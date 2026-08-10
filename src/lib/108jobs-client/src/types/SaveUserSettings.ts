@@ -60,6 +60,14 @@ export type SaveUserSettings = {
     username?: string;
     avatarUrl?: string;
     /**
+     * Your resume/CV file URL
+     */
+    resumeUrl?: string;
+    /**
+     * The original filename of the uploaded resume
+     */
+    resumeFileName?: string;
+    /**
      * Your matrix profile id. Ex: @myUser:matrix.org
      */
     matrixUserId?: string;

@@ -30,6 +30,14 @@ export type Person = {
      */
     banner?: DbUrl;
     /**
+     * A URL for the person's uploaded resume/CV file.
+     */
+    resumeUrl?: DbUrl;
+    /**
+     * The original filename of the uploaded resume, shown next to the download link.
+     */
+    resumeFileName?: string;
+    /**
      * Whether the person is deleted.
      */
     deleted: boolean;
