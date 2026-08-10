@@ -1,11 +1,12 @@
 "use client";
-import React, {useState} from "react";
+import React from "react";
 import {Person} from "108jobs-client";
-import ProfileHeader from "@/components/Profile/ProfileHeader";
-import ProfileSidebar from "@/components/Profile/ProfileSidebar";
-import PortfolioSlider from "@/components/Profile/PortfolioSlider";
+import ProfileHero from "@/components/Profile/ProfileHero";
+import AboutCard from "@/components/Profile/AboutCard";
+import SkillsCard from "@/components/Profile/SkillsCard";
+import ContactCard from "@/components/Profile/ContactCard";
+import ResumeCard from "@/components/Profile/ResumeCard";
 import WorkSamplesSlider from "@/components/Profile/WorkSamplesSlider";
-import ImageModal from "@/components/Common/Modal/ImageModal";
 import Reviews from "@/components/Profile/Reviews";
 import NotFound from "@/components/Common/NotFound";
 import {useUserStore} from "@/store/useUserStore";
@@ -16,41 +17,24 @@ interface ProfileProps {
 
 const CurrentProfileUser: React.FC<ProfileProps> = ({profile}) => {
     const {person: currentUserProfile} = useUserStore();
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-    const portfolioItems = profile?.portfolioPics ?? [];
-    const workSamples = profile?.workSamples ?? [];
     const isOwnProfile = currentUserProfile?.id === profile?.id;
-
-    const openImageModal = (imageUrl: string) => {
-        setSelectedImage(imageUrl);
-    };
-
-    const closeImageModal = () => {
-        setSelectedImage(null);
-    };
 
     if (!profile) {
         return <NotFound/>;
     }
 
+    const workSamples = profile.workSamples ?? [];
+
     return (
         <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-            <ProfileHeader/>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <ProfileSidebar profile={profile}/>
-                    <section className="lg:col-span-2">
-                        <PortfolioSlider
-                            portfolioItems={portfolioItems}
-                            isOwnProfile={isOwnProfile}
-                            onImageClick={openImageModal}
-                        />
-                        <WorkSamplesSlider workSamples={workSamples} isOwnProfile={isOwnProfile}/>
-                        {selectedImage && <ImageModal imageUrl={selectedImage} onClose={closeImageModal}/>}
-                        <Reviews profileId={profile.id}/>
-                    </section>
-                </div>
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+                <ProfileHero profile={profile} isOwnProfile={isOwnProfile} currentUserId={currentUserProfile?.id}/>
+                <AboutCard profile={profile} isOwnProfile={isOwnProfile}/>
+                <SkillsCard profile={profile} isOwnProfile={isOwnProfile}/>
+                <ContactCard profile={profile} isOwnProfile={isOwnProfile}/>
+                <ResumeCard profile={profile} isOwnProfile={isOwnProfile}/>
+                <WorkSamplesSlider workSamples={workSamples} isOwnProfile={isOwnProfile}/>
+                <Reviews profileId={profile.id}/>
             </div>
         </main>
     );

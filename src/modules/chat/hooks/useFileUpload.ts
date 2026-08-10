@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { REQUEST_STATE } from '@/services/HttpService';
 import { useHttpPost } from '@/hooks/api/http/useHttpPost';
-import { madGatewayUrl, uploadToMad, type MediaVisibility } from '@/services/media/madUpload';
+import { madGatewayUrl, uploadToMad, type MediaKind, type MediaVisibility } from '@/services/media/madUpload';
 
 export type UploadedFile = { fileUrl: string; fileType: string; fileName: string } | null;
 
@@ -26,10 +26,16 @@ interface UseFileUploadProps {
      * concept and serves everything it stores from one route.
      */
     visibility?: MediaVisibility;
+    /**
+     * What kind of asset this upload is. Defaults to `'image'`, matching
+     * every caller before the resume feature. Only meaningful on the MAD
+     * path — the legacy `/account/files` endpoint has no such concept.
+     */
+    kind?: MediaKind;
 }
 
 export const useFileUpload = (opts: UseFileUploadProps) => {
-    const { setError, t, visibility = 'private' } = opts;
+    const { setError, t, visibility = 'private', kind = 'image' } = opts;
     const [selectedFile, setSelectedFile] = useState<UploadedFile>(null);
     const [isDeletingFile, setIsDeletingFile] = useState<boolean>(false);
 
@@ -61,7 +67,7 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 // which is what makes the cutover safe to land ahead of time.
                 let uploaded: UploadedFile;
                 if (madGatewayUrl()) {
-                    const asset = await uploadToMad(file, visibility);
+                    const asset = await uploadToMad(file, visibility, kind);
                     uploaded = {
                         fileUrl: asset.url,
                         fileType: asset.mimeType || fileType,
@@ -98,7 +104,7 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 return null;
             }
         },
-        [setError, t, uploadFile, visibility],
+        [setError, t, uploadFile, visibility, kind],
     );
 
     const handleRemoveSelectedFile = useCallback(

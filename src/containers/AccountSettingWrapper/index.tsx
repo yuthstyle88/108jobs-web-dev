@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Link from "next/link";
-import { Briefcase, BriefcaseBusiness, CreditCard, ShieldCheck, SquareUserRound, User } from "lucide-react";
+import { Briefcase, BriefcaseBusiness, CreditCard, FileText, ShieldCheck, User } from "lucide-react";
 
 type IconType = React.ComponentType<{ className?: string }>;
 
@@ -38,7 +38,7 @@ const AccountSettingWrapper = memo(function AccountSettingWrapper() {
   const accountMenu: MenuItemData[] = useMemo(
     () => [
       { href: "/account-setting/basic-information", label: t("profileNavbar.accountInfo"), icon: User },
-      { href: "/account-setting/portfolio", label: t("profileNavbar.portfolio"), icon: SquareUserRound },
+      { href: "/account-setting/resume", label: t("profileNavbar.resume"), icon: FileText },
       { href: "/account-setting/work-sample", label: t("profileNavbar.workSample"), icon: BriefcaseBusiness },
       { href: "/account-setting/bank-account", label: t("profileNavbar.bankInfo"), icon: CreditCard },
     ],

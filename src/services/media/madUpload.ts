@@ -10,6 +10,13 @@ import {UserService} from "@/services/UserService";
  */
 export type MediaVisibility = "private" | "public";
 
+/**
+ * What kind of asset is being uploaded. MAD partitions storage/serving
+ * behaviour by this — `"image"` assets may get rendition processing,
+ * `"file"` assets are stored and served verbatim (documents, etc.).
+ */
+export type MediaKind = "image" | "file";
+
 /** What every upload path here returns, matching the legacy `/account/files`
  *  response so call sites do not care which one ran. */
 export type UploadedAsset = {
@@ -78,6 +85,7 @@ async function madJson<T>(
 export async function uploadToMad(
   file: File,
   visibility: MediaVisibility,
+  kind: MediaKind = "image",
 ): Promise<UploadedAsset> {
   const gateway = madGatewayUrl();
   if (!gateway) {
@@ -96,8 +104,7 @@ export async function uploadToMad(
     token,
     headers: {"content-type": "application/json"},
     body: JSON.stringify({
-      // MAD partitions by kind; everything this app sends is an image.
-      kind: "image",
+      kind,
       declaredContentLength: file.size,
       contentType,
       visibility,

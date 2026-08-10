@@ -46,7 +46,7 @@ const WorkSamplesSlider: React.FC<WorkSamplesSliderProps> = ({workSamples, isOwn
 
 
     return (
-        <div className="mb-8">
+        <div className="bg-white shadow-lg rounded-2xl p-6">
             <div className="flex justify-between items-center mb-4 sm:mb-5">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-700">
                     {t('profile.workSamples')}
@@ -63,8 +63,7 @@ const WorkSamplesSlider: React.FC<WorkSamplesSliderProps> = ({workSamples, isOwn
                 )}
             </div>
             {workSamples.length > 0 ? (
-                <div className="relative bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-                    <SlickSlider {...workSampleSettings}>
+                <SlickSlider {...workSampleSettings}>
                         {workSamples.map((sample) => (
                             <div key={sample.id} className="px-2">
                                 <div
@@ -84,7 +83,6 @@ const WorkSamplesSlider: React.FC<WorkSamplesSliderProps> = ({workSamples, isOwn
                             </div>
                         ))}
                     </SlickSlider>
-                </div>
             ) : (
                 <p className="text-gray-600 text-xs sm:text-sm">{t('profile.noWorkSamples')}</p>
             )}
