@@ -1598,6 +1598,8 @@ export const th = {
         profile: {
             verified: "ยืนยันแล้ว",
             notVerified: "ยังไม่ได้ยืนยัน",
+            editProfile: "แก้ไขโปรไฟล์",
+            availableForWork: "พร้อมรับงาน",
             notReceive: "ไม่ได้รับงาน",
             averageResponseTime: "เวลาในการตอบกลับเฉลี่ย",
             certificationTitle: "ใบรับรองและรางวัล",

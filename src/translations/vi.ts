@@ -1651,6 +1651,8 @@ export const vi = {
         profile: {
             verified: "Đã xác minh",
             notVerified: "Chưa xác minh",
+            editProfile: "Chỉnh sửa hồ sơ",
+            availableForWork: "Sẵn sàng nhận việc",
             notReceive: "Chưa nhận công việc",
             averageResponseTime: "Thời gian phản hồi trung bình",
             certificationTitle: "Chứng chỉ và Giải thưởng",

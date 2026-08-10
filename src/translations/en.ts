@@ -1641,6 +1641,8 @@ export const en = {
         profile: {
             verified: "Verified",
             notVerified: "Not verified",
+            editProfile: "Edit profile",
+            availableForWork: "Open to work",
             notReceive: "Not receive job",
             averageResponseTime: "Average response time",
             certificationTitle: "Certifications and Awards",
