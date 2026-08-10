@@ -52,8 +52,14 @@ export const useResumeForm = ({person, setPerson}: UseResumeFormProps) => {
                 bio: person.bio ?? '',
                 skills: person.skills ?? '',
                 contacts: person.contacts ?? '',
+                // saveUserSettings fully replaces portfolioPics/workSamples from whatever
+                // the request contains (no partial update on the backend), so they must be
+                // resent on every save or they get silently wiped. See useProfileForm.ts /
+                // useWorkSamplesForm.ts for the same pattern.
+                workSamples: person.workSamples ?? [],
+                portfolioPics: person.portfolioPics ?? [],
                 resumeUrl: uploaded.fileUrl,
-                resumeFileName: uploaded.fileName,
+                resumeFileName: file.name,
             };
 
             const response = await saveUserSettings(payload);
@@ -62,7 +68,7 @@ export const useResumeForm = ({person, setPerson}: UseResumeFormProps) => {
                 return;
             }
 
-            setPerson({...person, resumeUrl: uploaded.fileUrl, resumeFileName: uploaded.fileName});
+            setPerson({...person, resumeUrl: uploaded.fileUrl, resumeFileName: file.name});
             successMessage(null, null, t('profileInfo.resumeUpdated') ?? 'Resume updated!');
         },
         [handleFileUpload, person, saveUserSettings, setPerson, successMessage, t],
