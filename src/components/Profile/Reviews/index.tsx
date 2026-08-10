@@ -24,7 +24,7 @@ const Reviews: React.FC<ReviewsProps> = ({profileId}) => {
     } = usePaginatedReviews({profileId, limit: ITEMS_PER_PAGE});
 
     return (
-        <div className="mt-8">
+        <div className="bg-white shadow-lg rounded-2xl p-6">
             <div className="border-b border-gray-200 mb-6">
                 <div className="flex space-x-6 overflow-x-auto pb-2">
                     <span className="flex-shrink-0 pb-2 text-sm font-medium text-primary border-b-2 border-primary">

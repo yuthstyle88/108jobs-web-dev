@@ -42,16 +42,14 @@ const ChatNoWorkButton: React.FC<ChatNoWorkButtonProps> = ({profile, currentUser
     };
 
     return (
-        <div className="mt-6">
-            <button
-                onClick={handleChatClick}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
-                aria-label={`Start a chat with ${profile?.name}`}
-            >
-                <MessageCircle className="w-5 h-5"/>
-                <span>{t("profile.startChat") || "Start Chat"}</span>
-            </button>
-        </div>
+        <button
+            onClick={handleChatClick}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+            aria-label={`Start a chat with ${profile?.name}`}
+        >
+            <MessageCircle className="w-5 h-5"/>
+            <span>{t("profile.startChat") || "Start Chat"}</span>
+        </button>
     );
 };
 
