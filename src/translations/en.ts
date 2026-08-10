@@ -1676,6 +1676,7 @@ export const en = {
             noBio: "No bio available",
             noPortfolio: "No portfolio listed",
             noWorkSamples: "No work samples available",
+            noResume: "No resume uploaded yet",
             bio: "Bio",
             noReviews: "No reviews available yet",
             noClients: "No client projects available yet",

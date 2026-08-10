@@ -1686,6 +1686,7 @@ export const vi = {
             noBio: "Không có tiểu sử",
             noPortfolio: "Không có danh mục đầu tư",
             noWorkSamples: "Không có mẫu công việc",
+            noResume: "Chưa có sơ yếu lý lịch nào được tải lên",
             bio: "Tiểu sử",
             noReviews: "Chưa có đánh giá nào",
             noClients: "Chưa có dự án khách hàng nào",
