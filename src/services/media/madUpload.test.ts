@@ -119,6 +119,16 @@ describe("uploadToMad", () => {
     });
   });
 
+  it("sends the given kind instead of the image default", async () => {
+    const calls = stubFetch([SESSION, BYTES, COMPLETE]);
+
+    await uploadToMad(file, "private", "file");
+
+    expect(JSON.parse(String(calls[0].body))).toMatchObject({
+      kind: "file",
+    });
+  });
+
   it("sends the session bearer on every leg", async () => {
     const calls = stubFetch([SESSION, BYTES, COMPLETE]);
 
