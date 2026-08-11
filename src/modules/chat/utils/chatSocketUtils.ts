@@ -186,15 +186,34 @@ export function safeParse(val: unknown): unknown {
  * ride in the query because the browser API has no way to set a header on
  * the handshake.
  */
-export function buildChatWsUrl(token?: string | null): string {
+export function buildChatWsUrl(token?: string | null, keyId?: number | null): string {
     const proto = isHttps() ? 'wss' : 'ws';
     const host = getApiHost();
-    const base = `${proto}://${host}/socket/websocket`;
-    return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+    const params = new URLSearchParams();
+    if (token) params.set('token', token);
+    // Which of this user's devices is connecting. Omitted, the server falls
+    // back to the single `person.shared_key` — one key per person, which is
+    // what made the second device to exchange leave the first one's messages
+    // undecryptable.
+    if (keyId != null) params.set('keyId', String(keyId));
+    const query = params.toString();
+    return query ? `${proto}://${host}/socket/websocket?${query}` : `${proto}://${host}/socket/websocket`;
 }
 
+/**
+ * Whether a string is shaped like one of our ciphertext payloads.
+ *
+ * At least 16 characters, and nothing outside the base64 alphabet — the same
+ * rule as the server's `is_base64_like` and the Flutter client's
+ * `looksLikeChatCiphertext`. The length bound was missing here, so a short
+ * plaintext ("ok", "yes") that happens to be base64-shaped was handed to
+ * decrypt and produced a warning on every such message. Three implementations
+ * of "is this ciphertext?" must answer identically, or one of them starts
+ * showing base64 to people.
+ */
 export function isBase64Like(s: string): boolean {
-    return /^[A-Za-z0-9+/=]+$/.test(s);
+    const trimmed = s.trim();
+    return trimmed.length >= 16 && /^[A-Za-z0-9+/=]+$/.test(trimmed);
 }
 
 
