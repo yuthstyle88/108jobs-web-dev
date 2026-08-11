@@ -27,6 +27,7 @@
  * buffer and the reconnect backoff are ours now, not a dependency's.
  */
 import { buildChatWsUrl } from "@/modules/chat/utils/chatSocketUtils";
+import { UserService } from "@/services";
 import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 
 /** Client -> server frame. `ref` and `room` are omitted when not applicable
@@ -406,7 +407,11 @@ export function getChannelAdapter(
   opts: { joinOnConnect?: boolean } = {}
 ): RealtimeChannelAdapter {
   const { joinOnConnect = true } = opts;
-  const url = buildChatWsUrl(token);
+  // The key id says which device this is, so the relay uses this browser's key
+  // rather than the one-per-person fallback. Read at connect time rather than
+  // captured earlier: the exchange finishes after sign-in, and a socket built
+  // before it lands would stay on the legacy key for the whole session.
+  const url = buildChatWsUrl(token, UserService.Instance.authInfo?.chatKeyId);
   const socket = new ChatSocket(url);
   const ch = new ChatChannel(socket, room);
 

@@ -28,6 +28,14 @@ interface AuthInfo {
     claims?: Claims;
     auth?: string;
     sharedKey?: CryptoKey;
+    /**
+     * The `chat_session_key` row this browser's key exchange created.
+     *
+     * Goes on the chat socket URL so the relay decrypts what THIS device sent
+     * and re-encrypts with THIS device's key. Undefined against a server
+     * without per-device keys, which falls back to one key per person.
+     */
+    chatKeyId?: number;
 }
 
 export class UserService {

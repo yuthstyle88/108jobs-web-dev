@@ -48,11 +48,76 @@ async function importServerPublicKeyHex(sec1Hex: string): Promise<CryptoKey> {
   return subtle.importKey("raw", hexToBytes(hex), { name: "ECDH", namedCurve: "P-256" }, true, []);
 }
 
-// === Derive AES-GCM-256 directly from ECDH (no HKDF) ===
-async function deriveKeyAesGcmKey(privateKey: CryptoKey, serverPublicKeyHex: string): Promise<CryptoKey> {
+/**
+ * How the AES key is produced from the ECDH shared point.
+ *
+ * Negotiated with the server per exchange, and NOT a protocol-wide constant: a
+ * client only ever reads content the relay re-encrypted under that client's own
+ * key, so a browser on `hkdf-sha256` and a phone on `raw` never decrypt each
+ * other's ciphertext and never have to agree.
+ */
+export type ChatKdf = "raw" | "hkdf-sha256";
+
+/**
+ * The `info` string bound into the HKDF expansion, for domain separation.
+ *
+ * Must match `CHAT_SESSION_KDF_INFO` in api-108jobs
+ * (`crates/infra/src/crypto.rs`) and `_kdfInfo` in 108jobs-flutter
+ * (`lib/core/crypto/chat_session_key.dart`) byte for byte.
+ */
+const KDF_INFO = "108jobs chat session key v1";
+
+/**
+ * The KDF the server says it used, or `raw` for anything unrecognised.
+ *
+ * Unrecognised includes absent, which is what an older server answers: it
+ * ignores a field it does not know and derives the old way. Deriving what we
+ * ASKED for against such a server produces a key it does not hold, and every
+ * message sent under it is stored as ciphertext nobody can recover.
+ */
+export function kdfFromWireName(name: unknown): ChatKdf {
+  return String(name ?? "").trim().toLowerCase() === "hkdf-sha256"
+    ? "hkdf-sha256"
+    : "raw";
+}
+
+// === Derive AES-GCM-256 from ECDH ===
+//
+// `raw` hands the X coordinate of the shared point straight to AES. That
+// coordinate is a field element, not a uniform 256-bit string, which is not
+// what a block cipher's key schedule expects; `hkdf-sha256` is the standard
+// repair and costs one hash.
+async function deriveKeyAesGcmKey(
+  privateKey: CryptoKey,
+  serverPublicKeyHex: string,
+  kdf: ChatKdf = "raw",
+): Promise<CryptoKey> {
   const peerPub = await importServerPublicKeyHex(serverPublicKeyHex);
   const shared = await subtle!.deriveBits({ name: "ECDH", public: peerPub }, privateKey, 256); // 32 bytes
-  return subtle!.importKey("raw", shared, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+
+  if (kdf !== "hkdf-sha256") {
+    return subtle!.importKey("raw", shared, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+  }
+
+  // An EMPTY salt, which RFC 5869 defines as a HashLen block of zeros. WebCrypto
+  // requires the parameter to be present, and an empty one is equivalent here
+  // because HKDF-Extract is HMAC keyed by the salt and HMAC zero-pads any key
+  // shorter than its block size. That equivalence is asserted rather than
+  // assumed: the vector in crypto.test.ts is the same one api-108jobs and
+  // 108jobs-flutter pin, so all three HKDF implementations are checked against
+  // each other.
+  const ikm = await subtle!.importKey("raw", shared, "HKDF", false, ["deriveBits"]);
+  const okm = await subtle!.deriveBits(
+    {
+      name: "HKDF",
+      hash: "SHA-256",
+      salt: new Uint8Array(0),
+      info: new TextEncoder().encode(KDF_INFO),
+    },
+    ikm,
+    256,
+  );
+  return subtle!.importKey("raw", okm, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
 }
 
 // In-memory cache: localUserId -> AES key (hex)
@@ -62,7 +127,8 @@ const LOCAL_USER_KEYS_MEM = new Map<string, CryptoKey>();
 export async function ensureSharedKeyForLocalUser(
   localUserId: string | number,
   privateKey: CryptoKey,
-  sharedOrPubHex: string
+  sharedOrPubHex: string,
+  kdf: ChatKdf = "raw"
 ): Promise<CryptoKey | null> {
     try {
         // guard: ต้องมี WebCrypto
@@ -96,7 +162,7 @@ export async function ensureSharedKeyForLocalUser(
             // 4) ถ้าเป็น public key → เติม '04' ถ้าขาด แล้ว derive
             if (hex.length === 128) hex = `04${hex}`;
             if (hex.length === 130 && hex.startsWith('04')) {
-                aes = await deriveKeyAesGcmKey(privateKey, hex);
+                aes = await deriveKeyAesGcmKey(privateKey, hex, kdf);
             }
         }
 
@@ -125,11 +191,13 @@ export async function importAesKey(sharedKeyHex: string): Promise<AESKey> {
 }
 
 // Derive AES key hex using a known private key and the server's public key hex
-export async function deriveAesGcmKeyHex(clientPrivateKey: CryptoKey, serverPubHex: string): Promise<string> {
+export async function deriveAesGcmKeyHex(
+  clientPrivateKey: CryptoKey,
+  serverPubHex: string,
+  kdf: ChatKdf = "raw",
+): Promise<string> {
   if (!subtle) throw new Error("WebCrypto not available");
-  const serverPub = await importServerPublicKeyHex(serverPubHex);
-  const shared = await subtle.deriveBits({ name: "ECDH", public: serverPub }, clientPrivateKey, 256);
-  const aes = await subtle.importKey("raw", shared, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+  const aes = await deriveKeyAesGcmKey(clientPrivateKey, serverPubHex, kdf);
   return bytesToHex(await subtle.exportKey("raw", aes));
 }
 /**
