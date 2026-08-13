@@ -427,6 +427,8 @@ export const vi = {
             btnVerifyOTP: "Xác minh OTP",
             placeholderOTP: "Nhập mã OTP",
             invalidOTP: "Mã OTP không hợp lệ",
+            otpExpired: "Mã này đã hết hạn. Vui lòng yêu cầu mã mới.",
+            changePhoneNumber: "Đổi số điện thoại",
             linkCreateAccount: "Tạo tài khoản",
             linkForgotPassword: "Quên mật khẩu?",
             messageEnterCode:

@@ -2,178 +2,220 @@
 import LoadingCircle from "@/components/Common/Loading/LoadingCircle";
 import {CustomInput} from "@/components/ui/InputField";
 import {zodResolver} from "@hookform/resolvers/zod";
-import React, {useCallback, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import * as z from "zod";
-import {HttpService, REQUEST_STATE,} from "@/services/HttpService";
 import {useTranslation} from "react-i18next";
-import {OAuthButtons} from "@/components/Authentication/LoginForm/oauth-provider";
-import {OAuthProvider} from "108jobs-client";
-import {handleUseOAuthProvider} from "@/components/Authentication/LoginForm/handlers";
 import {useSearchParams} from "next/navigation";
-import {useSiteStore} from "@/store/useSiteStore";
 import {UserService} from "@/services";
 import {jwtDecode} from "jwt-decode";
 import {isAdminClaims, Claims} from "@/services/UserService";
-
-// Form schema definition
-const createRegisterSchema = (t: any) => z
-    .object({
-        username: z.string().min(3, t("authen.usernameMin3")).max(32, t("authen.usernameMax32")),
-        email: z.string().email(t("authen.invalidEmail")),
-        password: z.string().min(6, t("authen.passwordMin6")),
-        passwordVerify: z.string().min(6, t("authen.passwordMin6")),
-    })
-    .refine((data) => data.password === data.passwordVerify, {
-        message: t("authen.passwordMismatch"),
-        path: ["passwordVerify"],
-    });
+import {ApiError, REQUEST_STATE} from "@/services/HttpService";
+import {normalizeThaiPhone, OtpChallenge, requestOtp, verifyOtp} from "@/services/IdentityOtpService";
 
 interface RegisterFormProps {
     setApiError?: (err: string) => void;
 }
 
+const RESEND_COOLDOWN_SECONDS = 30;
+
+type Step = "phone" | "code";
+
+// Identity-Platform's stable error codes (see error_response() in
+// Identity-Platform-dev) mapped onto the copy this form already has.
+function errorMessage(t: (key: string) => string, err?: ApiError): string {
+    switch (err?.error) {
+        case "invalid_code":
+            return t("authen.invalidOTP");
+        case "challenge_expired":
+        case "invalid_challenge_state":
+        case "challenge_not_found":
+            return t("authen.otpExpired");
+        case "rate_limited":
+        case "too_many_attempts":
+            return t("authen.resendLimitReached");
+        default:
+            return t("authen.apiErrorState");
+    }
+}
+
 export const RegisterForm: React.FC<RegisterFormProps> = ({
-                                                              setApiError,
-                                                          }) => {
+                                                                setApiError,
+                                                            }) => {
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/";
-    // Hooks
     const {t} = useTranslation();
-    // State
+
+    const [step, setStep] = useState<Step>("phone");
     const [apiErrorState, setApiErrorState] = useState<string | null>(null);
-    const {oauthProviders} = useSiteStore();
-    // Use the provided setApiError function if available, otherwise use the local state setter
+    const [phone, setPhone] = useState("");
+    const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
+    const [cooldown, setCooldown] = useState(0);
+
+    // register/page.tsx threads a setApiError prop through but never renders
+    // the state it sets -- always keep our own copy so this form's error
+    // banner works regardless of what (if anything) the parent does with it.
     const handleApiError = useCallback((err: string) => {
-            if (setApiError) {
-                setApiError(err);
-            } else {
-                setApiErrorState(err);
-            }
+            setApiErrorState(err);
+            setApiError?.(err);
         },
         [setApiError]);
 
-    // Form setup
-    const registerSchema = createRegisterSchema(t);
-    const formMethods = useForm<z.infer<typeof registerSchema>>({
-        resolver: zodResolver(registerSchema),
+    useEffect(() => {
+        if (cooldown <= 0) return;
+        const timer = setInterval(() => setCooldown((s) => Math.max(0, s - 1)), 1000);
+        return () => clearInterval(timer);
+    }, [cooldown]);
+
+    const phoneSchema = z.object({
+        phone: z.string().min(9, t("authen.errorPhoneLength")),
+    });
+    const phoneForm = useForm<z.infer<typeof phoneSchema>>({
+        resolver: zodResolver(phoneSchema),
         mode: "onChange",
-        criteriaMode: "all",
     });
 
-    const {
-        register,
-        handleSubmit,
-        formState: {isValid, errors, isSubmitting}
-    } = formMethods;
+    const codeSchema = z.object({
+        code: z.string().min(4, t("authen.invalidOTP")).regex(/^\d+$/, t("authen.invalidOTP")),
+    });
+    const codeForm = useForm<z.infer<typeof codeSchema>>({
+        resolver: zodResolver(codeSchema),
+        mode: "onChange",
+    });
 
-    const handleLoginWithProvider = async (provider: OAuthProvider) => {
-        await handleUseOAuthProvider({
-            oauthProvider: provider,
-            prev: redirectUrl,
-        });
-    };
-    const onSubmit = useCallback(async (data: any) => {
-            const registerRes = await HttpService.client.registerWithIdentityPlatform({
-                username: data.username,
-                email: data.email,
-                password: data.password,
-                selfPromotion: false,
-            });
-            switch (registerRes.state) {
-                case REQUEST_STATE.FAILED: {
-                    const errName = registerRes.err?.name ?? "unknownError";
-                    if (errName === "emailAlreadyExists") {
-                        window.location.href = `/login?email-already-exists&redirect=${encodeURIComponent(redirectUrl)}&email=${encodeURIComponent(data.email)}`;
-                    } else {
-                        handleApiError(t(`authen.${errName}`));
-                    }
-                    break;
-                }
-                case REQUEST_STATE.SUCCESS: {
-                    await UserService.Instance.login(registerRes.data.accessToken, registerRes.data.refreshToken);
-                    const claims = jwtDecode<Claims>(registerRes.data.accessToken);
-                    if (isAdminClaims(claims)) {
-                        window.location.href = "/admin/dashboard";
-                        break;
-                    }
-                    window.location.href = redirectUrl;
-                    break;
-                }
+    const sendCode = useCallback(async (rawPhone: string) => {
+            const normalized = normalizeThaiPhone(rawPhone);
+            if (!normalized) {
+                phoneForm.setError("phone", {message: t("authen.errorPhoneLength")});
+                return;
             }
+            handleApiError("");
+            const res = await requestOtp(normalized);
+            if (res.state === REQUEST_STATE.FAILED) {
+                handleApiError(errorMessage(t, res.err));
+                return;
+            }
+            setPhone(normalized);
+            setChallenge(res.data);
+            setCooldown(RESEND_COOLDOWN_SECONDS);
+            setStep("code");
         },
-        [redirectUrl, handleApiError, t]);
-    return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-            {apiErrorState && (
-                <p className="text-red-500 text-sm text-center mb-4">
-                    {t("authen.apiErrorState")}
-                </p>
-            )}
-            {errors.root && (
-                <p className="text-red-500 text-sm text-center mb-4">
-                    {errors.root.message}
-                </p>
-            )}
-            <CustomInput
-                label={t("authen.labelUsername")}
-                type="text"
-                name={"username"}
-                placeholder={t("authen.placeholderUsername")}
-                register={register("username")}
-                error={errors.username?.message}
-            />
+        [handleApiError, phoneForm, t]);
 
-            <CustomInput
-                label={t("authen.labelEmail")}
-                type="email"
-                name={"email"}
-                placeholder={t("authen.placeholderEmail")}
-                register={register("email")}
-                error={errors.email?.message}
-            />
+    const onSubmitPhone = phoneForm.handleSubmit((data) => sendCode(data.phone));
 
-            <CustomInput
-                label={t("authen.labelPassword")}
-                type="password"
-                name={"password"}
-                placeholder={t("authen.placeholderPassword")}
-                register={register("password")}
-                error={errors.password?.message}
-            />
+    const onResend = useCallback(async () => {
+            if (cooldown > 0 || !phone) return;
+            await sendCode(phone);
+        },
+        [cooldown, phone, sendCode]);
 
-            <CustomInput
-                label={t("authen.labelPasswordVerify")}
-                type="password"
-                name={"passwordVerify"}
-                placeholder={t("authen.placeholderPasswordVerify")}
-                register={register("passwordVerify")}
-                error={errors.passwordVerify?.message}
-            />
+    const onChangeNumber = () => {
+        handleApiError("");
+        codeForm.reset();
+        setChallenge(null);
+        setStep("phone");
+    };
 
-            {apiErrorState && (
-                <div className="p-3 bg-red-100 text-red-700 rounded text-sm">
-                    {apiErrorState}
+    const onSubmitCode = codeForm.handleSubmit(async (data) => {
+        if (!challenge) return;
+        handleApiError("");
+        const res = await verifyOtp(challenge.challengeId, data.code);
+        if (res.state === REQUEST_STATE.FAILED) {
+            handleApiError(errorMessage(t, res.err));
+            return;
+        }
+        const {login} = res.data;
+        await UserService.Instance.login(login.accessToken, login.refreshToken);
+        const claims = jwtDecode<Claims>(login.accessToken);
+        if (isAdminClaims(claims)) {
+            window.location.href = "/admin/dashboard";
+            return;
+        }
+        window.location.href = redirectUrl;
+    });
+
+    const phoneErrors = phoneForm.formState.errors;
+    const codeErrors = codeForm.formState.errors;
+
+    if (step === "phone") {
+        return (
+            <form onSubmit={onSubmitPhone} className="space-y-5" noValidate>
+                {apiErrorState && (
+                    <p className="text-red-500 text-sm text-center mb-4">
+                        {apiErrorState}
+                    </p>
+                )}
+
+                <CustomInput
+                    label={t("authen.labelPhone")}
+                    type="tel"
+                    name="phone"
+                    autoComplete="tel"
+                    placeholder={t("authen.placeholderPhone")}
+                    register={phoneForm.register("phone")}
+                    error={phoneErrors.phone?.message}
+                />
+
+                <div className="text-center">
+                    <button
+                        type="submit"
+                        className="submit-button py-3"
+                        disabled={phoneForm.formState.isSubmitting}
+                    >
+                        {phoneForm.formState.isSubmitting ? <LoadingCircle/> : t("authen.sendCodeButton")}
+                    </button>
                 </div>
+            </form>
+        );
+    }
+
+    return (
+        <form onSubmit={onSubmitCode} className="space-y-5" noValidate>
+            {apiErrorState && (
+                <p className="text-red-500 text-sm text-center mb-4">
+                    {apiErrorState}
+                </p>
             )}
+
+            <p className="text-sm text-gray-600 text-center -mt-2">
+                {t("authen.labelOTP")}<br/>
+                <span className="font-medium text-gray-800">{phone}</span>
+            </p>
+
+            <CustomInput
+                label={t("authen.labelOTP")}
+                type="text"
+                name="code"
+                autoComplete="one-time-code"
+                placeholder={t("authen.placeholderOTP")}
+                register={codeForm.register("code")}
+                error={codeErrors.code?.message}
+            />
 
             <div className="text-center">
                 <button
                     type="submit"
                     className="submit-button py-3"
-                    disabled={!isValid || isSubmitting}
+                    disabled={codeForm.formState.isSubmitting}
                 >
-                    {isSubmitting ? <LoadingCircle/> : t("global.labelContinue")}
+                    {codeForm.formState.isSubmitting ? <LoadingCircle/> : t("authen.btnVerifyOTP")}
                 </button>
+
+                <div className="flex justify-between text-sm text-primary mt-4">
+                    <button type="button" onClick={onChangeNumber} className="hover:underline">
+                        {t("authen.changePhoneNumber")}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onResend}
+                        disabled={cooldown > 0}
+                        className="hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:no-underline"
+                    >
+                        {cooldown > 0 ? `${t("authen.resendCode")} (${cooldown}s)` : t("authen.resendCode")}
+                    </button>
+                </div>
             </div>
-
-            {
-                oauthProviders.length > 0 && (<div className="flex flex-col gap-3 mt-6">
-                    <OAuthButtons providers={oauthProviders} onLogin={handleLoginWithProvider}
-                                  label={t("authen.labelOrSignInWith")}/>
-                </div>)
-            }
-
         </form>
     );
 };

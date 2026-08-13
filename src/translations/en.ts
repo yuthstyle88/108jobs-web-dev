@@ -427,6 +427,8 @@ export const en = {
             btnVerifyOTP: "Verify OTP",
             placeholderOTP: "Enter OTP",
             invalidOTP: "Invalid OTP",
+            otpExpired: "This code has expired. Request a new one.",
+            changePhoneNumber: "Change phone number",
             linkCreateAccount: "Create an account",
             linkForgotPassword: "Forgot your password?",
             messageEnterCode:
