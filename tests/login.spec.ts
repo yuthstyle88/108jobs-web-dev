@@ -1,33 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { captureConsole } from './utils/console';
 import type { CapturedConsole } from './utils/console';
-import { enableMockAuth } from './utils/auth';
+import { enableMockOtp } from './utils/otp';
 
 const LOCALE = process.env.TEST_LOCALE || 'en';
 
-async function fillLoginForm(page: import('@playwright/test').Page, email: string, password: string) {
-  // Prefer accessible labels first, then fall back to common attributes or data-testid
-  const emailInput = page
-    .getByLabel(/^(email|อีเมล|อีเมล์|correo|メール|邮箱)$/i)
-    .or(page.locator('[data-testid="login-email"], input[name="email"], input[type="email"], input[placeholder*="email" i]'));
-
-  const passwordInput = page
-    .getByLabel(/^(password|รหัสผ่าน|contraseña|パスワード|密码)$/i)
-    .or(page.locator('[data-testid="login-password"], input[name="password"], input[type="password"]'));
-
-  await emailInput.fill(email);
-  await passwordInput.fill(password);
-
-  const submit = page
-    .getByRole('button', { name: /log in|login|เข้าสู่ระบบ|sign in|เข้าสู่บัญชี|ลงชื่อเข้าใช้/i })
-    .or(page.locator('[data-testid="login-submit"], button[type="submit"]'));
-
-  await submit.click();
-}
-
 let con: CapturedConsole | null = null;
 
-// Before each test, hook console to capture JS errors (ignore known dev network warnings via your config/allowlist if any)
 test.beforeEach(async ({ page }) => {
   con = captureConsole(page);
 });
@@ -37,50 +16,50 @@ test.afterEach(async () => {
   con = null;
 });
 
-// Mocked login tests (stable without backend)
-// If you later want to run against a real backend, remove enableMockAuth and provide TEST_USER_EMAIL/TEST_USER_PASSWORD.
-
-test.describe('Login (mocked)', () => {
-  test('logs in successfully and shows authenticated UI', async ({ page }) => {
-    await enableMockAuth(page, { success: true });
+// Login is now the same phone+OTP flow as register (PhoneOtpAuthForm,
+// mode="login") -- mirrors 108jobs-flutter, which dropped password auth
+// entirely. See register.spec.ts for the shared mock helper.
+test.describe('Login (phone + OTP, mocked)', () => {
+  test('requests a code, then verifies it and lands authenticated', async ({ page }) => {
+    await enableMockOtp(page);
 
     await page.goto(`/${LOCALE}/login`);
 
-    const email = process.env.TEST_USER_EMAIL || 'test@example.com';
-    const password = process.env.TEST_USER_PASSWORD || 'Password123!';
-    await fillLoginForm(page, email, password);
-    // Ensure auth cookie exists for middleware checks (mock environment)
+    await page.getByPlaceholder(/phone/i).fill('0812345678');
+    await page.getByRole('button', { name: /send verification code/i }).click();
 
-    // Wait until we are no longer on the login page and network settles
-    await page.waitForURL(url => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
-    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('+66812345678')).toBeVisible();
 
-    const authenticatedUi = page.locator([
-      'button[name="profile"]',
-      'button:has(img[alt="avatar"])',
-      '[data-testid="user-menu"]',
-      '[data-testid="logout-button"]',
-      '[data-testid="user-avatar"]',
-      'button[aria-haspopup="menu"]',
-      'button[aria-label*="profile" i]',
-      'button[title*="profile" i]'
-    ].join(', ')).first();
+    await page.getByPlaceholder(/otp/i).fill('123456');
+    await page.getByRole('button', { name: /verify otp/i }).click();
 
-    await expect(authenticatedUi).toBeVisible({ timeout: 15000 });
-
-    // Optional: Protected route should not bounce back to login when authenticated
-    // await page.goto(`/${LOCALE}/account-setting/work-sample`);
-    // await expect(page).toHaveURL(new RegExp(`/${LOCALE}/account-setting/work-sample`));
+    await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 
-  test('shows error on invalid credentials', async ({ page }) => {
-    await enableMockAuth(page, { success: false });
+  test('shows an inline error and stays on the code step for a wrong code', async ({ page }) => {
+    await enableMockOtp(page, { verifyStatus: 401, verifyBody: { error: 'invalid_code' } });
 
     await page.goto(`/${LOCALE}/login`);
-    await fillLoginForm(page, 'wrong@example.com', 'wrong-password');
 
-    // Adjust this to your real UI. We check for a generic error message.
-    const err = page.getByText(/invalid|Incorrect password|failed|unauthorized|เข้าสู่ระบบไม่สำเร็จ/i);
-    await expect(err).toBeVisible();
+    await page.getByPlaceholder(/phone/i).fill('0812345678');
+    await page.getByRole('button', { name: /send verification code/i }).click();
+
+    const codeInput = page.getByPlaceholder(/otp/i);
+    await expect(codeInput).toBeVisible();
+    await codeInput.fill('000000');
+    await page.getByRole('button', { name: /verify otp/i }).click();
+
+    await expect(page.getByText(/invalid otp/i)).toBeVisible();
+    await expect(codeInput).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/login`));
+  });
+
+  test('links to register, and there is no password field anywhere on the page', async ({ page }) => {
+    await page.goto(`/${LOCALE}/login`);
+
+    await expect(page.locator('input[type="password"]')).toHaveCount(0);
+
+    await page.getByRole('button', { name: /create an account/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/register`));
   });
 });

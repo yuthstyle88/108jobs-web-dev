@@ -41,9 +41,11 @@ export const useHttpPost = <K extends keyof WrappedApi108Jobs>(method: K) => {
           RequestState<Payload<K>>
         >);
       } catch (e) {
-        // Capture and forward error to GlobalErrorContext
-        const errorMessage = e instanceof Error ? e.message : "Unknown error occurred.";
-        setError(errorMessage); // forward message to GlobalErrorContext
+        // setError() runs its argument through t() as an i18n key -- e.message
+        // is arbitrary caught-exception text (e.g. "Failed to fetch"), not a
+        // key, so passing it directly showed untranslated raw text instead of
+        // a real message. "error.serverError" is a real key.
+        setError("error.serverError");
         return {
           state: REQUEST_STATE.FAILED,
           err: e instanceof Error ? e : new Error("Unknown error"),

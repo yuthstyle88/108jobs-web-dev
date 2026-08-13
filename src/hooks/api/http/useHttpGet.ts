@@ -43,12 +43,13 @@ export function useHttpGet<K extends keyof WrappedApi108Jobs>(
         ...typedArgs,
       )) as RequestState<Payload<K>>;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Error occurred";
-      setError(errorMessage); // ตั้งค่าข้อผิดพลาดใน GlobalError Context
+      // setError() runs its argument through t() as an i18n key -- err.message
+      // is arbitrary caught-exception text, not a key; "error.serverError" is
+      // a real one.
+      setError("error.serverError");
       return {
         state: REQUEST_STATE.FAILED,
-        err: err instanceof Error ? err : new Error(errorMessage),
+        err: err instanceof Error ? err : new Error("Error occurred"),
       } as RequestState<Payload<K>>;
     } finally {
       setLoading(false); // ปิด Loader เสมอ

@@ -4,9 +4,7 @@
 // Actual pages should be placed under /app or /pages depending on routing mode
 import {GetSiteResponse, MyUserInfo} from "108jobs-client";
 import {InitialFetchRequest, IRouteProps, RouteData} from "@/utils/types";
-import {LoginForm} from "@/components/Authentication/LoginForm";
 import {LoginFetchConfig,} from "@/components/Authentication/LoginForm/interface";
-import {getLoginQueryParams} from "@/components/Authentication/LoginForm/handlers";
 
 type RouteComponentProps<PathPropsT> = {
   params: PathPropsT;
@@ -31,16 +29,9 @@ export interface IRoutePropsWithFetch<
   ): QueryPropsT;
 }
 
-export const routes: LoginFetchConfig[] = [
-  {
-    path: `/login/:id`,
-    component: LoginForm,
-    getQueryParams: getLoginQueryParams,
-  } as LoginFetchConfig,
-  {
-    path: `/comment/:name`,
-    component: LoginForm,
-    getQueryParams: getLoginQueryParams,
-  } as LoginFetchConfig,
-
-];
+// Both entries this array ever carried (`/login/:id`, `/comment/:name` -- the
+// latter was already copy-paste cruft) pointed at the now-deleted password
+// LoginForm and never matched a real App Router path in the first place
+// (matchPath() in fetchIsoData.tsx always missed them), so removing them
+// changes no runtime behavior.
+export const routes: LoginFetchConfig[] = [];

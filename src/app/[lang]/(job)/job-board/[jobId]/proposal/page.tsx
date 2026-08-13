@@ -13,6 +13,7 @@ import {useCallback} from "react";
 import {CreateComment, PostId} from "108jobs-client";
 import {REQUEST_STATE} from "@/services/HttpService";
 import useNotification from "@/hooks/ui/useNotification";
+import {resolveApiErrorMessage} from "@/utils/errorMessage";
 
 const createJobApplicationSchema = (t: (key: string, options?: any) => string) =>
     z.object({
@@ -59,6 +60,11 @@ const JobApplication = () => {
                         errorMessage(null, null, messageError);
                         return;
                     }
+                    // Previously fell through to handleCreateSuccess() below
+                    // for any OTHER failure code -- a rejected submission
+                    // silently navigated away as though it had succeeded.
+                    errorMessage(null, null, resolveApiErrorMessage(response.err, t, {fallback: t("global.submissionFailed")}));
+                    return;
                 }
 
                 await handleCreateSuccess();

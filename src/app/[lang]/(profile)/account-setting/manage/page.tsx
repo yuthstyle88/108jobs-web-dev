@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 import TotpModal from "@/components/Common/Modal/TotpModal";
-import PasswordChangeModal from "@/components/ChangePasswordModal";
 
 import { REQUEST_STATE } from "@/services/HttpService";
 import { useHttpPost } from "@/hooks/api/http/useHttpPost";
@@ -19,8 +18,6 @@ export default function AccountManagePage() {
     const [showTotpModal, setShowTotpModal] = useState(false);
     const [modalType, setModalType] = useState<"generate" | "remove">("generate");
     const [secretUrl, setSecretUrl] = useState<string>();
-
-    const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     const { execute: generateTotpSecret } = useHttpPost("generateTotpSecret");
     const { execute: updateTotp } = useHttpPost("updateTotp");
@@ -84,12 +81,6 @@ export default function AccountManagePage() {
                 secretUrl={modalType === "generate" ? secretUrl : undefined}
             />
 
-            {/* Password modal */}
-            <PasswordChangeModal
-                isOpen={showPasswordModal}
-                onClose={() => setShowPasswordModal(false)}
-            />
-
             <div className="bg-white rounded-2xl shadow-md border border-border-primary p-6 space-y-8">
                 {/* Header */}
                 <div>
@@ -140,24 +131,6 @@ export default function AccountManagePage() {
                   : t("accountManage.totpDisabled")}
             </span>
                     </p>
-                </div>
-
-                {/* Set Password Section */}
-                <div className="border rounded-xl p-4">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">
-                        {t("accountManage.passwordTitle")}
-                    </h3>
-                    <div className="flex justify-between items-center">
-                        <p className="text-xs text-gray-500 max-w-md">
-                            {t("accountManage.passwordDescription")}
-                        </p>
-                        <button
-                            className="text-primary px-4 py-2 rounded-lg hover:bg-blue-50 border border-blue-200 text-sm font-medium"
-                            onClick={() => setShowPasswordModal(true)}
-                        >
-                            {t("accountManage.passwordButton")}
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

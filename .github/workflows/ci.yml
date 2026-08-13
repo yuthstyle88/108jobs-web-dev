@@ -97,6 +97,16 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
+    env:
+      # IdentityOtpService.ts/IdentityPasskeyService.ts refuse to even attempt
+      # a fetch when this is unset (see IdentityOtpService.ts's own comment:
+      # guessing is worse than refusing) -- register.spec.ts/login.spec.ts/
+      # protected-redirect.spec.ts never reach their page.route() mocks
+      # without it, and fail at "phone number never appears after Send code"
+      # instead of a clear "not configured" message. The value is never
+      # actually dialed: every request to it is intercepted by page.route()
+      # in tests/utils/otp.ts, so it only needs to be well-formed, not real.
+      NEXT_PUBLIC_IDENTITY_BASE_URL: http://localhost:19999
     steps:
       - uses: actions/checkout@v4
 
@@ -118,8 +128,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # playwright.config.ts's webServer boots its own `npm run dev` instance
-      # (port 3001) and tests/utils/auth.ts mocks the backend API via
-      # page.route -- no separately-running backend or secrets are needed.
+      # (port 3001) and tests/utils/{auth,otp}.ts mock the backend/Identity
+      # APIs via page.route -- no separately-running backend, Identity
+      # instance, or real secrets are needed (see this job's `env:` above for
+      # why NEXT_PUBLIC_IDENTITY_BASE_URL still has to be set to something).
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 

@@ -14,6 +14,7 @@ import {REQUEST_STATE} from "@/services/HttpService";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {useUserStore} from "@/store/useUserStore";
+import {resolveApiErrorMessage} from "@/utils/errorMessage";
 
 
 interface PostFormProps {
@@ -157,8 +158,14 @@ export const PostForm: React.FC<PostFormProps> = ({
                     : await createPost(payload);
 
                 if (response.state === REQUEST_STATE.FAILED) {
-                    const key = postId ? `editJob.${response.err.name}` : `createJob.${response.err.name}`;
-                    const messageError = t(key) ?? t("global.serverError");
+                    // t()'s own `?? t(...)` fallback above never actually
+                    // fired -- i18next returns the key itself for a miss, not
+                    // undefined, so an unmapped code showed raw text like
+                    // "createJob.someCode". defaultValue is the real check.
+                    const namespace = postId ? "editJob" : "createJob";
+                    const code = response.err?.name;
+                    const specific = code ? t(`${namespace}.${code}`, {defaultValue: ""}) : "";
+                    const messageError = specific || resolveApiErrorMessage(response.err, t, {fallback: t("global.serverError")});
                     errorMessage(null, null, messageError);
                     return;
                 }
