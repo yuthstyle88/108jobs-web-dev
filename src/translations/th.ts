@@ -423,6 +423,8 @@ export const th = {
             btnVerifyOTP: "ตรวจสอบรหัส",
             placeholderOTP: "กรอกรหัส",
             invalidOTP: "กรอกรหัสไม่ถูกต้อง",
+            otpExpired: "รหัสนี้หมดอายุแล้ว กรุณาขอรหัสใหม่",
+            changePhoneNumber: "เปลี่ยนเบอร์โทรศัพท์",
             linkCreateAccount: "สร้างบัญชี",
             linkForgotPassword: "ลืมรหัสผ่าน?",
             messageEnterCode:
