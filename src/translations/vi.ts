@@ -429,6 +429,7 @@ export const vi = {
             invalidOTP: "Mã OTP không hợp lệ",
             otpExpired: "Mã này đã hết hạn. Vui lòng yêu cầu mã mới.",
             changePhoneNumber: "Đổi số điện thoại",
+            signInWithPasskey: "Đăng nhập bằng passkey",
             linkCreateAccount: "Tạo tài khoản",
             linkForgotPassword: "Quên mật khẩu?",
             messageEnterCode:
@@ -859,6 +860,7 @@ export const vi = {
         },
         error: {
             title: "Xin lỗi, Đã xảy ra lỗi",
+            notAvailableYet: "Tính năng này chưa được bật. Vui lòng thử lại khi đã sẵn sàng.",
             emailExist: "Email này đã được sử dụng, vui lòng chọn email khác",
             emailVerified: "Email đã được xác minh",
             emailRequired: "Email là bắt buộc",

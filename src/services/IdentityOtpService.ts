@@ -61,7 +61,7 @@ async function postIdentity<T>(path: string, body: unknown): Promise<Settled<T>>
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-            return {state: REQUEST_STATE.FAILED, err: json as ApiError};
+            return {state: REQUEST_STATE.FAILED, err: {...(json as ApiError), status: res.status}};
         }
         return {state: REQUEST_STATE.SUCCESS, data: json as T};
     } catch (e) {

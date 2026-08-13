@@ -6,66 +6,112 @@ import React, {useCallback, useEffect, useState} from "react";
 import {useForm} from "react-hook-form";
 import * as z from "zod";
 import {useTranslation} from "react-i18next";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import {UserService} from "@/services";
 import {jwtDecode} from "jwt-decode";
 import {isAdminClaims, Claims} from "@/services/UserService";
 import {ApiError, REQUEST_STATE} from "@/services/HttpService";
 import {normalizeThaiPhone, OtpChallenge, requestOtp, verifyOtp} from "@/services/IdentityOtpService";
+import {
+    enrollPasskey,
+    isPasskeySupported,
+    loginWithPasskey,
+    rememberedPasskeyIdentifier,
+} from "@/services/IdentityPasskeyService";
+import {resolveApiErrorMessage} from "@/utils/errorMessage";
 
-interface RegisterFormProps {
-    setApiError?: (err: string) => void;
+// Sign in or create an account: a phone number, or nothing else -- mirrors
+// 108jobs-flutter's PhoneOtpAuthFlow, which the same widget backs for both
+// its login and register pages. Login and register are functionally the
+// same operation now (phone + OTP, registerIfAbsent always true on the
+// server) so there is nothing left for two separate components to do
+// differently beyond which page they link back to.
+interface PhoneOtpAuthFormProps {
+    mode: "login" | "register";
 }
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
 type Step = "phone" | "code";
 
-// Identity-Platform's stable error codes (see error_response() in
-// Identity-Platform-dev) mapped onto the copy this form already has.
-function errorMessage(t: (key: string) => string, err?: ApiError): string {
-    switch (err?.error) {
-        case "invalid_code":
-            return t("authen.invalidOTP");
-        case "challenge_expired":
-        case "invalid_challenge_state":
-        case "challenge_not_found":
-            return t("authen.otpExpired");
-        case "rate_limited":
-        case "too_many_attempts":
-            return t("authen.resendLimitReached");
-        default:
-            return t("authen.apiErrorState");
-    }
+// Codes this flow has specific, better-than-generic copy for; anything else
+// falls through to resolveApiErrorMessage()'s server-message/code-suffix
+// fallback instead of a flat "something went wrong" for every unmapped case.
+function errorMessage(t: (key: string, options?: Record<string, unknown>) => string, err?: ApiError): string {
+    return resolveApiErrorMessage(err, t, {
+        knownCodes: {
+            invalid_code: t("authen.invalidOTP"),
+            challenge_expired: t("authen.otpExpired"),
+            invalid_challenge_state: t("authen.otpExpired"),
+            challenge_not_found: t("authen.otpExpired"),
+            rate_limited: t("authen.resendLimitReached"),
+            too_many_attempts: t("authen.resendLimitReached"),
+        },
+        fallback: t("authen.apiErrorState"),
+    });
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({
-                                                                setApiError,
-                                                            }) => {
+export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/";
     const {t} = useTranslation();
 
     const [step, setStep] = useState<Step>("phone");
-    const [apiErrorState, setApiErrorState] = useState<string | null>(null);
+    const [apiError, setApiError] = useState<string | null>(null);
     const [phone, setPhone] = useState("");
     const [challenge, setChallenge] = useState<OtpChallenge | null>(null);
     const [cooldown, setCooldown] = useState(0);
-
-    // register/page.tsx threads a setApiError prop through but never renders
-    // the state it sets -- always keep our own copy so this form's error
-    // banner works regardless of what (if anything) the parent does with it.
-    const handleApiError = useCallback((err: string) => {
-            setApiErrorState(err);
-            setApiError?.(err);
-        },
-        [setApiError]);
+    const [passkeyIdentifier, setPasskeyIdentifier] = useState<string | null>(null);
+    const [passkeyBusy, setPasskeyBusy] = useState(false);
 
     useEffect(() => {
         if (cooldown <= 0) return;
         const timer = setInterval(() => setCooldown((s) => Math.max(0, s - 1)), 1000);
         return () => clearInterval(timer);
     }, [cooldown]);
+
+    const completeSignIn = useCallback(async (accessToken: string, refreshToken?: string) => {
+            await UserService.Instance.login(accessToken, refreshToken);
+            const claims = jwtDecode<Claims>(accessToken);
+            if (isAdminClaims(claims)) {
+                window.location.href = "/admin/dashboard";
+                return;
+            }
+            window.location.href = redirectUrl;
+        },
+        [redirectUrl]);
+
+    const attemptPasskeyLogin = useCallback(async (identifier: string, silent: boolean) => {
+            setPasskeyBusy(true);
+            if (!silent) setApiError(null);
+            const res = await loginWithPasskey(identifier);
+            setPasskeyBusy(false);
+            if (res.state === REQUEST_STATE.FAILED) {
+                // A silent, page-load auto-attempt failing (no matching credential on
+                // this device/browser profile, user dismissed the OS prompt, etc.) is
+                // routine, not something to alarm someone who hasn't touched anything
+                // yet -- only an explicit button press surfaces an error.
+                if (!silent) setApiError(errorMessage(t, res.err));
+                return;
+            }
+            await completeSignIn(res.data.accessToken, res.data.refreshToken);
+        },
+        [completeSignIn, t]);
+
+    // Mirrors 108jobs-flutter's PhoneOtpAuthFlow(autoPasskey: ...): login
+    // auto-attempts a passkey sign-in for whichever identifier this browser
+    // last enrolled one for; register never does (unsolicited biometric
+    // prompt on a screen nobody has claimed an account on yet).
+    useEffect(() => {
+        if (!isPasskeySupported()) return;
+        const identifier = rememberedPasskeyIdentifier();
+        setPasskeyIdentifier(identifier);
+        if (mode === "login" && identifier) {
+            void attemptPasskeyLogin(identifier, true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mode]);
 
     const phoneSchema = z.object({
         phone: z.string().min(9, t("authen.errorPhoneLength")),
@@ -89,10 +135,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                 phoneForm.setError("phone", {message: t("authen.errorPhoneLength")});
                 return;
             }
-            handleApiError("");
+            setApiError(null);
             const res = await requestOtp(normalized);
             if (res.state === REQUEST_STATE.FAILED) {
-                handleApiError(errorMessage(t, res.err));
+                setApiError(errorMessage(t, res.err));
                 return;
             }
             setPhone(normalized);
@@ -100,7 +146,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             setCooldown(RESEND_COOLDOWN_SECONDS);
             setStep("code");
         },
-        [handleApiError, phoneForm, t]);
+        [phoneForm, t]);
 
     const onSubmitPhone = phoneForm.handleSubmit((data) => sendCode(data.phone));
 
@@ -111,7 +157,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         [cooldown, phone, sendCode]);
 
     const onChangeNumber = () => {
-        handleApiError("");
+        setApiError(null);
         codeForm.reset();
         setChallenge(null);
         setStep("phone");
@@ -119,20 +165,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
     const onSubmitCode = codeForm.handleSubmit(async (data) => {
         if (!challenge) return;
-        handleApiError("");
+        setApiError(null);
         const res = await verifyOtp(challenge.challengeId, data.code);
         if (res.state === REQUEST_STATE.FAILED) {
-            handleApiError(errorMessage(t, res.err));
+            setApiError(errorMessage(t, res.err));
             return;
         }
         const {login} = res.data;
-        await UserService.Instance.login(login.accessToken, login.refreshToken);
-        const claims = jwtDecode<Claims>(login.accessToken);
-        if (isAdminClaims(claims)) {
-            window.location.href = "/admin/dashboard";
-            return;
+        // Offered, not required: awaited so the OS prompt gets a chance to
+        // show and resolve before the redirect below tears down the page
+        // (a hard navigation kills any WebAuthn ceremony still in flight).
+        // Skipped when this device already has a passkey for this identifier.
+        if (rememberedPasskeyIdentifier() !== phone) {
+            await enrollPasskey(login.identityId, login.accessToken, phone);
         }
-        window.location.href = redirectUrl;
+        await completeSignIn(login.accessToken, login.refreshToken);
     });
 
     const phoneErrors = phoneForm.formState.errors;
@@ -141,10 +188,21 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     if (step === "phone") {
         return (
             <form onSubmit={onSubmitPhone} className="space-y-5" noValidate>
-                {apiErrorState && (
+                {apiError && (
                     <p className="text-red-500 text-sm text-center mb-4">
-                        {apiErrorState}
+                        {apiError}
                     </p>
+                )}
+
+                {passkeyIdentifier && (
+                    <button
+                        type="button"
+                        onClick={() => attemptPasskeyLogin(passkeyIdentifier, false)}
+                        disabled={passkeyBusy}
+                        className="cursor-pointer w-full py-3 rounded-md border border-blue-600 text-blue-600 font-semibold hover:bg-blue-50 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {passkeyBusy ? <LoadingCircle/> : t("authen.signInWithPasskey")}
+                    </button>
                 )}
 
                 <CustomInput
@@ -165,6 +223,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                     >
                         {phoneForm.formState.isSubmitting ? <LoadingCircle/> : t("authen.sendCodeButton")}
                     </button>
+
+                    {mode === "login" && (
+                        <div className="text-sm text-primary mt-4">
+                            <button type="button" onClick={() => router.push("/register")} className="hover:underline">
+                                {t("authen.linkCreateAccount")}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </form>
         );
@@ -172,9 +238,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
     return (
         <form onSubmit={onSubmitCode} className="space-y-5" noValidate>
-            {apiErrorState && (
+            {apiError && (
                 <p className="text-red-500 text-sm text-center mb-4">
-                    {apiErrorState}
+                    {apiError}
                 </p>
             )}
 
