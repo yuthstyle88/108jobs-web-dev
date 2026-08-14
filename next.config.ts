@@ -191,6 +191,15 @@ const nextConfig: NextConfig = {
                 source: '/(.*)',
                 headers: [
                     { key: 'Content-Security-Policy', value: csp },
+                    // Belt-and-suspenders for the same dev-mode staleness this file
+                    // already documents above: page/RSC responses aren't
+                    // content-hashed the way /_next/static/* is, so there's no URL
+                    // change to force a re-fetch after a rebuild. Production relies
+                    // on Next's own (short) default page caching instead -- this is
+                    // dev-only so it never affects real cache behavior.
+                    ...(process.env.NODE_ENV === 'production' ? [] : [
+                        { key: 'Cache-Control', value: 'no-store' },
+                    ]),
                 ],
             },
         ];
