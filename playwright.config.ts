@@ -24,11 +24,23 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  // A PRODUCTION build, never `next dev`. Under dev the destination of a
+  // post-login redirect is compiled on demand, and that compile ran past the
+  // specs' 15s waitForURL budget on CI -- so the three "lands authenticated"
+  // specs failed while the app was working correctly (the failure snapshot
+  // showed the redirect already done and the Next overlay still "Compiling").
+  // It presented as flakiness: identical code went 10/10 green on #13's PR run
+  // and red on the push run 90 seconds later. Against a build, the same 12
+  // specs pass in ~1.2 min with no retries.
+  //
+  // `npm run build` needs API_INTERNAL_URL (next.config.ts fails closed rather
+  // than defaulting to the staging backend) and inlines every NEXT_PUBLIC_* at
+  // build time, so both live in the workflow job's `env:`, not just the run step.
   webServer: {
-    command: `PORT=${port} __NEXT_EXPERIMENTAL_MCP_SERVER=true npm run dev`,
+    command: `npm run build && PORT=${port} npm run start`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 600_000,
   },
   projects: [
     {
