@@ -50,8 +50,8 @@ export default function AdminCategoriesPage() {
 
     const {data: categories, isLoading, execute: refetch} = useHttpGet("listCategories");
 
-    const {execute: createCategory} = useHttpPost(""); // TODO(): implement later
-    const {execute: deleteCategory} = useHttpDelete("");  // TODO(): implement later
+    const {execute: createCategory} = useHttpPost("createCategory");
+    const {execute: deleteCategory} = useHttpDelete("deleteCategory");
 
     const {execute: uploadIcon} = useHttpPost("uploadCategoryIcon");
     const {execute: uploadBanner} = useHttpPost("uploadCategoryBanner");
@@ -133,11 +133,16 @@ export default function AdminCategoriesPage() {
 
         // --- NEW CATEGORY ---
         if (isAddingNew) {
+            // CreateCategory has no parent-relationship field (hierarchy is
+            // derived server-side from `path`) and requires `title`, which
+            // this form doesn't collect separately from `name` -- mirror it
+            // until subcategory creation gets a real form/product design.
             await createCategory({
-                ...form,
+                name: form.name,
+                title: form.name,
+                description: form.description,
                 icon: iconUrl,
                 banner: bannerUrl,
-                parent_id: parentIdForNew
             });
 
             toast.success("Category created!");
@@ -248,7 +253,7 @@ export default function AdminCategoriesPage() {
                                             node={root}
                                             depth={0}
                                             onEdit={openEditModal}
-                                            onDelete={(id) => deleteCategory(`/admin/categories/${id}`)}
+                                            onDelete={(id) => deleteCategory({categoryId: id})}
                                             onAddChild={openAddModal}
                                             onImageClick={openImageLightbox}
                                         />
