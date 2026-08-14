@@ -70,7 +70,9 @@ const TERMINAL_CLOSE_CODES = new Set([1000, 1008]);
  * Events the transport handles itself and must not forward to the app:
  * `join`/`leave` are our own outbound lifecycle frames, and `heartbeat` is a
  * keepalive with nothing in it. `reply` IS forwarded despite being protocol
- * plumbing, because waitForAck() in socketSend.ts reads it directly.
+ * plumbing, because chatSocketUtils' payload normalizer reads it directly
+ * (a specific push's own reply is separately settled inside `onmessage`
+ * above via the pending-ref map, independent of this forwarding).
  */
 const isInternalEvent = (ev?: string): boolean =>
   !!ev && (ev === WS_EVENT.Heartbeat || ev === WS_EVENT.Join || ev === WS_EVENT.Leave);

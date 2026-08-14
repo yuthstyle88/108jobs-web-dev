@@ -5,13 +5,8 @@ import {dbg} from "@/modules/chat/utils";
 import {MessagePayload, ChatWireEvent, ChatPacket, SendMessageDeps} from "@/modules/chat/types";
 import {WS_EVENT} from "@/modules/chat/protocol/wireEvents";
 import {createMessage} from "@/modules/chat/domain/entities/message";
-import {waitForAck, wsSend} from "@/modules/chat/utils/socketSend";
+import {wsSend} from "@/modules/chat/utils/socketSend";
 import {useChatStore} from "@/modules/chat/store/chatStore";
-
-// ---- Ack / Retry tuning (keep minimal & explicit)
-const ACK_TIMEOUT_MS = Number(process.env.CHAT_ACK_TIMEOUT ?? 8000);
-// Allow extending ACK wait more than once. Default 3x (24s total when timeout=8s)
-const ACK_EXTENDS = Number(process.env.CHAT_ACK_EXTENDS ?? 3);
 
 // ---- Packet helpers ----
 export function createEvent<T>(event: ChatWireEvent, payload?: T): ChatPacket<T> & {
@@ -73,61 +68,26 @@ export function sendDeliveryAck(deps: SendEventDeps, messageId: string) {
 }
 
 // ---- Core send/ack ----
+// sender.sendMessage() (ChatSenderAdapter, bound to the real channel) waits
+// for the server's own reply frame before resolving -- a truthy result here
+// already IS server confirmation, not just a wire write. No separate
+// wait-for-ack loop is needed on top of it.
 async function doSend(deps: SendMessageDeps, msg: ChatMessage): Promise<{ id: string; sent: boolean }> {
     const id = (msg as any).id; // keep the original id type (number/string) to match store keys
     const s = (deps as any).sender;
-    const a = (deps as any).adapter;
-    const isChannelClosed = () => {
-        try {
-            return a && (a.closed === true || a.isClosed?.() === true || a.isOpen?.() === false);
-        } catch {
-            return false;
-        }
-    };
     if (!s) return {id, sent: false};
     dbg('doSend:start', {id, roomId: (deps as any)?.roomId});
     try {
         const result = await s.sendMessage(WS_EVENT.Message, msg);
         if (!result) return (dbg('doSend:sendMessage failed', {id}), {id, sent: false});
 
-        // Transport send initiated successfully → mark as 'sending'
         try {
             useChatStore.getState()?.commitStatus?.(msg.roomId, id, 'sending' as any);
         } catch {
         }
 
-        // If sendMessage returned a string, it's the serverId (or confirmation)
-        if (typeof result === 'string') {
-            dbg('doSend:sendMessage returned serverId', {id, result});
-            return {id: result, sent: true};
-        }
-
-        // Otherwise wait for ACK
-        let totalWait = 0;
-        let acked = false;
-        let markedRetrying = false;
-        while (totalWait < ACK_TIMEOUT_MS * ACK_EXTENDS && !acked) {
-            if (isChannelClosed()) {
-                dbg('doSend:channel-closed-before-ack', {id, totalWait});
-                break;
-            }
-            acked = await waitForAck(deps, msg.id, ACK_TIMEOUT_MS).catch((e) => (dbg('doSend:waitForAck error', e), false));
-            if (!acked) {
-                totalWait += ACK_TIMEOUT_MS;
-                dbg('doSend:auto-extend-wait', {id, totalWait});
-                if (!markedRetrying) {
-                    try {
-                        useChatStore.getState()?.commitStatus?.(msg.roomId, id, 'retrying' as any);
-                    } catch {
-                    }
-                    markedRetrying = true;
-                }
-            }
-        }
-        return acked ? (dbg('doSend:ack ok', {id}), {id, sent: true}) : (dbg('doSend:ack timeout', {id}), {
-            id,
-            sent: false
-        });
+        dbg('doSend:sendMessage returned serverId', {id, result});
+        return {id: result, sent: true};
     } catch (err: any) {
         const reason = err?.message || err?.reason || String(err);
         dbg('doSend:error', {id, reason});
