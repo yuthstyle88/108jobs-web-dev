@@ -144,7 +144,10 @@ export async function sendChatMessage(deps: SendMessageDeps, data: MessagePayloa
         const rid = (res as any)?.id ?? pid;         // if server returns new id only on success
         // update status without changing identity type
         if (res?.sent) {
-            store?.commitStatus?.(pid, rid, 'delivered');
+            // commitStatus is (roomId, id, status) -- match on the message's
+            // own client id (pid), the same key it was added to the store
+            // under; `rid` (the resolved server id) isn't a store key.
+            store?.commitStatus?.(deps.roomId, pid, 'delivered');
             if (msgId != null) try {
                 sentSet?.add?.(msgId);
             } catch {
