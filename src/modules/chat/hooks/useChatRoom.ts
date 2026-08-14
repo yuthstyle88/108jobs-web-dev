@@ -32,7 +32,15 @@ function dispatchDomEvent(name: string, detail: any) {
     }
 }
 
-const TYPING_DECAY_MS = 200; // faster hint-off (was 2000)
+// Must comfortably outlast ChatInput's own resend cadence for a continuous
+// typing burst (TYPING_TRUE_THROTTLE_MS, 5000ms) -- a shorter value here
+// makes the indicator decay between resends and flicker off almost as soon
+// as it appears, even while the other person is still actively typing.
+// The "stopped typing" case doesn't depend on this: ChatInput and
+// useTypingIndicator's own idle timers (1500-2000ms) already send an
+// explicit typing:false as soon as the user actually pauses -- this decay
+// is only the fallback for a dropped/missed false event.
+const TYPING_DECAY_MS = 6000;
 const PEER_ACTIVE_DECAY_MS = 20000;
 const PEER_ACTIVE_BUMP_MIN_MS = 1000; // throttle markPeerActive to avoid runaway timer churn
 

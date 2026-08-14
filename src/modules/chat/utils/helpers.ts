@@ -11,16 +11,22 @@ import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
 
-// Type guard: narrow a NormalizedEnvelope to the typing envelope (explicit interface)
+// Type guard: narrow a NormalizedEnvelope to any of the typing envelope
+// variants -- normalizeChatEnvelope() (chatSocketUtils.ts) treats "typing",
+// "typingStart" and "typingStop" all as typing envelopes, so this must too
+// or a backend that emits the start/stop pair instead of a single "typing"
+// event with a boolean would silently be dropped here.
 export type TypingEnv = {
-    event: typeof WS_EVENT.Typing;
+    event: typeof WS_EVENT.Typing | typeof WS_EVENT.TypingStart | typeof WS_EVENT.TypingStop;
     roomId: string;
-    typing: boolean;
+    typing?: boolean;
     sender?: ChatMessageView['sender'];
 };
 
+const TYPING_EVENTS: string[] = [WS_EVENT.Typing, WS_EVENT.TypingStart, WS_EVENT.TypingStop];
+
 function isTypingEnvelope(env: NormalizedEnvelope): env is TypingEnv {
-    return !!env && (env as any).event === WS_EVENT.Typing && typeof (env as any).roomId === 'string';
+    return !!env && TYPING_EVENTS.includes((env as any).event) && typeof (env as any).roomId === 'string';
 }
 
 export function parseTypingDetail(env: NormalizedEnvelope, _fallbackRoomId: string, localUserId: number): {
@@ -36,7 +42,14 @@ export function parseTypingDetail(env: NormalizedEnvelope, _fallbackRoomId: stri
         const senderId = Number(env.sender?.id ?? 0);
         if (!senderId || senderId === Number(localUserId)) return null; // ignore self
 
-        const typing = Boolean(env.typing);
+        // "typingStart"/"typingStop" carry no explicit `typing` field -- the
+        // event name itself is the signal. Only "typing" needs the payload's
+        // boolean read.
+        const typing = env.event === WS_EVENT.TypingStart
+            ? true
+            : env.event === WS_EVENT.TypingStop
+                ? false
+                : Boolean(env.typing);
 
         return {roomId, senderId, typing};
     } catch {
