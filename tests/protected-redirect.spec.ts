@@ -49,6 +49,7 @@ test('signing in from a protected-route bounce returns to the original page, not
   await page.getByPlaceholder(/otp/i).fill('123456');
   await page.getByRole('button', { name: /verify otp/i }).click();
 
-  await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
+  // 'commit' rather than the default 'load' -- see the note in login.spec.ts.
+  await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000, waitUntil: 'commit' });
   expect(new URL(page.url()).pathname).toBe('/en/account-setting/bank-account');
 });
