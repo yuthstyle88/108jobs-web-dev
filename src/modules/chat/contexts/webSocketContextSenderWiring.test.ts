@@ -113,7 +113,6 @@ describe("WebSocketContext sender wiring", () => {
               senderId: SENDER_ID,
               autoConnect: true,
               autoJoin: false,
-              autoReconnect: false,
               reconnectOnVisible: false,
               disableInactivityTimeout: true,
             },
