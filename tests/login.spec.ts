@@ -33,13 +33,7 @@ test.describe('Login (phone + OTP, mocked)', () => {
     await page.getByPlaceholder(/otp/i).fill('123456');
     await page.getByRole('button', { name: /verify otp/i }).click();
 
-    // `waitUntil: 'commit'` on purpose: the assertion is "we left /login", and the
-    // default 'load' also waits for the DESTINATION to finish rendering. Under
-    // `next dev` (see playwright.config.ts's webServer) that means waiting on
-    // on-demand compilation plus an SSR data fetch against a backend these specs
-    // deliberately do not run -- which blew the 15s budget while the snapshot
-    // showed the redirect had already happened and the target was mid-"Compiling".
-    await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000, waitUntil: 'commit' });
+    await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 
   test('shows an inline error and stays on the code step for a wrong code', async ({ page }) => {
