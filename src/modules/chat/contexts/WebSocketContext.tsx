@@ -60,7 +60,10 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{ options?: Use
     };
 
     // Message sender (single source of truth for sending + optimistic emit + ack handling)
-    const sender = adapter ? new ChatSenderAdapter(adapter) : null;
+    // Bind to `channel` (has real .push(), ChatSenderAdapter's ack-capturing
+    // branch) rather than `adapter` (fire-and-forget .emit()/.send(), no ack)
+    // -- falling back to `adapter` only if a channel somehow isn't available.
+    const sender = channel ? new ChatSenderAdapter(channel) : (adapter ? new ChatSenderAdapter(adapter) : null);
     // Return the original ws enriched with normalized fields.
     // Cast to any to avoid narrowing issues if WebSocketAPI doesn’t yet declare these fields.
     return {
