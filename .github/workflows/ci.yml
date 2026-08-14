@@ -149,6 +149,16 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: [self-hosted, Linux, X64]
+    # getIdentityBase() refuses to guess: with NEXT_PUBLIC_IDENTITY_BASE_URL
+    # unset it returns "", and IdentityOtpService gives back
+    # `identityNotConfigured` WITHOUT making a request -- so the page.route()
+    # mocks in tests/utils/otp.ts never fire and register.spec.ts /
+    # login.spec.ts / protected-redirect.spec.ts all fail at "the phone number
+    # never appears after Send code" rather than at anything they are testing.
+    # The value below is never actually dialed (every call to it is
+    # intercepted), so it only has to be well-formed.
+    env:
+      NEXT_PUBLIC_IDENTITY_BASE_URL: http://localhost:19999
     steps:
       - uses: actions/checkout@v4
 
