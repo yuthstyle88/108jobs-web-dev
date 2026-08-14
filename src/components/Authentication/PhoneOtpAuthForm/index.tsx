@@ -241,6 +241,9 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
                         <span className="text-xs text-gray-400">{t("authen.labelOr")}</span>
                         <div className="flex-1 border-t border-gray-200"/>
                     </div>
+                    {/* Not a page -- a Route Handler that redirects to Identity-Platform then on to
+                        Google, so this needs a real top-level navigation, not next/link's client-side one. */}
+                    {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                     <a
                         href="/api/auth/google/start"
                         className="block cursor-pointer w-full py-3 rounded-md border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition duration-300"
