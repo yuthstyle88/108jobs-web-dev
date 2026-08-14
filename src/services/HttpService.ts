@@ -31,6 +31,8 @@ export type ApiError = {
     name?: string;
     /** Optional human-readable message */
     message?: string;
+    /** HTTP status, when the caller captured one -- lets resolveApiErrorMessage() special-case e.g. 501. */
+    status?: number;
 };
 
 /* ---------- concrete states --------------------------------- */

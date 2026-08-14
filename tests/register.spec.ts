@@ -16,30 +16,30 @@ test.afterEach(async () => {
   con = null;
 });
 
-// Login is now the same phone+OTP flow as register (PhoneOtpAuthForm,
-// mode="login") -- mirrors 108jobs-flutter, which dropped password auth
-// entirely. See register.spec.ts for the shared mock helper.
-test.describe('Login (phone + OTP, mocked)', () => {
+test.describe('Register (phone + OTP, mocked)', () => {
   test('requests a code, then verifies it and lands authenticated', async ({ page }) => {
     await enableMockOtp(page);
 
-    await page.goto(`/${LOCALE}/login`);
+    await page.goto(`/${LOCALE}/register`);
 
-    await page.getByPlaceholder(/phone/i).fill('0812345678');
+    const phoneInput = page.getByPlaceholder(/phone/i);
+    await phoneInput.fill('0812345678');
     await page.getByRole('button', { name: /send verification code/i }).click();
 
+    // Normalized to E.164 and shown back on the code step.
     await expect(page.getByText('+66812345678')).toBeVisible();
 
-    await page.getByPlaceholder(/otp/i).fill('123456');
+    const codeInput = page.getByPlaceholder(/otp/i);
+    await codeInput.fill('123456');
     await page.getByRole('button', { name: /verify otp/i }).click();
 
-    await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
+    await page.waitForURL((url) => !/\/register(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 
   test('shows an inline error and stays on the code step for a wrong code', async ({ page }) => {
     await enableMockOtp(page, { verifyStatus: 401, verifyBody: { error: 'invalid_code' } });
 
-    await page.goto(`/${LOCALE}/login`);
+    await page.goto(`/${LOCALE}/register`);
 
     await page.getByPlaceholder(/phone/i).fill('0812345678');
     await page.getByRole('button', { name: /send verification code/i }).click();
@@ -50,16 +50,24 @@ test.describe('Login (phone + OTP, mocked)', () => {
     await page.getByRole('button', { name: /verify otp/i }).click();
 
     await expect(page.getByText(/invalid otp/i)).toBeVisible();
+    // Still on the code step, not bounced back to phone entry or elsewhere.
     await expect(codeInput).toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/login`));
+    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/register`));
   });
 
-  test('links to register, and there is no password field anywhere on the page', async ({ page }) => {
-    await page.goto(`/${LOCALE}/login`);
+  test('rejects an unparseable phone number without calling the network', async ({ page }) => {
+    let requestCalled = false;
+    await page.route('**/auth/otp/request', async (route) => {
+      requestCalled = true;
+      await route.abort();
+    });
 
-    await expect(page.locator('input[type="password"]')).toHaveCount(0);
+    await page.goto(`/${LOCALE}/register`);
 
-    await page.getByRole('button', { name: /create an account/i }).click();
-    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/register`));
+    await page.getByPlaceholder(/phone/i).fill('123456789');
+    await page.getByRole('button', { name: /send verification code/i }).click();
+
+    await expect(page.getByText(/phone number must be at least 10 digits/i)).toBeVisible();
+    expect(requestCalled).toBe(false);
   });
 });

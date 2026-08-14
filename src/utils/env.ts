@@ -77,6 +77,15 @@ export function getApiHost(): string {
 }
 
 /**
+ * Identity-Platform origin. Called directly from the browser (phone/OTP
+ * register + sign-in) — not proxied through API_INTERNAL_URL, so there is no
+ * server/browser split here the way getApiBase() has one.
+ */
+export function getIdentityBase(): string {
+  return ensureAbsoluteUrl(process.env.NEXT_PUBLIC_IDENTITY_BASE_URL);
+}
+
+/**
  * Returns the absolute static directory URL or path for serving static assets.
  */
 export function getStaticDir(): string {

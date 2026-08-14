@@ -427,6 +427,9 @@ export const en = {
             btnVerifyOTP: "Verify OTP",
             placeholderOTP: "Enter OTP",
             invalidOTP: "Invalid OTP",
+            otpExpired: "This code has expired. Request a new one.",
+            changePhoneNumber: "Change phone number",
+            signInWithPasskey: "Sign in with passkey",
             linkCreateAccount: "Create an account",
             linkForgotPassword: "Forgot your password?",
             messageEnterCode:
@@ -862,6 +865,7 @@ export const en = {
         },
         error: {
             title: "Sorry, Something went wrong",
+            notAvailableYet: "This isn't switched on yet. Please try again once it's available.",
             emailExist: "This email is already in use, please use another",
             emailVerified: "Email is already verified",
             emailRequired: "Email is required",

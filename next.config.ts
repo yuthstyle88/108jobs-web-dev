@@ -144,6 +144,16 @@ const nextConfig: NextConfig = {
         // socket with "violates ... connect-src" even though the API origin
         // itself is already allowed.
         const apiWsOrigin = apiOrigin.replace(/^http/, 'ws');
+        // Phone/OTP register+login (IdentityOtpService.ts) calls Identity-Platform
+        // directly from the browser -- same reason as apiOrigin above, different
+        // origin, no ws: equivalent needed since it's plain request/response.
+        const identityOrigin = (() => {
+            try {
+                return new URL(process.env.NEXT_PUBLIC_IDENTITY_BASE_URL ?? '').origin;
+            } catch {
+                return '';
+            }
+        })();
         // Next.js dev mode (Fast Refresh / React's dev-only debugging) uses
         // eval() to reconstruct call stacks -- blocked without 'unsafe-eval',
         // which breaks every page in dev (confirmed: React itself states it
@@ -157,7 +167,7 @@ const nextConfig: NextConfig = {
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https://cdn.108jobs.com",
             "font-src 'self' data:",
-            `connect-src ${["'self'", apiOrigin, apiWsOrigin].filter(Boolean).join(' ')}`,
+            `connect-src ${["'self'", apiOrigin, apiWsOrigin, identityOrigin].filter(Boolean).join(' ')}`,
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
@@ -181,6 +191,15 @@ const nextConfig: NextConfig = {
                 source: '/(.*)',
                 headers: [
                     { key: 'Content-Security-Policy', value: csp },
+                    // Belt-and-suspenders for the same dev-mode staleness this file
+                    // already documents above: page/RSC responses aren't
+                    // content-hashed the way /_next/static/* is, so there's no URL
+                    // change to force a re-fetch after a rebuild. Production relies
+                    // on Next's own (short) default page caching instead -- this is
+                    // dev-only so it never affects real cache behavior.
+                    ...(process.env.NODE_ENV === 'production' ? [] : [
+                        { key: 'Cache-Control', value: 'no-store' },
+                    ]),
                 ],
             },
         ];

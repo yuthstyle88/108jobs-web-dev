@@ -12,6 +12,7 @@ import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {useTranslation} from "react-i18next";
 import {isFailed, isSuccess} from "@/services/HttpService";
 import {useBankAccountsStore} from "@/store/useBankAccountStore";
+import {resolveApiErrorMessage} from "@/utils/errorMessage";
 
 const MAX_ACCOUNTS = 3;
 
@@ -106,7 +107,12 @@ const BankAccount = () => {
             setError(null);
         }
         if (isFailed(res)) {
-            setError(t(`sellerBankAccount.${res.err.name}`));
+            // t() returns the key itself on a miss, not undefined, so an
+            // unmapped code previously showed raw text like
+            // "sellerBankAccount.someCode". defaultValue is the real check.
+            const code = res.err?.name;
+            const specific = code ? t(`sellerBankAccount.${code}`, {defaultValue: ""}) : "";
+            setError(specific || resolveApiErrorMessage(res.err, t, {fallback: t("error.serverError")}));
         }
     };
 

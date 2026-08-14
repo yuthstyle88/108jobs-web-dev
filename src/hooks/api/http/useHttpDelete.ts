@@ -25,8 +25,10 @@ export const useHttpDelete = <K extends keyof WrappedApi108Jobs>(method: K) => {
       try {
         return await callHttp(method, ...arg) as RequestState<Payload<K>>;
       } catch (e) {
-        const errorMessage = e instanceof Error ? e.message : "Unknown error";
-        setError(errorMessage);
+        // setError() runs its argument through t() as an i18n key -- e.message
+        // is arbitrary caught-exception text, not a key; "error.serverError"
+        // is a real one.
+        setError("error.serverError");
         return {
           state: REQUEST_STATE.FAILED,
           err: e instanceof Error ? e : new Error("Unknown error"),

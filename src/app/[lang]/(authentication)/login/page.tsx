@@ -1,30 +1,13 @@
 "use client";
 import {AuthFormContainer} from "@/components/Authentication/AuthFormContainer";
-import {ForgotPasswordForm} from "@/components/Authentication/ForgotPasswordForm";
-import {LoginForm} from "@/components/Authentication/LoginForm";
-import VerificationForgotPassword from "@/components/Authentication/VerifyForgotPassword";
+import {PhoneOtpAuthForm} from "@/components/Authentication/PhoneOtpAuthForm";
 import {AuthenticateIcon} from "@/constants/icons";
 import {CategoriesImage} from "@/constants/images";
-import {RegisterDataProps} from "@/types/register-data";
 import Image from "next/image";
-import {useRouter, useSearchParams} from "next/navigation";
-import {useState} from "react";
 import {useTranslation} from "react-i18next";
-
-type ViewState = "login" | "forgot-password" | "verify-forgot-password";
 
 export default function LoginPage() {
   const {t} = useTranslation();
-
-  const params = useSearchParams();
-  const viewParam = params.get("view") as ViewState | null;
-
-  const [currentView, setCurrentView] = useState<ViewState>(() => viewParam ?? "login");
-  // We intentionally avoid updating state inside an effect here; the initial value is derived once from the URL.
-
-  const [forgotEmail, setForgotEmail] = useState<RegisterDataProps>();
-  // Load singUpData from sessionStorage if available, only on client
-  const route = useRouter();
 
   return (
     <div
@@ -111,35 +94,9 @@ export default function LoginPage() {
             src={CategoriesImage.logodefault}
             alt="logo"
           />
-          {currentView === "login" && (
-            <AuthFormContainer title={t("authen.titleLoginForm")}>
-              <LoginForm
-                switchToRegister={() => route.push("/register")}
-                switchToForgotPassword={() => setCurrentView("forgot-password")}
-              />
-            </AuthFormContainer>
-          )}
-          {currentView === "forgot-password" && (
-            <AuthFormContainer
-              title={t("authen.linkForgotPassword")}
-              onBack={() => setCurrentView("login")}
-            >
-              <ForgotPasswordForm
-                setForgotEmail={setForgotEmail}
-                switchToVerifyForgotPassword={() =>
-                  setCurrentView("verify-forgot-password")
-                }
-              />
-            </AuthFormContainer>
-          )}
-          {currentView === "verify-forgot-password" && (
-            <AuthFormContainer
-              title="Forgot password"
-              onBack={() => setCurrentView("forgot-password")}
-            >
-              <VerificationForgotPassword forgotEmail={forgotEmail}/>
-            </AuthFormContainer>
-          )}
+          <AuthFormContainer title={t("authen.titleLoginForm")}>
+            <PhoneOtpAuthForm mode="login"/>
+          </AuthFormContainer>
         </div>
       </div>
     </div>

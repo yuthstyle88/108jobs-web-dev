@@ -1,18 +1,16 @@
 "use client";
 import {AuthFormContainer} from "@/components/Authentication/AuthFormContainer";
 
-import {RegisterForm} from "@/components/Authentication/RegisterForm";
+import {PhoneOtpAuthForm} from "@/components/Authentication/PhoneOtpAuthForm";
 import {AuthenticateIcon} from "@/constants/icons";
 import {CategoriesImage} from "@/constants/images";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {useState} from "react";
 import {useTranslation} from "react-i18next";
 
 export default function RegisterPage() {
     const {t} = useTranslation();
     const route = useRouter();
-    const [apiError, setApiError] = useState<string | null>(null);
 
     return (
         <div
@@ -102,7 +100,7 @@ export default function RegisterPage() {
                         title={t("authen.titleCreateAccount")}
                         onBack={() => route.push("/login")}
                     >
-                        <RegisterForm setApiError={setApiError}/>
+                        <PhoneOtpAuthForm mode="register"/>
                     </AuthFormContainer>
                 </div>
             </div>

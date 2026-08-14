@@ -423,6 +423,9 @@ export const th = {
             btnVerifyOTP: "ตรวจสอบรหัส",
             placeholderOTP: "กรอกรหัส",
             invalidOTP: "กรอกรหัสไม่ถูกต้อง",
+            otpExpired: "รหัสนี้หมดอายุแล้ว กรุณาขอรหัสใหม่",
+            changePhoneNumber: "เปลี่ยนเบอร์โทรศัพท์",
+            signInWithPasskey: "เข้าสู่ระบบด้วยพาสคีย์",
             linkCreateAccount: "สร้างบัญชี",
             linkForgotPassword: "ลืมรหัสผ่าน?",
             messageEnterCode:
@@ -847,6 +850,7 @@ export const th = {
         },
         error: {
             title: "ขออภัย, เกิดข้อผิดพลาด",
+            notAvailableYet: "ฟีเจอร์นี้ยังไม่เปิดใช้งาน กรุณาลองใหม่อีกครั้งเมื่อพร้อมใช้งาน",
             emailExist: "อีเมลนี้ถูกใช้งานแล้ว, กรุณาใช้อีเมลอื่น",
             emailVerified: "อีเมลได้รับการยืนยันแล้ว",
             emailRequired: "ต้องระบุอีเมล",

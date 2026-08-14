@@ -13,7 +13,7 @@ function stripLocalePrefix(pathname: string) {
 // Disable protection: make all routes public except admin
 const PROTECTED_PATHS: string[] = ['/chat', '/profile', '/account-setting'];
 const ADMIN_PATHS: string[] = ['/admin'];
-const AUTH_PATHS = ['/login', '/register', '/password-management'];
+const AUTH_PATHS = ['/login', '/register'];
 
 export async function proxy(req: NextRequest) {
     const { pathname, search } = req.nextUrl;
@@ -69,7 +69,10 @@ export async function proxy(req: NextRequest) {
     // normal protected routes
     if (isProtected && !sid && !isOnLogin) {
         const login = new URL(`/${effectiveLng}/login`, req.url);
-        login.searchParams.set('next', pathname + search);
+        // PhoneOtpAuthForm reads `redirect`, not `next` -- this was previously
+        // a silent mismatch (bounced-here users always landed on "/" after
+        // signing in instead of back where they started).
+        login.searchParams.set('redirect', pathname + search);
         const resp = NextResponse.redirect(login);
         if (cookieLng !== cookieTargetLng) setLangCookie(resp, cookieTargetLng);
         return resp;

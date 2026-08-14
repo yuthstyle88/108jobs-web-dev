@@ -7,6 +7,7 @@ import { Person, PortfolioPic, SaveUserSettings, WorkSample } from '108jobs-clie
 import { useState } from 'react';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { resolveApiErrorMessage } from '@/utils/errorMessage';
 
 interface FormValues {
     displayName: string;
@@ -117,7 +118,9 @@ export const useProfileForm = (
             const response = await saveUserSettings(payload);
 
             if (response.state === REQUEST_STATE.FAILED) {
-                const messageError = t('error.title');
+                // Previously always showed the same generic title regardless
+                // of what the server actually said.
+                const messageError = resolveApiErrorMessage(response.err, t, {fallback: t('error.title')});
                 errorMessage(null, null, messageError);
                 setForm(previousForm);
                 return false;

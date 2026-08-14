@@ -2,7 +2,9 @@
 import React, {useEffect, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {Person} from "108jobs-client";
+import {NotebookPen} from "lucide-react";
 import EditButton from "@/components/Profile/EditButton";
+import EmptyState from "@/components/Profile/EmptyState";
 
 interface AboutCardProps {
     profile: Person;
@@ -27,19 +29,30 @@ const AboutCard: React.FC<AboutCardProps> = ({profile, isOwnProfile}) => {
                 <h3 className="text-primary font-semibold">{t("profile.bio")}</h3>
                 {isOwnProfile && <EditButton href="/account-setting/basic-information" label="Edit bio"/>}
             </div>
-            <p
-                ref={bioRef}
-                className={`text-gray-600 text-sm leading-relaxed ${showFullBio ? "" : "line-clamp-4"}`}
-            >
-                {profile?.bio || t("profile.noBio")}
-            </p>
-            {isClamped && !showFullBio && (
-                <button
-                    onClick={() => setShowFullBio(true)}
-                    className="mt-2 text-primary text-sm font-medium hover:underline"
-                >
-                    {t("profile.seeMore")}
-                </button>
+            {profile?.bio ? (
+                <>
+                    <p
+                        ref={bioRef}
+                        className={`text-gray-600 text-sm leading-relaxed ${showFullBio ? "" : "line-clamp-4"}`}
+                    >
+                        {profile.bio}
+                    </p>
+                    {isClamped && !showFullBio && (
+                        <button
+                            onClick={() => setShowFullBio(true)}
+                            className="mt-2 text-primary text-sm font-medium hover:underline"
+                        >
+                            {t("profile.seeMore")}
+                        </button>
+                    )}
+                </>
+            ) : (
+                <EmptyState
+                    icon={NotebookPen}
+                    message={t("profile.noBio")}
+                    addLabel={isOwnProfile ? "Add bio" : undefined}
+                    href={isOwnProfile ? "/account-setting/basic-information" : undefined}
+                />
             )}
         </div>
     );
