@@ -19,6 +19,8 @@ import {
     rememberedPasskeyIdentifier,
 } from "@/services/IdentityPasskeyService";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
+import {AuthenticateIcon} from "@/constants/icons";
+import Image from "next/image";
 
 // Sign in or create an account: a phone number, or nothing else -- mirrors
 // 108jobs-flutter's PhoneOtpAuthFlow, which the same widget backs for both
@@ -246,8 +248,9 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
                     {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                     <a
                         href="/api/auth/google/start"
-                        className="block cursor-pointer w-full py-3 rounded-md border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition duration-300"
+                        className="flex items-center justify-center gap-2 cursor-pointer w-full py-3 rounded-md border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition duration-300"
                     >
+                        <Image src={AuthenticateIcon.gg} alt="" className="h-[18px] w-[18px]"/>
                         {t("authen.buttonLoginGoogle")}
                     </a>
 
