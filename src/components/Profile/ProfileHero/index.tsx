@@ -38,13 +38,18 @@ const ProfileHero: React.FC<ProfileHeroProps> = ({profile, isOwnProfile, current
                 )}
             </div>
             <div className="px-6 pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-20 sm:-mt-24">
+                {/* relative is load-bearing, not decorative: the banner above is
+                    position:relative, and CSS always paints positioned elements
+                    above static ones regardless of DOM order -- without this the
+                    banner covers the top of the avatar despite the negative
+                    margin correctly overlapping it in the box model. */}
+                <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-20 sm:-mt-24">
                     <Image
                         src={profile.avatar || ProfileImage.avatar}
                         alt={profile.name}
                         width={160}
                         height={160}
-                        className="shrink-0 rounded-full w-32 h-32 sm:w-40 sm:h-40 object-cover ring-4 ring-white shadow-md bg-white mx-auto sm:mx-0"
+                        className="shrink-0 rounded-full w-32 h-32 sm:w-40 sm:h-40 object-cover ring-8 ring-white shadow-xl bg-white mx-auto sm:mx-0"
                     />
                     <div className="mt-4 sm:mt-0 sm:mb-2 flex justify-center sm:justify-end">
                         {isOwnProfile ? (
