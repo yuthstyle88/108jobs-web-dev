@@ -21,7 +21,8 @@ import ConfirmActionModal from '@/components/Common/Modal/ConfirmActionModal';
 import {useWorkflowStepper} from '@/hooks/utils/useWorkflowMachine';
 import FileUploadModal from '@/components/Common/Modal/FileUploadModal';
 import {UploadedFile} from '@/modules/chat/hooks/useFileUpload';
-import {WorkFlowAction, workflowActionsMap, WorkFlowStatus} from "@/modules/chat/types/workflow";
+import type {WorkflowStatus} from "108jobs-client";
+import {WorkFlowAction, workflowActionsMap} from "@/modules/chat/types/workflow";
 import WorkflowActionPanel from "@/components/WorkflowActionPanel"
 import {filterByRole} from "@/modules/chat/utils/workflow/helper";
 
@@ -29,7 +30,7 @@ import {filterByRole} from "@/modules/chat/utils/workflow/helper";
 // Types & Props
 // =============================================================================
 
-export type StatusKey = WorkFlowStatus;
+export type StatusKey = WorkflowStatus;
 
 /** UI-only status that can precede QuotationPending when no quotation exists yet */
 type ViewStatus = StatusKey | 'WaitForFreelancerQuotation';
