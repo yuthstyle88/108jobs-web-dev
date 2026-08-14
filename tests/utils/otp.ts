@@ -63,6 +63,20 @@ export async function enableMockOtp(page: Page, opts: MockOtpOptions = {}) {
     });
   });
 
+  // #13 put `await enrollPasskey(...)` on the path between a successful verify
+  // and the redirect, and nothing here covered it -- so the call went to the
+  // real NEXT_PUBLIC_IDENTITY_BASE_URL. On this Mac that is refused instantly
+  // and the flow continues; on the CI runner the connection HANGS, the submit
+  // button sits disabled behind `formState.isSubmitting`, and every spec that
+  // waits for the post-login redirect burns its 15s budget. The trace shows it
+  // plainly: otp/request 200, otp/verify 200, passkey/register/challenge -1.
+  //
+  // Failing it fast is the honest mock: enrolment is offered, not required, and
+  // enrollPasskey() already treats a non-success challenge as "no passkey today".
+  await page.route('**/auth/passkey/**', async (route) => {
+    await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' });
+  });
+
   await page.route('**/api/**', async (route) => {
     const req = route.request();
     const url = req.url();

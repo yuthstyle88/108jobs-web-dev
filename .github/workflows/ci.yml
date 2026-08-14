@@ -159,6 +159,12 @@ jobs:
     # intercepted), so it only has to be well-formed.
     env:
       NEXT_PUBLIC_IDENTITY_BASE_URL: http://localhost:19999
+      # The suite now builds before it runs (see playwright.config.ts), and
+      # next.config.ts refuses to build for production without this rather than
+      # silently rewriting to the staging backend. Nothing dials it: every
+      # browser-side call is intercepted by page.route, and the SSR fetches these
+      # specs trigger are already expected to fail.
+      API_INTERNAL_URL: http://localhost:19998
     steps:
       - uses: actions/checkout@v4
 
