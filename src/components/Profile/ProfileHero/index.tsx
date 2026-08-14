@@ -38,13 +38,13 @@ const ProfileHero: React.FC<ProfileHeroProps> = ({profile, isOwnProfile, current
                 )}
             </div>
             <div className="px-6 pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 sm:-mt-20">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-20 sm:-mt-24">
                     <Image
                         src={profile.avatar || ProfileImage.avatar}
                         alt={profile.name}
                         width={160}
                         height={160}
-                        className="rounded-full w-32 h-32 sm:w-40 sm:h-40 object-cover border-4 border-white shadow-md bg-white mx-auto sm:mx-0"
+                        className="shrink-0 rounded-full w-32 h-32 sm:w-40 sm:h-40 object-cover ring-4 ring-white shadow-md bg-white mx-auto sm:mx-0"
                     />
                     <div className="mt-4 sm:mt-0 sm:mb-2 flex justify-center sm:justify-end">
                         {isOwnProfile ? (

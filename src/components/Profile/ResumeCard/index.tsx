@@ -2,9 +2,10 @@
 import React from "react";
 import Link from "next/link";
 import {useTranslation} from "react-i18next";
-import {FileText} from "lucide-react";
+import {FileText, Upload} from "lucide-react";
 import {Person} from "108jobs-client";
 import EditButton from "@/components/Profile/EditButton";
+import EmptyState from "@/components/Profile/EmptyState";
 
 interface ResumeCardProps {
     profile: Person;
@@ -41,7 +42,12 @@ const ResumeCard: React.FC<ResumeCardProps> = ({profile, isOwnProfile}) => {
                     </div>
                 </Link>
             ) : (
-                <p className="text-gray-600 text-sm">{t("profile.noResume")}</p>
+                <EmptyState
+                    icon={Upload}
+                    message={t("profile.noResume")}
+                    addLabel={isOwnProfile ? "Add resume" : undefined}
+                    href={isOwnProfile ? "/account-setting/resume" : undefined}
+                />
             )}
         </div>
     );

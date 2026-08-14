@@ -2,7 +2,9 @@
 import React from "react";
 import {useTranslation} from "react-i18next";
 import {Person} from "108jobs-client";
+import {Phone} from "lucide-react";
 import EditButton from "@/components/Profile/EditButton";
+import EmptyState from "@/components/Profile/EmptyState";
 
 interface ContactCardProps {
     profile: Person;
@@ -18,20 +20,25 @@ const ContactCard: React.FC<ContactCardProps> = ({profile, isOwnProfile}) => {
                 <h3 className="text-primary font-semibold">{t("profileInfo.sectionContactInfo")}</h3>
                 {isOwnProfile && <EditButton href="/account-setting/basic-information" label="Edit contact info"/>}
             </div>
-            <div className="flex flex-wrap gap-2">
-                {profile?.contacts ? (
-                    profile.contacts.split(",").map((contact, index) => (
+            {profile?.contacts ? (
+                <div className="flex flex-wrap gap-2">
+                    {profile.contacts.split(",").map((contact, index) => (
                         <span
                             key={index}
                             className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
                         >
                             {contact.trim()}
                         </span>
-                    ))
-                ) : (
-                    <p className="text-gray-600 text-sm">{t("profile.noContacts")}</p>
-                )}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <EmptyState
+                    icon={Phone}
+                    message={t("profile.noContacts")}
+                    addLabel={isOwnProfile ? "Add contact info" : undefined}
+                    href={isOwnProfile ? "/account-setting/basic-information" : undefined}
+                />
+            )}
         </div>
     );
 };
