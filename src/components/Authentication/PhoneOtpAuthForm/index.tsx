@@ -201,7 +201,14 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
 
     if (step === "phone") {
         return (
-            <form onSubmit={onSubmitPhone} className="space-y-5" noValidate>
+            // Both steps render <form> -> CustomInput -> <input> in the same
+            // position, so without distinct keys React reconciles them into ONE
+            // reused <input> DOM node. react-hook-form registers uncontrolled
+            // (ref-based) inputs and never rewrites .value, so whatever the user
+            // typed on one step stays visible -- and gets SUBMITTED -- on the
+            // other: the phone number arrived pre-filled in the OTP box and was
+            // sent as the code, answering a blameless user with "Invalid OTP".
+            <form key="phone" onSubmit={onSubmitPhone} className="space-y-5" noValidate>
                 {apiError && (
                     <p className="text-red-500 text-sm text-center mb-4">
                         {apiError}
@@ -267,7 +274,8 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
     }
 
     return (
-        <form onSubmit={onSubmitCode} className="space-y-5" noValidate>
+        // Keyed apart from the phone step -- see the comment there.
+        <form key="code" onSubmit={onSubmitCode} className="space-y-5" noValidate>
             {apiError && (
                 <p className="text-red-500 text-sm text-center mb-4">
                     {apiError}

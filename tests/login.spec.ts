@@ -54,6 +54,26 @@ test.describe('Login (phone + OTP, mocked)', () => {
     await expect(page).toHaveURL(new RegExp(`/${LOCALE}/login`));
   });
 
+  // `fill()` CLEARS the field before typing, so every assertion in this file was
+  // blind to whatever the step arrived carrying -- which is how the phone number
+  // shipped inside the OTP box with 10/10 green. Read .inputValue() BEFORE typing.
+  test('arrives on the code step with an empty OTP box, not the phone number', async ({ page }) => {
+    await enableMockOtp(page);
+
+    await page.goto(`/${LOCALE}/login`);
+
+    await page.getByPlaceholder(/phone/i).fill('0812345678');
+    await page.getByRole('button', { name: /send verification code/i }).click();
+
+    const codeInput = page.getByPlaceholder(/otp/i);
+    await expect(codeInput).toBeVisible();
+    await expect(codeInput).toHaveValue('');
+
+    // ...and going back keeps the number the user typed, rather than blanking it.
+    await page.getByRole('button', { name: /change phone number/i }).click();
+    await expect(page.getByPlaceholder(/phone/i)).toHaveValue('0812345678');
+  });
+
   test('links to register, and there is no password field anywhere on the page', async ({ page }) => {
     await page.goto(`/${LOCALE}/login`);
 
