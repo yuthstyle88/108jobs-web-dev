@@ -19,6 +19,7 @@ import {
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
 import {AuthenticateIcon} from "@/constants/icons";
 import Image from "next/image";
+import {KeyRound} from "lucide-react";
 
 // Sign in or create an account: a phone number, or nothing else -- mirrors
 // 108jobs-flutter's PhoneOtpAuthFlow, which the same widget backs for both
@@ -28,6 +29,7 @@ import Image from "next/image";
 // differently beyond which page they link back to.
 interface PhoneOtpAuthFormProps {
     mode: "login" | "register";
+    onSwitchToPassword?: () => void;
 }
 
 const RESEND_COOLDOWN_SECONDS = 30;
@@ -51,7 +53,7 @@ function errorMessage(t: (key: string, options?: Record<string, unknown>) => str
     });
 }
 
-export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
+export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitchToPassword}) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/";
@@ -244,6 +246,17 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
                         <Image src={AuthenticateIcon.gg} alt="" className="h-[18px] w-[18px]"/>
                         {t("authen.buttonLoginGoogle")}
                     </a>
+
+                    {mode === "login" && onSwitchToPassword && (
+                        <button
+                            type="button"
+                            onClick={onSwitchToPassword}
+                            className="flex items-center justify-center gap-2 cursor-pointer w-full py-3 rounded-md border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition duration-300 mt-3"
+                        >
+                            <KeyRound className="h-[18px] w-[18px]"/>
+                            {t("authen.buttonLoginPassword")}
+                        </button>
+                    )}
 
                     {mode === "login" && (
                         <div className="text-sm text-primary mt-4">

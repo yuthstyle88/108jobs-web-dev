@@ -1,13 +1,16 @@
 "use client";
 import {AuthFormContainer} from "@/components/Authentication/AuthFormContainer";
 import {PhoneOtpAuthForm} from "@/components/Authentication/PhoneOtpAuthForm";
+import {PasswordLoginForm} from "@/components/Authentication/PasswordLoginForm";
 import {AuthenticateIcon} from "@/constants/icons";
 import {CategoriesImage} from "@/constants/images";
 import Image from "next/image";
+import {useState} from "react";
 import {useTranslation} from "react-i18next";
 
 export default function LoginPage() {
   const {t} = useTranslation();
+  const [authMode, setAuthMode] = useState<"otp" | "password">("otp");
 
   return (
     <div
@@ -94,8 +97,15 @@ export default function LoginPage() {
             src={CategoriesImage.logodefault}
             alt="logo"
           />
-          <AuthFormContainer title={t("authen.titleLoginForm")}>
-            <PhoneOtpAuthForm mode="login"/>
+          <AuthFormContainer
+            title={t("authen.titleLoginForm")}
+            onBack={authMode === "password" ? () => setAuthMode("otp") : undefined}
+          >
+            {authMode === "otp" ? (
+              <PhoneOtpAuthForm mode="login" onSwitchToPassword={() => setAuthMode("password")}/>
+            ) : (
+              <PasswordLoginForm/>
+            )}
           </AuthFormContainer>
         </div>
       </div>
