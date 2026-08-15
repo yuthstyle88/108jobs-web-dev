@@ -431,7 +431,11 @@ export const en = {
             changePhoneNumber: "Change phone number",
             signInWithPasskey: "Sign in with passkey",
             linkCreateAccount: "Create an account",
+            buttonLoginPassword: "Log in with a password",
             linkForgotPassword: "Forgot your password?",
+            errorUsernameOrEmailRequired: "Username or email is required",
+            errorPasswordRequired: "Password is required",
+            invalidLoginCredentials: "Invalid username/email or password.",
             messageEnterCode:
                 "Please enter the code to activate your account. (If you don’t see it, check your Spam and Junk folders)",
             messageVerificationSent:
