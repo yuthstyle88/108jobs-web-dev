@@ -1,13 +1,5 @@
+import type {WorkflowStatus} from "108jobs-client";
 import {TransitionMap} from "@/modules/chat/store/stateMachineStore";
-
-export type WorkFlowStatus =
-  | 'WaitForFreelancerQuotation'
-  | 'QuotationPendingReview'
-  | 'OrderApproved'
-  | 'InProgress'
-  | 'PendingEmployerReview'
-  | 'Completed'
-  | 'Cancelled';
 
 export const ORDER = [
     'WaitForFreelancerQuotation',
@@ -17,7 +9,7 @@ export const ORDER = [
     'PendingEmployerReview',
     'Completed',
     'Cancelled',
-] as const satisfies readonly WorkFlowStatus[];
+] as const satisfies readonly WorkflowStatus[];
 
 // Events reflect real transitions; no "chat" state
 export type WorkflowEvent =
@@ -28,9 +20,9 @@ export type WorkflowEvent =
   | { type: 'REQUEST_REVISION' }
   | { type: 'RELEASE_PAYMENT' }
   | { type: 'CANCEL' }
-  | { type: 'SET'; state: WorkFlowStatus; statusBeforeCancel?: WorkFlowStatus };
+  | { type: 'SET'; state: WorkflowStatus; statusBeforeCancel?: WorkflowStatus };
 
-export const WORKFLOW_TRANSITIONS: TransitionMap<WorkFlowStatus, Exclude<WorkflowEvent['type'], 'SET'>> = {
+export const WORKFLOW_TRANSITIONS: TransitionMap<WorkflowStatus, Exclude<WorkflowEvent['type'], 'SET'>> = {
     WaitForFreelancerQuotation: { QUOTE_PROPOSED: 'QuotationPendingReview', CANCEL: 'Cancelled' }, // เปลี่ยน event และไปข้างหน้า
     QuotationPendingReview: { APPROVE_ORDER: 'OrderApproved', CANCEL: 'Cancelled' },
     OrderApproved: { START_WORK: 'InProgress', CANCEL: 'Cancelled' },
@@ -50,7 +42,7 @@ export type WorkFlowAction =
   | 'cancel'               // -> CANCEL
   | 'restart';             // -> SET (special)
 
-export const workflowActionsMap: Record<WorkFlowStatus, WorkFlowAction[]> = {
+export const workflowActionsMap: Record<WorkflowStatus, WorkFlowAction[]> = {
   WaitForFreelancerQuotation: ['submitQuotation', 'cancel'],
   QuotationPendingReview: ['approveOrder', 'cancel'],
   OrderApproved: ['startWork', 'cancel'],

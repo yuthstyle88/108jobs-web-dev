@@ -346,7 +346,6 @@ export function useChatRoom({
             isE2EMock,
             roomId,
             sentSet: sentMessagesRef.current,
-            addMessageListener, // allow waitForAck to subscribe when adapter lacks onAny/onmessage
             onAfterSend: () => {
                 lastTypedSentRef.current = false;
             },

@@ -1,6 +1,6 @@
 import {create} from 'zustand';
 import type {WorkflowStatus} from '108jobs-client';
-import {ORDER, WORKFLOW_TRANSITIONS, WorkflowEvent, WorkFlowStatus} from "@/modules/chat/types/workflow";
+import {ORDER, WORKFLOW_TRANSITIONS, WorkflowEvent} from "@/modules/chat/types/workflow";
 
 // Generic, reusable finite state machine store with typed states and events
 export type StateKey = string | number | symbol;
@@ -82,12 +82,12 @@ export const createMachineStore = <S extends StateKey, E extends string>(
 
 // Concrete workflow implementation using the generic machine
 
-export const useStateMachineStore = createMachineStore<WorkFlowStatus, Exclude<WorkflowEvent['type'], 'SET'>>(
+export const useStateMachineStore = createMachineStore<WorkflowStatus, Exclude<WorkflowEvent['type'], 'SET'>>(
     ORDER,
     WORKFLOW_TRANSITIONS,
     'WaitForFreelancerQuotation'
 );
 
-// Helper mapping functions bridging API <-> UI (identity mapping)
-export const apiToUiStatus = (s: WorkflowStatus | null | undefined): WorkFlowStatus =>
-    (s as WorkFlowStatus) ?? 'WaitForFreelancerQuotation';
+// Defaults a missing/unknown status to the initial workflow step.
+export const apiToUiStatus = (s: WorkflowStatus | null | undefined): WorkflowStatus =>
+    s ?? 'WaitForFreelancerQuotation';

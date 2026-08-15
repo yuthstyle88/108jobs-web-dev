@@ -26,12 +26,14 @@ const TopUpCoins = () => {
     const [filters, setFilters] = useState<ListTopUpRequestQuery>({limit: 10});
     const [currentCursor, setCurrentCursor] = useState<string | undefined>();
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+    const [isGoingBack, setIsGoingBack] = useState(false);
 
     const debouncedFilters = useDebounce(filters, 500);
 
     const {data, isLoading, execute: refetch} = useHttpGet("adminListTopUpRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
+        pageBack: isGoingBack,
     });
 
     const {execute: adminTopUpWallet, isMutating: isToppingUp} = useHttpPost("adminTopUpWallet");
@@ -50,6 +52,7 @@ const TopUpCoins = () => {
     const applyFilters = () => {
         setCurrentCursor(undefined);
         setCursorHistory([]);
+        setIsGoingBack(false);
         refetch();
     };
 
@@ -57,6 +60,7 @@ const TopUpCoins = () => {
         if (data?.nextPage) {
             setCursorHistory((prev) => [...prev, currentCursor || ""]);
             setCurrentCursor(data.nextPage);
+            setIsGoingBack(false);
         }
     }, [data?.nextPage, currentCursor]);
 
@@ -65,6 +69,7 @@ const TopUpCoins = () => {
             const prevCursor = cursorHistory[cursorHistory.length - 1];
             setCursorHistory((prev) => prev.slice(0, -1));
             setCurrentCursor(prevCursor || undefined);
+            setIsGoingBack(true);
         }
     }, [cursorHistory]);
 

@@ -1,23 +1,23 @@
+import type {WorkflowStatus} from '108jobs-client';
 import {useStateMachineStore} from '@/modules/chat/store/stateMachineStore';
 import {
     ORDER,
     toWorkflowEvent,
     WorkFlowAction,
     workflowActionsMap,
-    WorkFlowStatus
 } from '@/modules/chat/types/workflow';
 
 // A stepper-friendly hook that mirrors the issue description API
 export type StepperEvents = { type: 'NEXT' } | { type: 'BACK' } | { type: 'RESET' } | { type: 'CANCEL' };
 export type UseWorkflowStepper = {
-  state: { name: WorkFlowStatus };
-  statusBeforeCancel?: WorkFlowStatus;
-  ORDER: readonly WorkFlowStatus[];
+  state: { name: WorkflowStatus };
+  statusBeforeCancel?: WorkflowStatus;
+  ORDER: readonly WorkflowStatus[];
   idx: number;
   canNext: boolean;
   canBack: boolean;
   canCancel: boolean;
-  canGo: (to: WorkFlowStatus) => boolean;
+  canGo: (to: WorkflowStatus) => boolean;
   // Dynamic actions derived from state
   actions: WorkFlowAction[];
   canPerform: (a: WorkFlowAction) => boolean;
@@ -38,7 +38,7 @@ export const useWorkflowStepper = (): UseWorkflowStepper => {
     const cancelStore = useStateMachineStore((s) => s.cancel);
 
     // Dynamic actions available for the current workflow state
-    const actions = (workflowActionsMap as Record<WorkFlowStatus, WorkFlowAction[]>)[state] || [];
+    const actions = (workflowActionsMap as Record<WorkflowStatus, WorkFlowAction[]>)[state] || [];
     const canPerform = (a: WorkFlowAction) => actions.includes(a);
 
     const sendAction = (a: WorkFlowAction, payload?: any) => {
@@ -67,7 +67,7 @@ export const useWorkflowStepper = (): UseWorkflowStepper => {
     const canNext = idx < ORDER.length - 1;
     const canBack = idx > 0;
     const canCancel = state !== 'Completed' && state !== 'Cancelled';
-    const canGo = (to: WorkFlowStatus) => {
+    const canGo = (to: WorkflowStatus) => {
         const toIdx = ORDER.indexOf(to);
         if (toIdx < 0) return false;
         return toIdx === idx || Math.abs(toIdx - idx) === 1;

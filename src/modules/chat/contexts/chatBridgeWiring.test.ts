@@ -159,7 +159,6 @@ describe("Chat bridge channel wiring (Bug A regression)", () => {
               senderId: SENDER_ID,
               autoConnect: true,
               autoJoin: false,
-              autoReconnect: false,
               reconnectOnVisible: false,
               disableInactivityTimeout: true,
             },

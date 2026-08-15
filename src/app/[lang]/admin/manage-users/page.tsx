@@ -25,10 +25,12 @@ const ManageUsers = () => {
 
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+    const [isGoingBack, setIsGoingBack] = useState(false);
 
     const {data, isLoading, execute: refetch} = useHttpGet("listUsers", {
         ...filters,
         pageCursor: currentCursor,
+        pageBack: isGoingBack,
     });
 
     const {execute: executeBan, isMutating: isBanning} = useHttpPost("banPerson");
@@ -47,12 +49,14 @@ const ManageUsers = () => {
         setFilters((prev) => ({...prev, [key]: value}));
         setCurrentCursor(undefined);
         setCursorHistory([]);
+        setIsGoingBack(false);
     };
 
     const handleNextPage = useCallback(() => {
         if (data?.nextPage) {
             setCursorHistory((prev) => [...prev, currentCursor || ""]);
             setCurrentCursor(data.nextPage);
+            setIsGoingBack(false);
         }
     }, [data?.nextPage, currentCursor]);
 
@@ -61,6 +65,7 @@ const ManageUsers = () => {
             const prevCursor = cursorHistory[cursorHistory.length - 1];
             setCursorHistory((prev) => prev.slice(0, -1));
             setCurrentCursor(prevCursor || undefined);
+            setIsGoingBack(true);
         }
     }, [cursorHistory]);
 
