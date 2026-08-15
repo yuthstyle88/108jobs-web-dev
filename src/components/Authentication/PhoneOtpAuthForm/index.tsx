@@ -7,9 +7,7 @@ import {useForm} from "react-hook-form";
 import * as z from "zod";
 import {useTranslation} from "react-i18next";
 import {useRouter, useSearchParams} from "next/navigation";
-import {UserService} from "@/services";
-import {jwtDecode} from "jwt-decode";
-import {isAdminClaims, Claims} from "@/services/UserService";
+import {completeSignIn} from "@/services/authRedirect";
 import {ApiError, REQUEST_STATE} from "@/services/HttpService";
 import {normalizeThaiPhone, OtpChallenge, requestOtp, verifyOtp} from "@/services/IdentityOtpService";
 import {
@@ -73,15 +71,8 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
         return () => clearInterval(timer);
     }, [cooldown]);
 
-    const completeSignIn = useCallback(async (accessToken: string, refreshToken?: string) => {
-            await UserService.Instance.login(accessToken, refreshToken);
-            const claims = jwtDecode<Claims>(accessToken);
-            if (isAdminClaims(claims)) {
-                window.location.href = "/admin/dashboard";
-                return;
-            }
-            window.location.href = redirectUrl;
-        },
+    const finishSignIn = useCallback(
+        (accessToken: string, refreshToken?: string) => completeSignIn(accessToken, refreshToken, redirectUrl),
         [redirectUrl]);
 
     const attemptPasskeyLogin = useCallback(async (identifier: string, silent: boolean) => {
@@ -97,9 +88,9 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
                 if (!silent) setApiError(errorMessage(t, res.err));
                 return;
             }
-            await completeSignIn(res.data.accessToken, res.data.refreshToken);
+            await finishSignIn(res.data.accessToken, res.data.refreshToken);
         },
-        [completeSignIn, t]);
+        [finishSignIn, t]);
 
     // Google sign-in is a plain top-level link to /api/auth/google/start (see
     // that route) -- Identity-Platform does the whole OAuth round trip
@@ -193,7 +184,7 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode}) => {
         if (rememberedPasskeyIdentifier() !== phone) {
             await enrollPasskey(login.identityId, login.accessToken, phone);
         }
-        await completeSignIn(login.accessToken, login.refreshToken);
+        await finishSignIn(login.accessToken, login.refreshToken);
     });
 
     const phoneErrors = phoneForm.formState.errors;
