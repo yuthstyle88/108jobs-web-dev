@@ -12,16 +12,16 @@ import {REQUEST_STATE} from "@/services/HttpService";
 import {completeSignIn} from "@/services/authRedirect";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
 
-const passwordLoginSchema = z.object({
-    usernameOrEmail: z.string().min(1),
-    password: z.string().min(1),
-});
-
 export const PasswordLoginForm: React.FC = () => {
     const {t} = useTranslation();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/";
     const [apiError, setApiError] = useState<string | null>(null);
+
+    const passwordLoginSchema = z.object({
+        usernameOrEmail: z.string().min(1, t("authen.errorUsernameOrEmailRequired")),
+        password: z.string().min(1, t("authen.errorPasswordRequired")),
+    });
 
     const form = useForm<z.infer<typeof passwordLoginSchema>>({
         resolver: zodResolver(passwordLoginSchema),
@@ -34,7 +34,12 @@ export const PasswordLoginForm: React.FC = () => {
         setApiError(null);
         const res = await login(data);
         if (res.state === REQUEST_STATE.FAILED) {
-            setApiError(resolveApiErrorMessage(res.err, t, {fallback: t("authen.apiErrorState")}));
+            setApiError(resolveApiErrorMessage(res.err, t, {
+                knownCodes: {
+                    identityPlatformLoginFailed: t("authen.invalidLoginCredentials"),
+                },
+                fallback: t("authen.apiErrorState"),
+            }));
             return;
         }
         if (res.state === REQUEST_STATE.SUCCESS) {
