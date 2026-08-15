@@ -1,6 +1,4 @@
 import {dbg} from "@/modules/chat/utils/helpers";
-import {SendMessageDeps} from "@/modules/chat/types";
-import {WS_EVENT} from "@/modules/chat/protocol/wireEvents";
 
 let __wireRef = 0;
 const nextRef = () => String(++__wireRef);
@@ -63,81 +61,4 @@ export function wsSend(socket: any, obj: any) {
         dbg('wsSend → error', { err });
         return false;
     }
-}
-
-/**
- * Wait for a `reply` ack (see WS_EVENT.AckConfirm's counterpart on the
- * inbound side) that matches the given message id.
- * Uses onAny/onMessage if available; otherwise resolves false after timeout.
- */
-export function waitForAck(deps: SendMessageDeps, clientId: string, timeoutMs = 4000): Promise<boolean> {
-  return new Promise((resolve) => {
-    let settled = false;
-    let unsubs: Array<() => void> = [];
-
-    // wire v2 answers a ref-carrying frame with a `reply` event whose payload
-    // is {status: 'ok' | 'error', response}. Same two statuses phx_reply had.
-    const transport: any = (deps as any)?.adapter || (deps as any)?.sender;
-
-    const cleanup = () => {
-      try { clearTimeout(timer); } catch {}
-      for (const off of unsubs) {
-        try {
-          if (typeof off === 'function') {
-            off();
-          }
-        } catch {}
-      }
-      unsubs = [];
-    };
-
-    const timer: any = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        try {
-          dbg('waitForAck timeout', {
-            clientId,
-            timeoutMs,
-            transport: !!transport,
-            at: new Date().toISOString(),
-          });
-        } finally {
-          cleanup();
-          resolve(false);
-        }
-      }
-    }, timeoutMs);
-
-
-    try {
-      const addMessageListener = (deps as any)?.addMessageListener;
-      if (typeof addMessageListener === 'function') {
-        const off = addMessageListener((packet: any) => {
-          const ev = packet?.event;
-          const payload = packet?.payload ?? packet;
-          dbg('waitForAck addMessageListener event', { ev, payload });
-          if (ev !== WS_EVENT.Reply) return;
-          const status = payload?.status;
-          const response = payload?.response;
-          const id = response?.id ?? response?.message?.id ?? response?.msgRefId;
-          
-          if (status === 'ok' && (String(id) === String(clientId) || !id)) {
-            dbg('waitForAck received', { clientId, status, id });
-            if (!settled) { settled = true; cleanup(); resolve(true); }
-          }
-        });
-        if (typeof off === 'function') unsubs.push(off);
-      } else {
-        dbg('waitForAck no addMessageListener on deps');
-      }
-    } catch (err) {
-      dbg('waitForAck addMessageListener error', err);
-    }
-
-    dbg('waitForAck subscription summary', {
-      hasAddMessageListener: typeof (deps as any)?.addMessageListener === 'function',
-    });
-
-    // Fallback: no event subscription → resolve false after timeout
-  });
 }

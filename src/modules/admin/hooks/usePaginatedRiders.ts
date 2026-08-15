@@ -19,6 +19,7 @@ export const usePaginatedRiders = ({
 
     const [currentCursor, setCurrentCursor] = useState<PaginationCursor | undefined>(undefined);
     const [cursorHistory, setCursorHistory] = useState<PaginationCursor[]>([]);
+    const [isGoingBack, setIsGoingBack] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -28,6 +29,7 @@ export const usePaginatedRiders = ({
         execute: refetch,
     } = useHttpGet("adminListRiders", {
         pageCursor: currentCursor,
+        pageBack: isGoingBack,
         limit,
         verified,
     });
@@ -48,6 +50,7 @@ export const usePaginatedRiders = ({
         if (paginationData?.nextPage) {
             setCursorHistory((prev) => [...prev, currentCursor ?? ""]);
             setCurrentCursor(paginationData.nextPage);
+            setIsGoingBack(false);
         }
     }, [paginationData?.nextPage, currentCursor]);
 
@@ -56,6 +59,7 @@ export const usePaginatedRiders = ({
             const prevCursor = cursorHistory[cursorHistory.length - 1];
             setCursorHistory((prev) => prev.slice(0, -1));
             setCurrentCursor(prevCursor || undefined);
+            setIsGoingBack(true);
         }
     }, [cursorHistory]);
 

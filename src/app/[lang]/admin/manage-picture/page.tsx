@@ -2,9 +2,8 @@
 
 import React, {useState} from "react";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
-import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
-import {isFailed, isSuccess} from "@/services/HttpService";
+import {callHttp, isFailed, isSuccess} from "@/services/HttpService";
 import {toast} from "sonner";
 import Image from "next/image";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -12,8 +11,10 @@ import {faUpload, faGlobe} from "@fortawesome/free-solid-svg-icons";
 import {useSiteStore} from "@/store/useSiteStore";
 
 export default function SiteAppearancePage() {
-    const {setSiteRes} = useSiteStore();
-    const {data: siteData, isMutating: loadingSite, execute: refetch} = useHttpGet("getSite");
+    // Site data is already seeded here by UserServiceProvider from the SSR
+    // fetchIsoData pass every page gets -- no need to re-fetch getSite on
+    // mount just to read it back.
+    const {siteRes, setSiteRes} = useSiteStore();
     const {execute: uploadIcon, isMutating: uploadingIcon} = useHttpPost("uploadSiteIcon");
     const {execute: uploadBanner, isMutating: uploadingBanner} = useHttpPost("uploadSiteBanner");
 
@@ -22,13 +23,13 @@ export default function SiteAppearancePage() {
     const [iconPreviewOverride, setIconPreviewOverride] = useState<string | null>(null);
     const [bannerPreviewOverride, setBannerPreviewOverride] = useState<string | null>(null);
 
-    const siteName = siteData?.siteView?.localSite?.name || "Your Site";
+    const siteName = siteRes?.siteView?.localSite?.name || "Your Site";
 
     // The locally-selected file preview (if any) takes priority over the
     // image currently stored on the site; once uploaded, the override is
-    // cleared and this falls back to the freshly-fetched site data.
-    const iconPreview = iconPreviewOverride ?? siteData?.siteView?.localSite?.icon ?? null;
-    const bannerPreview = bannerPreviewOverride ?? siteData?.siteView?.localSite?.banner ?? null;
+    // cleared and this falls back to the (now refreshed) store data.
+    const iconPreview = iconPreviewOverride ?? siteRes?.siteView?.localSite?.icon ?? null;
+    const bannerPreview = bannerPreviewOverride ?? siteRes?.siteView?.localSite?.banner ?? null;
 
     const handleFileChange = (
         type: "icon" | "banner",
@@ -98,8 +99,13 @@ export default function SiteAppearancePage() {
 
         if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
             toast.success(`${type === "icon" ? "Logo" : "Banner"} updated successfully!`);
-            await refetch();
-            setSiteRes(siteData);
+            // Refresh the shared store with the canonical site data now that
+            // it actually changed -- everywhere else that reads useSiteStore
+            // (header, homepage banner, ...) picks up the new icon/banner too.
+            const refreshed = await callHttp("getSite");
+            if (isSuccess(refreshed)) {
+                setSiteRes(refreshed.data);
+            }
             if (type === "icon") {
                 setIconFile(null);
                 setIconPreviewOverride(null);
@@ -111,16 +117,6 @@ export default function SiteAppearancePage() {
             toast.error(`Failed to upload ${type === "icon" ? "logo" : "banner"}`);
         }
     };
-
-    if (loadingSite) {
-        return (
-            <AdminLayout>
-                <div className="flex items-center justify-center min-h-screen">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-                </div>
-            </AdminLayout>
-        );
-    }
 
     return (
         <AdminLayout>

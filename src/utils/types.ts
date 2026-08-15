@@ -1,5 +1,4 @@
 import {
-    Comment,
     CommentView,
     CategoryView,
     CreateOAuthProvider,
@@ -50,16 +49,6 @@ export interface IRouteProps {
     exact?: boolean;
     strict?: boolean;
     sensitive?: boolean;
-}
-
-export interface PostFormParams {
-    name?: string;
-    url?: string;
-    body?: string;
-    nsfw?: boolean;
-    categoryId?: number;
-    customThumbnail?: string;
-    altText?: string;
 }
 
 export enum CommentViewType {
@@ -138,16 +127,6 @@ export type ThemeColor =
     | "white"
     | "gray"
     | "gray-dark";
-
-export interface WithComment {
-    comment: Comment;
-    myVote?: number;
-    saved: boolean;
-    creatorIsModerator: boolean;
-    creatorIsAdmin: boolean;
-    creatorBlocked: boolean;
-    creatorBannedFromCategory: boolean;
-}
 
 export interface CrossPostParams {
     name: string;
