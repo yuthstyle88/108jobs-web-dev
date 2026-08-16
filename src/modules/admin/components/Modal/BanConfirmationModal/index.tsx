@@ -54,6 +54,15 @@ export function BanConfirmationModal({
         return () => clearInterval(interval);
     }, [isOpen]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onCancel();
+        };
+        window.addEventListener("keydown", handleEscape);
+        return () => window.removeEventListener("keydown", handleEscape);
+    }, [isOpen, onCancel]);
+
     if (!isOpen) return null;
 
     return (
@@ -62,6 +71,8 @@ export function BanConfirmationModal({
             onClick={onCancel}
         >
             <div
+                role="dialog"
+                aria-modal="true"
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-6 transform transition-all animate-in fade-in zoom-in duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
