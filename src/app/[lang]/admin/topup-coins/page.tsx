@@ -56,13 +56,13 @@ const TopUpCoins = () => {
         refetch();
     };
 
-    const handleNextPage = useCallback(() => {
+    const handleNextPage = () => {
         if (data?.nextPage) {
             setCursorHistory((prev) => [...prev, currentCursor || ""]);
             setCurrentCursor(data.nextPage);
             setIsGoingBack(false);
         }
-    }, [data?.nextPage, currentCursor]);
+    };
 
     const handlePrevPage = useCallback(() => {
         if (cursorHistory.length > 0) {
