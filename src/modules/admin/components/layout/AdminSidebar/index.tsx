@@ -101,12 +101,12 @@ export function AdminSidebar() {
                                                             collapsed ? "w-10 h-10" : "",
                                                             isActive
                                                                 ? "text-white"
-                                                                : "text-muted-foreground group-hover:text-foreground"
+                                                                : "text-muted-foreground group-hover:text-card-foreground"
                                                         )}
                                                     />
                                                     {!collapsed && (
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-sm truncate">{title}</div>
+                                                            <div className={cn("font-medium text-sm truncate", isActive ? "text-white" : "text-card-foreground")}>{title}</div>
                                                             <div
                                                                 className={cn(
                                                                     "text-xs truncate",
