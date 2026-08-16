@@ -3830,6 +3830,8 @@ export const vi = {
             },
             jobBoardManagement: "Quản Lý Bảng Việc Làm",
             jobBoardSubtitle: "Quản lý tất cả bài đăng tuyển dụng, hiển thị và nội dung",
+            jobBoardSearchPlaceholder: "Tìm kiếm bài đăng việc làm…",
+            jobBoardSearchButton: "Tìm kiếm",
             status: "Trạng thái",
             statusAll: "Tất cả tin",
             statusActive: "Đang hiển thị",

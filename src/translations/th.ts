@@ -3722,6 +3722,8 @@ export const th = {
             },
             jobBoardManagement: "จัดการบอร์ดงาน",
             jobBoardSubtitle: "จัดการโพสต์งานทั้งหมด การมองเห็น และเนื้อหา",
+            jobBoardSearchPlaceholder: "ค้นหาโพสต์งาน…",
+            jobBoardSearchButton: "ค้นหา",
             status: "สถานะ",
             statusAll: "งานทั้งหมด",
             statusActive: "แสดงอยู่",

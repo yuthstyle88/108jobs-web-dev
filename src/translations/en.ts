@@ -3806,6 +3806,8 @@ export const en = {
             },
             jobBoardManagement: "Job Board Management",
             jobBoardSubtitle: "Manage all job posts, visibility, and content",
+            jobBoardSearchPlaceholder: "Search job posts…",
+            jobBoardSearchButton: "Search",
             status: "Status",
             statusAll: "All Jobs",
             statusActive: "Active",

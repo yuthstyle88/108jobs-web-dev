@@ -59,6 +59,16 @@ const AdminJobBoard = () => {
     const encoded = searchParams.get("q");
     const sanitizedQuery = encoded ? decodeURIComponent(encoded).trim() : "";
 
+    const [searchInput, setSearchInput] = useState(sanitizedQuery);
+
+    const handleSearchSubmit = useCallback(() => {
+        const params = new URLSearchParams(searchParams);
+        const trimmed = searchInput.trim();
+        if (trimmed) params.set("q", trimmed);
+        else params.delete("q");
+        router.push(`${pathname}?${params.toString()}`, {scroll: false});
+    }, [searchInput, searchParams, router, pathname]);
+
     const [filters, setFilters] = useState<FilterState>({
         category: undefined,
         jobType: undefined,
@@ -284,6 +294,26 @@ const AdminJobBoard = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-borderPrimary p-6">
                         {/* Filters */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                            {/* Search */}
+                            <div className="flex gap-2 sm:col-span-2">
+                                <input
+                                    type="search"
+                                    placeholder={t("admin.jobBoardSearchPlaceholder")}
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") handleSearchSubmit();
+                                    }}
+                                    className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                                />
+                                <button
+                                    onClick={handleSearchSubmit}
+                                    className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"
+                                >
+                                    {t("admin.jobBoardSearchButton")}
+                                </button>
+                            </div>
+
                             {/* Category */}
                             <select
                                 value={filters.category || ""}
