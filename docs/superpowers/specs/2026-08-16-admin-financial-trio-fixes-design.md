@@ -265,7 +265,23 @@ pages that bypasses it with a hardcoded locale string. Fix: replace with
 `format(new Date(w.createdAt), "MMM d, HH:mm")`, adding the already-used-
 elsewhere `format` import from `date-fns`.
 
-**8. The "no year filter" option is mislabeled** (`page.tsx:227-231`)
+**8. `vi.ts`'s entire `admin.withdraw` block is Thai text, not Vietnamese**
+(translation file, discovered while gathering exact translation content for
+the implementation plan)
+Every key under `vi.ts`'s `withdraw: {...}` object (`src/translations/vi.ts:3799-3831`)
+is Thai copy-pasted verbatim from `th.ts`'s equivalent block, except
+`filters.title` (`"Lọc yêu cầu rút tiền"`, genuinely Vietnamese) — even
+`title` itself (`"การถอนเหรียญ"`) is Thai, not Vietnamese. A Vietnamese
+admin using this page today sees Thai throughout: the page title,
+description, every filter label, list messages, review/bank-info/reason/
+note labels, and every approve/reject toast. Fix: retranslate the entire
+block into real Vietnamese, matching `th.ts`'s structure (keys, nesting,
+interpolation placeholders) with genuine Vietnamese content, in the same
+register already established elsewhere in `vi.ts` for this exact page
+family (`topupCoins.title: "Nạp Coin"` → `withdraw.title: "Rút Coin"` is
+the natural parallel).
+
+**9. The "no year filter" option is mislabeled** (`page.tsx:227-231`)
 ```tsx
 <option value="">{new Date().getFullYear()}</option>
 {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map((y) => (
@@ -340,4 +356,6 @@ No component-test infrastructure exists for any of the three files
   filter's blank option reads "All years," not a bare "2026" duplicate of
   the real 2026 option; every previously-hardcoded label (Amount, Bank,
   Account, Requested, status names) is now real, translated text in all
-  three locales.
+  three locales; switching to Vietnamese shows genuine Vietnamese text
+  throughout the entire page (title, filters, list, review panel, toasts)
+  instead of Thai.
