@@ -3,6 +3,7 @@
 import React, {useState} from "react";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
+import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
 import {callHttp, isFailed, isSuccess} from "@/services/HttpService";
 import {toast} from "sonner";
 import Image from "next/image";
@@ -17,6 +18,8 @@ export default function SiteAppearancePage() {
     const {siteRes, setSiteRes} = useSiteStore();
     const {execute: uploadIcon, isMutating: uploadingIcon} = useHttpPost("uploadSiteIcon");
     const {execute: uploadBanner, isMutating: uploadingBanner} = useHttpPost("uploadSiteBanner");
+    const {execute: removeIcon, isMutating: removingIcon} = useHttpDelete("deleteSiteIcon");
+    const {execute: removeBanner, isMutating: removingBanner} = useHttpDelete("deleteSiteBanner");
 
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -118,6 +121,21 @@ export default function SiteAppearancePage() {
         }
     };
 
+    const handleRemove = async (type: "icon" | "banner") => {
+        const execute = type === "icon" ? removeIcon : removeBanner;
+        const res = await execute();
+
+        if (isSuccess(res)) {
+            toast.success(`${type === "icon" ? "Logo" : "Banner"} removed`);
+            const refreshed = await callHttp("getSite");
+            if (isSuccess(refreshed)) {
+                setSiteRes(refreshed.data);
+            }
+        } else if (isFailed(res)) {
+            toast.error(`Failed to remove ${type === "icon" ? "logo" : "banner"}`);
+        }
+    };
+
     return (
         <AdminLayout>
             <div className="bg-[#F6F9FE] min-h-screen py-8">
@@ -161,6 +179,15 @@ export default function SiteAppearancePage() {
                                             </span>
                                         )}
                                     </div>
+                                    {siteRes?.siteView?.localSite?.icon && (
+                                        <button
+                                            onClick={() => handleRemove("icon")}
+                                            disabled={removingIcon}
+                                            className="mt-2 text-sm text-red-600 hover:underline disabled:opacity-50"
+                                        >
+                                            {removingIcon ? "Removing..." : "Remove Logo"}
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div>
@@ -229,6 +256,15 @@ export default function SiteAppearancePage() {
                                             </div>
                                         )}
                                     </div>
+                                    {siteRes?.siteView?.localSite?.banner && (
+                                        <button
+                                            onClick={() => handleRemove("banner")}
+                                            disabled={removingBanner}
+                                            className="mt-2 text-sm text-red-600 hover:underline disabled:opacity-50"
+                                        >
+                                            {removingBanner ? "Removing..." : "Remove Banner"}
+                                        </button>
+                                    )}
                                 </div>
 
                                 <div>
