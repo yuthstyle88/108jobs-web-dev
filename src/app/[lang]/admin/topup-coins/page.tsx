@@ -89,23 +89,18 @@ const TopUpCoins = () => {
             reason: "Admin top-up from payment",
         };
 
-        try {
-            const res = await adminTopUpWallet(payload);
-            if (res.state === REQUEST_STATE.FAILED) {
-                toast.error(t("topupCoins.toast.error"));
-                return;
-            }
-            toast.success(t("topupCoins.toast.success", {
-                amount: formatMinor(selectedTransfer.topUpRequest.amountMinor),
-                email: selectedTransfer.localUser.email,
-            }));
-            refetch();
-        } catch (error: any) {
-            toast.error(error.message || t("topupCoins.toast.error"));
-        } finally {
-            setIsTransferModalOpen(false);
-            setSelectedTransfer(null);
+        const res = await adminTopUpWallet(payload);
+        if (res.state === REQUEST_STATE.FAILED) {
+            toast.error(t("topupCoins.toast.error"));
+            return;
         }
+        toast.success(t("topupCoins.toast.success", {
+            amount: formatMinor(selectedTransfer.topUpRequest.amountMinor),
+            email: selectedTransfer.localUser.email,
+        }));
+        refetch();
+        setIsTransferModalOpen(false);
+        setSelectedTransfer(null);
     };
 
     const getStatusBadge = (status: string, transferred: boolean) => {
