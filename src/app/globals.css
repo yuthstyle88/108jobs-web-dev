@@ -256,10 +256,13 @@
     --destructive-foreground: #ffffff;
     --success: #16A34A;
     --success-foreground: #ffffff;
+    /* --muted and --accent are deliberately light-only via --fourth/--third below.
+       Do not give --fourth or --third their own dark-mode overrides later —
+       that would silently make --muted/--accent dark-reactive again. */
     --muted: var(--fourth);
     --muted-foreground: #6B7280;
-    --accent: var(--third);
-    --accent-foreground: #ffffff;
+    --accent: var(--fourth);
+    --accent-foreground: #171717;
     --card: #ffffff;
     --card-foreground: #171717;
 }

@@ -86,33 +86,26 @@ Replace it with:
     --destructive-foreground: #ffffff;
     --success: #16A34A;
     --success-foreground: #ffffff;
+    /* --muted and --accent are deliberately light-only via --fourth/--third below.
+       Do not give --fourth or --third their own dark-mode overrides later —
+       that would silently make --muted/--accent dark-reactive again. */
     --muted: var(--fourth);
     --muted-foreground: #6B7280;
-    --accent: var(--third);
-    --accent-foreground: #ffffff;
-    --card: var(--background);
-    --card-foreground: var(--foreground);
+    --accent: var(--fourth);
+    --accent-foreground: #171717;
+    --card: #ffffff;
+    --card-foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --background: #0a0a0a;
         --foreground: #ededed;
-        --destructive: #F87171;
-        --destructive-foreground: #1B1A1D;
-        --success: #4ADE80;
-        --success-foreground: #1B1A1D;
-        --muted: #27272A;
-        --muted-foreground: #A1A1AA;
-        --accent: var(--third);
-        --accent-foreground: #ffffff;
-        --card: #18181B;
-        --card-foreground: var(--foreground);
     }
 }
 ```
 
-(`destructive`/`success` are new hues — they match the ad-hoc `red-*`/`green-*` Tailwind classes already scattered across these pages, just centralized. `muted`, `accent`, and `card` reuse the existing `fourth`/`third`/`background` tokens rather than inventing new ones, since this app's real palette has no gap there — see the design spec.)
+(`destructive`/`success` are new hues — they match the ad-hoc `red-*`/`green-*` Tailwind classes already scattered across these pages, just centralized. `muted` and `accent` reuse the existing `fourth` token — `accent` is a hover/focus surface for shared UI primitives like `Button`'s outline variant and `DropdownMenuItem`, not the brand blue, since that combination (saturated blue background + white text) fails contrast when it lands on near-white surfaces elsewhere in the app. `card` uses light literals rather than aliasing `--background`/`--foreground`, so it can't later chain into a dark-mode override those tokens might gain. All 5 families are light-only by design — no dark-mode entries — to avoid the shared `Card` primitive going near-black under OS dark preference while the rest of the app, which has no real dark-mode support, stays light. See the design spec's "Out of scope" section.)
 
 - [ ] **Step 3: Add the matching Tailwind config entries**
 
@@ -389,7 +382,7 @@ export function AdminHeader() {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-10 px-3 gap-2">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={person?.avatar || ProfileImage.avatar} alt={displayName || "Admin"}/>
+                                <AvatarImage src={person?.avatar || ProfileImage.avatar.src} alt={displayName || "Admin"}/>
                                 <AvatarFallback className="bg-black text-white">{initials}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col items-start text-left">

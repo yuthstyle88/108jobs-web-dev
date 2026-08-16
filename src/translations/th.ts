@@ -3621,6 +3621,7 @@ export const th = {
             layout: {
                 header: {
                     logout: "ออกจากระบบ",
+                    defaultAdminLabel: "ผู้ดูแลระบบ",
                 },
                 sidebar: {
                     navLabel: "เมนูนำทางผู้ดูแลระบบ",

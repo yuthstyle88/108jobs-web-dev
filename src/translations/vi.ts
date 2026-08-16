@@ -3729,6 +3729,7 @@ export const vi = {
             layout: {
                 header: {
                     logout: "Đăng xuất",
+                    defaultAdminLabel: "Quản trị viên",
                 },
                 sidebar: {
                     navLabel: "Điều hướng quản trị",

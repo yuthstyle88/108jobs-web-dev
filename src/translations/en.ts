@@ -3705,6 +3705,7 @@ export const en = {
             layout: {
                 header: {
                     logout: "Logout",
+                    defaultAdminLabel: "Admin",
                 },
                 sidebar: {
                     navLabel: "Admin navigation",

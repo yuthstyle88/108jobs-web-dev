@@ -54,18 +54,20 @@ action can't become navy blue without losing its meaning — add the missing
 semantic tokens for real, reusing existing hues where one already fits
 rather than inventing new ones:
 
-| New token | Light value | Dark value | Source |
-|---|---|---|---|
-| `--destructive` | `#DC2626` | `#F87171` | New — matches the ad-hoc `red-500`/`red-800` already scattered across these same pages |
-| `--destructive-foreground` | `#FFFFFF` | `#1B1A1D` | New |
-| `--success` | `#16A34A` | `#4ADE80` | New — matches the ad-hoc `green-600`/`green-700` already in use |
-| `--success-foreground` | `#FFFFFF` | `#1B1A1D` | New |
-| `--muted` | `var(--fourth)` (`#f6f7f8`) | `#27272A` | Reuses the existing near-white neutral |
-| `--muted-foreground` | `#6B7280` | `#A1A1AA` | New — readable gray on `--muted` |
-| `--accent` | `var(--third)` (`#1d6ce2`) | `var(--third)` | Reuses the existing medium blue, no 6th hue invented |
-| `--accent-foreground` | `#FFFFFF` | `#FFFFFF` | New |
-| `--card` | `var(--background)` | `#18181B` | Reuses the existing white/near-black surface |
-| `--card-foreground` | `var(--foreground)` | `var(--foreground)` | Alias |
+| New token | Light value | Source |
+|---|---|---|
+| `--destructive` | `#DC2626` | New — matches the ad-hoc `red-500`/`red-800` already scattered across these same pages |
+| `--destructive-foreground` | `#FFFFFF` | New |
+| `--success` | `#16A34A` | New — matches the ad-hoc `green-600`/`green-700` already in use |
+| `--success-foreground` | `#FFFFFF` | New |
+| `--muted` | `var(--fourth)` (`#f6f7f8`) | Reuses the existing near-white neutral |
+| `--muted-foreground` | `#6B7280` | New — readable gray on `--muted` |
+| `--accent` | `var(--fourth)` (`#f6f7f8`) | Reuses the existing near-white neutral, dark literal foreground — not the brand blue, since accent doubles as a hover/focus surface for shared UI primitives (Button, DropdownMenu) across the whole app, not just admin |
+| `--accent-foreground` | `#171717` | New — matches this file's own `--foreground` light literal |
+| `--card` | `#FFFFFF` | Reuses the existing white surface (literal, not `var(--background)`, to avoid chaining through a token that could later gain its own dark-mode override) |
+| `--card-foreground` | `#171717` | Literal, matches `--foreground`'s light value (same reasoning as `--card`) |
+
+All 5 new token families are light-only — none of them get a dark-mode override (see "Out of scope" below).
 
 Added inside `globals.css`'s existing `:root { }` block and its existing
 `@media (prefers-color-scheme: dark)` block (both already exist for
@@ -138,13 +140,16 @@ those specific classes.
 - **Full dark-mode support for the admin section.** The app has no active
   theme *toggle* — Tailwind's `darkMode` is unset, which defaults to the
   `media` strategy, so `dark:` classes already respond to OS-level dark
-  mode with no code required. The new tokens above get dark values purely
-  to stay consistent with the existing `--background`/`--foreground`
-  pattern in `globals.css`, and because it's zero extra mechanism — not
-  because this spec is taking on full dark-mode coverage. The audit's
-  finding that Riders uses `dark:` classes while Users doesn't (and every
-  other page-specific dark-mode gap) is unaffected by this change and
-  stays out of scope.
+  mode with no code required. The new tokens above are deliberately
+  light-only, not dark-aware: they get no entries in `globals.css`'s
+  `@media (prefers-color-scheme: dark)` block. Giving them dark values
+  would have introduced a dark-mode inconsistency where the shared `Card`
+  primitive (used app-wide, not just in admin) would go near-black under
+  OS dark preference while the rest of the app — which has no real
+  dark-mode support anywhere else — stays light. The audit's finding that
+  Riders uses `dark:` classes while Users doesn't (and every other
+  page-specific dark-mode gap) is unaffected by this change and stays out
+  of scope.
 - **Real notification and settings functionality.** Removing the dead
   bell/Settings menu item is in scope; building the features behind them
   is a separate, future initiative.
