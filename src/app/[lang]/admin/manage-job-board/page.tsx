@@ -246,7 +246,11 @@ const AdminJobBoard = () => {
     }, [isJobsLoading]);
 
     if (searchState.state === REQUEST_STATE.FAILED) {
-        return <ErrorState/>;
+        return (
+            <AdminLayout>
+                <ErrorState/>
+            </AdminLayout>
+        );
     }
 
     return (
