@@ -247,7 +247,7 @@ const ManageUsers = () => {
                                                         variant="destructive"
                                                         size="sm"
                                                         onClick={() => openBanModal(person)}
-                                                        className="py-2 px-4 rounded-lg font-medium bg-red-500 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                                        className="py-2 px-4 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                                                     >
                                                         <Ban className="w-3.5 h-3.5 mr-1"/>
                                                         {t("manageUsers.ban")}
