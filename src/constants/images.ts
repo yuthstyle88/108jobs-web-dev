@@ -66,7 +66,7 @@ import group from "../assets/images/group-people.svg";
 import paper from "../assets/images/paper.svg";
 import shield from "../assets/images/shield.svg";
 import startSelling from "../assets/images/hero-image-desktop.jpg";
-import notFound from "../assets/images/notFound.png";
+import notFound from "../assets/images/not-found-illustration.png";
 
 // Mega menu images
 import search from "../assets/images/megamenu/search.svg";

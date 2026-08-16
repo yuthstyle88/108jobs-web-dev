@@ -1,6 +1,7 @@
 "use client";
 import {useState, useCallback} from "react";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
+import {isFailed} from "@/services/HttpService";
 import {Card} from "@/components/ui/Card";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
@@ -27,11 +28,14 @@ const ManageUsers = () => {
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
     const [isGoingBack, setIsGoingBack] = useState(false);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("listUsers", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("listUsers", {
         ...filters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
     });
+
+    const showLoading = isLoading || isMutating;
+    const isFetchFailed = isFailed(state);
 
     const {execute: executeBan, isMutating: isBanning} = useHttpPost("banPerson");
 
@@ -93,7 +97,7 @@ const ManageUsers = () => {
             toast.success(
                 banReason
                     ? t("manageUsers.banConfirmationModal.successWithReason", {reason: banReason})
-                    : `${t("manageUsers.bannedSuccess")} ${banTarget.name}`
+                    : t("manageUsers.bannedSuccess", {name: banTarget.name})
             );
             refetch(); // Refresh user list
         } catch (error: any) {
@@ -159,11 +163,16 @@ const ManageUsers = () => {
 
                 {/* User List */}
                 <div className="space-y-3">
-                    {isLoading ? (
+                    {showLoading ? (
                         <div className="flex justify-center py-16">
                             <div
                                 className="w-8 h-8 border-2 border-t-transparent border-foreground/30 rounded-full animate-spin"></div>
                         </div>
+                    ) : isFetchFailed ? (
+                        <Card className="border-dashed p-12 text-center">
+                            <User className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>
+                            <p className="text-sm text-muted-foreground">{t("manageUsers.fetchError")}</p>
+                        </Card>
                     ) : users.length === 0 ? (
                         <Card className="border-dashed p-12 text-center">
                             <User className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>
@@ -238,7 +247,7 @@ const ManageUsers = () => {
                                                         variant="destructive"
                                                         size="sm"
                                                         onClick={() => openBanModal(person)}
-                                                        className="py-2 px-4 rounded-lg font-medium bg-red-500 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                                        className="py-2 px-4 rounded-lg font-medium bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                                                     >
                                                         <Ban className="w-3.5 h-3.5 mr-1"/>
                                                         {t("manageUsers.ban")}
@@ -260,7 +269,7 @@ const ManageUsers = () => {
                     hasNext={hasNextPage}
                     onPrevious={handlePrevPage}
                     onNext={handleNextPage}
-                    isLoading={isLoading}
+                    isLoading={showLoading}
                 />
 
                 {/* Detail Modal */}
@@ -280,7 +289,6 @@ const ManageUsers = () => {
                     user={{
                         id: banTarget?.id ?? 0,
                         name: banTarget?.name ?? "",
-                        handle: banTarget?.displayName ?? "",
                     }}
                     reason={banReason}
                     onReasonChange={setBanReason}
