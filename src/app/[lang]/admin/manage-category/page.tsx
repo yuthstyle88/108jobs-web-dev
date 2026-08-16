@@ -48,7 +48,7 @@ export default function AdminCategoriesPage() {
     const [lightboxSrc, setLightboxSrc] = useState("");
     const [lightboxAlt, setLightboxAlt] = useState("");
 
-    const {data: categories, isLoading, execute: refetch} = useHttpGet("listCategories");
+    const {data: categories, isLoading, error, execute: refetch} = useHttpGet("listCategories");
 
     const {execute: createCategory} = useHttpPost("createCategory");
     const {execute: deleteCategory} = useHttpDelete("deleteCategory");
@@ -223,10 +223,18 @@ export default function AdminCategoriesPage() {
                     {/* Table */}
                     <div className="bg-white rounded-lg shadow-sm border border-borderPrimary overflow-hidden">
                         <div className="overflow-x-auto">
-                            {!isLoading && tree.length === undefined ? (
+                            {isLoading ? (
                                 <div className="py-16 text-center">
                                     <div
                                         className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                                </div>
+                            ) : error ? (
+                                <div className="text-center py-16">
+                                    <p className="text-red-600 text-lg">Something went wrong loading categories</p>
+                                    <button onClick={() => refetch()}
+                                            className="mt-4 text-primary hover:underline">
+                                        Try again
+                                    </button>
                                 </div>
                             ) : tree.length === 0 ? (
                                 <div className="text-center py-16">
