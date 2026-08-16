@@ -137,7 +137,7 @@ export default function AdminCategoriesPage() {
             // derived server-side from `path`) and requires `title`, which
             // this form doesn't collect separately from `name` -- mirror it
             // until subcategory creation gets a real form/product design.
-            await createCategory({
+            const res = await createCategory({
                 name: form.name,
                 title: form.name,
                 description: form.description,
@@ -145,8 +145,12 @@ export default function AdminCategoriesPage() {
                 banner: bannerUrl,
             });
 
-            toast.success("Category created!");
-            closeModal();
+            if (isSuccess(res)) {
+                toast.success("Category created!");
+                closeModal();
+            } else if (isFailed(res)) {
+                toast.error("Failed to create the category. Please try again.");
+            }
             return;
         }
 
