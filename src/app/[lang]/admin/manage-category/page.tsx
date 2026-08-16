@@ -17,6 +17,7 @@ import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
 import {isFailed, isSuccess} from "@/services/HttpService";
 import {CategoryRow} from "@/modules/admin/components/CategoryRow";
 import {CategoryModal} from "@/modules/admin/components/Modal/CategoryModal";
+import {DeleteCategoryModal} from "@/modules/admin/components/Modal/DeleteCategoryModal";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 
 interface CategoryFormData {
@@ -25,6 +26,16 @@ interface CategoryFormData {
     banner?: string;
     description?: string;
     parent_id?: number | null;
+}
+
+/** Depth-first lookup by id; the page only ever holds the tree, not a flat list. */
+function findNodeById(nodes: CategoryNodeView[], id: number): CategoryNodeView | null {
+    for (const node of nodes) {
+        if (node.category.id === id) return node;
+        const found = findNodeById(node.children || [], id);
+        if (found) return found;
+    }
+    return null;
 }
 
 export default function AdminCategoriesPage() {
@@ -45,6 +56,8 @@ export default function AdminCategoriesPage() {
     const [uploadedBanner, setUploadedBanner] = useState<string | null>(null);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
+    const [deletingCategory, setDeletingCategory] = useState<CategoryNodeView | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Lightbox
     const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -146,21 +159,36 @@ export default function AdminCategoriesPage() {
 
         // --- NEW CATEGORY ---
         if (isAddingNew) {
-            // CreateCategory has no parent-relationship field (hierarchy is
-            // derived server-side from `path`) and requires `title`, which
-            // this form doesn't collect separately from `name` -- mirror it
-            // until subcategory creation gets a real form/product design.
+            // `title` isn't collected separately from `name` by this form, so
+            // it mirrors it. The backend derives the ltree path from `name`
+            // plus the parent's path.
             const res = await createCategory({
                 name: form.name,
                 title: form.name,
+                parentId: parentIdForNew ?? undefined,
                 description: form.description,
-                icon: iconUrl,
-                banner: bannerUrl,
+                // On the upload tab `iconUrl` still holds the FileReader's
+                // base64 data: URL from the preview -- only a real URL from
+                // the URL tab belongs in the create payload.
+                icon: iconMode === "url" ? iconUrl : undefined,
+                banner: bannerMode === "url" ? bannerUrl : undefined,
             });
 
             if (isSuccess(res)) {
+                // Images can only be uploaded against an existing id, so any
+                // pending files are sent once the category exists.
+                const newId = res.data?.categoryView?.category?.id;
+                if (newId !== undefined) {
+                    if (iconMode === "upload" && iconFile) {
+                        await uploadIcon({id: newId}, {image: iconFile});
+                    }
+                    if (bannerMode === "upload" && bannerFile) {
+                        await uploadBanner({id: newId}, {image: bannerFile});
+                    }
+                }
                 toast.success(t("admin.category.created"));
                 closeModal();
+                await refetch();
             } else if (isFailed(res)) {
                 toast.error(t("admin.category.createError"));
             }
@@ -170,8 +198,11 @@ export default function AdminCategoriesPage() {
         if (editingCategory) {
             const res = await editCategory({
                 categoryId: editingCategory.category.id,
+                name: form.name,
                 title: form.name,
                 description: form.description,
+                icon: iconUrl || undefined,
+                banner: bannerUrl || undefined,
             });
 
             if (isFailed(res)) {
@@ -182,6 +213,31 @@ export default function AdminCategoriesPage() {
 
         closeModal();
         await refetch();
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deletingCategory) return;
+        setIsDeleting(true);
+        const res = await deleteCategory({
+            categoryId: deletingCategory.category.id,
+            deleted: true,
+        });
+        setIsDeleting(false);
+
+        if (isSuccess(res)) {
+            toast.success(t("admin.category.deleted"));
+            setDeletingCategory(null);
+            await refetch();
+        } else if (isFailed(res)) {
+            // The backend refuses to delete a category that still has live
+            // subcategories rather than orphaning them. Leave the dialog open
+            // so the message sits next to the category it refers to.
+            toast.error(
+                res.err?.error === "categoryHasChildren"
+                    ? t("admin.category.deleteHasChildren")
+                    : t("admin.category.deleteError"),
+            );
+        }
     };
 
     const closeModal = () => {
@@ -230,7 +286,7 @@ export default function AdminCategoriesPage() {
                             <p className="text-gray-600">{t("admin.category.subtitle")}</p>
                         </div>
                         <button
-                            onClick={() => toast(t("admin.category.addRootComingSoon"))}
+                            onClick={() => openAddModal(null)}
                             className="inline-flex items-center bg-primary text-white py-3 px-6
                    rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all"
                         >
@@ -281,7 +337,7 @@ export default function AdminCategoriesPage() {
                                             node={root}
                                             depth={0}
                                             onEdit={openEditModal}
-                                            onDelete={(id) => deleteCategory({categoryId: id})}
+                                            onDelete={(id) => setDeletingCategory(findNodeById(tree, id))}
                                             onAddChild={openAddModal}
                                             onImageClick={openImageLightbox}
                                         />
@@ -298,6 +354,11 @@ export default function AdminCategoriesPage() {
                 <CategoryModal
                     isOpen={isModalOpen}
                     isAddingNew={isAddingNew}
+                    parentName={
+                        parentIdForNew !== null
+                            ? findNodeById(tree, parentIdForNew)?.category.title ?? null
+                            : null
+                    }
                     form={form}
                     setForm={setForm}
                     iconMode={iconMode}
@@ -311,6 +372,14 @@ export default function AdminCategoriesPage() {
                     onImageUpload={handleImageUpload}
                     onSave={handleSave}
                     onClose={closeModal}
+                />
+
+                <DeleteCategoryModal
+                    isOpen={!!deletingCategory}
+                    categoryName={deletingCategory?.category.title ?? ""}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={() => setDeletingCategory(null)}
+                    isLoading={isDeleting}
                 />
 
                 {/* Lightbox */}

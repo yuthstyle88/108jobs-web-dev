@@ -220,7 +220,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
             {/* Recursively render children with clear visual separation */}
             {isOpen &&
                 hasChildren &&
-                node.children!.map((child, index) => (
+                node.children!.map((child) => (
                     <React.Fragment key={child.category.id}>
                         <CategoryRow
                             node={child}
