@@ -325,6 +325,92 @@ const SiteSettingsPage = () => {
                     </label>
                 </Card>
 
+                <Card className="p-6 space-y-4">
+                    <h2 className="text-lg font-semibold">{t("admin.siteSettings.sections.contentDefaults.title")}</h2>
+
+                    <CustomInput
+                        tag="input"
+                        type="text"
+                        name="defaultTheme"
+                        register={register("defaultTheme")}
+                        label={t("admin.siteSettings.fields.defaultTheme.label")}
+                        placeholder="browser"
+                        error={errors.defaultTheme?.message}
+                    />
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">
+                            {t("admin.siteSettings.fields.defaultPostListingType.label")}
+                        </label>
+                        <select
+                            {...register("defaultPostListingType")}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                        >
+                            <option value="All">{t("admin.siteSettings.fields.defaultPostListingType.all")}</option>
+                            <option value="Local">{t("admin.siteSettings.fields.defaultPostListingType.local")}</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">
+                            {t("admin.siteSettings.fields.defaultPostListingMode.label")}
+                        </label>
+                        <select
+                            {...register("defaultPostListingMode")}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                        >
+                            <option value="List">{t("admin.siteSettings.fields.defaultPostListingMode.list")}</option>
+                            <option value="Card">{t("admin.siteSettings.fields.defaultPostListingMode.card")}</option>
+                            <option value="SmallCard">{t("admin.siteSettings.fields.defaultPostListingMode.smallCard")}</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">
+                            {t("admin.siteSettings.fields.defaultPostSortType.label")}
+                        </label>
+                        <select
+                            {...register("defaultPostSortType")}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                        >
+                            <option value="Active">{t("admin.siteSettings.fields.defaultPostSortType.active")}</option>
+                            <option value="Hot">{t("admin.siteSettings.fields.defaultPostSortType.hot")}</option>
+                            <option value="New">{t("admin.siteSettings.fields.defaultPostSortType.new")}</option>
+                            <option value="Old">{t("admin.siteSettings.fields.defaultPostSortType.old")}</option>
+                            <option value="Top">{t("admin.siteSettings.fields.defaultPostSortType.top")}</option>
+                            <option value="MostComments">{t("admin.siteSettings.fields.defaultPostSortType.mostComments")}</option>
+                            <option value="NewComments">{t("admin.siteSettings.fields.defaultPostSortType.newComments")}</option>
+                            <option value="Controversial">{t("admin.siteSettings.fields.defaultPostSortType.controversial")}</option>
+                            <option value="Scaled">{t("admin.siteSettings.fields.defaultPostSortType.scaled")}</option>
+                        </select>
+                    </div>
+
+                    <CustomInput
+                        tag="input"
+                        type="number"
+                        name="defaultPostTimeRangeSeconds"
+                        register={register("defaultPostTimeRangeSeconds", {valueAsNumber: true})}
+                        label={t("admin.siteSettings.fields.defaultPostTimeRangeSeconds.label")}
+                        error={errors.defaultPostTimeRangeSeconds?.message}
+                    />
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">
+                            {t("admin.siteSettings.fields.defaultProposalSortType.label")}
+                        </label>
+                        <select
+                            {...register("defaultProposalSortType")}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                        >
+                            <option value="Hot">{t("admin.siteSettings.fields.defaultProposalSortType.hot")}</option>
+                            <option value="Top">{t("admin.siteSettings.fields.defaultProposalSortType.top")}</option>
+                            <option value="New">{t("admin.siteSettings.fields.defaultProposalSortType.new")}</option>
+                            <option value="Old">{t("admin.siteSettings.fields.defaultProposalSortType.old")}</option>
+                            <option value="Controversial">{t("admin.siteSettings.fields.defaultProposalSortType.controversial")}</option>
+                        </select>
+                    </div>
+                </Card>
+
                 <div className="flex justify-end">
                     <button
                         type="submit"
