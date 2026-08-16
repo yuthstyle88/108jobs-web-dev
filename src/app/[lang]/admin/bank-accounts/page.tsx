@@ -25,7 +25,7 @@ export default function AdminBankVerificationList() {
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
     const [isGoingBack, setIsGoingBack] = useState(false);
 
-    const {data, isLoading, state, execute: refetch} = useHttpGet("adminListBankAccounts", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListBankAccounts", {
         pageCursor: currentCursor,
         pageBack: isGoingBack,
         limit: 5,
@@ -36,6 +36,7 @@ export default function AdminBankVerificationList() {
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
     const isFetchFailed = isFailed(state);
+    const showLoading = isLoading || isMutating;
 
     const {execute: verify, isMutating: verifying} = useHttpPost("adminVerifyBankAccount");
 
@@ -114,7 +115,7 @@ export default function AdminBankVerificationList() {
                 </div>
 
                 {/* Loading */}
-                {isLoading && (
+                {showLoading && (
                     <div className="space-y-4">
                         {[...Array(5)].map((_, i) => (
                             <Card key={i} className="p-5 animate-pulse">
@@ -131,7 +132,7 @@ export default function AdminBankVerificationList() {
                 )}
 
                 {/* Error State */}
-                {!isLoading && isFetchFailed && (
+                {!showLoading && isFetchFailed && (
                     <Card className="p-12 text-center bg-red-50 border border-red-100">
                         <CreditCard className="w-16 h-16 mx-auto text-red-400 mb-4"/>
                         <p className="text-lg font-medium text-red-600">
@@ -141,7 +142,7 @@ export default function AdminBankVerificationList() {
                 )}
 
                 {/* Empty State */}
-                {!isLoading && !isFetchFailed && bankAccounts.length === 0 && (
+                {!showLoading && !isFetchFailed && bankAccounts.length === 0 && (
                     <Card className="p-12 text-center bg-gray-50">
                         <CreditCard className="w-16 h-16 mx-auto text-gray-400 mb-4"/>
                         <p className="text-lg font-medium text-gray-700">
@@ -153,7 +154,7 @@ export default function AdminBankVerificationList() {
                 )}
 
                 {/* List */}
-                {!isLoading && !isFetchFailed && bankAccounts.length > 0 && (
+                {!showLoading && !isFetchFailed && bankAccounts.length > 0 && (
                     <>
                         <div className="space-y-4">
                             {bankAccounts.map((item: any) => {
@@ -267,7 +268,7 @@ export default function AdminBankVerificationList() {
                                 hasNext={hasNextPage}
                                 onPrevious={handlePrevPage}
                                 onNext={handleNextPage}
-                                isLoading={isLoading}
+                                isLoading={showLoading}
                             />
                         </div>
                     </>
