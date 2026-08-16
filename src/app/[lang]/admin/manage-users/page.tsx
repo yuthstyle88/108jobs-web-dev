@@ -269,7 +269,7 @@ const ManageUsers = () => {
                     hasNext={hasNextPage}
                     onPrevious={handlePrevPage}
                     onNext={handleNextPage}
-                    isLoading={isLoading}
+                    isLoading={showLoading}
                 />
 
                 {/* Detail Modal */}
