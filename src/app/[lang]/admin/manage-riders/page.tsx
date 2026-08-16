@@ -3,7 +3,7 @@
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
 import {Card} from "@/components/ui/Card";
-import {CheckCircle, Loader2, UserCheck, UserX, Bike, Car, Star} from "lucide-react";
+import {CheckCircle, Loader2, UserCheck, UserX, Bike, Motorbike, Car, Star} from "lucide-react";
 import {toast} from "sonner";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
@@ -16,7 +16,7 @@ import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 
 const vehicleIconMap: Record<VehicleType, JSX.Element> = {
     Bicycle: <Bike className="w-4 h-4"/>,
-    Motorcycle: <Bike className="w-4 h-4"/>,
+    Motorcycle: <Motorbike className="w-4 h-4"/>,
     Car: <Car className="w-4 h-4"/>,
 };
 
