@@ -74,10 +74,15 @@ export default function AdminCategoriesPage() {
     const {execute: uploadBanner} = useHttpPost("uploadCategoryBanner");
 
     const tree = useMemo<CategoryNodeView[]>(() => {
-        if (categories) {
-            return buildCategoriesTree(categories) || [];
-        }
-        return [];
+        if (!categories) return [];
+        // The list endpoint returns soft-deleted categories to admins (they
+        // bypass the hide filter every other caller gets), so without this a
+        // just-deleted category stays on screen behind its own success toast.
+        const prune = (nodes: CategoryNodeView[]): CategoryNodeView[] =>
+            nodes
+                .filter((node) => !node.category.deleted)
+                .map((node) => ({...node, children: prune(node.children || [])}));
+        return prune(buildCategoriesTree(categories) || []);
     }, [categories]);
 
     const openImageLightbox = (src: string, alt: string) => {
@@ -169,9 +174,13 @@ export default function AdminCategoriesPage() {
                 description: form.description,
                 // On the upload tab `iconUrl` still holds the FileReader's
                 // base64 data: URL from the preview -- only a real URL from
-                // the URL tab belongs in the create payload.
-                icon: iconMode === "url" ? iconUrl : undefined,
-                banner: bannerMode === "url" ? bannerUrl : undefined,
+                // the URL tab belongs in the create payload. The empty-string
+                // fallback has to become `undefined`: the field deserializes
+                // as a URL server-side, and `""` fails at the extractor with
+                // a 400 that never reaches the CORS layer, so the browser
+                // reports an opaque network error instead.
+                icon: iconMode === "url" && iconUrl ? iconUrl : undefined,
+                banner: bannerMode === "url" && bannerUrl ? bannerUrl : undefined,
             });
 
             if (isSuccess(res)) {
