@@ -1927,7 +1927,7 @@ export const en = {
                 confirm: "Ban User",
                 cancel: "Cancel",
                 success: "User has been banned",
-                successWithReason: "User has been banned – {reason}",
+                successWithReason: "User has been banned – {{reason}}",
             },
 
             // Toast Messages

@@ -1861,11 +1861,11 @@ export const th = {
                 confirm: "แบนผู้ใช้",
                 cancel: "ยกเลิก",
                 success: "แบนผู้ใช้เรียบร้อยแล้ว",
-                successWithReason: "แบนผู้ใช้แล้ว – {reason}",
+                successWithReason: "แบนผู้ใช้แล้ว – {{reason}}",
             },
 
             bannedSuccess: "แบน {name} แล้ว",
-            unbannedSuccess: "ยกเลิกแบน {name} แล้ว",
+            unbannedSuccess: "ยกเลิกแบน {{name}} แล้ว",
             refresh: "รีเฟรช",
         },
         topupGuide: {

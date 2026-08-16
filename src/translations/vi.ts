@@ -1912,11 +1912,11 @@ export const vi = {
                 confirm: "Cấm người dùng",
                 cancel: "Hủy",
                 success: "Đã cấm người dùng",
-                successWithReason: "Đã cấm người dùng – {reason}",
+                successWithReason: "Đã cấm người dùng – {{reason}}",
             },
 
             bannedSuccess: "Đã cấm {name}",
-            unbannedSuccess: "Đã gỡ cấm {name}",
+            unbannedSuccess: "Đã bỏ cấm {{name}}",
             refresh: "Làm mới",
         },
         topupGuide: {
