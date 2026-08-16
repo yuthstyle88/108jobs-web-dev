@@ -2025,21 +2025,13 @@ export const vi = {
                 version: "Phiên bản",
                 registration: "Đăng ký",
                 emailVerification: "Xác minh email",
-                captcha: "Captcha",
                 required: "Bắt buộc",
                 optional: "Tùy chọn",
-                enabled: "Đã bật ({{difficulty}})",
-                disabled: "Đã tắt",
                 unknown: "Không rõ",
                 registrationMode: {
                     open: "Mở",
                     closed: "Đóng",
                     requireApplication: "Yêu cầu đơn đăng ký",
-                },
-                captchaDifficulty: {
-                    easy: "Dễ",
-                    medium: "Trung bình",
-                    hard: "Khó",
                 },
             },
             loadError: {

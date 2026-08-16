@@ -1974,21 +1974,13 @@ export const th = {
                 version: "เวอร์ชัน",
                 registration: "การลงทะเบียน",
                 emailVerification: "ยืนยันอีเมล",
-                captcha: "แคปต์ชา",
                 required: "จำเป็น",
                 optional: "ไม่บังคับ",
-                enabled: "เปิดใช้งาน ({{difficulty}})",
-                disabled: "ปิดใช้งาน",
                 unknown: "ไม่ทราบ",
                 registrationMode: {
                     open: "เปิด",
                     closed: "ปิด",
                     requireApplication: "ต้องยื่นคำขอ",
-                },
-                captchaDifficulty: {
-                    easy: "ง่าย",
-                    medium: "ปานกลาง",
-                    hard: "ยาก",
                 },
             },
             loadError: {

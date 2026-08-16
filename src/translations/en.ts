@@ -2041,21 +2041,13 @@ export const en = {
                 version: "Version",
                 registration: "Registration",
                 emailVerification: "Email Verification",
-                captcha: "Captcha",
                 required: "Required",
                 optional: "Optional",
-                enabled: "Enabled ({{difficulty}})",
-                disabled: "Disabled",
                 unknown: "Unknown",
                 registrationMode: {
                     open: "Open",
                     closed: "Closed",
                     requireApplication: "Application Required",
-                },
-                captchaDifficulty: {
-                    easy: "Easy",
-                    medium: "Medium",
-                    hard: "Hard",
                 },
             },
             loadError: {
