@@ -166,7 +166,7 @@ const DashboardPage = () => {
                                     <div>
                                         <p className="font-medium">{item.label}</p>
                                         <p className="text-sm">
-                                            {item.value} {item.value === 1n ? t("dashboard.activity.user") : t("dashboard.activity.users")}
+                                            {item.value} {Number(item.value) === 1 ? t("dashboard.activity.user") : t("dashboard.activity.users")}
                                         </p>
                                     </div>
                                     <div

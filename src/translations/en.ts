@@ -2090,7 +2090,7 @@ export const en = {
             },
             events: {
                 title: "Site Summary",
-                adminActive: "Admin on record: @{name}",
+                adminActive: "Admin on record: @{{name}}",
                 postsPublished: "{{count}} posts published",
                 sinceLaunch: "Since {{date}}",
                 launch: "Launch",
