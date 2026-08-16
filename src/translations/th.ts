@@ -3811,6 +3811,9 @@ export const th = {
                     rateLimits: {title: "ขีดจำกัดอัตราการใช้งาน"},
                 },
                 fields: {
+                    errorNotANumber: "ต้องเป็นตัวเลข",
+                    errorMinValue: "ต้องมีค่าตั้งแต่ 0 ขึ้นไป",
+                    errorMinOne: "ต้องมีค่าตั้งแต่ 1 ขึ้นไป",
                     name: {
                         label: "ชื่อไซต์",
                         placeholder: "เช่น 108Jobs",

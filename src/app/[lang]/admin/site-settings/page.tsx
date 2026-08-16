@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,26 +31,26 @@ const getSiteSettingsSchema = (t: (key: string) => string) => z.object({
     defaultPostSortType: z.enum([
         "Active", "Hot", "New", "Old", "Top", "MostComments", "NewComments", "Controversial", "Scaled",
     ]).optional(),
-    defaultPostTimeRangeSeconds: z.number().int().min(0).optional(),
+    defaultPostTimeRangeSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
     defaultProposalSortType: z.enum(["Hot", "Top", "New", "Old", "Controversial"]).optional(),
     legalInformation: z.string().optional(),
     applicationEmailAdmins: z.boolean().optional(),
     slurFilterRegex: z.string().optional(),
-    actorNameMaxLength: z.number().int().min(1).optional(),
-    rateLimitMessageMaxRequests: z.number().int().min(0).optional(),
-    rateLimitMessageIntervalSeconds: z.number().int().min(0).optional(),
-    rateLimitPostMaxRequests: z.number().int().min(0).optional(),
-    rateLimitPostIntervalSeconds: z.number().int().min(0).optional(),
-    rateLimitRegisterMaxRequests: z.number().int().min(0).optional(),
-    rateLimitRegisterIntervalSeconds: z.number().int().min(0).optional(),
-    rateLimitImageMaxRequests: z.number().int().min(0).optional(),
-    rateLimitImageIntervalSeconds: z.number().int().min(0).optional(),
-    rateLimitProposalMaxRequests: z.number().int().min(0).optional(),
-    rateLimitProposalIntervalSeconds: z.number().int().min(0).optional(),
-    rateLimitSearchMaxRequests: z.number().int().min(0).optional(),
-    rateLimitSearchIntervalSeconds: z.number().int().min(0).optional(),
-    rateLimitImportUserSettingsMaxRequests: z.number().int().min(0).optional(),
-    rateLimitImportUserSettingsIntervalSeconds: z.number().int().min(0).optional(),
+    actorNameMaxLength: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(1, t("admin.siteSettings.fields.errorMinOne")).optional(),
+    rateLimitMessageMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitMessageIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitPostMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitPostIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitRegisterMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitRegisterIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitImageMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitImageIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitProposalMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitProposalIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitSearchMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitSearchIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitImportUserSettingsMaxRequests: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
+    rateLimitImportUserSettingsIntervalSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
     registrationMode: z.enum(["Open", "Closed", "RequireApplication"]).optional(),
     reportsEmailAdmins: z.boolean().optional(),
     contentWarning: z.string().optional(),
@@ -118,13 +118,15 @@ const SiteSettingsPage = () => {
 
     const {execute: updateSite, isMutating: isSaving} = useHttpPut("updateSite");
 
+    const siteSettingsSchema = useMemo(() => getSiteSettingsSchema(t), [t]);
+
     const {
         register,
         handleSubmit,
         reset,
-        formState: {errors, dirtyFields},
+        formState: {errors, dirtyFields, isDirty},
     } = useForm<SiteSettingsFormValues>({
-        resolver: zodResolver(getSiteSettingsSchema(t)),
+        resolver: zodResolver(siteSettingsSchema),
         defaultValues: buildDefaultValues(siteRes?.siteView),
     });
 
@@ -245,12 +247,13 @@ const SiteSettingsPage = () => {
                     <h2 className="text-lg font-semibold">{t("admin.siteSettings.sections.registration.title")}</h2>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1.5">
+                        <label htmlFor="registrationMode" className="block text-sm font-medium text-gray-700 mb-2">
                             {t("admin.siteSettings.fields.registrationMode.label")}
                         </label>
                         <select
+                            id="registrationMode"
                             {...register("registrationMode")}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                             <option value="Open">{t("dashboard.siteInfo.registrationMode.open")}</option>
                             <option value="Closed">{t("dashboard.siteInfo.registrationMode.closed")}</option>
@@ -339,12 +342,13 @@ const SiteSettingsPage = () => {
                     />
 
                     <div>
-                        <label className="block text-sm font-medium mb-1.5">
+                        <label htmlFor="defaultPostListingType" className="block text-sm font-medium text-gray-700 mb-2">
                             {t("admin.siteSettings.fields.defaultPostListingType.label")}
                         </label>
                         <select
+                            id="defaultPostListingType"
                             {...register("defaultPostListingType")}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                             <option value="All">{t("admin.siteSettings.fields.defaultPostListingType.all")}</option>
                             <option value="Local">{t("admin.siteSettings.fields.defaultPostListingType.local")}</option>
@@ -352,12 +356,13 @@ const SiteSettingsPage = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1.5">
+                        <label htmlFor="defaultPostListingMode" className="block text-sm font-medium text-gray-700 mb-2">
                             {t("admin.siteSettings.fields.defaultPostListingMode.label")}
                         </label>
                         <select
+                            id="defaultPostListingMode"
                             {...register("defaultPostListingMode")}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                             <option value="List">{t("admin.siteSettings.fields.defaultPostListingMode.list")}</option>
                             <option value="Card">{t("admin.siteSettings.fields.defaultPostListingMode.card")}</option>
@@ -366,12 +371,13 @@ const SiteSettingsPage = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1.5">
+                        <label htmlFor="defaultPostSortType" className="block text-sm font-medium text-gray-700 mb-2">
                             {t("admin.siteSettings.fields.defaultPostSortType.label")}
                         </label>
                         <select
+                            id="defaultPostSortType"
                             {...register("defaultPostSortType")}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                             <option value="Active">{t("admin.siteSettings.fields.defaultPostSortType.active")}</option>
                             <option value="Hot">{t("admin.siteSettings.fields.defaultPostSortType.hot")}</option>
@@ -395,12 +401,13 @@ const SiteSettingsPage = () => {
                     />
 
                     <div>
-                        <label className="block text-sm font-medium mb-1.5">
+                        <label htmlFor="defaultProposalSortType" className="block text-sm font-medium text-gray-700 mb-2">
                             {t("admin.siteSettings.fields.defaultProposalSortType.label")}
                         </label>
                         <select
+                            id="defaultProposalSortType"
                             {...register("defaultProposalSortType")}
-                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >
                             <option value="Hot">{t("admin.siteSettings.fields.defaultProposalSortType.hot")}</option>
                             <option value="Top">{t("admin.siteSettings.fields.defaultProposalSortType.top")}</option>
@@ -424,7 +431,7 @@ const SiteSettingsPage = () => {
                         {key: "importUserSettings", max: "rateLimitImportUserSettingsMaxRequests", interval: "rateLimitImportUserSettingsIntervalSeconds"},
                     ] as const).map((row) => (
                         <div key={row.key} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
-                            <p className="text-sm font-medium sm:col-span-1">
+                            <p className="text-sm font-medium sm:col-span-1 mb-4">
                                 {t(`admin.siteSettings.fields.rateLimits.${row.key}`)}
                             </p>
                             <CustomInput
@@ -450,7 +457,7 @@ const SiteSettingsPage = () => {
                 <div className="flex justify-end">
                     <button
                         type="submit"
-                        disabled={isSaving}
+                        disabled={isSaving || !isDirty}
                         className="px-6 py-2.5 rounded-lg bg-primary text-white font-medium disabled:opacity-50"
                     >
                         {isSaving ? t("admin.siteSettings.saving") : t("admin.siteSettings.saveButton")}

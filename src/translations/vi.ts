@@ -3919,6 +3919,9 @@ export const vi = {
                     rateLimits: {title: "Giới Hạn Tần Suất"},
                 },
                 fields: {
+                    errorNotANumber: "Phải là một số",
+                    errorMinValue: "Phải từ 0 trở lên",
+                    errorMinOne: "Phải từ 1 trở lên",
                     name: {
                         label: "Tên Trang Web",
                         placeholder: "ví dụ: 108Jobs",

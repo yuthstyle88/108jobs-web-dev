@@ -3895,6 +3895,9 @@ export const en = {
                     rateLimits: {title: "Rate Limits"},
                 },
                 fields: {
+                    errorNotANumber: "Must be a number",
+                    errorMinValue: "Must be 0 or greater",
+                    errorMinOne: "Must be 1 or greater",
                     name: {
                         label: "Site Name",
                         placeholder: "e.g. 108Jobs",
