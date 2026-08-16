@@ -112,6 +112,17 @@ as dead — nothing in the page renders either of them (fix #3 above adds a
 distinct, correctly-worded `dashboard.events.launch` key rather than
 reusing `never`), and neither fits the corrected framing.
 
+**8. Broken `{minutes}` interpolation in `vi.ts`** (translation file, discovered
+while gathering exact translation content for the implementation plan)
+`dashboard.limits.perMinute` uses single-brace `{minutes}` in `vi.ts`
+("bài / {minutes} phút") while `en.ts` ("posts / {{minutes}} min") and
+`th.ts` ("โพสต์ / {{minutes}} นาที") both correctly use double-brace
+`{{minutes}}` — the exact same i18next interpolation bug fixed repeatedly
+in prior batches (single braces don't interpolate; i18next needs `{{ }}`).
+The call site (`page.tsx:147-149`) already passes a `{minutes: ...}`
+interpolation object correctly — only `vi.ts`'s string itself is wrong.
+Fix: `{minutes}` → `{{minutes}}` in `vi.ts`, no other change.
+
 ### Out of scope for this batch
 
 - **Site Settings / config CRUD** (site name, registration mode, email
@@ -163,3 +174,5 @@ batch's situation). Verify manually in the browser preview:
 - The former "Recent System Events" card now reads as "Site Summary" (or
   equivalent per-locale copy) in all three locales, with copy that doesn't
   imply a real-time event log.
+- The Post Rate Limit card's "posts / N min" line shows the actual number
+  in Vietnamese, not the literal text "{minutes}".
