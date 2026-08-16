@@ -29,9 +29,9 @@ export type Category = {
      */
     deleted: boolean;
     /**
-     * Whether its an NSFW category.
+     * Whether its a self-promotion category.
      */
-    nsfw: boolean;
+    selfPromotion: boolean;
     /**
      * A URL for an icon.
      */
@@ -44,7 +44,7 @@ export type Category = {
      * Whether posting is restricted to mods only.
      */
     postingRestrictedToMods: boolean;
-    instanceId: InstanceId;
+    instanceId?: InstanceId;
     visibility: CategoryVisibility;
     /**
      * A shorter, one-line description of the site.
@@ -52,7 +52,7 @@ export type Category = {
     description?: string;
     subscribers: number;
     posts: number;
-    comments: number;
+    proposals: number;
     /**
      * The number of users with any activity in the last day.
      */
@@ -75,5 +75,5 @@ export type Category = {
     localRemoved: boolean;
     path: string;
     active: boolean;
-    is_new: boolean;
+    isNew: boolean;
 };

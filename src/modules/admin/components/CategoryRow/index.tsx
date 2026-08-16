@@ -90,7 +90,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                             {node.category.icon ? (
                                 <Image
                                     src={node.category.icon}
-                                    alt="Icon"
+                                    alt={t("admin.category.iconAlt", {name: node.category.title})}
                                     width={56}
                                     height={56}
                                     className={`
@@ -99,7 +99,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                                         hover:border-primary transition-all cursor-pointer
                                         ring-2 ring-transparent hover:ring-primary/20
                                     `}
-                                    onClick={() => onImageClick(node.category.icon!, "Category Icon")}
+                                    onClick={() => onImageClick(node.category.icon!, t("admin.category.iconAlt", {name: node.category.title}))}
                                 />
                             ) : (
                                 <div
@@ -129,11 +129,11 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                                 {node.category.banner ? (
                                     <div
                                         className="relative group cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
-                                        onClick={() => onImageClick(node.category.banner!, "Banner")}
+                                        onClick={() => onImageClick(node.category.banner!, t("admin.category.bannerAlt", {name: node.category.title}))}
                                     >
                                         <Image
                                             src={node.category.banner}
-                                            alt="Banner"
+                                            alt={t("admin.category.bannerAlt", {name: node.category.title})}
                                             width={380}
                                             height={110}
                                             className="w-full h-28 object-cover rounded-xl"
@@ -141,7 +141,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                                         <div
                                             className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent rounded-xl"/>
                                         <div className="absolute bottom-3 left-4 text-white font-medium text-sm">
-                                            {node.children?.length || 0} subcategories
+                                            {t("admin.category.subcategoryCount", {count: node.children?.length || 0})}
                                         </div>
                                         <div
                                             className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-xl">
@@ -151,7 +151,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                                 ) : (
                                     <div
                                         className="h-28 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center text-gray-400 text-sm font-medium">
-                                        No banner image
+                                        {t("admin.category.noBanner")}
                                     </div>
                                 )}
                             </div>
@@ -163,8 +163,12 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                 <td className="px-6 py-4 text-sm">
                     <span className={isRoot ? "text-gray-400 italic" : "text-gray-600"}>
                         {isRoot
-                            ? "— Root Category —"
-                            : node.category.path.split(" > ").slice(0, -1).join(" → ") || "-"
+                            ? t("admin.category.rootLabel")
+                            : node.category.path
+                                .split(".")
+                                .slice(1, -1)
+                                .map((segment) => segment.replace(/_/g, " "))
+                                .join(" → ") || "-"
                         }
                     </span>
                 </td>
@@ -185,26 +189,30 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                 {/* Actions */}
                 <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                        {/*<button*/}
-                        {/*    onClick={() => onAddChild(node.category.id)}*/}
-                        {/*    className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition"*/}
-                        {/*    title="Add subcategory"*/}
-                        {/*>*/}
-                        {/*    <FontAwesomeIcon icon={faPlus}/>*/}
-                        {/*</button>*/}
+                        <button
+                            onClick={() => onAddChild(node.category.id)}
+                            className="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition"
+                            title={t("admin.category.addChild")}
+                            aria-label={t("admin.category.addChild")}
+                        >
+                            <FontAwesomeIcon icon={faPlus}/>
+                        </button>
                         <button
                             onClick={() => onEdit(node)}
                             className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                            title={t("admin.category.edit")}
+                            aria-label={t("admin.category.edit")}
                         >
                             <FontAwesomeIcon icon={faEdit}/>
                         </button>
-                        {/*<button*/}
-                        {/*    onClick={() => onDelete(node.category.id)}*/}
-                        {/*    className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"*/}
-                        {/*    title="Delete"*/}
-                        {/*>*/}
-                        {/*    <FontAwesomeIcon icon={faTrash}/>*/}
-                        {/*</button>*/}
+                        <button
+                            onClick={() => onDelete(node.category.id)}
+                            className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                            title={t("admin.category.delete")}
+                            aria-label={t("admin.category.delete")}
+                        >
+                            <FontAwesomeIcon icon={faTrash}/>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -212,7 +220,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
             {/* Recursively render children with clear visual separation */}
             {isOpen &&
                 hasChildren &&
-                node.children!.map((child, index) => (
+                node.children!.map((child) => (
                     <React.Fragment key={child.category.id}>
                         <CategoryRow
                             node={child}
