@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSave } from "@fortawesome/free-solid-svg-icons";
+import { useTranslation } from "react-i18next";
 
 interface CategoryFormData {
     name: string;
@@ -47,34 +48,35 @@ export function CategoryModal({
                                   onSave,
                                   onClose,
                               }: CategoryModalProps) {
+    const { t } = useTranslation();
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
                 <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                    {isAddingNew ? "Add New Category" : "Edit Category"}
+                    {isAddingNew ? t("admin.category.modal.addTitle") : t("admin.category.modal.editTitle")}
                 </h3>
 
                 <div className="space-y-8">
                     {/* Name */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Name <span className="text-red-500">*</span>
+                            {t("admin.category.modal.nameLabel")} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
-                            placeholder="Mobile Development"
+                            placeholder={t("admin.category.modal.namePlaceholder")}
                         />
                     </div>
 
                     {/* Icon */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Icon (64x64 recommended)
+                            {t("admin.category.modal.iconLabel")}
                         </label>
                         <div className="flex gap-4 mb-4 border-b border-gray-200">
                             <button
@@ -84,7 +86,7 @@ export function CategoryModal({
                                     iconMode === "url" ? "border-primary text-primary" : "border-transparent"
                                 }`}
                             >
-                                URL
+                                {t("admin.category.modal.tabUrl")}
                             </button>
                             <button
                                 type="button"
@@ -93,7 +95,7 @@ export function CategoryModal({
                                     iconMode === "upload" ? "border-primary text-primary" : "border-transparent"
                                 }`}
                             >
-                                Upload
+                                {t("admin.category.modal.tabUpload")}
                             </button>
                         </div>
 
@@ -109,11 +111,11 @@ export function CategoryModal({
                             <label className="block cursor-pointer">
                                 {!uploadedIcon ? (
                                     <div className="h-32 border-2 border-dashed rounded-xl flex items-center justify-center bg-gray-50 hover:bg-gray-100">
-                                        <p className="text-gray-500">Click to upload icon</p>
+                                        <p className="text-gray-500">{t("admin.category.modal.clickToUploadIcon")}</p>
                                     </div>
                                 ) : (
                                     <div className="relative">
-                                        <Image src={uploadedIcon} alt="Icon" width={100} height={100} className="rounded-lg mx-auto" />
+                                        <Image src={uploadedIcon} alt={t("admin.category.modal.iconAlt")} width={100} height={100} className="rounded-lg mx-auto" />
                                         <button
                                             onClick={() => {
                                                 setUploadedIcon(null);
@@ -131,7 +133,7 @@ export function CategoryModal({
 
                         {form.icon && (
                             <div className="mt-3 text-center">
-                                <Image src={form.icon} alt="Icon preview" width={80} height={80} className="rounded-lg mx-auto border" />
+                                <Image src={form.icon} alt={t("admin.category.modal.iconPreviewAlt")} width={80} height={80} className="rounded-lg mx-auto border" />
                             </div>
                         )}
                     </div>
@@ -139,7 +141,7 @@ export function CategoryModal({
                     {/* Banner */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Banner Image <span className="text-gray-500 text-xs">(Recommended: 1920×600px)</span>
+                            {t("admin.category.modal.bannerLabel")} <span className="text-gray-500 text-xs">{t("admin.category.modal.bannerHint")}</span>
                         </label>
                         <div className="flex gap-6 mb-4 border-b border-gray-200">
                             <button
@@ -149,7 +151,7 @@ export function CategoryModal({
                                     bannerMode === "url" ? "border-primary text-primary" : "border-transparent"
                                 }`}
                             >
-                                Enter URL
+                                {t("admin.category.modal.tabEnterUrl")}
                             </button>
                             <button
                                 type="button"
@@ -158,7 +160,7 @@ export function CategoryModal({
                                     bannerMode === "upload" ? "border-primary text-primary" : "border-transparent"
                                 }`}
                             >
-                                Upload Image
+                                {t("admin.category.modal.tabUploadImage")}
                             </button>
                         </div>
 
@@ -174,11 +176,11 @@ export function CategoryModal({
                                 />
                                 {form.banner && (
                                     <div className="relative rounded-xl overflow-hidden shadow-lg border">
-                                        <Image src={form.banner} alt="Banner preview" width={800} height={300} className="w-full h-64 object-cover" />
+                                        <Image src={form.banner} alt={t("admin.category.modal.bannerPreviewAlt")} width={800} height={300} className="w-full h-64 object-cover" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                                         <div className="absolute bottom-4 left-6 text-white">
-                                            <p className="text-2xl font-bold">{form.name || "Category Name"}</p>
-                                            <p className="text-sm opacity-90">Click banner to enlarge</p>
+                                            <p className="text-2xl font-bold">{form.name || t("admin.category.modal.namePreviewFallback")}</p>
+                                            <p className="text-sm opacity-90">{t("admin.category.modal.clickToEnlarge")}</p>
                                         </div>
                                         <button
                                             onClick={() => setForm({ ...form, banner: "" })}
@@ -199,15 +201,15 @@ export function CategoryModal({
                                         <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                         </svg>
-                                        <p className="text-gray-600 font-medium">Click to upload banner</p>
-                                        <p className="text-xs text-gray-500 mt-1">JPG, PNG · Max 5MB · 1920×600 recommended</p>
+                                        <p className="text-gray-600 font-medium">{t("admin.category.modal.clickToUploadBanner")}</p>
+                                        <p className="text-xs text-gray-500 mt-1">{t("admin.category.modal.bannerUploadHint")}</p>
                                     </div>
                                 ) : (
                                     <div className="relative rounded-xl overflow-hidden shadow-lg">
-                                        <Image src={uploadedBanner} alt="Banner" width={800} height={300} className="w-full h-64 object-cover" />
+                                        <Image src={uploadedBanner} alt={t("admin.category.modal.bannerAlt")} width={800} height={300} className="w-full h-64 object-cover" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                                         <div className="absolute bottom-4 left-6 text-white">
-                                            <p className="text-2xl font-bold">{form.name || "Category Name"}</p>
+                                            <p className="text-2xl font-bold">{form.name || t("admin.category.modal.namePreviewFallback")}</p>
                                         </div>
                                         <button
                                             onClick={() => {
@@ -229,7 +231,7 @@ export function CategoryModal({
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 mt-8">
                     <button onClick={onClose} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                        Cancel
+                        {t("admin.category.modal.cancel")}
                     </button>
                     <button
                         onClick={onSave}
@@ -237,7 +239,7 @@ export function CategoryModal({
                         className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
                     >
                         <FontAwesomeIcon icon={faSave} />
-                        {isAddingNew ? "Create" : "Save"}
+                        {isAddingNew ? t("admin.category.modal.create") : t("admin.category.modal.save")}
                     </button>
                 </div>
             </div>
