@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
 import {Card} from "@/components/ui/Card";
@@ -165,10 +166,20 @@ export default function AdminRidersManagementPage() {
                                                 {/* Main info */}
                                                 <div className="flex items-start gap-5">
                                                     <div
-                                                        className="p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex-shrink-0">
-                                                        <UserCheck
-                                                            className={cn("w-7 h-7", isUnverified ? "text-amber-600" : "text-emerald-600")}
-                                                        />
+                                                        className="p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex-shrink-0 overflow-hidden flex items-center justify-center">
+                                                        {person.avatar ? (
+                                                            <Image
+                                                                src={person.avatar}
+                                                                alt={person.name || person.displayName || t("common.unknown")}
+                                                                width={28}
+                                                                height={28}
+                                                                className="w-7 h-7 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <UserCheck
+                                                                className={cn("w-7 h-7", isUnverified ? "text-amber-600" : "text-emerald-600")}
+                                                            />
+                                                        )}
                                                     </div>
 
                                                     <div className="flex-1 min-w-0 space-y-3">
