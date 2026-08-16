@@ -218,24 +218,14 @@ export default function AdminCategoriesPage() {
                             <h1 className="text-2xl font-bold text-primary mb-1">Manage Categories</h1>
                             <p className="text-gray-600">Organize your service catalog structure</p>
                         </div>
-                        <div className="relative group inline-block">
-                            <button
-                                disabled
-                                className="inline-flex items-center bg-primary text-white py-3 px-6
-                   rounded-xl text-sm font-semibold shadow-md opacity-60
-                   cursor-not-allowed"
-                            >
-                                <FontAwesomeIcon icon={faPlus} className="mr-2"/>
-                                Add Root Category
-                            </button>
-
-                            <span
-                                className="absolute top-full left-1/2 -translate-x-1/2 mt-2
-                   bg-black text-white text-xs px-2 py-1 rounded
-                   opacity-0 group-hover:opacity-100 transition-opacity">
-        Coming soon
-    </span>
-                        </div>
+                        <button
+                            onClick={() => toast("Adding root categories isn't available yet — coming soon.")}
+                            className="inline-flex items-center bg-primary text-white py-3 px-6
+                   rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all"
+                        >
+                            <FontAwesomeIcon icon={faPlus} className="mr-2"/>
+                            Add Root Category
+                        </button>
 
                     </div>
 
