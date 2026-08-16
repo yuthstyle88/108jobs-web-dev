@@ -202,8 +202,53 @@ const TopUpCoins = () => {
                             />
                         </div>
 
-                        {/* Year, Month, Day — same pattern */}
-                        {/* ... abbreviated for brevity ... */}
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">
+                                {t("topupCoins.filters.year")}
+                            </label>
+                            <select
+                                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                                value={filters.year ?? ""}
+                                onChange={(e) => handleFilterChange("year", e.target.value ? Number(e.target.value) : undefined)}
+                            >
+                                <option value="">{t("topupCoins.filters.all")}</option>
+                                {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map((y) => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">
+                                {t("topupCoins.filters.month")}
+                            </label>
+                            <select
+                                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                                value={filters.month ?? ""}
+                                onChange={(e) => handleFilterChange("month", e.target.value ? Number(e.target.value) : undefined)}
+                            >
+                                <option value="">{t("topupCoins.filters.all")}</option>
+                                {Array.from({length: 12}, (_, i) => i + 1).map((m) => (
+                                    <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">
+                                {t("topupCoins.filters.day")}
+                            </label>
+                            <select
+                                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                                value={filters.day ?? ""}
+                                onChange={(e) => handleFilterChange("day", e.target.value ? Number(e.target.value) : undefined)}
+                            >
+                                <option value="">{t("topupCoins.filters.all")}</option>
+                                {Array.from({length: 31}, (_, i) => i + 1).map((d) => (
+                                    <option key={d} value={d}>{d.toString().padStart(2, "0")}</option>
+                                ))}
+                            </select>
+                        </div>
 
                         <div className="flex items-end sm:col-span-2 lg:col-span-6">
                             <Button onClick={applyFilters} className="w-full">
