@@ -106,7 +106,7 @@ const TopUpCoins = () => {
     const getStatusBadge = (status: string, transferred: boolean) => {
         if (transferred) {
             return (
-                <Badge className="bg-green-600 text-white border-emerald-200">
+                <Badge className="bg-success text-success-foreground border-success/30">
                     <CheckCircle2 className="w-3 h-3 mr-1"/>
                     {t("topupCoins.status.transferred")}
                 </Badge>
@@ -130,7 +130,7 @@ const TopUpCoins = () => {
                 );
             case "Expired":
                 return (
-                    <Badge className="bg-red-100 text-red-800 border-red-200">
+                    <Badge className="bg-destructive/10 text-destructive border-destructive/20">
                         <XCircle className="w-3 h-3 mr-1"/>
                         {t("topupCoins.status.expired")}
                     </Badge>
