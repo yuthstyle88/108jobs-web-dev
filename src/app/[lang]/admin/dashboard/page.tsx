@@ -7,6 +7,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
+import {RegistrationMode} from "108jobs-client";
 
 const DashboardPage = () => {
     const {t} = useTranslation();
@@ -18,6 +19,18 @@ const DashboardPage = () => {
     const version = siteRes?.version;
 
     const siteName = localSite?.name ?? "108Jobs";
+
+    const registrationModeLabels: Record<RegistrationMode, string> = {
+        Open: t("dashboard.siteInfo.registrationMode.open"),
+        Closed: t("dashboard.siteInfo.registrationMode.closed"),
+        RequireApplication: t("dashboard.siteInfo.registrationMode.requireApplication"),
+    };
+
+    const captchaDifficultyLabels: Record<string, string> = {
+        easy: t("dashboard.siteInfo.captchaDifficulty.easy"),
+        medium: t("dashboard.siteInfo.captchaDifficulty.medium"),
+        hard: t("dashboard.siteInfo.captchaDifficulty.hard"),
+    };
 
     const stats = [
         {
@@ -78,7 +91,7 @@ const DashboardPage = () => {
                             <span
                                 className={localSite?.registrationMode === "Open" ? "text-success" : "text-destructive"}
                             >
-                {localSite?.registrationMode ?? t("dashboard.siteInfo.unknown")}
+                {localSite?.registrationMode ? registrationModeLabels[localSite.registrationMode] : t("dashboard.siteInfo.unknown")}
               </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -92,7 +105,9 @@ const DashboardPage = () => {
                             <AlertTriangle className="w-4 h-4"/>
                             <span className="font-medium">{t("dashboard.siteInfo.captcha")}:</span>{" "}
                             {localSite?.captchaEnabled
-                                ? t("dashboard.siteInfo.enabled", {difficulty: localSite.captchaDifficulty ?? "easy"})
+                                ? t("dashboard.siteInfo.enabled", {
+                                    difficulty: captchaDifficultyLabels[localSite.captchaDifficulty ?? "easy"] ?? (localSite.captchaDifficulty ?? "easy"),
+                                })
                                 : t("dashboard.siteInfo.disabled")}
                         </div>
                     </CardContent>

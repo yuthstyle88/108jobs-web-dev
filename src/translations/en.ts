@@ -2044,6 +2044,16 @@ export const en = {
                 enabled: "Enabled ({{difficulty}})",
                 disabled: "Disabled",
                 unknown: "Unknown",
+                registrationMode: {
+                    open: "Open",
+                    closed: "Closed",
+                    requireApplication: "Application Required",
+                },
+                captchaDifficulty: {
+                    easy: "Easy",
+                    medium: "Medium",
+                    hard: "Hard",
+                },
             },
             stats: {
                 totalUsers: "Total Users",

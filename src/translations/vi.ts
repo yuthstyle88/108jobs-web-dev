@@ -2028,6 +2028,16 @@ export const vi = {
                 enabled: "Đã bật ({{difficulty}})",
                 disabled: "Đã tắt",
                 unknown: "Không rõ",
+                registrationMode: {
+                    open: "Mở",
+                    closed: "Đóng",
+                    requireApplication: "Yêu cầu đơn đăng ký",
+                },
+                captchaDifficulty: {
+                    easy: "Dễ",
+                    medium: "Trung bình",
+                    hard: "Khó",
+                },
             },
             stats: {
                 totalUsers: "Tổng người dùng",
