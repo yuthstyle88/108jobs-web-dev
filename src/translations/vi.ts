@@ -2008,6 +2008,7 @@ export const vi = {
                 confirm: "Xác nhận chuyển",
                 cancel: "Hủy",
                 processing: "Đang xử lý...",
+                unknownUser: "Không rõ",
             },
 
             toast: {

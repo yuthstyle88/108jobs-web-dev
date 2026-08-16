@@ -369,7 +369,7 @@ const TopUpCoins = () => {
                     transfer={
                         selectedTransfer
                             ? {
-                                userName: selectedTransfer.localUser.email || "Unknown",
+                                userName: selectedTransfer.localUser.email || t("topupCoins.modal.unknownUser"),
                                 reason: "User paid via QR",
                                 amount: selectedTransfer.topUpRequest.amountMinor / 100,
                                 paymentCode: selectedTransfer.topUpRequest.paymentIntentId || undefined,

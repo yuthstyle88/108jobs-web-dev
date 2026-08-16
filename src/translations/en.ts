@@ -2024,6 +2024,7 @@ export const en = {
                 confirm: "Confirm Transfer",
                 cancel: "Cancel",
                 processing: "Processing...",
+                unknownUser: "Unknown",
             },
 
             toast: {

@@ -1957,6 +1957,7 @@ export const th = {
                 confirm: "ยืนยันการโอน",
                 cancel: "ยกเลิก",
                 processing: "กำลังดำเนินการ...",
+                unknownUser: "ไม่ทราบ",
             },
 
             toast: {
