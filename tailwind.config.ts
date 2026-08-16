@@ -22,6 +22,26 @@ const config: Config = {
                 third: "var(--third)",
                 fourth: "var(--fourth)",
                 fifth: "var(--fifth)",
+                destructive: {
+                    DEFAULT: "var(--destructive)",
+                    foreground: "var(--destructive-foreground)",
+                },
+                success: {
+                    DEFAULT: "var(--success)",
+                    foreground: "var(--success-foreground)",
+                },
+                muted: {
+                    DEFAULT: "var(--muted)",
+                    foreground: "var(--muted-foreground)",
+                },
+                accent: {
+                    DEFAULT: "var(--accent)",
+                    foreground: "var(--accent-foreground)",
+                },
+                card: {
+                    DEFAULT: "var(--card)",
+                    foreground: "var(--card-foreground)",
+                },
 
                 // ✅ แบบใหม่ (ขีดกลาง): ใช้ได้กับ `text-text-primary`, `text-text-secondary`
                 text: {

@@ -1,4 +1,3 @@
-import {Bell, Settings} from "lucide-react";
 import {Button} from "@/components/ui/Button";
 import {SidebarTrigger} from "@/components/ui/Sidebar";
 import {
@@ -10,36 +9,39 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
-import LanguageDropdown from "@/components/LanguageDropDown";
+import {ProfileImage} from "@/constants/images";
 import React, {useCallback} from "react";
+import {useTranslation} from "react-i18next";
 import {UserService} from "@/services";
+import {useUserStore} from "@/store/useUserStore";
 
 export function AdminHeader() {
     const logout = useCallback(() => UserService.Instance.logout(), []);
+    const {t} = useTranslation();
+    const {userInfo} = useUserStore();
+    const person = userInfo?.localUserView.person;
+    const email = userInfo?.localUserView.localUser.email;
+    const displayName = person?.displayName || person?.name || "";
+    const initials = displayName ? displayName.slice(0, 2).toUpperCase() : "AD";
+
     return (
         <header
-            className="h-16 border-b border-border bg-primary flex items-center justify-between px-6">
+            className="h-16 border-b border-border bg-primary text-white flex items-center justify-between px-6">
             <div className="flex items-center gap-4">
-                <SidebarTrigger className="text-muted-foreground hover:text-foreground"/>
+                <SidebarTrigger className="text-white/80 hover:text-white"/>
             </div>
 
             <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="w-5 h-5"/>
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
-                </Button>
-
-                {/*<LanguageDropdown/>*/}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-10 px-3 gap-2">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src="/admin-avatar.jpg" alt="Admin"/>
-                                <AvatarFallback className="bg-black text-white">AD</AvatarFallback>
+                                <AvatarImage src={person?.avatar || ProfileImage.avatar.src} alt={displayName || t("admin.layout.header.defaultAdminLabel")}/>
+                                <AvatarFallback className="bg-black text-white">{initials}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col items-start text-left">
-                                <span className="text-sm font-medium">Admin User</span>
-                                <span className="text-xs text-muted-foreground">admin@108jobs.com</span>
+                                <span className="text-sm font-medium">{displayName}</span>
+                                <span className="text-xs text-white/80">{email}</span>
                             </div>
                         </Button>
                     </DropdownMenuTrigger>
@@ -47,20 +49,15 @@ export function AdminHeader() {
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuLabel className="font-normal">
                             <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">Admin User</p>
+                                <p className="text-sm font-medium leading-none">{displayName}</p>
                                 <p className="text-xs leading-none text-muted-foreground">
-                                    admin@108jobs.com
+                                    {email}
                                 </p>
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator/>
-                        <DropdownMenuItem>
-                            <Settings className="mr-2 h-4 w-4"/>
-                            <span>Settings</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator/>
                         <DropdownMenuItem className="text-destructive" onSelect={logout}>
-                            Logout
+                            {t("admin.layout.header.logout")}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

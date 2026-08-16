@@ -107,7 +107,7 @@ const DashboardPage = () => {
 
                 <div className="grid gap-6 lg:grid-cols-2">
                     {/* User Activity */}
-                    <Card className="bg-gradient-card border-border/50">
+                    <Card className="bg-card border-border/50">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Activity className="w-5 h-5"/>
@@ -131,7 +131,7 @@ const DashboardPage = () => {
                     </Card>
 
                     {/* Rate Limits & Admins */}
-                    <Card className="bg-gradient-card border-border/50">
+                    <Card className="bg-card border-border/50">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Shield className="w-5 h-5"/>
@@ -174,7 +174,7 @@ const DashboardPage = () => {
                 </div>
 
                 {/* Recent System Events */}
-                <Card className="bg-gradient-card border-border/50">
+                <Card className="bg-card border-border/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <CheckCircle className="w-5 h-5 text-success"/>
