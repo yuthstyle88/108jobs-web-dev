@@ -3675,6 +3675,7 @@ export const th = {
                     iconPreviewAlt: "ตัวอย่างไอคอน",
                     bannerLabel: "รูปแบนเนอร์",
                     bannerHint: "(แนะนำ: 1920×600px)",
+                    urlEditWarning: "การเปลี่ยน URL ที่นี่จะไม่ถูกบันทึกสำหรับหมวดหมู่ที่มีอยู่แล้ว — ใช้การอัปโหลดแทน",
                     tabEnterUrl: "กรอก URL",
                     tabUploadImage: "อัปโหลดรูปภาพ",
                     bannerPreviewAlt: "ตัวอย่างแบนเนอร์",

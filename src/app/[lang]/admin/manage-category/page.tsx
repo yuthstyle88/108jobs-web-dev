@@ -205,7 +205,7 @@ export default function AdminCategoriesPage() {
     const openEditModal = (node: CategoryNodeView) => {
         setEditingCategory(node);
         setForm({
-            name: node.category.name,
+            name: node.category.title,
             icon: node.category.icon || "",
             banner: node.category.banner || "",
             description: node.category.description || "",

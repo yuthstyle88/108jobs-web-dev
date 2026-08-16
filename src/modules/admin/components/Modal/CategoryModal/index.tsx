@@ -100,13 +100,18 @@ export function CategoryModal({
                         </div>
 
                         {iconMode === "url" ? (
-                            <input
-                                type="url"
-                                value={form.icon || ""}
-                                onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                                className="w-full px-4 py-3 border rounded-lg"
-                                placeholder="https://..."
-                            />
+                            <>
+                                <input
+                                    type="url"
+                                    value={form.icon || ""}
+                                    onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                                    className="w-full px-4 py-3 border rounded-lg"
+                                    placeholder="https://..."
+                                />
+                                {!isAddingNew && (
+                                    <p className="mt-2 text-xs text-amber-600">{t("admin.category.modal.urlEditWarning")}</p>
+                                )}
+                            </>
                         ) : (
                             <label className="block cursor-pointer">
                                 {!uploadedIcon ? (
@@ -174,6 +179,9 @@ export function CategoryModal({
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                                     placeholder="https://storage.googleapis.com/..."
                                 />
+                                {!isAddingNew && (
+                                    <p className="mt-2 text-xs text-amber-600">{t("admin.category.modal.urlEditWarning")}</p>
+                                )}
                                 {form.banner && (
                                     <div className="relative rounded-xl overflow-hidden shadow-lg border">
                                         <Image src={form.banner} alt={t("admin.category.modal.bannerPreviewAlt")} width={800} height={300} className="w-full h-64 object-cover" />

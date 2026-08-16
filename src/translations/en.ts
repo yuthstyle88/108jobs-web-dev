@@ -3759,6 +3759,7 @@ export const en = {
                     iconPreviewAlt: "Icon preview",
                     bannerLabel: "Banner Image",
                     bannerHint: "(Recommended: 1920×600px)",
+                    urlEditWarning: "Changing the URL here won't be saved for an existing category — use Upload instead.",
                     tabEnterUrl: "Enter URL",
                     tabUploadImage: "Upload Image",
                     bannerPreviewAlt: "Banner preview",

@@ -11,7 +11,6 @@ import {
     JobType,
     PostSortType,
     SearchCombinedView,
-    PostView,
 } from "108jobs-client";
 import {useTranslation} from "react-i18next";
 import {
@@ -22,18 +21,15 @@ import {
     toCamelCaseLastSegment,
 } from "@/utils/helpers";
 import ErrorState from "@/components/ErrorState";
-import {REQUEST_STATE} from "@/services/HttpService";
+import {REQUEST_STATE, isSuccess, isFailed} from "@/services/HttpService";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
     faEye,
-    faToggleOn,
-    faToggleOff,
     faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
-import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {toast} from "sonner";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useDebounce} from "@/hooks/utils/useDebounce";
@@ -108,8 +104,7 @@ const AdminJobBoard = () => {
         limit: ITEMS_PER_PAGE,
     });
 
-    const {execute: deleteJob} = useHttpDelete("");
-    const {execute: toggleVisibility} = useHttpPost("");
+    const {execute: deleteJob} = useHttpDelete("deletePost");
 
     const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
     const hasNextPage = useMemo(() => !!jobPostsPagination?.nextPage, [jobPostsPagination?.nextPage]);
@@ -195,22 +190,12 @@ const AdminJobBoard = () => {
     const handleDelete = async (jobId: number) => {
         if (!confirm(t("admin.confirmDeleteJob"))) return;
 
-        try {
-            await deleteJob(`/post/${jobId}`);
+        const res = await deleteJob({postId: jobId});
+        if (isSuccess(res)) {
             toast.success(t("admin.jobDeleted"));
             refreshJobs();
-        } catch (err) {
+        } else if (isFailed(res)) {
             toast.error(t("admin.jobDeleteFailed"));
-        }
-    };
-
-    const handleToggleVisibility = async (job: PostView) => {
-        try {
-            await toggleVisibility(`/post/${job.post.id}/toggle-hidden`, {hidden: !job.post.removed});
-            toast.success(job.post.removed ? t("admin.jobUnhidden") : t("admin.jobHidden"));
-            refreshJobs();
-        } catch (err) {
-            toast.error(t("admin.toggleFailed"));
         }
     };
 
@@ -223,6 +208,8 @@ const AdminJobBoard = () => {
             budgetMax: undefined,
             sort: undefined,
         });
+        setBudgetInputs({min: "", max: ""});
+        setBudgetError(null);
         router.push(pathname, {scroll: false});
     }, [router, pathname]);
 
@@ -259,6 +246,7 @@ const AdminJobBoard = () => {
         filters.budgetMax,
         filters.jobType,
         filters.intendedUse,
+        sanitizedQuery,
     ]);
 
     useEffect(() => {
@@ -455,16 +443,6 @@ const AdminJobBoard = () => {
                                                             title={t("global.view")}
                                                         >
                                                             <FontAwesomeIcon icon={faEye}/>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleToggleVisibility(job)}
-                                                            className={`${
-                                                                job.post.removed ? "text-green-600" : "text-orange-600"
-                                                            } hover:opacity-80`}
-                                                            title={job.post.removed ? t("admin.unhide") : t("admin.hide")}
-                                                        >
-                                                            <FontAwesomeIcon
-                                                                icon={job.post.removed ? faToggleOff : faToggleOn}/>
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(job.post.id)}

@@ -3783,6 +3783,7 @@ export const vi = {
                     iconPreviewAlt: "Xem trước biểu tượng",
                     bannerLabel: "Hình ảnh banner",
                     bannerHint: "(Khuyến nghị: 1920×600px)",
+                    urlEditWarning: "Thay đổi URL tại đây sẽ không được lưu cho danh mục đã có — hãy dùng chức năng Tải lên thay thế.",
                     tabEnterUrl: "Nhập URL",
                     tabUploadImage: "Tải hình ảnh lên",
                     bannerPreviewAlt: "Xem trước banner",
