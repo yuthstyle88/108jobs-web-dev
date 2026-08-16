@@ -3813,6 +3813,11 @@ export const vi = {
                     placeholderMin: "เช่น 1000",
                     placeholderMax: "เช่น 50000",
                 },
+                stats: {
+                    pendingThisPage: "Đang chờ (trang này)",
+                    approvedThisPage: "Đã duyệt (trang này)",
+                    rejectedThisPage: "Đã từ chối (trang này)",
+                },
                 list: {
                     loading: "กำลังโหลดคำขอ...",
                     noResults: "ไม่พบคำขอถอนเงิน",

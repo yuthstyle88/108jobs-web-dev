@@ -3705,6 +3705,11 @@ export const th = {
                     placeholderMin: "เช่น 1000",
                     placeholderMax: "เช่น 50000",
                 },
+                stats: {
+                    pendingThisPage: "รอดำเนินการ (หน้านี้)",
+                    approvedThisPage: "อนุมัติแล้ว (หน้านี้)",
+                    rejectedThisPage: "ปฏิเสธแล้ว (หน้านี้)",
+                },
                 list: {
                     loading: "กำลังโหลดคำขอ...",
                     noResults: "ไม่พบคำขอถอนเงิน",

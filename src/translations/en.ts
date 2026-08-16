@@ -3789,6 +3789,11 @@ export const en = {
                     placeholderMin: "e.g. 1000",
                     placeholderMax: "e.g. 50000",
                 },
+                stats: {
+                    pendingThisPage: "Pending (this page)",
+                    approvedThisPage: "Approved (this page)",
+                    rejectedThisPage: "Rejected (this page)",
+                },
                 list: {
                     loading: "Loading requests...",
                     noResults: "No withdrawal requests found",

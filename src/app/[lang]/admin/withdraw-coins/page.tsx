@@ -262,33 +262,25 @@ const WithdrawCoins = () => {
                     </Card>
 
                     {/* Stats Grid */}
-                    <div className="grid gap-5 md:grid-cols-4">
+                    <div className="grid gap-5 md:grid-cols-3">
                         {[
                             {
                                 icon: Minus,
-                                label: "Pending",
+                                label: t("admin.withdraw.stats.pendingThisPage"),
                                 color: "from-amber-400 to-orange-500",
                                 value: withdrawRequests.filter((r: WithdrawRequestView) => r.withdrawRequest.status === "Pending").length
                             },
                             {
                                 icon: CheckCircle,
-                                label: "Approved",
+                                label: t("admin.withdraw.stats.approvedThisPage"),
                                 color: "from-emerald-400 to-teal-500",
                                 value: withdrawRequests.filter((r: WithdrawRequestView) => r.withdrawRequest.status === "Completed").length
                             },
                             {
                                 icon: XCircle,
-                                label: "Rejected",
+                                label: t("admin.withdraw.stats.rejectedThisPage"),
                                 color: "from-rose-400 to-pink-500",
                                 value: withdrawRequests.filter((r: WithdrawRequestView) => r.withdrawRequest.status === "Rejected").length
-                            },
-                            {
-                                icon: CreditCard,
-                                label: "Total Amount",
-                                color: "from-blue-500 to-indigo-600",
-                                value: withdrawRequests
-                                    .reduce((sum: number, r: WithdrawRequestView) => sum + r.withdrawRequest.amount, 0)
-                                    .toLocaleString() + " coins"
                             },
                         ].map((stat, i) => (
                             <Card key={i}
