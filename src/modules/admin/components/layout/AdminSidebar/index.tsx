@@ -92,7 +92,7 @@ export function AdminSidebar() {
     const logoUrl = siteView?.localSite?.icon || AssetIcon.logo.src;
     return (
         <Sidebar collapsible="icon">
-            <SidebarContent className="bg-gradient-card ">
+            <SidebarContent className="bg-card">
                 <div className="p-6 border-b border-border bg-primary">
                     <div className="flex items-center gap-3">
                         {!collapsed && (
