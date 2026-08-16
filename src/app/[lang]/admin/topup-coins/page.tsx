@@ -30,7 +30,7 @@ const TopUpCoins = () => {
 
     const debouncedFilters = useDebounce(filters, 500);
 
-    const {data, isLoading, state, execute: refetch} = useHttpGet("adminListTopUpRequests", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListTopUpRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
@@ -42,6 +42,7 @@ const TopUpCoins = () => {
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
     const isFetchFailed = isFailed(state);
+    const showLoading = isLoading || isMutating;
 
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [selectedTransfer, setSelectedTransfer] = useState<TopUpRequestView | null>(null);
@@ -261,7 +262,7 @@ const TopUpCoins = () => {
 
                 {/* Top-up List */}
                 <div className="space-y-4">
-                    {isLoading ? (
+                    {showLoading ? (
                         <div className="text-center py-12">
                             <div
                                 className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -359,7 +360,7 @@ const TopUpCoins = () => {
                     hasNext={hasNextPage}
                     onPrevious={handlePrevPage}
                     onNext={handleNextPage}
-                    isLoading={isLoading}
+                    isLoading={showLoading}
                 />
 
                 <TransferConfirmModal
