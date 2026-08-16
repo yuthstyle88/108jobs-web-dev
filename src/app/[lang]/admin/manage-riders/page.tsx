@@ -168,7 +168,7 @@ export default function AdminRidersManagementPage() {
                                                     <div className="flex-1 min-w-0 space-y-3">
                                                         <div className="flex items-center gap-3 flex-wrap">
                                                             <h3 className="text-lg sm:text-xl font-bold text-primary truncate">
-                                                                {person.name || person.displayName || t("common.unknown")}
+                                                                {person.name || person.displayName || t("admin.riders.unknown")}
                                                             </h3>
                                                             <Badge
                                                                 variant={isUnverified ? "secondary" : "default"}
