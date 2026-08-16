@@ -3841,6 +3841,7 @@ export const en = {
                 actionReject: "Reject",
                 actionApprove: "Approve",
                 verifyFailed: "Failed to verify bank account",
+                fetchError: "Failed to load bank accounts. Please try again.",
             },
             riders: {
                 // Page title & tabs

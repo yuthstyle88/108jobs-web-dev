@@ -25,7 +25,7 @@ export default function AdminBankVerificationList() {
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
     const [isGoingBack, setIsGoingBack] = useState(false);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("adminListBankAccounts", {
+    const {data, isLoading, state, execute: refetch} = useHttpGet("adminListBankAccounts", {
         pageCursor: currentCursor,
         pageBack: isGoingBack,
         limit: 5,
@@ -35,6 +35,7 @@ export default function AdminBankVerificationList() {
     const bankAccounts = data?.bankAccounts ?? [];
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
+    const isFetchFailed = isFailed(state);
 
     const {execute: verify, isMutating: verifying} = useHttpPost("adminVerifyBankAccount");
 
@@ -129,8 +130,18 @@ export default function AdminBankVerificationList() {
                     </div>
                 )}
 
+                {/* Error State */}
+                {!isLoading && isFetchFailed && (
+                    <Card className="p-12 text-center bg-red-50 border border-red-100">
+                        <CreditCard className="w-16 h-16 mx-auto text-red-400 mb-4"/>
+                        <p className="text-lg font-medium text-red-600">
+                            {t("admin.bankManagement.fetchError")}
+                        </p>
+                    </Card>
+                )}
+
                 {/* Empty State */}
-                {!isLoading && bankAccounts.length === 0 && (
+                {!isLoading && !isFetchFailed && bankAccounts.length === 0 && (
                     <Card className="p-12 text-center bg-gray-50">
                         <CreditCard className="w-16 h-16 mx-auto text-gray-400 mb-4"/>
                         <p className="text-lg font-medium text-gray-700">
@@ -142,7 +153,7 @@ export default function AdminBankVerificationList() {
                 )}
 
                 {/* List */}
-                {!isLoading && bankAccounts.length > 0 && (
+                {!isLoading && !isFetchFailed && bankAccounts.length > 0 && (
                     <>
                         <div className="space-y-4">
                             {bankAccounts.map((item: any) => {

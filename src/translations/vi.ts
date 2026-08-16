@@ -3865,6 +3865,7 @@ export const vi = {
                 actionReject: "Từ chối",
                 actionApprove: "Duyệt",
                 verifyFailed: "Xác minh tài khoản ngân hàng thất bại",
+                fetchError: "Không thể tải danh sách tài khoản ngân hàng. Vui lòng thử lại.",
             },
             riders: {
                 // Page title & tabs

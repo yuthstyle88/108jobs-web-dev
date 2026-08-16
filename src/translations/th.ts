@@ -3757,6 +3757,7 @@ export const th = {
                 actionReject: "ปฏิเสธ",
                 actionApprove: "อนุมัติ",
                 verifyFailed: "ยืนยันบัญชีธนาคารไม่สำเร็จ",
+                fetchError: "โหลดรายการบัญชีธนาคารไม่สำเร็จ กรุณาลองใหม่",
             },
             riders: {
                 // Page title & tabs
