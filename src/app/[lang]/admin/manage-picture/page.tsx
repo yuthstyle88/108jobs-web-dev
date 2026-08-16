@@ -139,9 +139,11 @@ export default function SiteAppearancePage() {
                                 PNG)</h2>
                             <div className="grid md:grid-cols-2 gap-8 items-start">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">Current Logo</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        {iconPreviewOverride ? "Preview" : "Current Logo"}
+                                    </label>
                                     <div
-                                        className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 flex items-center justify-center">
+                                        className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center gap-3">
                                         {iconPreview ? (
                                             <Image
                                                 src={iconPreview}
@@ -152,6 +154,11 @@ export default function SiteAppearancePage() {
                                             />
                                         ) : (
                                             <p className="text-gray-500">No logo set</p>
+                                        )}
+                                        {iconPreviewOverride && (
+                                            <span className="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
+                                                Preview — not saved yet
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -191,8 +198,9 @@ export default function SiteAppearancePage() {
                             </h2>
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-3">Current
-                                        Banner</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        {bannerPreviewOverride ? "Preview" : "Current Banner"}
+                                    </label>
                                     <div
                                         className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden">
                                         {bannerPreview ? (
@@ -209,6 +217,11 @@ export default function SiteAppearancePage() {
                                                     <h3 className="text-3xl font-bold">{siteName}</h3>
                                                     <p className="text-lg opacity-90">Welcome to your marketplace</p>
                                                 </div>
+                                                {bannerPreviewOverride && (
+                                                    <span className="absolute top-3 right-3 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
+                                                        Preview — not saved yet
+                                                    </span>
+                                                )}
                                             </div>
                                         ) : (
                                             <div className="h-64 flex items-center justify-center">
