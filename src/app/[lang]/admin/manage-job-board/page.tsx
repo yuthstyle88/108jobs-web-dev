@@ -23,7 +23,6 @@ import {
 } from "@/utils/helpers";
 import ErrorState from "@/components/ErrorState";
 import {REQUEST_STATE} from "@/services/HttpService";
-import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
@@ -356,7 +355,7 @@ const AdminJobBoard = () => {
                         <div className="overflow-x-auto">
                             {isLoading ? (
                                 <div className="py-12 text-center">
-                                    <LoadingBlur text=""/>
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                 </div>
                             ) : (
                                 <table className="min-w-full divide-y divide-gray-200">
