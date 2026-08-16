@@ -19,6 +19,7 @@ import {cn} from "@/lib/utils";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {useDebounce} from "@/hooks/utils/useDebounce";
+import {isSuccess, isFailed} from "@/services/HttpService";
 
 const WithdrawCoins = () => {
     const {t} = useTranslation();
@@ -72,18 +73,18 @@ const WithdrawCoins = () => {
             return;
         }
 
-        try {
-            await approve({
-                withdrawalId: request.withdrawRequest.id,
-                reason: adminNote,
-                targetUserId: request.localUser.id,
-                amount: request.withdrawRequest.amount
-            });
+        const res = await approve({
+            withdrawalId: request.withdrawRequest.id,
+            reason: adminNote,
+            targetUserId: request.localUser.id,
+            amount: request.withdrawRequest.amount
+        });
+        if (isSuccess(res)) {
             toast.success(t("admin.withdraw.approved", {amount: request.withdrawRequest.amount.toLocaleString()}));
             setAdminNote("");
             setSelectedRequest(null);
             await refetch();
-        } catch {
+        } else if (isFailed(res)) {
             toast.error(t("admin.withdraw.approveFailed"));
         }
     };
@@ -94,13 +95,13 @@ const WithdrawCoins = () => {
             return;
         }
 
-        try {
-            await reject({withdrawalId: request.withdrawRequest.id, reason: adminNote});
+        const res = await reject({withdrawalId: request.withdrawRequest.id, reason: adminNote});
+        if (isSuccess(res)) {
             toast.success(t("admin.withdraw.rejected"));
             setAdminNote("");
             setSelectedRequest(null);
             await refetch();
-        } catch {
+        } else if (isFailed(res)) {
             toast.error(t("admin.withdraw.rejectFailed"));
         }
     };
