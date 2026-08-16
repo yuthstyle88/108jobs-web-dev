@@ -2002,6 +2002,7 @@ export const en = {
                 noResultsHint: "Try adjusting your filters",
                 coins: "coins",
                 transfer: "Transfer",
+                fetchError: "Failed to load top-up requests. Please try again.",
             },
 
             status: {

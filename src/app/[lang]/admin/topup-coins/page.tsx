@@ -15,7 +15,7 @@ import {TransferConfirmModal} from "@/modules/admin/components/Modal/TransferCon
 import {PaginationControls} from "@/components/PaginationControls";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {AdminTopUpWallet} from "108jobs-client";
-import {REQUEST_STATE} from "@/services/HttpService";
+import {REQUEST_STATE, isFailed} from "@/services/HttpService";
 import {TopupGuide} from "@/modules/admin/components/TopupGuide";
 import {useTranslation} from "react-i18next";
 import {useDebounce} from "@/hooks/utils/useDebounce";
@@ -30,7 +30,7 @@ const TopUpCoins = () => {
 
     const debouncedFilters = useDebounce(filters, 500);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("adminListTopUpRequests", {
+    const {data, isLoading, state, execute: refetch} = useHttpGet("adminListTopUpRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
@@ -41,6 +41,7 @@ const TopUpCoins = () => {
     const topUps: TopUpRequestView[] = data?.topUpRequests ?? [];
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
+    const isFetchFailed = isFailed(state);
 
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [selectedTransfer, setSelectedTransfer] = useState<TopUpRequestView | null>(null);
@@ -266,6 +267,12 @@ const TopUpCoins = () => {
                                 className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                             <p className="mt-3 text-sm text-muted-foreground">
                                 {t("topupCoins.list.loading")}
+                            </p>
+                        </div>
+                    ) : isFetchFailed ? (
+                        <div className="text-center py-16 bg-red-50 rounded-lg border border-red-100">
+                            <p className="text-lg font-medium text-red-600">
+                                {t("topupCoins.list.fetchError")}
                             </p>
                         </div>
                     ) : topUps.length === 0 ? (

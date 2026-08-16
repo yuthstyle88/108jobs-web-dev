@@ -1935,6 +1935,7 @@ export const th = {
                 noResultsHint: "ลองปรับตัวกรอง",
                 coins: "เหรียญ",
                 transfer: "โอนเหรียญ",
+                fetchError: "โหลดรายการคำขอเติมเหรียญไม่สำเร็จ กรุณาลองใหม่",
             },
 
             status: {

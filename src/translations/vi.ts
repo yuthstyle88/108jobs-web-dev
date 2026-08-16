@@ -1986,6 +1986,7 @@ export const vi = {
                 noResultsHint: "Thử điều chỉnh bộ lọc",
                 coins: "coin",
                 transfer: "Chuyển coin",
+                fetchError: "Không thể tải danh sách yêu cầu nạp coin. Vui lòng thử lại.",
             },
 
             status: {
