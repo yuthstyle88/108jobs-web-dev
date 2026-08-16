@@ -36,7 +36,7 @@ export function AdminHeader() {
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-10 px-3 gap-2">
                             <Avatar className="h-8 w-8">
-                                <AvatarImage src={person?.avatar || ProfileImage.avatar} alt={displayName || "Admin"}/>
+                                <AvatarImage src={person?.avatar || ProfileImage.avatar.src} alt={displayName || "Admin"}/>
                                 <AvatarFallback className="bg-black text-white">{initials}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col items-start text-left">
