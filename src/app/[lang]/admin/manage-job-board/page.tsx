@@ -69,6 +69,7 @@ const AdminJobBoard = () => {
     });
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+    const [isGoingBack, setIsGoingBack] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [budgetError, setBudgetError] = useState<string | null>(null);
 
@@ -85,6 +86,7 @@ const AdminJobBoard = () => {
         q: sanitizedQuery,
         categoryId: filters.category,
         pageCursor: currentCursor,
+        pageBack: isGoingBack,
         budgetMin: filters.budgetMin,
         budgetMax: filters.budgetMax,
         jobType: filters.jobType,
@@ -163,6 +165,7 @@ const AdminJobBoard = () => {
         if (jobPostsPagination?.nextPage) {
             setCursorHistory((prev) => [...prev, currentCursor || ""]);
             setCurrentCursor(jobPostsPagination.nextPage);
+            setIsGoingBack(false);
         }
     }, [jobPostsPagination?.nextPage, currentCursor]);
 
@@ -171,6 +174,7 @@ const AdminJobBoard = () => {
             const prevCursor = cursorHistory[cursorHistory.length - 1];
             setCursorHistory((prev) => prev.slice(0, -1));
             setCurrentCursor(prevCursor || undefined);
+            setIsGoingBack(true);
         }
     }, [cursorHistory]);
 
@@ -233,6 +237,7 @@ const AdminJobBoard = () => {
     useEffect(() => {
         setCurrentCursor(undefined);
         setCursorHistory([]);
+        setIsGoingBack(false);
     }, [
         filters.category,
         filters.sort,
