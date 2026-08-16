@@ -241,6 +241,53 @@ const SiteSettingsPage = () => {
                     />
                 </Card>
 
+                <Card className="p-6 space-y-4">
+                    <h2 className="text-lg font-semibold">{t("admin.siteSettings.sections.registration.title")}</h2>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1.5">
+                            {t("admin.siteSettings.fields.registrationMode.label")}
+                        </label>
+                        <select
+                            {...register("registrationMode")}
+                            className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                        >
+                            <option value="Open">{t("dashboard.siteInfo.registrationMode.open")}</option>
+                            <option value="Closed">{t("dashboard.siteInfo.registrationMode.closed")}</option>
+                            <option value="RequireApplication">{t("dashboard.siteInfo.registrationMode.requireApplication")}</option>
+                        </select>
+                    </div>
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("requireEmailVerification")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.requireEmailVerification.label")}</span>
+                    </label>
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("categoryCreationAdminOnly")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.categoryCreationAdminOnly.label")}</span>
+                    </label>
+
+                    <CustomInput
+                        tag="textarea"
+                        name="applicationQuestion"
+                        register={register("applicationQuestion")}
+                        label={t("admin.siteSettings.fields.applicationQuestion.label")}
+                        rows={4}
+                        error={errors.applicationQuestion?.message}
+                    />
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("applicationEmailAdmins")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.applicationEmailAdmins.label")}</span>
+                    </label>
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("oauthRegistration")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.oauthRegistration.label")}</span>
+                    </label>
+                </Card>
+
                 <div className="flex justify-end">
                     <button
                         type="submit"

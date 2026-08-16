@@ -3913,6 +3913,7 @@ export const vi = {
                 },
                 sections: {
                     identity: {title: "Thông Tin Trang Web"},
+                    registration: {title: "Đăng Ký & Truy Cập"},
                 },
                 fields: {
                     name: {
@@ -3929,6 +3930,12 @@ export const vi = {
                     sidebar: {label: "Thanh Bên (Markdown)", placeholder: "Thông tin bổ sung của trang web hiển thị cho khách truy cập"},
                     contentWarning: {label: "Cảnh Báo Nội Dung"},
                     legalInformation: {label: "Thông Tin Pháp Lý (Markdown)"},
+                    registrationMode: {label: "Chế Độ Đăng Ký"},
+                    requireEmailVerification: {label: "Yêu Cầu Xác Minh Email"},
+                    categoryCreationAdminOnly: {label: "Giới Hạn Tạo Danh Mục Chỉ Cho Admin"},
+                    applicationQuestion: {label: "Câu Hỏi Đơn Đăng Ký"},
+                    applicationEmailAdmins: {label: "Thông Báo Admin Khi Có Đơn Đăng Ký Mới"},
+                    oauthRegistration: {label: "Cho Phép Đăng Ký Qua OAuth"},
                 },
             },
             jobBoardManagement: "Quản Lý Bảng Việc Làm",

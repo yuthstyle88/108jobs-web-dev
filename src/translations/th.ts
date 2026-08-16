@@ -3805,6 +3805,7 @@ export const th = {
                 },
                 sections: {
                     identity: {title: "ข้อมูลไซต์"},
+                    registration: {title: "การลงทะเบียนและการเข้าถึง"},
                 },
                 fields: {
                     name: {
@@ -3821,6 +3822,12 @@ export const th = {
                     sidebar: {label: "แถบข้างเคียง (Markdown)", placeholder: "ข้อมูลเพิ่มเติมของไซต์ที่แสดงต่อผู้เยี่ยมชม"},
                     contentWarning: {label: "คำเตือนเนื้อหา"},
                     legalInformation: {label: "ข้อมูลทางกฎหมาย (Markdown)"},
+                    registrationMode: {label: "โหมดการลงทะเบียน"},
+                    requireEmailVerification: {label: "ต้องยืนยันอีเมล"},
+                    categoryCreationAdminOnly: {label: "จำกัดการสร้างหมวดหมู่เฉพาะแอดมิน"},
+                    applicationQuestion: {label: "คำถามใบสมัคร"},
+                    applicationEmailAdmins: {label: "แจ้งเตือนแอดมินเมื่อมีใบสมัครใหม่"},
+                    oauthRegistration: {label: "อนุญาตการลงทะเบียนผ่าน OAuth"},
                 },
             },
             jobBoardManagement: "จัดการบอร์ดงาน",

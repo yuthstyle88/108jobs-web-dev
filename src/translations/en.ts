@@ -3889,6 +3889,7 @@ export const en = {
                 },
                 sections: {
                     identity: {title: "Site Identity"},
+                    registration: {title: "Registration & Access"},
                 },
                 fields: {
                     name: {
@@ -3905,6 +3906,12 @@ export const en = {
                     sidebar: {label: "Sidebar (Markdown)", placeholder: "Additional site information shown to visitors"},
                     contentWarning: {label: "Content Warning"},
                     legalInformation: {label: "Legal Information (Markdown)"},
+                    registrationMode: {label: "Registration Mode"},
+                    requireEmailVerification: {label: "Require Email Verification"},
+                    categoryCreationAdminOnly: {label: "Limit Category Creation to Admins"},
+                    applicationQuestion: {label: "Application Question"},
+                    applicationEmailAdmins: {label: "Notify Admins on New Application"},
+                    oauthRegistration: {label: "Allow OAuth Registration"},
                 },
             },
             jobBoardManagement: "Job Board Management",
