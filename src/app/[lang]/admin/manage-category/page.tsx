@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState, useMemo} from "react";
+import React, {useState, useMemo, useEffect} from "react";
 import {buildCategoriesTree} from "@/utils/helpers";
 import {CategoryNodeView} from "108jobs-client";
 import {toast} from "sonner";
@@ -70,6 +70,15 @@ export default function AdminCategoriesPage() {
         setLightboxAlt(alt);
         setLightboxOpen(true);
     };
+
+    useEffect(() => {
+        if (!lightboxOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setLightboxOpen(false);
+        };
+        window.addEventListener("keydown", handleEscape);
+        return () => window.removeEventListener("keydown", handleEscape);
+    }, [lightboxOpen]);
 
     const handleImageUpload = (type: "icon" | "banner", e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -315,6 +324,11 @@ export default function AdminCategoriesPage() {
                                 className="max-w-full max-h-full object-contain"
                             />
                             <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLightboxOpen(false);
+                                }}
+                                aria-label="Close image preview"
                                 className="absolute top-4 right-4 bg-white/90 text-black rounded-full w-10 h-10 text-2xl hover:bg-white">
                                 ×
                             </button>
