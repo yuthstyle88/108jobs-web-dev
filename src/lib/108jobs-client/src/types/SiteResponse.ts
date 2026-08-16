@@ -6,5 +6,5 @@ import type {SiteView} from "./SiteView";
  * A response for a site edit.
  */
 export type SiteResponse = {
-    siteView: SiteView;
+  siteView: SiteView;
 };
