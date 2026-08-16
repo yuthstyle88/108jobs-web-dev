@@ -3916,6 +3916,7 @@ export const vi = {
                     registration: {title: "Đăng Ký & Truy Cập"},
                     moderation: {title: "Kiểm Duyệt"},
                     contentDefaults: {title: "Mặc Định Nội Dung"},
+                    rateLimits: {title: "Giới Hạn Tần Suất"},
                 },
                 fields: {
                     name: {
@@ -3975,6 +3976,17 @@ export const vi = {
                         new: "Mới nhất",
                         old: "Cũ nhất",
                         controversial: "Gây tranh cãi",
+                    },
+                    rateLimits: {
+                        maxRequests: "Số Yêu Cầu Tối Đa",
+                        intervalSeconds: "Khoảng Thời Gian (giây)",
+                        message: "Tin nhắn",
+                        post: "Bài đăng",
+                        register: "Đăng ký",
+                        image: "Tải Ảnh Lên",
+                        proposal: "Đề xuất",
+                        search: "Tìm kiếm",
+                        importUserSettings: "Nhập/Xuất Cài Đặt",
                     },
                 },
             },

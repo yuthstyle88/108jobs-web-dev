@@ -3808,6 +3808,7 @@ export const th = {
                     registration: {title: "การลงทะเบียนและการเข้าถึง"},
                     moderation: {title: "การกลั่นกรอง"},
                     contentDefaults: {title: "ค่าเริ่มต้นเนื้อหา"},
+                    rateLimits: {title: "ขีดจำกัดอัตราการใช้งาน"},
                 },
                 fields: {
                     name: {
@@ -3867,6 +3868,17 @@ export const th = {
                         new: "ใหม่ล่าสุด",
                         old: "เก่าที่สุด",
                         controversial: "เป็นที่ถกเถียง",
+                    },
+                    rateLimits: {
+                        maxRequests: "จำนวนคำขอสูงสุด",
+                        intervalSeconds: "ช่วงเวลา (วินาที)",
+                        message: "ข้อความ",
+                        post: "โพสต์",
+                        register: "การลงทะเบียน",
+                        image: "การอัปโหลดรูปภาพ",
+                        proposal: "ข้อเสนอ",
+                        search: "การค้นหา",
+                        importUserSettings: "การนำเข้า/ส่งออกการตั้งค่า",
                     },
                 },
             },

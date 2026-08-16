@@ -3892,6 +3892,7 @@ export const en = {
                     registration: {title: "Registration & Access"},
                     moderation: {title: "Moderation"},
                     contentDefaults: {title: "Content Defaults"},
+                    rateLimits: {title: "Rate Limits"},
                 },
                 fields: {
                     name: {
@@ -3951,6 +3952,17 @@ export const en = {
                         new: "New",
                         old: "Old",
                         controversial: "Controversial",
+                    },
+                    rateLimits: {
+                        maxRequests: "Max Requests",
+                        intervalSeconds: "Interval (seconds)",
+                        message: "Messages",
+                        post: "Posts",
+                        register: "Registrations",
+                        image: "Image Uploads",
+                        proposal: "Proposals",
+                        search: "Search",
+                        importUserSettings: "Settings Import/Export",
                     },
                 },
             },

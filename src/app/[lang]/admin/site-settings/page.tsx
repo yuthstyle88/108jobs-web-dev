@@ -411,6 +411,42 @@ const SiteSettingsPage = () => {
                     </div>
                 </Card>
 
+                <Card className="p-6 space-y-4">
+                    <h2 className="text-lg font-semibold">{t("admin.siteSettings.sections.rateLimits.title")}</h2>
+
+                    {([
+                        {key: "message", max: "rateLimitMessageMaxRequests", interval: "rateLimitMessageIntervalSeconds"},
+                        {key: "post", max: "rateLimitPostMaxRequests", interval: "rateLimitPostIntervalSeconds"},
+                        {key: "register", max: "rateLimitRegisterMaxRequests", interval: "rateLimitRegisterIntervalSeconds"},
+                        {key: "image", max: "rateLimitImageMaxRequests", interval: "rateLimitImageIntervalSeconds"},
+                        {key: "proposal", max: "rateLimitProposalMaxRequests", interval: "rateLimitProposalIntervalSeconds"},
+                        {key: "search", max: "rateLimitSearchMaxRequests", interval: "rateLimitSearchIntervalSeconds"},
+                        {key: "importUserSettings", max: "rateLimitImportUserSettingsMaxRequests", interval: "rateLimitImportUserSettingsIntervalSeconds"},
+                    ] as const).map((row) => (
+                        <div key={row.key} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
+                            <p className="text-sm font-medium sm:col-span-1">
+                                {t(`admin.siteSettings.fields.rateLimits.${row.key}`)}
+                            </p>
+                            <CustomInput
+                                tag="input"
+                                type="number"
+                                name={row.max}
+                                register={register(row.max, {valueAsNumber: true})}
+                                label={t("admin.siteSettings.fields.rateLimits.maxRequests")}
+                                error={errors[row.max]?.message}
+                            />
+                            <CustomInput
+                                tag="input"
+                                type="number"
+                                name={row.interval}
+                                register={register(row.interval, {valueAsNumber: true})}
+                                label={t("admin.siteSettings.fields.rateLimits.intervalSeconds")}
+                                error={errors[row.interval]?.message}
+                            />
+                        </div>
+                    ))}
+                </Card>
+
                 <div className="flex justify-end">
                     <button
                         type="submit"
