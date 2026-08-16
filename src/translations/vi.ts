@@ -1898,6 +1898,7 @@ export const vi = {
             bannedBadge: "Đã bị cấm",
 
             noUsersFound: "Không tìm thấy người dùng",
+            fetchError: "Đã xảy ra lỗi khi tải người dùng",
 
             userDetailModal: {
                 title: "Chi tiết người dùng",

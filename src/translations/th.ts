@@ -1847,6 +1847,7 @@ export const th = {
             bannedBadge: "ถูกแบน",
 
             noUsersFound: "ไม่พบผู้ใช้",
+            fetchError: "เกิดข้อผิดพลาดขณะโหลดผู้ใช้",
 
             userDetailModal: {
                 title: "รายละเอียดผู้ใช้",

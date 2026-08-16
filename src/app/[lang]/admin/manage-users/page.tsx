@@ -1,6 +1,7 @@
 "use client";
 import {useState, useCallback} from "react";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
+import {isFailed} from "@/services/HttpService";
 import {Card} from "@/components/ui/Card";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
@@ -27,11 +28,14 @@ const ManageUsers = () => {
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
     const [isGoingBack, setIsGoingBack] = useState(false);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("listUsers", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("listUsers", {
         ...filters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
     });
+
+    const showLoading = isLoading || isMutating;
+    const isFetchFailed = isFailed(state);
 
     const {execute: executeBan, isMutating: isBanning} = useHttpPost("banPerson");
 
@@ -159,11 +163,16 @@ const ManageUsers = () => {
 
                 {/* User List */}
                 <div className="space-y-3">
-                    {isLoading ? (
+                    {showLoading ? (
                         <div className="flex justify-center py-16">
                             <div
                                 className="w-8 h-8 border-2 border-t-transparent border-foreground/30 rounded-full animate-spin"></div>
                         </div>
+                    ) : isFetchFailed ? (
+                        <Card className="border-dashed p-12 text-center">
+                            <User className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>
+                            <p className="text-sm text-muted-foreground">{t("manageUsers.fetchError")}</p>
+                        </Card>
                     ) : users.length === 0 ? (
                         <Card className="border-dashed p-12 text-center">
                             <User className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>

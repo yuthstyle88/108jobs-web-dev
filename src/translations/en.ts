@@ -1912,6 +1912,7 @@ export const en = {
 
             // Empty State
             noUsersFound: "No users found",
+            fetchError: "Something went wrong loading users",
 
             // Modals
             userDetailModal: {
