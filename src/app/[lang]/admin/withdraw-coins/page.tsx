@@ -229,7 +229,7 @@ const WithdrawCoins = () => {
                                             value={filters.year ?? ""}
                                             onChange={(e) => handleFilterChange("year", e.target.value ? Number(e.target.value) : undefined)}
                                         >
-                                            <option value="">{new Date().getFullYear()}</option>
+                                            <option value="">{t("admin.withdraw.filters.allYears")}</option>
                                             {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map((y) => (
                                                 <option key={y} value={y}>{y}</option>
                                             ))}

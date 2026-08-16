@@ -3788,6 +3788,7 @@ export const en = {
                     apply: "Apply Filter",
                     placeholderMin: "e.g. 1000",
                     placeholderMax: "e.g. 50000",
+                    allYears: "All years",
                 },
                 stats: {
                     pendingThisPage: "Pending (this page)",

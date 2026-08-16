@@ -3704,6 +3704,7 @@ export const th = {
                     apply: "ใช้ตัวกรอง",
                     placeholderMin: "เช่น 1000",
                     placeholderMax: "เช่น 50000",
+                    allYears: "ทุกปี",
                 },
                 stats: {
                     pendingThisPage: "รอดำเนินการ (หน้านี้)",

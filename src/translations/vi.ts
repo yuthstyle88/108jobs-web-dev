@@ -3812,6 +3812,7 @@ export const vi = {
                     apply: "Áp dụng bộ lọc",
                     placeholderMin: "ví dụ: 1000",
                     placeholderMax: "ví dụ: 50000",
+                    allYears: "Tất cả các năm",
                 },
                 stats: {
                     pendingThisPage: "Đang chờ (trang này)",
