@@ -171,7 +171,7 @@ export default function AdminRidersManagementPage() {
                                                         {person.avatar ? (
                                                             <Image
                                                                 src={person.avatar}
-                                                                alt={person.name || person.displayName || t("common.unknown")}
+                                                                alt={person.name || person.displayName || t("admin.riders.unknown")}
                                                                 width={28}
                                                                 height={28}
                                                                 className="w-7 h-7 rounded-full object-cover"
