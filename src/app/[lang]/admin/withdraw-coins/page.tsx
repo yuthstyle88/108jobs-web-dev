@@ -20,6 +20,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {useDebounce} from "@/hooks/utils/useDebounce";
 import {isSuccess, isFailed} from "@/services/HttpService";
+import {format} from "date-fns";
 
 const WithdrawCoins = () => {
     const {t} = useTranslation();
@@ -430,12 +431,7 @@ const WithdrawCoins = () => {
                                                                 <span
                                                                     className="font-medium text-foreground/70 whitespace-nowrap">{t("admin.withdraw.fields.requested")}</span>
                                                                 <span className="font-mono text-foreground/90">
-            {new Date(w.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-            })}
+            {format(new Date(w.createdAt), "MMM d, HH:mm")}
         </span>
                                                             </div>
                                                         </div>
