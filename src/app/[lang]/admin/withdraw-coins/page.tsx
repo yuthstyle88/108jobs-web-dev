@@ -347,7 +347,10 @@ const WithdrawCoins = () => {
                                         <Card
                                             key={w.id}
                                             className="group relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer select-none"
-                                            onClick={() => setSelectedRequest(req)}
+                                            onClick={() => {
+                                                setSelectedRequest(req);
+                                                setAdminNote("");
+                                            }}
                                         >
                                             {/* Shimmer Effect */}
                                             <div
@@ -460,6 +463,7 @@ const WithdrawCoins = () => {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setSelectedRequest(req);
+                                                            setAdminNote("");
                                                         }}
                                                     >
                                                         <Eye
