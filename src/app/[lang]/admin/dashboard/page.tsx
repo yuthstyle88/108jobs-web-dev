@@ -184,7 +184,7 @@ const DashboardPage = () => {
                     <CardContent>
                         <div className="space-y-3 text-sm">
                             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                <div className="w-2 h-2 bg-blue rounded-full"></div>
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
                                 <div className="flex-1">
                                     <p className="font-medium">
                                         {t("dashboard.events.adminActive", {name: admins[0]?.person?.name ?? "admin"})}
@@ -197,7 +197,7 @@ const DashboardPage = () => {
 
                             {localSite?.posts !== undefined && localSite.posts > 0 && (
                                 <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                    <div className="w-2 h-2 bg-blue rounded-full"></div>
+                                    <div className="w-2 h-2 bg-primary rounded-full"></div>
                                     <div className="flex-1">
                                         <p className="font-medium">
                                             {t("dashboard.events.postsPublished", {count: Number(localSite.posts)})}
