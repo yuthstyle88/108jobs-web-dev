@@ -3730,6 +3730,20 @@ export const vi = {
                 header: {
                     logout: "Đăng xuất",
                 },
+                sidebar: {
+                    navLabel: "Điều hướng quản trị",
+                    nav: {
+                        dashboard: {title: "Bảng điều khiển", description: "Tổng quan hệ thống"},
+                        manageUsers: {title: "Quản lý người dùng", description: "Xem xét và quản lý hồ sơ người dùng"},
+                        bankAccounts: {title: "Tài khoản ngân hàng", description: "Quản lý tài khoản ngân hàng của người dùng"},
+                        topupCoins: {title: "Nạp xu", description: "Thêm xu vào tài khoản người dùng"},
+                        withdrawCoins: {title: "Rút xu", description: "Duyệt yêu cầu rút xu"},
+                        manageJobBoard: {title: "Quản lý bảng việc làm", description: "Quản lý bài đăng trên bảng việc làm"},
+                        manageCategory: {title: "Quản lý danh mục", description: "Quản lý danh mục cho bài đăng việc làm"},
+                        managePicture: {title: "Quản lý hình ảnh", description: "Quản lý hình ảnh cho 108jobs"},
+                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108jobs"},
+                    },
+                },
             },
             withdraw: {
                 title: "การถอนเหรียญ",

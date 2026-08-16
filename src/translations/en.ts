@@ -3706,6 +3706,20 @@ export const en = {
                 header: {
                     logout: "Logout",
                 },
+                sidebar: {
+                    navLabel: "Admin navigation",
+                    nav: {
+                        dashboard: {title: "Dashboard", description: "System overview"},
+                        manageUsers: {title: "Manage Users", description: "Review and manage user profiles"},
+                        bankAccounts: {title: "Bank Accounts", description: "Manage user bank accounts"},
+                        topupCoins: {title: "Top-up Coins", description: "Add coins to user accounts"},
+                        withdrawCoins: {title: "Withdraw Coins", description: "Approve coin withdrawal requests"},
+                        manageJobBoard: {title: "Manage Job Board", description: "Manage job board posts"},
+                        manageCategory: {title: "Manage Category", description: "Manage categories for job board posts"},
+                        managePicture: {title: "Manage Picture", description: "Manage picture for 108jobs"},
+                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108jobs"},
+                    },
+                },
             },
             withdraw: {
                 title: "Coin Withdrawals",
