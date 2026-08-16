@@ -1976,6 +1976,7 @@ export const th = {
                 optional: "ไม่บังคับ",
                 enabled: "เปิดใช้งาน ({{difficulty}})",
                 disabled: "ปิดใช้งาน",
+                unknown: "ไม่ทราบ",
             },
             stats: {
                 totalUsers: "ผู้ใช้ทั้งหมด",
@@ -2010,6 +2011,7 @@ export const th = {
                 adminActive: "บัญชีแอดมินที่ใช้งาน: @{{name}}",
                 postsPublished: "โพสต์ {{count}} รายการ",
                 sinceLaunch: "ตั้งแต่ {{date}}",
+                launch: "เปิดตัว",
                 never: "ไม่เคย",
                 instanceId: "ID อินสแตนซ์: {{id}}",
             },

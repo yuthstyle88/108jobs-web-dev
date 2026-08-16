@@ -2043,6 +2043,7 @@ export const en = {
                 optional: "Optional",
                 enabled: "Enabled ({{difficulty}})",
                 disabled: "Disabled",
+                unknown: "Unknown",
             },
             stats: {
                 totalUsers: "Total Users",
@@ -2077,6 +2078,7 @@ export const en = {
                 adminActive: "Admin account active: @{name}",
                 postsPublished: "{{count}} posts published",
                 sinceLaunch: "Since {{date}}",
+                launch: "Launch",
                 never: "Never",
                 instanceId: "Instance ID: {{id}}",
             },

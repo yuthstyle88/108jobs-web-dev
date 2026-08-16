@@ -78,7 +78,7 @@ const DashboardPage = () => {
                             <span
                                 className={localSite?.registrationMode === "Open" ? "text-success" : "text-destructive"}
                             >
-                {localSite?.registrationMode ?? t("common.unknown")}
+                {localSite?.registrationMode ?? t("dashboard.siteInfo.unknown")}
               </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -204,7 +204,7 @@ const DashboardPage = () => {
                                         </p>
                                         <p className="text-xs">
                                             {t("dashboard.events.sinceLaunch", {
-                                                date: localSite?.publishedAt ? format(new Date(localSite.publishedAt), "PPP") : t("common.launch")
+                                                date: localSite?.publishedAt ? format(new Date(localSite.publishedAt), "PPP") : t("dashboard.events.launch")
                                             })}
                                         </p>
                                     </div>

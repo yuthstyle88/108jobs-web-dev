@@ -2027,6 +2027,7 @@ export const vi = {
                 optional: "Tùy chọn",
                 enabled: "Đã bật ({{difficulty}})",
                 disabled: "Đã tắt",
+                unknown: "Không rõ",
             },
             stats: {
                 totalUsers: "Tổng người dùng",
@@ -2061,6 +2062,7 @@ export const vi = {
                 adminActive: "Tài khoản admin đang hoạt động: @{{name}}",
                 postsPublished: "{{count}} bài đã đăng",
                 sinceLaunch: "Từ {{date}}",
+                launch: "Ra mắt",
                 never: "Chưa từng",
                 instanceId: "ID hệ thống: {{id}}",
             },
