@@ -8,7 +8,6 @@ interface BanConfirmationModalProps {
     user: {
         id: number;
         name: string;
-        handle?: string;
     };
     reason: string;
     onReasonChange: (reason: string) => void;
@@ -55,6 +54,15 @@ export function BanConfirmationModal({
         return () => clearInterval(interval);
     }, [isOpen]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onCancel();
+        };
+        window.addEventListener("keydown", handleEscape);
+        return () => window.removeEventListener("keydown", handleEscape);
+    }, [isOpen, onCancel]);
+
     if (!isOpen) return null;
 
     return (
@@ -63,6 +71,8 @@ export function BanConfirmationModal({
             onClick={onCancel}
         >
             <div
+                role="dialog"
+                aria-modal="true"
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-6 transform transition-all animate-in fade-in zoom-in duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -97,25 +107,6 @@ export function BanConfirmationModal({
                             <span className="text-sm font-medium text-gray-700">User</span>
                             <span className="font-bold text-gray-900">{user.name}</span>
                         </div>
-
-                        {user.handle && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700">X Handle</span>
-                                <a
-                                    href={`https://x.com/${user.handle.replace("@", "")}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm font-medium text-blue-600 hover:underline flex items-center gap-1"
-                                >
-                                    {user.handle}
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path
-                                            d="M11.173 12.747l4.364-4.364a1.5 1.5 0 10-2.121-2.121l-4.364 4.364a1.5 1.5 0 000 2.121l4.364 4.364a1.5 1.5 0 102.121-2.121L11.173 12.747z"/>
-                                    </svg>
-                                </a>
-                            </div>
-                        )}
-
 
                     <div className="flex items-center justify-between pt-2 border-t border-red-200">
               <span className="text-sm font-medium text-gray-700 flex items-center gap-1">

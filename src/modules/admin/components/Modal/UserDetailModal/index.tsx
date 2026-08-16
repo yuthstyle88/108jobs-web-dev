@@ -1,3 +1,4 @@
+import {useEffect} from "react";
 import {User, Mail, Calendar, FileText, X} from "lucide-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
 import {LocalUserView} from "108jobs-client";
@@ -9,6 +10,15 @@ interface UserDetailModalProps {
 }
 
 export function UserDetailModal({isOpen, onClose, user}: UserDetailModalProps) {
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleEscape);
+        return () => window.removeEventListener("keydown", handleEscape);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     const {person, localUser, banned} = user;
@@ -16,8 +26,13 @@ export function UserDetailModal({isOpen, onClose, user}: UserDetailModalProps) {
     const getTypeLabel = () => "User";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={onClose}
+        >
             <div
+                role="dialog"
+                aria-modal="true"
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >

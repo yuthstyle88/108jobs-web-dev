@@ -1912,6 +1912,7 @@ export const en = {
 
             // Empty State
             noUsersFound: "No users found",
+            fetchError: "Something went wrong loading users",
 
             // Modals
             userDetailModal: {
@@ -1927,7 +1928,7 @@ export const en = {
                 confirm: "Ban User",
                 cancel: "Cancel",
                 success: "User has been banned",
-                successWithReason: "User has been banned – {reason}",
+                successWithReason: "User has been banned – {{reason}}",
             },
 
             // Toast Messages
@@ -2002,6 +2003,7 @@ export const en = {
                 noResultsHint: "Try adjusting your filters",
                 coins: "coins",
                 transfer: "Transfer",
+                fetchError: "Failed to load top-up requests. Please try again.",
             },
 
             status: {
@@ -2023,6 +2025,7 @@ export const en = {
                 confirm: "Confirm Transfer",
                 cancel: "Cancel",
                 processing: "Processing...",
+                unknownUser: "Unknown",
             },
 
             toast: {
@@ -2043,6 +2046,23 @@ export const en = {
                 optional: "Optional",
                 enabled: "Enabled ({{difficulty}})",
                 disabled: "Disabled",
+                unknown: "Unknown",
+                registrationMode: {
+                    open: "Open",
+                    closed: "Closed",
+                    requireApplication: "Application Required",
+                },
+                captchaDifficulty: {
+                    easy: "Easy",
+                    medium: "Medium",
+                    hard: "Hard",
+                },
+            },
+            loadError: {
+                title: "Unable to load site information",
+                description: "Something went wrong loading this site's configuration.",
+                retry: "Retry",
+                retrying: "Retrying…",
             },
             stats: {
                 totalUsers: "Total Users",
@@ -2072,12 +2092,11 @@ export const en = {
                 activeAdmins: "active admins",
             },
             events: {
-                title: "Recent System Events",
-                siteRefreshed: "Site refreshed successfully",
-                adminActive: "Admin account active: @{name}",
+                title: "Site Summary",
+                adminActive: "Admin on record: @{{name}}",
                 postsPublished: "{{count}} posts published",
                 sinceLaunch: "Since {{date}}",
-                never: "Never",
+                launch: "Launch",
                 instanceId: "Instance ID: {{id}}",
             },
         },
@@ -3717,7 +3736,7 @@ export const en = {
                         withdrawCoins: {title: "Withdraw Coins", description: "Approve coin withdrawal requests"},
                         manageJobBoard: {title: "Manage Job Board", description: "Manage job board posts"},
                         manageCategory: {title: "Manage Category", description: "Manage categories for job board posts"},
-                        managePicture: {title: "Manage Picture", description: "Manage picture for 108jobs"},
+                        managePicture: {title: "Site Appearance", description: "Manage picture for 108jobs"},
                         manageRiders: {title: "Manage Riders", description: "Manage riders for 108jobs"},
                     },
                 },
@@ -3772,6 +3791,42 @@ export const en = {
                     save: "Save",
                 },
             },
+            picture: {
+                title: "Site Appearance",
+                subtitle: "Update your site's logo and hero banner. These will appear on the homepage and across the platform.",
+                logoHeading: "Site Logo (Recommended: 512×512px, PNG)",
+                bannerHeading: "Hero Banner (Recommended: 1920×1080px or larger, JPG/PNG)",
+                currentLogo: "Current Logo",
+                currentBanner: "Current Banner",
+                previewLabel: "Preview",
+                previewBadge: "Preview — not saved yet",
+                noLogoSet: "No logo set",
+                noBannerSet: "No banner set",
+                logoAlt: "Current site logo",
+                bannerAlt: "Current hero banner",
+                welcomeSubtitle: "Welcome to your marketplace",
+                uploadNewLogo: "Upload New Logo",
+                uploadNewBanner: "Upload New Banner",
+                uploadingLogo: "Uploading...",
+                uploadingBanner: "Uploading Banner...",
+                removeLogo: "Remove Logo",
+                removeBanner: "Remove Banner",
+                removing: "Removing...",
+                footerNote: "Changes take effect immediately across the site.",
+                blockedFileType: "This file type is not allowed for security reasons.",
+                invalidFileType: "Only PNG, JPG, WebP, and GIF files are allowed.",
+                fileTooLarge: "Image must be under 10MB",
+                selectLogoFirst: "Please select a logo first",
+                selectBannerFirst: "Please select a banner first",
+                logoUpdated: "Logo updated successfully!",
+                bannerUpdated: "Banner updated successfully!",
+                logoUploadFailed: "Failed to upload logo",
+                bannerUploadFailed: "Failed to upload banner",
+                logoRemoved: "Logo removed",
+                bannerRemoved: "Banner removed",
+                logoRemoveFailed: "Failed to remove logo",
+                bannerRemoveFailed: "Failed to remove banner",
+            },
             withdraw: {
                 title: "Coin Withdrawals",
                 description: "Approve or reject user withdrawal requests",
@@ -3786,11 +3841,18 @@ export const en = {
                     apply: "Apply Filter",
                     placeholderMin: "e.g. 1000",
                     placeholderMax: "e.g. 50000",
+                    allYears: "All years",
+                },
+                stats: {
+                    pendingThisPage: "Pending (this page)",
+                    approvedThisPage: "Approved (this page)",
+                    rejectedThisPage: "Rejected (this page)",
                 },
                 list: {
                     loading: "Loading requests...",
                     noResults: "No withdrawal requests found",
                     noResultsHint: "Try adjusting the filters",
+                    fetchError: "Failed to load withdrawal requests. Please try again.",
                 },
                 review: "Review",
                 bankInfo: "Bank Information",
@@ -3804,6 +3866,20 @@ export const en = {
                 approveFailed: "Failed to approve",
                 rejectFailed: "Failed to reject",
                 noteRequired: "Admin note is required",
+                unknownBank: "Unknown Bank",
+                status: {
+                    pending: "Pending",
+                    approved: "Approved",
+                    rejected: "Rejected",
+                },
+                fields: {
+                    amount: "Amount:",
+                    bank: "Bank:",
+                    account: "Account:",
+                    requested: "Requested:",
+                    accountNumber: "Account #:",
+                    name: "Name:",
+                },
             },
             jobBoardManagement: "Job Board Management",
             jobBoardSubtitle: "Manage all job posts, visibility, and content",
@@ -3840,6 +3916,8 @@ export const en = {
                 statusVerified: "Verified",
                 actionReject: "Reject",
                 actionApprove: "Approve",
+                verifyFailed: "Failed to verify bank account",
+                fetchError: "Failed to load bank accounts. Please try again.",
             },
             riders: {
                 // Page title & tabs
