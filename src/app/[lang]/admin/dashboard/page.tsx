@@ -76,7 +76,7 @@ const DashboardPage = () => {
                             <Shield className="w-4 h-4"/>
                             <span className="font-medium">{t("dashboard.siteInfo.registration")}:</span>{" "}
                             <span
-                                className={localSite?.registrationMode === "Open" ? "text-green-700" : "text-red-800"}
+                                className={localSite?.registrationMode === "Open" ? "text-success" : "text-destructive"}
                             >
                 {localSite?.registrationMode ?? t("common.unknown")}
               </span>
