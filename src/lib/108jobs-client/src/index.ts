@@ -82,6 +82,8 @@ export type {GetPostsResponse} from "./types/GetPostsResponse";
 export type {GetSiteMetadata} from "./types/GetSiteMetadata";
 export type {GetSiteMetadataResponse} from "./types/GetSiteMetadataResponse";
 export type {GetSiteResponse} from "./types/GetSiteResponse";
+export type {EditSiteRequest} from "./types/EditSiteRequest";
+export type {SiteResponse} from "./types/SiteResponse";
 export type {ImageDetails} from "./types/ImageDetails";
 export type {IdentityPlatformAuthResponse} from "./types/IdentityPlatformAuthResponse";
 export type {IdentityPlatformLoginResponse} from "./types/IdentityPlatformLoginResponse";
