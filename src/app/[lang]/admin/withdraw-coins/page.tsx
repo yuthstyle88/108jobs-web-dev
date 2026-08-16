@@ -110,18 +110,18 @@ const WithdrawCoins = () => {
 
     const getStatusConfig = (status: WithdrawStatus) => {
         const config: Partial<Record<WithdrawStatus, { color: string; icon: typeof Minus; label: string }>> = {
-            Pending: { color: "bg-amber-500 text-white border-amber-400/30", icon: Minus, label: "Pending" },
+            Pending: { color: "bg-amber-500 text-white border-amber-400/30", icon: Minus, label: t("admin.withdraw.status.pending") },
             Completed: {
                 color: "bg-green-600 text-white border-emerald-500/30",
                 icon: CheckCircle,
-                label: "Approved",
+                label: t("admin.withdraw.status.approved"),
             },
-            Rejected: { color: "bg-red-500 text-white border-rose-500/30", icon: XCircle, label: "Rejected" },
+            Rejected: { color: "bg-red-500 text-white border-rose-500/30", icon: XCircle, label: t("admin.withdraw.status.rejected") },
         };
         return config[status] ?? { color: "bg-gray-500/15 text-gray-600", icon: Minus, label: status };
     };
 
-    const getBankName = (bankId: number) => bankList.find((b) => b.id === bankId)?.name ?? "Unknown Bank";
+    const getBankName = (bankId: number) => bankList.find((b) => b.id === bankId)?.name ?? t("admin.withdraw.unknownBank");
 
     const handleFilterChange = (key: keyof ListWithdrawRequestQuery, value: any) => {
         setFilters((prev: ListWithdrawRequestQuery) => ({...prev, [key]: value}));
@@ -190,9 +190,9 @@ const WithdrawCoins = () => {
                                             onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
                                         >
                                             <option value="">{t("admin.withdraw.filters.all")}</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Completed">Approved</option>
-                                            <option value="Rejected">Rejected</option>
+                                            <option value="Pending">{t("admin.withdraw.status.pending")}</option>
+                                            <option value="Completed">{t("admin.withdraw.status.approved")}</option>
+                                            <option value="Rejected">{t("admin.withdraw.status.rejected")}</option>
                                         </select>
                                     </div>
 
@@ -394,7 +394,7 @@ const WithdrawCoins = () => {
                                                             <div className="flex items-center gap-2">
                                                                 <div
                                                                     className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"/>
-                                                                <span className="font-medium">Amount:</span>
+                                                                <span className="font-medium">{t("admin.withdraw.fields.amount")}</span>
                                                                 <span className="font-bold">
                             {w.amount.toLocaleString()}
                                                                     <span
@@ -407,7 +407,7 @@ const WithdrawCoins = () => {
                                                             <div className="flex items-center gap-2">
                                                                 <div
                                                                     className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"/>
-                                                                <span className="font-medium">Bank:</span>
+                                                                <span className="font-medium">{t("admin.withdraw.fields.bank")}</span>
                                                                 <span
                                                                     className="truncate max-w-[120px]">{getBankName(bank.bankId)}</span>
                                                             </div>
@@ -419,7 +419,7 @@ const WithdrawCoins = () => {
                                                             {/* Account Line */}
                                                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                                                 <span
-                                                                    className="font-medium text-foreground/70 whitespace-nowrap">Account:</span>
+                                                                    className="font-medium text-foreground/70 whitespace-nowrap">{t("admin.withdraw.fields.account")}</span>
                                                                 <span className="font-mono text-foreground/90 truncate">
             {bank.accountName} • **** {bank.accountNumber.slice(-4)}
         </span>
@@ -428,7 +428,7 @@ const WithdrawCoins = () => {
                                                             {/* Requested Line */}
                                                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                                                 <span
-                                                                    className="font-medium text-foreground/70 whitespace-nowrap">Requested:</span>
+                                                                    className="font-medium text-foreground/70 whitespace-nowrap">{t("admin.withdraw.fields.requested")}</span>
                                                                 <span className="font-mono text-foreground/90">
             {new Date(w.createdAt).toLocaleDateString("en-US", {
                 month: "short",
@@ -512,13 +512,13 @@ const WithdrawCoins = () => {
                                             <h5 className="font-semibold">{t("admin.withdraw.bankInfo")}:</h5>
                                             <div className="space-y-2 p-3 bg-muted/30 rounded-xl">
                                                 <div><span
-                                                    className="font-medium">Bank:</span> {getBankName(selectedRequest.bankAccount.bankId)}
+                                                    className="font-medium">{t("admin.withdraw.fields.bank")}</span> {getBankName(selectedRequest.bankAccount.bankId)}
                                                 </div>
                                                 <div><span
-                                                    className="font-medium">Account #:</span> {selectedRequest.bankAccount.accountNumber}
+                                                    className="font-medium">{t("admin.withdraw.fields.accountNumber")}</span> {selectedRequest.bankAccount.accountNumber}
                                                 </div>
                                                 <div><span
-                                                    className="font-medium">Name:</span> {selectedRequest.bankAccount.accountName}
+                                                    className="font-medium">{t("admin.withdraw.fields.name")}</span> {selectedRequest.bankAccount.accountName}
                                                 </div>
                                             </div>
                                         </div>
