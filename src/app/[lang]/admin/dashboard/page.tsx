@@ -1,5 +1,6 @@
 "use client";
 
+import {useState} from "react";
 import {StatsCard} from "@/components/ui/StatsCard";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/Card";
 import {Users, MessageSquare, Globe, Activity, Shield, CheckCircle, AlertTriangle, Settings} from "lucide-react";
@@ -7,10 +8,13 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
+import {RegistrationMode} from "108jobs-client";
+import {callHttp, isSuccess} from "@/services/HttpService";
 
 const DashboardPage = () => {
     const {t} = useTranslation();
-    const {siteRes} = useSiteStore();
+    const {siteRes, setSiteRes} = useSiteStore();
+    const [retrying, setRetrying] = useState(false);
 
     const localSite = siteRes?.siteView?.localSite;
     const rateLimit = siteRes?.siteView?.localSiteRateLimit;
@@ -18,6 +22,46 @@ const DashboardPage = () => {
     const version = siteRes?.version;
 
     const siteName = localSite?.name ?? "108Jobs";
+
+    const registrationModeLabels: Record<RegistrationMode, string> = {
+        Open: t("dashboard.siteInfo.registrationMode.open"),
+        Closed: t("dashboard.siteInfo.registrationMode.closed"),
+        RequireApplication: t("dashboard.siteInfo.registrationMode.requireApplication"),
+    };
+
+    const captchaDifficultyLabels: Record<string, string> = {
+        easy: t("dashboard.siteInfo.captchaDifficulty.easy"),
+        medium: t("dashboard.siteInfo.captchaDifficulty.medium"),
+        hard: t("dashboard.siteInfo.captchaDifficulty.hard"),
+    };
+
+    const handleRetry = async () => {
+        setRetrying(true);
+        const res = await callHttp("getSite");
+        if (isSuccess(res)) {
+            setSiteRes(res.data);
+        }
+        setRetrying(false);
+    };
+
+    if (!localSite) {
+        return (
+            <AdminLayout>
+                <div className="flex flex-col items-center justify-center gap-4 py-24 text-center text-gray-600">
+                    <AlertTriangle className="w-10 h-10 text-destructive"/>
+                    <p className="text-lg font-medium">{t("dashboard.loadError.title")}</p>
+                    <p className="text-sm max-w-md">{t("dashboard.loadError.description")}</p>
+                    <button
+                        onClick={handleRetry}
+                        disabled={retrying}
+                        className="px-4 py-2 rounded-lg bg-primary text-white font-medium disabled:opacity-50"
+                    >
+                        {retrying ? t("dashboard.loadError.retrying") : t("dashboard.loadError.retry")}
+                    </button>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     const stats = [
         {
@@ -65,7 +109,7 @@ const DashboardPage = () => {
                         <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4"/>
                             <span
-                                className="font-medium tex">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108jobs"}
+                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108jobs"}
                         </div>
                         <div className="flex items-center gap-2">
                             <Settings className="w-4 h-4"/>
@@ -76,9 +120,9 @@ const DashboardPage = () => {
                             <Shield className="w-4 h-4"/>
                             <span className="font-medium">{t("dashboard.siteInfo.registration")}:</span>{" "}
                             <span
-                                className={localSite?.registrationMode === "Open" ? "text-green-700" : "text-red-800"}
+                                className={localSite?.registrationMode === "Open" ? "text-success" : "text-destructive"}
                             >
-                {localSite?.registrationMode ?? t("common.unknown")}
+                {localSite?.registrationMode ? registrationModeLabels[localSite.registrationMode] : t("dashboard.siteInfo.unknown")}
               </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -92,7 +136,9 @@ const DashboardPage = () => {
                             <AlertTriangle className="w-4 h-4"/>
                             <span className="font-medium">{t("dashboard.siteInfo.captcha")}:</span>{" "}
                             {localSite?.captchaEnabled
-                                ? t("dashboard.siteInfo.enabled", {difficulty: localSite.captchaDifficulty ?? "easy"})
+                                ? t("dashboard.siteInfo.enabled", {
+                                    difficulty: captchaDifficultyLabels[localSite.captchaDifficulty ?? "easy"] ?? (localSite.captchaDifficulty ?? "easy"),
+                                })
                                 : t("dashboard.siteInfo.disabled")}
                         </div>
                     </CardContent>
@@ -120,7 +166,7 @@ const DashboardPage = () => {
                                     <div>
                                         <p className="font-medium">{item.label}</p>
                                         <p className="text-sm">
-                                            {item.value} {item.value === 1 ? t("dashboard.activity.user") : t("dashboard.activity.users")}
+                                            {item.value} {Number(item.value) === 1 ? t("dashboard.activity.user") : t("dashboard.activity.users")}
                                         </p>
                                     </div>
                                     <div
@@ -184,7 +230,7 @@ const DashboardPage = () => {
                     <CardContent>
                         <div className="space-y-3 text-sm">
                             <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                <div className="w-2 h-2 bg-blue rounded-full"></div>
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
                                 <div className="flex-1">
                                     <p className="font-medium">
                                         {t("dashboard.events.adminActive", {name: admins[0]?.person?.name ?? "admin"})}
@@ -197,14 +243,14 @@ const DashboardPage = () => {
 
                             {localSite?.posts !== undefined && localSite.posts > 0 && (
                                 <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                                    <div className="w-2 h-2 bg-blue rounded-full"></div>
+                                    <div className="w-2 h-2 bg-primary rounded-full"></div>
                                     <div className="flex-1">
                                         <p className="font-medium">
                                             {t("dashboard.events.postsPublished", {count: Number(localSite.posts)})}
                                         </p>
                                         <p className="text-xs">
                                             {t("dashboard.events.sinceLaunch", {
-                                                date: localSite?.publishedAt ? format(new Date(localSite.publishedAt), "PPP") : t("common.launch")
+                                                date: localSite?.publishedAt ? format(new Date(localSite.publishedAt), "PPP") : t("dashboard.events.launch")
                                             })}
                                         </p>
                                     </div>
