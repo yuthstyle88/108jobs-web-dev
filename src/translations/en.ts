@@ -3702,6 +3702,11 @@ export const en = {
                 "I understand and want to disable two-factor authentication",
         },
         admin: {
+            layout: {
+                header: {
+                    logout: "Logout",
+                },
+            },
             withdraw: {
                 title: "Coin Withdrawals",
                 description: "Approve or reject user withdrawal requests",

@@ -3726,6 +3726,11 @@ export const vi = {
                 "Tôi hiểu và muốn tắt xác thực hai yếu tố",
         },
         admin: {
+            layout: {
+                header: {
+                    logout: "Đăng xuất",
+                },
+            },
             withdraw: {
                 title: "การถอนเหรียญ",
                 description: "อนุมัติหรือปฏิเสธคำขอถอนเงินของผู้ใช้",
