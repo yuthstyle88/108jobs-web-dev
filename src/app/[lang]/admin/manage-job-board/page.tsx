@@ -29,7 +29,7 @@ import {
     faEye,
     faToggleOn,
     faToggleOff,
-    faBan,
+    faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
@@ -433,23 +433,23 @@ const AdminJobBoard = () => {
                                                         >
                                                             <FontAwesomeIcon icon={faEye}/>
                                                         </button>
-                                                        {/*<button*/}
-                                                        {/*    onClick={() => handleToggleVisibility(job)}*/}
-                                                        {/*    className={`${*/}
-                                                        {/*        job.post.removed ? "text-green-600" : "text-orange-600"*/}
-                                                        {/*    } hover:opacity-80`}*/}
-                                                        {/*    title={job.post.removed ? t("admin.unhide") : t("admin.hide")}*/}
-                                                        {/*>*/}
-                                                        {/*    <FontAwesomeIcon*/}
-                                                        {/*        icon={job.post.removed ? faToggleOff : faToggleOn}/>*/}
-                                                        {/*</button>*/}
-                                                        {/*<button*/}
-                                                        {/*    onClick={() => handleDelete(job.post.id)}*/}
-                                                        {/*    className="text-red-600 hover:text-red-800"*/}
-                                                        {/*    title={t("global.delete")}*/}
-                                                        {/*>*/}
-                                                        {/*    <FontAwesomeIcon icon={faTrash}/>*/}
-                                                        {/*</button>*/}
+                                                        <button
+                                                            onClick={() => handleToggleVisibility(job)}
+                                                            className={`${
+                                                                job.post.removed ? "text-green-600" : "text-orange-600"
+                                                            } hover:opacity-80`}
+                                                            title={job.post.removed ? t("admin.unhide") : t("admin.hide")}
+                                                        >
+                                                            <FontAwesomeIcon
+                                                                icon={job.post.removed ? faToggleOff : faToggleOn}/>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(job.post.id)}
+                                                            className="text-red-600 hover:text-red-800"
+                                                            title={t("global.delete")}
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrash}/>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
