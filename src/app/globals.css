@@ -260,24 +260,14 @@
     --muted-foreground: #6B7280;
     --accent: var(--third);
     --accent-foreground: #ffffff;
-    --card: var(--background);
-    --card-foreground: var(--foreground);
+    --card: #ffffff;
+    --card-foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --background: #0a0a0a;
         --foreground: #ededed;
-        --destructive: #F87171;
-        --destructive-foreground: #1B1A1D;
-        --success: #4ADE80;
-        --success-foreground: #1B1A1D;
-        --muted: #27272A;
-        --muted-foreground: #A1A1AA;
-        --accent: var(--third);
-        --accent-foreground: #ffffff;
-        --card: #18181B;
-        --card-foreground: var(--foreground);
     }
 }
 
