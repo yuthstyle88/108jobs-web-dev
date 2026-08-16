@@ -120,7 +120,7 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                                 ${isRoot ? "text-primary" : "text-gray-800"}
                             `}>
                                 {t(`catalogs.${toCamelCaseLastSegment(node.category.path)}`, {
-                                    defaultValue: node.category.name,
+                                    defaultValue: node.category.title,
                                 })}
                             </h3>
 

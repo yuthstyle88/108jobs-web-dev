@@ -1,9 +1,10 @@
 "use client";
 
-import React, {useState, useMemo} from "react";
+import React, {useState, useMemo, useEffect} from "react";
 import {buildCategoriesTree} from "@/utils/helpers";
 import {CategoryNodeView} from "108jobs-client";
 import {toast} from "sonner";
+import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
+import {useHttpPut} from "@/hooks/api/http/useHttpPut";
 import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
 import {isFailed, isSuccess} from "@/services/HttpService";
 import {CategoryRow} from "@/modules/admin/components/CategoryRow";
@@ -26,6 +28,7 @@ interface CategoryFormData {
 }
 
 export default function AdminCategoriesPage() {
+    const {t} = useTranslation();
     const [editingCategory, setEditingCategory] = useState<CategoryNodeView | null>(null);
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [parentIdForNew, setParentIdForNew] = useState<number | null>(null);
@@ -48,9 +51,10 @@ export default function AdminCategoriesPage() {
     const [lightboxSrc, setLightboxSrc] = useState("");
     const [lightboxAlt, setLightboxAlt] = useState("");
 
-    const {data: categories, isLoading, execute: refetch} = useHttpGet("listCategories");
+    const {data: categories, isLoading, state, execute: refetch} = useHttpGet("listCategories");
 
     const {execute: createCategory} = useHttpPost("createCategory");
+    const {execute: editCategory} = useHttpPut("editCategory");
     const {execute: deleteCategory} = useHttpDelete("deleteCategory");
 
     const {execute: uploadIcon} = useHttpPost("uploadCategoryIcon");
@@ -69,17 +73,26 @@ export default function AdminCategoriesPage() {
         setLightboxOpen(true);
     };
 
+    useEffect(() => {
+        if (!lightboxOpen) return;
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setLightboxOpen(false);
+        };
+        window.addEventListener("keydown", handleEscape);
+        return () => window.removeEventListener("keydown", handleEscape);
+    }, [lightboxOpen]);
+
     const handleImageUpload = (type: "icon" | "banner", e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         if (file.size > 5 * 1024 * 1024) {
-            toast.error("Image must be under 5MB");
+            toast.error(t("admin.category.imageTooLarge"));
             return;
         }
 
         if (!file.type.startsWith("image/")) {
-            toast.error("Please upload an image");
+            toast.error(t("admin.category.invalidImageType"));
             return;
         }
 
@@ -106,7 +119,7 @@ export default function AdminCategoriesPage() {
 
     const handleSave = async () => {
         if (!form.name.trim()) {
-            toast.error("Category name is required");
+            toast.error(t("admin.category.nameRequired"));
             return;
         }
 
@@ -118,7 +131,7 @@ export default function AdminCategoriesPage() {
             if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
                 iconUrl = res.data.images[0].imageUrl;
             } else if (isFailed(res)) {
-                toast.error("Some error occurred while uploading the icon. Please try again later.");
+                toast.error(t("admin.category.iconUploadError"));
             }
         }
 
@@ -127,7 +140,7 @@ export default function AdminCategoriesPage() {
             if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
                 bannerUrl = res.data.images[0].imageUrl;
             } else if (isFailed(res)) {
-                toast.error("Some error occurred while uploading the banner. Please try again later.");
+                toast.error(t("admin.category.bannerUploadError"));
             }
         }
 
@@ -137,7 +150,7 @@ export default function AdminCategoriesPage() {
             // derived server-side from `path`) and requires `title`, which
             // this form doesn't collect separately from `name` -- mirror it
             // until subcategory creation gets a real form/product design.
-            await createCategory({
+            const res = await createCategory({
                 name: form.name,
                 title: form.name,
                 description: form.description,
@@ -145,9 +158,26 @@ export default function AdminCategoriesPage() {
                 banner: bannerUrl,
             });
 
-            toast.success("Category created!");
-            closeModal();
+            if (isSuccess(res)) {
+                toast.success(t("admin.category.created"));
+                closeModal();
+            } else if (isFailed(res)) {
+                toast.error(t("admin.category.createError"));
+            }
             return;
+        }
+
+        if (editingCategory) {
+            const res = await editCategory({
+                categoryId: editingCategory.category.id,
+                title: form.name,
+                description: form.description,
+            });
+
+            if (isFailed(res)) {
+                toast.error(t("admin.category.saveError"));
+                return;
+            }
         }
 
         closeModal();
@@ -175,7 +205,7 @@ export default function AdminCategoriesPage() {
     const openEditModal = (node: CategoryNodeView) => {
         setEditingCategory(node);
         setForm({
-            name: node.category.name,
+            name: node.category.title,
             icon: node.category.icon || "",
             banner: node.category.banner || "",
             description: node.category.description || "",
@@ -196,54 +226,52 @@ export default function AdminCategoriesPage() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-primary mb-1">Manage Categories</h1>
-                            <p className="text-gray-600">Organize your service catalog structure</p>
+                            <h1 className="text-2xl font-bold text-primary mb-1">{t("admin.category.title")}</h1>
+                            <p className="text-gray-600">{t("admin.category.subtitle")}</p>
                         </div>
-                        <div className="relative group inline-block">
-                            <button
-                                disabled
-                                className="inline-flex items-center bg-primary text-white py-3 px-6
-                   rounded-xl text-sm font-semibold shadow-md opacity-60
-                   cursor-not-allowed"
-                            >
-                                <FontAwesomeIcon icon={faPlus} className="mr-2"/>
-                                Add Root Category
-                            </button>
-
-                            <span
-                                className="absolute top-full left-1/2 -translate-x-1/2 mt-2
-                   bg-black text-white text-xs px-2 py-1 rounded
-                   opacity-0 group-hover:opacity-100 transition-opacity">
-        Coming soon
-    </span>
-                        </div>
+                        <button
+                            onClick={() => toast(t("admin.category.addRootComingSoon"))}
+                            className="inline-flex items-center bg-primary text-white py-3 px-6
+                   rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all"
+                        >
+                            <FontAwesomeIcon icon={faPlus} className="mr-2"/>
+                            {t("admin.category.addRoot")}
+                        </button>
 
                     </div>
 
                     {/* Table */}
                     <div className="bg-white rounded-lg shadow-sm border border-borderPrimary overflow-hidden">
                         <div className="overflow-x-auto">
-                            {!isLoading && tree.length === undefined ? (
+                            {isLoading ? (
                                 <div className="py-16 text-center">
                                     <div
                                         className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                 </div>
+                            ) : isFailed(state) ? (
+                                <div className="text-center py-16">
+                                    <p className="text-red-600 text-lg">{t("admin.category.loadError")}</p>
+                                    <button onClick={() => refetch()}
+                                            className="mt-4 text-primary hover:underline">
+                                        {t("admin.category.retry")}
+                                    </button>
+                                </div>
                             ) : tree.length === 0 ? (
                                 <div className="text-center py-16">
-                                    <p className="text-gray-500 text-lg">No categories found</p>
+                                    <p className="text-gray-500 text-lg">{t("admin.category.empty")}</p>
                                     <button onClick={() => openAddModal(null)}
                                             className="mt-4 text-primary hover:underline">
-                                        Create your first category
+                                        {t("admin.category.createFirst")}
                                     </button>
                                 </div>
                             ) : (
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Parent</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subcategories</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.category.columnCategory")}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.category.columnParent")}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.category.columnSubcategories")}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t("admin.category.columnActions")}</th>
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -298,11 +326,16 @@ export default function AdminCategoriesPage() {
                                 className="max-w-full max-h-full object-contain"
                             />
                             <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLightboxOpen(false);
+                                }}
+                                aria-label={t("admin.category.lightboxCloseLabel")}
                                 className="absolute top-4 right-4 bg-white/90 text-black rounded-full w-10 h-10 text-2xl hover:bg-white">
                                 ×
                             </button>
                             <p className="absolute bottom-4 left-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
-                                {lightboxAlt} — Click to close
+                                {t("admin.category.lightboxCaption", {name: lightboxAlt})}
                             </p>
                         </div>
                     </div>

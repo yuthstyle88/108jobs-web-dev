@@ -3,7 +3,7 @@
 import {ProfileImage} from "@/constants/images";
 import Image from "next/image";
 import Link from "next/link";
-import {useRouter, useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams, usePathname} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {
     CategoryId,
@@ -11,7 +11,6 @@ import {
     JobType,
     PostSortType,
     SearchCombinedView,
-    PostView,
 } from "108jobs-client";
 import {useTranslation} from "react-i18next";
 import {
@@ -22,19 +21,15 @@ import {
     toCamelCaseLastSegment,
 } from "@/utils/helpers";
 import ErrorState from "@/components/ErrorState";
-import {REQUEST_STATE} from "@/services/HttpService";
-import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
+import {REQUEST_STATE, isSuccess, isFailed} from "@/services/HttpService";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
     faEye,
-    faToggleOn,
-    faToggleOff,
-    faBan,
+    faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
-import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {toast} from "sonner";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useDebounce} from "@/hooks/utils/useDebounce";
@@ -49,16 +44,30 @@ interface FilterState {
     budgetMin: number | undefined;
     budgetMax: number | undefined;
     sort: PostSortType | undefined;
-    status: "all" | "active" | "hidden" | undefined;
 }
 
 const AdminJobBoard = () => {
     const {t} = useTranslation();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
 
     const encoded = searchParams.get("q");
     const sanitizedQuery = encoded ? decodeURIComponent(encoded).trim() : "";
+
+    const [searchInput, setSearchInput] = useState(sanitizedQuery);
+
+    useEffect(() => {
+        setSearchInput(sanitizedQuery);
+    }, [sanitizedQuery]);
+
+    const handleSearchSubmit = useCallback(() => {
+        const params = new URLSearchParams(searchParams);
+        const trimmed = searchInput.trim();
+        if (trimmed) params.set("q", trimmed);
+        else params.delete("q");
+        router.push(`${pathname}?${params.toString()}`, {scroll: false});
+    }, [searchInput, searchParams, router, pathname]);
 
     const [filters, setFilters] = useState<FilterState>({
         category: undefined,
@@ -67,10 +76,10 @@ const AdminJobBoard = () => {
         budgetMin: undefined,
         budgetMax: undefined,
         sort: undefined,
-        status: undefined,
     });
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+    const [isGoingBack, setIsGoingBack] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [budgetError, setBudgetError] = useState<string | null>(null);
 
@@ -87,17 +96,15 @@ const AdminJobBoard = () => {
         q: sanitizedQuery,
         categoryId: filters.category,
         pageCursor: currentCursor,
+        pageBack: isGoingBack,
         budgetMin: filters.budgetMin,
         budgetMax: filters.budgetMax,
         jobType: filters.jobType,
         intendedUse: filters.intendedUse,
         limit: ITEMS_PER_PAGE,
-        // Add custom admin filter if backend supports
-        // hidden: filters.status === "hidden" ? true : filters.status === "active" ? false : undefined,
     });
 
-    const {execute: deleteJob} = useHttpDelete("");
-    const {execute: toggleVisibility} = useHttpPost("");
+    const {execute: deleteJob} = useHttpDelete("deletePost");
 
     const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
     const hasNextPage = useMemo(() => !!jobPostsPagination?.nextPage, [jobPostsPagination?.nextPage]);
@@ -134,8 +141,6 @@ const AdminJobBoard = () => {
                 else params.delete("budgetMax");
                 if (updatedFilters.sort) params.set("sort", updatedFilters.sort);
                 else params.delete("sort");
-                if (updatedFilters.status && updatedFilters.status !== "all") params.set("status", updatedFilters.status);
-                else params.delete("status");
 
                 router.push(`?${params.toString()}`, {scroll: false});
             });
@@ -169,6 +174,7 @@ const AdminJobBoard = () => {
         if (jobPostsPagination?.nextPage) {
             setCursorHistory((prev) => [...prev, currentCursor || ""]);
             setCurrentCursor(jobPostsPagination.nextPage);
+            setIsGoingBack(false);
         }
     }, [jobPostsPagination?.nextPage, currentCursor]);
 
@@ -177,28 +183,19 @@ const AdminJobBoard = () => {
             const prevCursor = cursorHistory[cursorHistory.length - 1];
             setCursorHistory((prev) => prev.slice(0, -1));
             setCurrentCursor(prevCursor || undefined);
+            setIsGoingBack(true);
         }
     }, [cursorHistory]);
 
     const handleDelete = async (jobId: number) => {
         if (!confirm(t("admin.confirmDeleteJob"))) return;
 
-        try {
-            await deleteJob(`/post/${jobId}`);
+        const res = await deleteJob({postId: jobId});
+        if (isSuccess(res)) {
             toast.success(t("admin.jobDeleted"));
             refreshJobs();
-        } catch (err) {
+        } else if (isFailed(res)) {
             toast.error(t("admin.jobDeleteFailed"));
-        }
-    };
-
-    const handleToggleVisibility = async (job: PostView) => {
-        try {
-            await toggleVisibility(`/post/${job.post.id}/toggle-hidden`, {hidden: !job.post.removed});
-            toast.success(job.post.removed ? t("admin.jobUnhidden") : t("admin.jobHidden"));
-            refreshJobs();
-        } catch (err) {
-            toast.error(t("admin.toggleFailed"));
         }
     };
 
@@ -210,10 +207,11 @@ const AdminJobBoard = () => {
             budgetMin: undefined,
             budgetMax: undefined,
             sort: undefined,
-            status: undefined,
         });
-        router.push(`/admin/job-board`, {scroll: false});
-    }, [router]);
+        setBudgetInputs({min: "", max: ""});
+        setBudgetError(null);
+        router.push(pathname, {scroll: false});
+    }, [router, pathname]);
 
     const hasActiveFilters = useMemo(
         () =>
@@ -222,8 +220,7 @@ const AdminJobBoard = () => {
             filters.intendedUse ||
             filters.budgetMin ||
             filters.budgetMax ||
-            filters.sort ||
-            filters.status,
+            filters.sort,
         [filters]
     );
 
@@ -235,13 +232,13 @@ const AdminJobBoard = () => {
             budgetMin: searchParams.get("budgetMin") ? parseInt(searchParams.get("budgetMin")!) : undefined,
             budgetMax: searchParams.get("budgetMax") ? parseInt(searchParams.get("budgetMax")!) : undefined,
             sort: searchParams.get("sort") as PostSortType | undefined,
-            status: searchParams.get("status") as "all" | "active" | "hidden" | undefined,
         });
     }, [searchParams]);
 
     useEffect(() => {
         setCurrentCursor(undefined);
         setCursorHistory([]);
+        setIsGoingBack(false);
     }, [
         filters.category,
         filters.sort,
@@ -249,7 +246,7 @@ const AdminJobBoard = () => {
         filters.budgetMax,
         filters.jobType,
         filters.intendedUse,
-        filters.status,
+        sanitizedQuery,
     ]);
 
     useEffect(() => {
@@ -257,7 +254,11 @@ const AdminJobBoard = () => {
     }, [isJobsLoading]);
 
     if (searchState.state === REQUEST_STATE.FAILED) {
-        return <ErrorState/>;
+        return (
+            <AdminLayout>
+                <ErrorState/>
+            </AdminLayout>
+        );
     }
 
     return (
@@ -285,6 +286,26 @@ const AdminJobBoard = () => {
                     <div className="bg-white rounded-lg shadow-sm border border-borderPrimary p-6">
                         {/* Filters */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                            {/* Search */}
+                            <div className="flex gap-2 sm:col-span-2">
+                                <input
+                                    type="search"
+                                    placeholder={t("admin.jobBoardSearchPlaceholder")}
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") handleSearchSubmit();
+                                    }}
+                                    className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                                />
+                                <button
+                                    onClick={handleSearchSubmit}
+                                    className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"
+                                >
+                                    {t("admin.jobBoardSearchButton")}
+                                </button>
+                            </div>
+
                             {/* Category */}
                             <select
                                 value={filters.category || ""}
@@ -311,17 +332,6 @@ const AdminJobBoard = () => {
                                         {getJobTypeLabel(type, t)}
                                     </option>
                                 ))}
-                            </select>
-
-                            {/* Status */}
-                            <select
-                                value={filters.status || "all"}
-                                onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
-                                className="px-4 py-2 border rounded-lg text-sm"
-                            >
-                                <option value="all">{t("admin.statusAll")}</option>
-                                <option value="active">{t("admin.statusActive")}</option>
-                                <option value="hidden">{t("admin.statusHidden")}</option>
                             </select>
 
                             {/* Budget Min/Max */}
@@ -356,7 +366,7 @@ const AdminJobBoard = () => {
                         <div className="overflow-x-auto">
                             {isLoading ? (
                                 <div className="py-12 text-center">
-                                    <LoadingBlur text=""/>
+                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                 </div>
                             ) : (
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -434,23 +444,13 @@ const AdminJobBoard = () => {
                                                         >
                                                             <FontAwesomeIcon icon={faEye}/>
                                                         </button>
-                                                        {/*<button*/}
-                                                        {/*    onClick={() => handleToggleVisibility(job)}*/}
-                                                        {/*    className={`${*/}
-                                                        {/*        job.post.removed ? "text-green-600" : "text-orange-600"*/}
-                                                        {/*    } hover:opacity-80`}*/}
-                                                        {/*    title={job.post.removed ? t("admin.unhide") : t("admin.hide")}*/}
-                                                        {/*>*/}
-                                                        {/*    <FontAwesomeIcon*/}
-                                                        {/*        icon={job.post.removed ? faToggleOff : faToggleOn}/>*/}
-                                                        {/*</button>*/}
-                                                        {/*<button*/}
-                                                        {/*    onClick={() => handleDelete(job.post.id)}*/}
-                                                        {/*    className="text-red-600 hover:text-red-800"*/}
-                                                        {/*    title={t("global.delete")}*/}
-                                                        {/*>*/}
-                                                        {/*    <FontAwesomeIcon icon={faTrash}/>*/}
-                                                        {/*</button>*/}
+                                                        <button
+                                                            onClick={() => handleDelete(job.post.id)}
+                                                            className="text-red-600 hover:text-red-800"
+                                                            title={t("global.delete")}
+                                                        >
+                                                            <FontAwesomeIcon icon={faTrash}/>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
