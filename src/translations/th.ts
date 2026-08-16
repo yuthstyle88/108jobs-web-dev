@@ -3618,6 +3618,26 @@ export const th = {
                 "ฉันเข้าใจและต้องการปิดการใช้งานการยืนยันตัวตนสองขั้นตอน",
         },
         admin: {
+            layout: {
+                header: {
+                    logout: "ออกจากระบบ",
+                    defaultAdminLabel: "ผู้ดูแลระบบ",
+                },
+                sidebar: {
+                    navLabel: "เมนูนำทางผู้ดูแลระบบ",
+                    nav: {
+                        dashboard: {title: "แดชบอร์ด", description: "ภาพรวมระบบ"},
+                        manageUsers: {title: "จัดการผู้ใช้", description: "ตรวจสอบและจัดการโปรไฟล์ผู้ใช้"},
+                        bankAccounts: {title: "บัญชีธนาคาร", description: "จัดการบัญชีธนาคารของผู้ใช้"},
+                        topupCoins: {title: "เติมเหรียญ", description: "เพิ่มเหรียญให้บัญชีผู้ใช้"},
+                        withdrawCoins: {title: "ถอนเหรียญ", description: "อนุมัติคำขอถอนเหรียญ"},
+                        manageJobBoard: {title: "จัดการบอร์ดงาน", description: "จัดการโพสต์บอร์ดงาน"},
+                        manageCategory: {title: "จัดการหมวดหมู่", description: "จัดการหมวดหมู่สำหรับโพสต์บอร์ดงาน"},
+                        managePicture: {title: "จัดการรูปภาพ", description: "จัดการรูปภาพสำหรับ 108jobs"},
+                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108jobs"},
+                    },
+                },
+            },
             withdraw: {
                 title: "การถอนเหรียญ",
                 description: "อนุมัติหรือปฏิเสธคำขอถอนเงินของผู้ใช้",
