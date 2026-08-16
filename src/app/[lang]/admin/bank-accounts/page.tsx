@@ -12,7 +12,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useState} from "react";
 import {cn} from "@/lib/utils";
-import {BankAccountId} from "108jobs-client";
+import {BankAccountId, BankAccountView} from "108jobs-client";
 import {isSuccess, isFailed} from "@/services/HttpService";
 
 type ViewMode = "unverified" | "verified";
@@ -157,7 +157,7 @@ export default function AdminBankVerificationList() {
                 {!showLoading && !isFetchFailed && bankAccounts.length > 0 && (
                     <>
                         <div className="space-y-4">
-                            {bankAccounts.map((item: any) => {
+                            {bankAccounts.map((item: BankAccountView) => {
                                 const bank = item.bank;
                                 const acc = item.userBankAccount;
 
