@@ -26,6 +26,8 @@ export default function AdminRidersManagementPage() {
     const {t} = useTranslation();
 
     const [viewMode, setViewMode] = useState<ViewMode>("unverified");
+    const [rejectingRiderId, setRejectingRiderId] = useState<RiderId | null>(null);
+    const [rejectReason, setRejectReason] = useState("");
 
     const {
         riders,
@@ -42,12 +44,16 @@ export default function AdminRidersManagementPage() {
     });
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
 
-    const handleVerify = async (riderId: RiderId, approve: boolean) => {
+    const handleVerify = async (riderId: RiderId, approve: boolean, reason?: string) => {
         try {
-            await verifyRider({riderId, approve});
+            await verifyRider({riderId, approve, reason: reason || undefined});
             toast.success(
                 approve ? t("admin.riders.actionApproved") : t("admin.riders.actionRejected")
             );
+            if (!approve) {
+                setRejectingRiderId(null);
+                setRejectReason("");
+            }
             await refetch();
         } catch (err) {
             toast.error(t("common.errorOccurred") || "An error occurred");
@@ -232,19 +238,61 @@ export default function AdminRidersManagementPage() {
 
                                                 {isUnverified && (
                                                     <div
-                                                        className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                                        <Button
-                                                            className="flex-1 h-11 text-base bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                            onClick={() => handleVerify(rider.id, true)}
-                                                            disabled={verifying}
-                                                        >
-                                                            {verifying ? (
-                                                                <Loader2 className="w-5 h-5 animate-spin mr-2"/>
-                                                            ) : (
-                                                                <CheckCircle className="w-5 h-5 mr-2"/>
-                                                            )}
-                                                            {t("admin.riders.actionApprove")}
-                                                        </Button>
+                                                        className="flex flex-col gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                        {rejectingRiderId === rider.id ? (
+                                                            <div className="space-y-3">
+                                                                <textarea
+                                                                    value={rejectReason}
+                                                                    onChange={(e) => setRejectReason(e.target.value)}
+                                                                    placeholder={t("admin.riders.rejectionReasonPlaceholder")}
+                                                                    className="w-full min-h-20 p-3 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+                                                                    rows={2}
+                                                                />
+                                                                <div className="flex flex-col sm:flex-row gap-3">
+                                                                    <Button
+                                                                        className="flex-1 h-11 text-base bg-red-600 hover:bg-red-700 text-white"
+                                                                        onClick={() => handleVerify(rider.id, false, rejectReason)}
+                                                                        disabled={verifying}
+                                                                    >
+                                                                        {verifying && (
+                                                                            <Loader2 className="w-5 h-5 animate-spin mr-2"/>
+                                                                        )}
+                                                                        {t("admin.riders.actionReject")}
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        className="flex-1 h-11 text-base"
+                                                                        onClick={() => setRejectingRiderId(null)}
+                                                                        disabled={verifying}
+                                                                    >
+                                                                        {t("common.cancel") || "Cancel"}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                                <Button
+                                                                    className="flex-1 h-11 text-base bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                                    onClick={() => handleVerify(rider.id, true)}
+                                                                    disabled={verifying}
+                                                                >
+                                                                    {verifying ? (
+                                                                        <Loader2 className="w-5 h-5 animate-spin mr-2"/>
+                                                                    ) : (
+                                                                        <CheckCircle className="w-5 h-5 mr-2"/>
+                                                                    )}
+                                                                    {t("admin.riders.actionApprove")}
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    className="flex-1 h-11 text-base border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                                                                    onClick={() => setRejectingRiderId(rider.id)}
+                                                                    disabled={verifying}
+                                                                >
+                                                                    {t("admin.riders.actionReject")}
+                                                                </Button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
