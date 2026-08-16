@@ -136,7 +136,7 @@ export default function SiteAppearancePage() {
                         {/* Site Logo */}
                         <div className="mb-12">
                             <h2 className="text-xl font-semibold text-gray-800 mb-4">Site Logo (Recommended: 512×512px,
-                                PNG/SVG)</h2>
+                                PNG)</h2>
                             <div className="grid md:grid-cols-2 gap-8 items-start">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-3">Current Logo</label>
