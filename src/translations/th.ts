@@ -3806,6 +3806,7 @@ export const th = {
                 sections: {
                     identity: {title: "ข้อมูลไซต์"},
                     registration: {title: "การลงทะเบียนและการเข้าถึง"},
+                    moderation: {title: "การกลั่นกรอง"},
                 },
                 fields: {
                     name: {
@@ -3828,6 +3829,11 @@ export const th = {
                     applicationQuestion: {label: "คำถามใบสมัคร"},
                     applicationEmailAdmins: {label: "แจ้งเตือนแอดมินเมื่อมีใบสมัครใหม่"},
                     oauthRegistration: {label: "อนุญาตการลงทะเบียนผ่าน OAuth"},
+                    slurFilterRegex: {label: "ตัวกรองคำหยาบ (Regex)"},
+                    actorNameMaxLength: {label: "ความยาวชื่อผู้ใช้สูงสุด"},
+                    disallowSelfPromotionContent: {label: "บล็อกเนื้อหาโปรโมตตัวเอง"},
+                    reportsEmailAdmins: {label: "แจ้งเตือนแอดมินเมื่อมีรายงานใหม่"},
+                    disableEmailNotifications: {label: "ปิดการแจ้งเตือนทางอีเมล"},
                 },
             },
             jobBoardManagement: "จัดการบอร์ดงาน",

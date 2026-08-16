@@ -3914,6 +3914,7 @@ export const vi = {
                 sections: {
                     identity: {title: "Thông Tin Trang Web"},
                     registration: {title: "Đăng Ký & Truy Cập"},
+                    moderation: {title: "Kiểm Duyệt"},
                 },
                 fields: {
                     name: {
@@ -3936,6 +3937,11 @@ export const vi = {
                     applicationQuestion: {label: "Câu Hỏi Đơn Đăng Ký"},
                     applicationEmailAdmins: {label: "Thông Báo Admin Khi Có Đơn Đăng Ký Mới"},
                     oauthRegistration: {label: "Cho Phép Đăng Ký Qua OAuth"},
+                    slurFilterRegex: {label: "Bộ Lọc Từ Ngữ Xúc Phạm (Regex)"},
+                    actorNameMaxLength: {label: "Độ Dài Tên Người Dùng Tối Đa"},
+                    disallowSelfPromotionContent: {label: "Chặn Nội Dung Tự Quảng Cáo"},
+                    reportsEmailAdmins: {label: "Thông Báo Admin Khi Có Báo Cáo Mới"},
+                    disableEmailNotifications: {label: "Tắt Thông Báo Qua Email"},
                 },
             },
             jobBoardManagement: "Quản Lý Bảng Việc Làm",

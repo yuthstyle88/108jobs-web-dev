@@ -3890,6 +3890,7 @@ export const en = {
                 sections: {
                     identity: {title: "Site Identity"},
                     registration: {title: "Registration & Access"},
+                    moderation: {title: "Moderation"},
                 },
                 fields: {
                     name: {
@@ -3912,6 +3913,11 @@ export const en = {
                     applicationQuestion: {label: "Application Question"},
                     applicationEmailAdmins: {label: "Notify Admins on New Application"},
                     oauthRegistration: {label: "Allow OAuth Registration"},
+                    slurFilterRegex: {label: "Slur Filter (Regex)"},
+                    actorNameMaxLength: {label: "Max Username Length"},
+                    disallowSelfPromotionContent: {label: "Block Self-Promotion Content"},
+                    reportsEmailAdmins: {label: "Notify Admins on New Reports"},
+                    disableEmailNotifications: {label: "Disable Email Notifications"},
                 },
             },
             jobBoardManagement: "Job Board Management",

@@ -288,6 +288,43 @@ const SiteSettingsPage = () => {
                     </label>
                 </Card>
 
+                <Card className="p-6 space-y-4">
+                    <h2 className="text-lg font-semibold">{t("admin.siteSettings.sections.moderation.title")}</h2>
+
+                    <CustomInput
+                        tag="input"
+                        type="text"
+                        name="slurFilterRegex"
+                        register={register("slurFilterRegex")}
+                        label={t("admin.siteSettings.fields.slurFilterRegex.label")}
+                        error={errors.slurFilterRegex?.message}
+                    />
+
+                    <CustomInput
+                        tag="input"
+                        type="number"
+                        name="actorNameMaxLength"
+                        register={register("actorNameMaxLength", {valueAsNumber: true})}
+                        label={t("admin.siteSettings.fields.actorNameMaxLength.label")}
+                        error={errors.actorNameMaxLength?.message}
+                    />
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("disallowSelfPromotionContent")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.disallowSelfPromotionContent.label")}</span>
+                    </label>
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("reportsEmailAdmins")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.reportsEmailAdmins.label")}</span>
+                    </label>
+
+                    <label className="flex items-center gap-2">
+                        <input type="checkbox" {...register("disableEmailNotifications")} className="w-4 h-4"/>
+                        <span className="text-sm font-medium">{t("admin.siteSettings.fields.disableEmailNotifications.label")}</span>
+                    </label>
+                </Card>
+
                 <div className="flex justify-end">
                     <button
                         type="submit"
