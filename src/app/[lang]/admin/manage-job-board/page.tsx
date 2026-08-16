@@ -3,7 +3,7 @@
 import {ProfileImage} from "@/constants/images";
 import Image from "next/image";
 import Link from "next/link";
-import {useRouter, useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams, usePathname} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {
     CategoryId,
@@ -54,6 +54,7 @@ const AdminJobBoard = () => {
     const {t} = useTranslation();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
 
     const encoded = searchParams.get("q");
     const sanitizedQuery = encoded ? decodeURIComponent(encoded).trim() : "";
@@ -204,8 +205,8 @@ const AdminJobBoard = () => {
             budgetMax: undefined,
             sort: undefined,
         });
-        router.push(`/admin/job-board`, {scroll: false});
-    }, [router]);
+        router.push(pathname, {scroll: false});
+    }, [router, pathname]);
 
     const hasActiveFilters = useMemo(
         () =>
