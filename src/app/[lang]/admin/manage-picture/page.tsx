@@ -10,8 +10,10 @@ import Image from "next/image";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faUpload, faGlobe} from "@fortawesome/free-solid-svg-icons";
 import {useSiteStore} from "@/store/useSiteStore";
+import {useTranslation} from "react-i18next";
 
 export default function SiteAppearancePage() {
+    const {t} = useTranslation();
     // Site data is already seeded here by UserServiceProvider from the SSR
     // fetchIsoData pass every page gets -- no need to re-fetch getSite on
     // mount just to read it back.
@@ -46,7 +48,7 @@ export default function SiteAppearancePage() {
         const blockedExtensions = ['.svg', '.xml', '.php', '.html', '.htm', '.js', '.exe'];
 
         if (blockedExtensions.some(ext => fileName.endsWith(ext))) {
-            toast.error("This file type is not allowed for security reasons.");
+            toast.error(t("admin.picture.blockedFileType"));
             e.target.value = ''; // Clear input
             return;
         }
@@ -61,14 +63,14 @@ export default function SiteAppearancePage() {
         ];
 
         if (!allowedTypes.includes(file.type)) {
-            toast.error("Only PNG, JPG, WebP, and GIF files are allowed.");
+            toast.error(t("admin.picture.invalidFileType"));
             e.target.value = '';
             return;
         }
 
         // Size check
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("Image must be under 10MB");
+            toast.error(t("admin.picture.fileTooLarge"));
             e.target.value = '';
             return;
         }
@@ -92,7 +94,7 @@ export default function SiteAppearancePage() {
     const handleUpload = async (type: "icon" | "banner") => {
         const file = type === "icon" ? iconFile : bannerFile;
         if (!file) {
-            toast.error(`Please select a ${type === "icon" ? "logo" : "banner"} first`);
+            toast.error(type === "icon" ? t("admin.picture.selectLogoFirst") : t("admin.picture.selectBannerFirst"));
             return;
         }
 
@@ -101,7 +103,7 @@ export default function SiteAppearancePage() {
         const res = await execute({ image: file });
 
         if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
-            toast.success(`${type === "icon" ? "Logo" : "Banner"} updated successfully!`);
+            toast.success(type === "icon" ? t("admin.picture.logoUpdated") : t("admin.picture.bannerUpdated"));
             // Refresh the shared store with the canonical site data now that
             // it actually changed -- everywhere else that reads useSiteStore
             // (header, homepage banner, ...) picks up the new icon/banner too.
@@ -117,7 +119,7 @@ export default function SiteAppearancePage() {
                 setBannerPreviewOverride(null);
             }
         } else if (isFailed(res)) {
-            toast.error(`Failed to upload ${type === "icon" ? "logo" : "banner"}`);
+            toast.error(type === "icon" ? t("admin.picture.logoUploadFailed") : t("admin.picture.bannerUploadFailed"));
         }
     };
 
@@ -126,13 +128,13 @@ export default function SiteAppearancePage() {
         const res = await execute();
 
         if (isSuccess(res)) {
-            toast.success(`${type === "icon" ? "Logo" : "Banner"} removed`);
+            toast.success(type === "icon" ? t("admin.picture.logoRemoved") : t("admin.picture.bannerRemoved"));
             const refreshed = await callHttp("getSite");
             if (isSuccess(refreshed)) {
                 setSiteRes(refreshed.data);
             }
         } else if (isFailed(res)) {
-            toast.error(`Failed to remove ${type === "icon" ? "logo" : "banner"}`);
+            toast.error(type === "icon" ? t("admin.picture.logoRemoveFailed") : t("admin.picture.bannerRemoveFailed"));
         }
     };
 
@@ -143,39 +145,37 @@ export default function SiteAppearancePage() {
                     <div className="bg-white rounded-2xl shadow-lg p-8">
                         <div className="flex items-center gap-3 mb-8">
                             <FontAwesomeIcon icon={faGlobe} className="text-3xl text-primary"/>
-                            <h1 className="text-3xl font-bold text-gray-900">Site Appearance</h1>
+                            <h1 className="text-3xl font-bold text-gray-900">{t("admin.picture.title")}</h1>
                         </div>
 
                         <p className="text-gray-600 mb-10">
-                            Update your site&apos;s logo and hero banner. These will appear on the homepage and across the
-                            platform.
+                            {t("admin.picture.subtitle")}
                         </p>
 
                         {/* Site Logo */}
                         <div className="mb-12">
-                            <h2 className="text-xl font-semibold text-gray-800 mb-4">Site Logo (Recommended: 512×512px,
-                                PNG)</h2>
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">{t("admin.picture.logoHeading")}</h2>
                             <div className="grid md:grid-cols-2 gap-8 items-start">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                                        {iconPreviewOverride ? "Preview" : "Current Logo"}
+                                        {iconPreviewOverride ? t("admin.picture.previewLabel") : t("admin.picture.currentLogo")}
                                     </label>
                                     <div
                                         className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center gap-3">
                                         {iconPreview ? (
                                             <Image
                                                 src={iconPreview}
-                                                alt="Current site logo"
+                                                alt={t("admin.picture.logoAlt")}
                                                 width={160}
                                                 height={160}
                                                 className="rounded-lg object-contain max-h-40"
                                             />
                                         ) : (
-                                            <p className="text-gray-500">No logo set</p>
+                                            <p className="text-gray-500">{t("admin.picture.noLogoSet")}</p>
                                         )}
                                         {iconPreviewOverride && (
                                             <span className="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
-                                                Preview — not saved yet
+                                                {t("admin.picture.previewBadge")}
                                             </span>
                                         )}
                                     </div>
@@ -185,14 +185,13 @@ export default function SiteAppearancePage() {
                                             disabled={removingIcon}
                                             className="mt-2 text-sm text-red-600 hover:underline disabled:opacity-50"
                                         >
-                                            {removingIcon ? "Removing..." : "Remove Logo"}
+                                            {removingIcon ? t("admin.picture.removing") : t("admin.picture.removeLogo")}
                                         </button>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="logo-upload" className="block text-sm font-medium text-gray-700 mb-3">Upload New
-                                        Logo</label>
+                                    <label htmlFor="logo-upload" className="block text-sm font-medium text-gray-700 mb-3">{t("admin.picture.uploadNewLogo")}</label>
                                     <div className="space-y-4">
                                         <input
                                             id="logo-upload"
@@ -208,7 +207,7 @@ export default function SiteAppearancePage() {
                                                 className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg hover:bg-primary/90 disabled:opacity-70 transition"
                                             >
                                                 <FontAwesomeIcon icon={faUpload}/>
-                                                {uploadingIcon ? "Uploading..." : "Upload New Logo"}
+                                                {uploadingIcon ? t("admin.picture.uploadingLogo") : t("admin.picture.uploadNewLogo")}
                                             </button>
                                         )}
                                     </div>
@@ -221,12 +220,12 @@ export default function SiteAppearancePage() {
                         {/* Hero Banner */}
                         <div>
                             <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                                Hero Banner (Recommended: 1920×1080px or larger, JPG/PNG)
+                                {t("admin.picture.bannerHeading")}
                             </h2>
                             <div className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-3">
-                                        {bannerPreviewOverride ? "Preview" : "Current Banner"}
+                                        {bannerPreviewOverride ? t("admin.picture.previewLabel") : t("admin.picture.currentBanner")}
                                     </label>
                                     <div
                                         className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl overflow-hidden">
@@ -234,7 +233,7 @@ export default function SiteAppearancePage() {
                                             <div className="relative aspect-video">
                                                 <Image
                                                     src={bannerPreview}
-                                                    alt="Current hero banner"
+                                                    alt={t("admin.picture.bannerAlt")}
                                                     fill
                                                     className="object-cover"
                                                 />
@@ -242,17 +241,17 @@ export default function SiteAppearancePage() {
                                                     className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"/>
                                                 <div className="absolute bottom-6 left-6 text-white">
                                                     <h3 className="text-3xl font-bold">{siteName}</h3>
-                                                    <p className="text-lg opacity-90">Welcome to your marketplace</p>
+                                                    <p className="text-lg opacity-90">{t("admin.picture.welcomeSubtitle")}</p>
                                                 </div>
                                                 {bannerPreviewOverride && (
                                                     <span className="absolute top-3 right-3 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded-full">
-                                                        Preview — not saved yet
+                                                        {t("admin.picture.previewBadge")}
                                                     </span>
                                                 )}
                                             </div>
                                         ) : (
                                             <div className="h-64 flex items-center justify-center">
-                                                <p className="text-gray-500">No banner set</p>
+                                                <p className="text-gray-500">{t("admin.picture.noBannerSet")}</p>
                                             </div>
                                         )}
                                     </div>
@@ -262,14 +261,13 @@ export default function SiteAppearancePage() {
                                             disabled={removingBanner}
                                             className="mt-2 text-sm text-red-600 hover:underline disabled:opacity-50"
                                         >
-                                            {removingBanner ? "Removing..." : "Remove Banner"}
+                                            {removingBanner ? t("admin.picture.removing") : t("admin.picture.removeBanner")}
                                         </button>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="banner-upload" className="block text-sm font-medium text-gray-700 mb-3">Upload New
-                                        Banner</label>
+                                    <label htmlFor="banner-upload" className="block text-sm font-medium text-gray-700 mb-3">{t("admin.picture.uploadNewBanner")}</label>
                                     <input
                                         id="banner-upload"
                                         type="file"
@@ -284,7 +282,7 @@ export default function SiteAppearancePage() {
                                             className="mt-4 w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-lg hover:bg-primary/90 disabled:opacity-70 transition"
                                         >
                                             <FontAwesomeIcon icon={faUpload}/>
-                                            {uploadingBanner ? "Uploading Banner..." : "Upload New Banner"}
+                                            {uploadingBanner ? t("admin.picture.uploadingBanner") : t("admin.picture.uploadNewBanner")}
                                         </button>
                                     )}
                                 </div>
@@ -293,7 +291,7 @@ export default function SiteAppearancePage() {
 
                         <div className="mt-12 pt-8 border-t border-gray-200">
                             <p className="text-sm text-gray-500 text-center">
-                                Changes take effect immediately across the site.
+                                {t("admin.picture.footerNote")}
                             </p>
                         </div>
                     </div>
