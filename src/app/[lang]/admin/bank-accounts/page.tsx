@@ -12,7 +12,8 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useState} from "react";
 import {cn} from "@/lib/utils";
-import {BankAccountId} from "108jobs-client";
+import {BankAccountId, BankAccountView} from "108jobs-client";
+import {isSuccess, isFailed} from "@/services/HttpService";
 
 type ViewMode = "unverified" | "verified";
 
@@ -24,7 +25,7 @@ export default function AdminBankVerificationList() {
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
     const [isGoingBack, setIsGoingBack] = useState(false);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("adminListBankAccounts", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListBankAccounts", {
         pageCursor: currentCursor,
         pageBack: isGoingBack,
         limit: 5,
@@ -34,6 +35,8 @@ export default function AdminBankVerificationList() {
     const bankAccounts = data?.bankAccounts ?? [];
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
+    const isFetchFailed = isFailed(state);
+    const showLoading = isLoading || isMutating;
 
     const {execute: verify, isMutating: verifying} = useHttpPost("adminVerifyBankAccount");
 
@@ -55,12 +58,12 @@ export default function AdminBankVerificationList() {
     };
 
     const handleVerify = async (bankAccountId: BankAccountId) => {
-        try {
-            await verify({bankAccountId});
+        const res = await verify({bankAccountId});
+        if (isSuccess(res)) {
             toast.success(t("admin.bankManagement.actionApprove"));
             await refetch();
-        } catch {
-            toast.error(t("admin.bankManagement.actionApprove"));
+        } else if (isFailed(res)) {
+            toast.error(t("admin.bankManagement.verifyFailed"));
         }
     };
 
@@ -112,7 +115,7 @@ export default function AdminBankVerificationList() {
                 </div>
 
                 {/* Loading */}
-                {isLoading && (
+                {showLoading && (
                     <div className="space-y-4">
                         {[...Array(5)].map((_, i) => (
                             <Card key={i} className="p-5 animate-pulse">
@@ -128,8 +131,18 @@ export default function AdminBankVerificationList() {
                     </div>
                 )}
 
+                {/* Error State */}
+                {!showLoading && isFetchFailed && (
+                    <Card className="p-12 text-center bg-red-50 border border-red-100">
+                        <CreditCard className="w-16 h-16 mx-auto text-red-400 mb-4"/>
+                        <p className="text-lg font-medium text-red-600">
+                            {t("admin.bankManagement.fetchError")}
+                        </p>
+                    </Card>
+                )}
+
                 {/* Empty State */}
-                {!isLoading && bankAccounts.length === 0 && (
+                {!showLoading && !isFetchFailed && bankAccounts.length === 0 && (
                     <Card className="p-12 text-center bg-gray-50">
                         <CreditCard className="w-16 h-16 mx-auto text-gray-400 mb-4"/>
                         <p className="text-lg font-medium text-gray-700">
@@ -141,10 +154,10 @@ export default function AdminBankVerificationList() {
                 )}
 
                 {/* List */}
-                {!isLoading && bankAccounts.length > 0 && (
+                {!showLoading && !isFetchFailed && bankAccounts.length > 0 && (
                     <>
                         <div className="space-y-4">
-                            {bankAccounts.map((item: any) => {
+                            {bankAccounts.map((item: BankAccountView) => {
                                 const bank = item.bank;
                                 const acc = item.userBankAccount;
 
@@ -255,7 +268,7 @@ export default function AdminBankVerificationList() {
                                 hasNext={hasNextPage}
                                 onPrevious={handlePrevPage}
                                 onNext={handleNextPage}
-                                isLoading={isLoading}
+                                isLoading={showLoading}
                             />
                         </div>
                     </>

@@ -2003,6 +2003,7 @@ export const en = {
                 noResultsHint: "Try adjusting your filters",
                 coins: "coins",
                 transfer: "Transfer",
+                fetchError: "Failed to load top-up requests. Please try again.",
             },
 
             status: {
@@ -2024,6 +2025,7 @@ export const en = {
                 confirm: "Confirm Transfer",
                 cancel: "Cancel",
                 processing: "Processing...",
+                unknownUser: "Unknown",
             },
 
             toast: {
@@ -3839,11 +3841,18 @@ export const en = {
                     apply: "Apply Filter",
                     placeholderMin: "e.g. 1000",
                     placeholderMax: "e.g. 50000",
+                    allYears: "All years",
+                },
+                stats: {
+                    pendingThisPage: "Pending (this page)",
+                    approvedThisPage: "Approved (this page)",
+                    rejectedThisPage: "Rejected (this page)",
                 },
                 list: {
                     loading: "Loading requests...",
                     noResults: "No withdrawal requests found",
                     noResultsHint: "Try adjusting the filters",
+                    fetchError: "Failed to load withdrawal requests. Please try again.",
                 },
                 review: "Review",
                 bankInfo: "Bank Information",
@@ -3857,6 +3866,20 @@ export const en = {
                 approveFailed: "Failed to approve",
                 rejectFailed: "Failed to reject",
                 noteRequired: "Admin note is required",
+                unknownBank: "Unknown Bank",
+                status: {
+                    pending: "Pending",
+                    approved: "Approved",
+                    rejected: "Rejected",
+                },
+                fields: {
+                    amount: "Amount:",
+                    bank: "Bank:",
+                    account: "Account:",
+                    requested: "Requested:",
+                    accountNumber: "Account #:",
+                    name: "Name:",
+                },
             },
             jobBoardManagement: "Job Board Management",
             jobBoardSubtitle: "Manage all job posts, visibility, and content",
@@ -3893,6 +3916,8 @@ export const en = {
                 statusVerified: "Verified",
                 actionReject: "Reject",
                 actionApprove: "Approve",
+                verifyFailed: "Failed to verify bank account",
+                fetchError: "Failed to load bank accounts. Please try again.",
             },
             riders: {
                 // Page title & tabs

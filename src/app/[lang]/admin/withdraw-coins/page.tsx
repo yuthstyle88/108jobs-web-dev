@@ -19,6 +19,8 @@ import {cn} from "@/lib/utils";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {useDebounce} from "@/hooks/utils/useDebounce";
+import {isSuccess, isFailed} from "@/services/HttpService";
+import {format} from "date-fns";
 
 const WithdrawCoins = () => {
     const {t} = useTranslation();
@@ -36,7 +38,7 @@ const WithdrawCoins = () => {
 
     const debouncedFilters = useDebounce(filters, 500);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
@@ -45,6 +47,8 @@ const WithdrawCoins = () => {
     const withdrawRequests = data?.withdrawRequests ?? [];
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
+    const isFetchFailed = isFailed(state);
+    const showLoading = isLoading || isMutating;
 
     const {execute: approve, isMutating: approving} = useHttpPost("adminWithdrawWallet");
     const {execute: reject, isMutating: rejecting} = useHttpPost("adminRejectWithdrawRequest");
@@ -72,18 +76,18 @@ const WithdrawCoins = () => {
             return;
         }
 
-        try {
-            await approve({
-                withdrawalId: request.withdrawRequest.id,
-                reason: adminNote,
-                targetUserId: request.localUser.id,
-                amount: request.withdrawRequest.amount
-            });
+        const res = await approve({
+            withdrawalId: request.withdrawRequest.id,
+            reason: adminNote,
+            targetUserId: request.localUser.id,
+            amount: request.withdrawRequest.amount
+        });
+        if (isSuccess(res)) {
             toast.success(t("admin.withdraw.approved", {amount: request.withdrawRequest.amount.toLocaleString()}));
             setAdminNote("");
             setSelectedRequest(null);
             await refetch();
-        } catch {
+        } else if (isFailed(res)) {
             toast.error(t("admin.withdraw.approveFailed"));
         }
     };
@@ -94,31 +98,31 @@ const WithdrawCoins = () => {
             return;
         }
 
-        try {
-            await reject({withdrawalId: request.withdrawRequest.id, reason: adminNote});
+        const res = await reject({withdrawalId: request.withdrawRequest.id, reason: adminNote});
+        if (isSuccess(res)) {
             toast.success(t("admin.withdraw.rejected"));
             setAdminNote("");
             setSelectedRequest(null);
             await refetch();
-        } catch {
+        } else if (isFailed(res)) {
             toast.error(t("admin.withdraw.rejectFailed"));
         }
     };
 
     const getStatusConfig = (status: WithdrawStatus) => {
         const config: Partial<Record<WithdrawStatus, { color: string; icon: typeof Minus; label: string }>> = {
-            Pending: { color: "bg-amber-500 text-white border-amber-400/30", icon: Minus, label: "Pending" },
+            Pending: { color: "bg-amber-500 text-white border-amber-400/30", icon: Minus, label: t("admin.withdraw.status.pending") },
             Completed: {
                 color: "bg-green-600 text-white border-emerald-500/30",
                 icon: CheckCircle,
-                label: "Approved",
+                label: t("admin.withdraw.status.approved"),
             },
-            Rejected: { color: "bg-red-500 text-white border-rose-500/30", icon: XCircle, label: "Rejected" },
+            Rejected: { color: "bg-red-500 text-white border-rose-500/30", icon: XCircle, label: t("admin.withdraw.status.rejected") },
         };
         return config[status] ?? { color: "bg-gray-500/15 text-gray-600", icon: Minus, label: status };
     };
 
-    const getBankName = (bankId: number) => bankList.find((b) => b.id === bankId)?.name ?? "Unknown Bank";
+    const getBankName = (bankId: number) => bankList.find((b) => b.id === bankId)?.name ?? t("admin.withdraw.unknownBank");
 
     const handleFilterChange = (key: keyof ListWithdrawRequestQuery, value: any) => {
         setFilters((prev: ListWithdrawRequestQuery) => ({...prev, [key]: value}));
@@ -187,9 +191,9 @@ const WithdrawCoins = () => {
                                             onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
                                         >
                                             <option value="">{t("admin.withdraw.filters.all")}</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Completed">Approved</option>
-                                            <option value="Rejected">Rejected</option>
+                                            <option value="Pending">{t("admin.withdraw.status.pending")}</option>
+                                            <option value="Completed">{t("admin.withdraw.status.approved")}</option>
+                                            <option value="Rejected">{t("admin.withdraw.status.rejected")}</option>
                                         </select>
                                     </div>
 
@@ -225,7 +229,7 @@ const WithdrawCoins = () => {
                                             value={filters.year ?? ""}
                                             onChange={(e) => handleFilterChange("year", e.target.value ? Number(e.target.value) : undefined)}
                                         >
-                                            <option value="">{new Date().getFullYear()}</option>
+                                            <option value="">{t("admin.withdraw.filters.allYears")}</option>
                                             {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map((y) => (
                                                 <option key={y} value={y}>{y}</option>
                                             ))}
@@ -259,33 +263,25 @@ const WithdrawCoins = () => {
                     </Card>
 
                     {/* Stats Grid */}
-                    <div className="grid gap-5 md:grid-cols-4">
+                    <div className="grid gap-5 md:grid-cols-3">
                         {[
                             {
                                 icon: Minus,
-                                label: "Pending",
+                                label: t("admin.withdraw.stats.pendingThisPage"),
                                 color: "from-amber-400 to-orange-500",
                                 value: withdrawRequests.filter((r: WithdrawRequestView) => r.withdrawRequest.status === "Pending").length
                             },
                             {
                                 icon: CheckCircle,
-                                label: "Approved",
+                                label: t("admin.withdraw.stats.approvedThisPage"),
                                 color: "from-emerald-400 to-teal-500",
                                 value: withdrawRequests.filter((r: WithdrawRequestView) => r.withdrawRequest.status === "Completed").length
                             },
                             {
                                 icon: XCircle,
-                                label: "Rejected",
+                                label: t("admin.withdraw.stats.rejectedThisPage"),
                                 color: "from-rose-400 to-pink-500",
                                 value: withdrawRequests.filter((r: WithdrawRequestView) => r.withdrawRequest.status === "Rejected").length
-                            },
-                            {
-                                icon: CreditCard,
-                                label: "Total Amount",
-                                color: "from-blue-500 to-indigo-600",
-                                value: withdrawRequests
-                                    .reduce((sum: number, r: WithdrawRequestView) => sum + r.withdrawRequest.amount, 0)
-                                    .toLocaleString() + " coins"
                             },
                         ].map((stat, i) => (
                             <Card key={i}
@@ -312,10 +308,18 @@ const WithdrawCoins = () => {
                     <div className="grid gap-6 lg:grid-cols-3">
                         {/* Request List */}
                         <div className="lg:col-span-2 space-y-4">
-                            {isLoading ? (
+                            {showLoading ? (
                                 <div className="space-y-4">
                                     {[...Array(3)].map((_, i) => <RequestSkeleton key={i}/>)}
                                 </div>
+                            ) : isFetchFailed ? (
+                                <Card className="p-12 text-center bg-red-50 border-red-100">
+                                    <div
+                                        className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                        <CreditCard className="w-8 h-8 text-red-500"/>
+                                    </div>
+                                    <p className="text-lg font-medium text-red-600">{t("admin.withdraw.list.fetchError")}</p>
+                                </Card>
                             ) : withdrawRequests.length === 0 ? (
                                 <Card className="p-12 text-center backdrop-blur-xl bg-white/60 border-white/30">
                                     <div
@@ -336,7 +340,10 @@ const WithdrawCoins = () => {
                                         <Card
                                             key={w.id}
                                             className="group relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer select-none"
-                                            onClick={() => setSelectedRequest(req)}
+                                            onClick={() => {
+                                                setSelectedRequest(req);
+                                                setAdminNote("");
+                                            }}
                                         >
                                             {/* Shimmer Effect */}
                                             <div
@@ -388,7 +395,7 @@ const WithdrawCoins = () => {
                                                             <div className="flex items-center gap-2">
                                                                 <div
                                                                     className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"/>
-                                                                <span className="font-medium">Amount:</span>
+                                                                <span className="font-medium">{t("admin.withdraw.fields.amount")}</span>
                                                                 <span className="font-bold">
                             {w.amount.toLocaleString()}
                                                                     <span
@@ -401,7 +408,7 @@ const WithdrawCoins = () => {
                                                             <div className="flex items-center gap-2">
                                                                 <div
                                                                     className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"/>
-                                                                <span className="font-medium">Bank:</span>
+                                                                <span className="font-medium">{t("admin.withdraw.fields.bank")}</span>
                                                                 <span
                                                                     className="truncate max-w-[120px]">{getBankName(bank.bankId)}</span>
                                                             </div>
@@ -413,7 +420,7 @@ const WithdrawCoins = () => {
                                                             {/* Account Line */}
                                                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                                                 <span
-                                                                    className="font-medium text-foreground/70 whitespace-nowrap">Account:</span>
+                                                                    className="font-medium text-foreground/70 whitespace-nowrap">{t("admin.withdraw.fields.account")}</span>
                                                                 <span className="font-mono text-foreground/90 truncate">
             {bank.accountName} • **** {bank.accountNumber.slice(-4)}
         </span>
@@ -422,14 +429,9 @@ const WithdrawCoins = () => {
                                                             {/* Requested Line */}
                                                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                                                 <span
-                                                                    className="font-medium text-foreground/70 whitespace-nowrap">Requested:</span>
+                                                                    className="font-medium text-foreground/70 whitespace-nowrap">{t("admin.withdraw.fields.requested")}</span>
                                                                 <span className="font-mono text-foreground/90">
-            {new Date(w.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-            })}
+            {format(new Date(w.createdAt), "MMM d, HH:mm")}
         </span>
                                                             </div>
                                                         </div>
@@ -449,6 +451,7 @@ const WithdrawCoins = () => {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             setSelectedRequest(req);
+                                                            setAdminNote("");
                                                         }}
                                                     >
                                                         <Eye
@@ -505,13 +508,13 @@ const WithdrawCoins = () => {
                                             <h5 className="font-semibold">{t("admin.withdraw.bankInfo")}:</h5>
                                             <div className="space-y-2 p-3 bg-muted/30 rounded-xl">
                                                 <div><span
-                                                    className="font-medium">Bank:</span> {getBankName(selectedRequest.bankAccount.bankId)}
+                                                    className="font-medium">{t("admin.withdraw.fields.bank")}</span> {getBankName(selectedRequest.bankAccount.bankId)}
                                                 </div>
                                                 <div><span
-                                                    className="font-medium">Account #:</span> {selectedRequest.bankAccount.accountNumber}
+                                                    className="font-medium">{t("admin.withdraw.fields.accountNumber")}</span> {selectedRequest.bankAccount.accountNumber}
                                                 </div>
                                                 <div><span
-                                                    className="font-medium">Name:</span> {selectedRequest.bankAccount.accountName}
+                                                    className="font-medium">{t("admin.withdraw.fields.name")}</span> {selectedRequest.bankAccount.accountName}
                                                 </div>
                                             </div>
                                         </div>
@@ -579,7 +582,7 @@ const WithdrawCoins = () => {
                             hasNext={hasNextPage}
                             onPrevious={handlePrevPage}
                             onNext={handleNextPage}
-                            isLoading={isLoading}
+                            isLoading={showLoading}
                         />
                     </div>
                 </div>

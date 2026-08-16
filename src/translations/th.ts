@@ -1936,6 +1936,7 @@ export const th = {
                 noResultsHint: "ลองปรับตัวกรอง",
                 coins: "เหรียญ",
                 transfer: "โอนเหรียญ",
+                fetchError: "โหลดรายการคำขอเติมเหรียญไม่สำเร็จ กรุณาลองใหม่",
             },
 
             status: {
@@ -1957,6 +1958,7 @@ export const th = {
                 confirm: "ยืนยันการโอน",
                 cancel: "ยกเลิก",
                 processing: "กำลังดำเนินการ...",
+                unknownUser: "ไม่ทราบ",
             },
 
             toast: {
@@ -3755,11 +3757,18 @@ export const th = {
                     apply: "ใช้ตัวกรอง",
                     placeholderMin: "เช่น 1000",
                     placeholderMax: "เช่น 50000",
+                    allYears: "ทุกปี",
+                },
+                stats: {
+                    pendingThisPage: "รอดำเนินการ (หน้านี้)",
+                    approvedThisPage: "อนุมัติแล้ว (หน้านี้)",
+                    rejectedThisPage: "ปฏิเสธแล้ว (หน้านี้)",
                 },
                 list: {
                     loading: "กำลังโหลดคำขอ...",
                     noResults: "ไม่พบคำขอถอนเงิน",
                     noResultsHint: "ลองปรับตัวกรอง",
+                    fetchError: "โหลดรายการคำขอถอนเงินไม่สำเร็จ กรุณาลองใหม่",
                 },
                 review: "ตรวจสอบ",
                 bankInfo: "ข้อมูลธนาคาร",
@@ -3773,6 +3782,20 @@ export const th = {
                 approveFailed: "อนุมัติล้มเหลว",
                 rejectFailed: "ปฏิเสธล้มเหลว",
                 noteRequired: "ต้องระบุหมายเหตุแอดมิน",
+                unknownBank: "ไม่ทราบธนาคาร",
+                status: {
+                    pending: "รอดำเนินการ",
+                    approved: "อนุมัติแล้ว",
+                    rejected: "ปฏิเสธแล้ว",
+                },
+                fields: {
+                    amount: "จำนวน:",
+                    bank: "ธนาคาร:",
+                    account: "บัญชี:",
+                    requested: "วันที่ขอ:",
+                    accountNumber: "เลขบัญชี:",
+                    name: "ชื่อ:",
+                },
             },
             jobBoardManagement: "จัดการบอร์ดงาน",
             jobBoardSubtitle: "จัดการโพสต์งานทั้งหมด การมองเห็น และเนื้อหา",
@@ -3809,6 +3832,8 @@ export const th = {
                 statusVerified: "ตรวจสอบแล้ว",
                 actionReject: "ปฏิเสธ",
                 actionApprove: "อนุมัติ",
+                verifyFailed: "ยืนยันบัญชีธนาคารไม่สำเร็จ",
+                fetchError: "โหลดรายการบัญชีธนาคารไม่สำเร็จ กรุณาลองใหม่",
             },
             riders: {
                 // Page title & tabs

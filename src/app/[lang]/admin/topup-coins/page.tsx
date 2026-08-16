@@ -15,7 +15,7 @@ import {TransferConfirmModal} from "@/modules/admin/components/Modal/TransferCon
 import {PaginationControls} from "@/components/PaginationControls";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {AdminTopUpWallet} from "108jobs-client";
-import {REQUEST_STATE} from "@/services/HttpService";
+import {REQUEST_STATE, isFailed} from "@/services/HttpService";
 import {TopupGuide} from "@/modules/admin/components/TopupGuide";
 import {useTranslation} from "react-i18next";
 import {useDebounce} from "@/hooks/utils/useDebounce";
@@ -30,7 +30,7 @@ const TopUpCoins = () => {
 
     const debouncedFilters = useDebounce(filters, 500);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("adminListTopUpRequests", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListTopUpRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
@@ -41,6 +41,8 @@ const TopUpCoins = () => {
     const topUps: TopUpRequestView[] = data?.topUpRequests ?? [];
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
+    const isFetchFailed = isFailed(state);
+    const showLoading = isLoading || isMutating;
 
     const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [selectedTransfer, setSelectedTransfer] = useState<TopUpRequestView | null>(null);
@@ -87,29 +89,24 @@ const TopUpCoins = () => {
             reason: "Admin top-up from payment",
         };
 
-        try {
-            const res = await adminTopUpWallet(payload);
-            if (res.state === REQUEST_STATE.FAILED) {
-                toast.error(t("topupCoins.toast.error"));
-                return;
-            }
-            toast.success(t("topupCoins.toast.success", {
-                amount: formatMinor(selectedTransfer.topUpRequest.amountMinor),
-                email: selectedTransfer.localUser.email,
-            }));
-            refetch();
-        } catch (error: any) {
-            toast.error(error.message || t("topupCoins.toast.error"));
-        } finally {
-            setIsTransferModalOpen(false);
-            setSelectedTransfer(null);
+        const res = await adminTopUpWallet(payload);
+        if (res.state === REQUEST_STATE.FAILED) {
+            toast.error(t("topupCoins.toast.error"));
+            return;
         }
+        toast.success(t("topupCoins.toast.success", {
+            amount: formatMinor(selectedTransfer.topUpRequest.amountMinor),
+            email: selectedTransfer.localUser.email,
+        }));
+        refetch();
+        setIsTransferModalOpen(false);
+        setSelectedTransfer(null);
     };
 
     const getStatusBadge = (status: string, transferred: boolean) => {
         if (transferred) {
             return (
-                <Badge className="bg-green-600 text-white border-emerald-200">
+                <Badge className="bg-success text-success-foreground">
                     <CheckCircle2 className="w-3 h-3 mr-1"/>
                     {t("topupCoins.status.transferred")}
                 </Badge>
@@ -133,7 +130,7 @@ const TopUpCoins = () => {
                 );
             case "Expired":
                 return (
-                    <Badge className="bg-red-100 text-red-800 border-red-200">
+                    <Badge className="bg-destructive text-destructive-foreground">
                         <XCircle className="w-3 h-3 mr-1"/>
                         {t("topupCoins.status.expired")}
                     </Badge>
@@ -202,8 +199,53 @@ const TopUpCoins = () => {
                             />
                         </div>
 
-                        {/* Year, Month, Day — same pattern */}
-                        {/* ... abbreviated for brevity ... */}
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">
+                                {t("topupCoins.filters.year")}
+                            </label>
+                            <select
+                                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                                value={filters.year ?? ""}
+                                onChange={(e) => handleFilterChange("year", e.target.value ? Number(e.target.value) : undefined)}
+                            >
+                                <option value="">{t("topupCoins.filters.all")}</option>
+                                {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map((y) => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">
+                                {t("topupCoins.filters.month")}
+                            </label>
+                            <select
+                                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                                value={filters.month ?? ""}
+                                onChange={(e) => handleFilterChange("month", e.target.value ? Number(e.target.value) : undefined)}
+                            >
+                                <option value="">{t("topupCoins.filters.all")}</option>
+                                {Array.from({length: 12}, (_, i) => i + 1).map((m) => (
+                                    <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1.5">
+                                {t("topupCoins.filters.day")}
+                            </label>
+                            <select
+                                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary"
+                                value={filters.day ?? ""}
+                                onChange={(e) => handleFilterChange("day", e.target.value ? Number(e.target.value) : undefined)}
+                            >
+                                <option value="">{t("topupCoins.filters.all")}</option>
+                                {Array.from({length: 31}, (_, i) => i + 1).map((d) => (
+                                    <option key={d} value={d}>{d.toString().padStart(2, "0")}</option>
+                                ))}
+                            </select>
+                        </div>
 
                         <div className="flex items-end sm:col-span-2 lg:col-span-6">
                             <Button onClick={applyFilters} className="w-full">
@@ -215,12 +257,18 @@ const TopUpCoins = () => {
 
                 {/* Top-up List */}
                 <div className="space-y-4">
-                    {isLoading ? (
+                    {showLoading ? (
                         <div className="text-center py-12">
                             <div
                                 className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                             <p className="mt-3 text-sm text-muted-foreground">
                                 {t("topupCoins.list.loading")}
+                            </p>
+                        </div>
+                    ) : isFetchFailed ? (
+                        <div className="text-center py-16 bg-red-50 rounded-lg border border-red-100">
+                            <p className="text-lg font-medium text-red-600">
+                                {t("topupCoins.list.fetchError")}
                             </p>
                         </div>
                     ) : topUps.length === 0 ? (
@@ -307,7 +355,7 @@ const TopUpCoins = () => {
                     hasNext={hasNextPage}
                     onPrevious={handlePrevPage}
                     onNext={handleNextPage}
-                    isLoading={isLoading}
+                    isLoading={showLoading}
                 />
 
                 <TransferConfirmModal
@@ -321,7 +369,7 @@ const TopUpCoins = () => {
                     transfer={
                         selectedTransfer
                             ? {
-                                userName: selectedTransfer.localUser.email || "Unknown",
+                                userName: selectedTransfer.localUser.email || t("topupCoins.transferModal.unknownUser"),
                                 reason: "User paid via QR",
                                 amount: selectedTransfer.topUpRequest.amountMinor / 100,
                                 paymentCode: selectedTransfer.topUpRequest.paymentIntentId || undefined,
