@@ -8,6 +8,10 @@ import type {CategoryVisibility} from "./CategoryVisibility";
 export type EditCategory = {
     categoryId: CategoryId;
     /**
+     * The unique name.
+     */
+    name?: string;
+    /**
      * A longer title.
      */
     title?: string;
@@ -20,12 +24,24 @@ export type EditCategory = {
      */
     description?: string;
     /**
-     * Whether its an NSFW category.
+     * An icon URL.
      */
-    nsfw?: boolean;
+    icon?: string;
+    /**
+     * A banner URL.
+     */
+    banner?: string;
+    /**
+     * Whether its a self-promotion category.
+     */
+    selfPromotion?: boolean;
     /**
      * Whether to restrict posting only to moderators.
      */
     postingRestrictedToMods?: boolean;
     visibility?: CategoryVisibility;
+    /**
+     * Whether its new or not.
+     */
+    isNew?: boolean;
 };
