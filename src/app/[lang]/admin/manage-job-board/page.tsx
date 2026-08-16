@@ -48,7 +48,6 @@ interface FilterState {
     budgetMin: number | undefined;
     budgetMax: number | undefined;
     sort: PostSortType | undefined;
-    status: "all" | "active" | "hidden" | undefined;
 }
 
 const AdminJobBoard = () => {
@@ -66,7 +65,6 @@ const AdminJobBoard = () => {
         budgetMin: undefined,
         budgetMax: undefined,
         sort: undefined,
-        status: undefined,
     });
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
@@ -91,8 +89,6 @@ const AdminJobBoard = () => {
         jobType: filters.jobType,
         intendedUse: filters.intendedUse,
         limit: ITEMS_PER_PAGE,
-        // Add custom admin filter if backend supports
-        // hidden: filters.status === "hidden" ? true : filters.status === "active" ? false : undefined,
     });
 
     const {execute: deleteJob} = useHttpDelete("");
@@ -133,8 +129,6 @@ const AdminJobBoard = () => {
                 else params.delete("budgetMax");
                 if (updatedFilters.sort) params.set("sort", updatedFilters.sort);
                 else params.delete("sort");
-                if (updatedFilters.status && updatedFilters.status !== "all") params.set("status", updatedFilters.status);
-                else params.delete("status");
 
                 router.push(`?${params.toString()}`, {scroll: false});
             });
@@ -209,7 +203,6 @@ const AdminJobBoard = () => {
             budgetMin: undefined,
             budgetMax: undefined,
             sort: undefined,
-            status: undefined,
         });
         router.push(`/admin/job-board`, {scroll: false});
     }, [router]);
@@ -221,8 +214,7 @@ const AdminJobBoard = () => {
             filters.intendedUse ||
             filters.budgetMin ||
             filters.budgetMax ||
-            filters.sort ||
-            filters.status,
+            filters.sort,
         [filters]
     );
 
@@ -234,7 +226,6 @@ const AdminJobBoard = () => {
             budgetMin: searchParams.get("budgetMin") ? parseInt(searchParams.get("budgetMin")!) : undefined,
             budgetMax: searchParams.get("budgetMax") ? parseInt(searchParams.get("budgetMax")!) : undefined,
             sort: searchParams.get("sort") as PostSortType | undefined,
-            status: searchParams.get("status") as "all" | "active" | "hidden" | undefined,
         });
     }, [searchParams]);
 
@@ -248,7 +239,6 @@ const AdminJobBoard = () => {
         filters.budgetMax,
         filters.jobType,
         filters.intendedUse,
-        filters.status,
     ]);
 
     useEffect(() => {
@@ -310,17 +300,6 @@ const AdminJobBoard = () => {
                                         {getJobTypeLabel(type, t)}
                                     </option>
                                 ))}
-                            </select>
-
-                            {/* Status */}
-                            <select
-                                value={filters.status || "all"}
-                                onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
-                                className="px-4 py-2 border rounded-lg text-sm"
-                            >
-                                <option value="all">{t("admin.statusAll")}</option>
-                                <option value="active">{t("admin.statusActive")}</option>
-                                <option value="hidden">{t("admin.statusHidden")}</option>
                             </select>
 
                             {/* Budget Min/Max */}
