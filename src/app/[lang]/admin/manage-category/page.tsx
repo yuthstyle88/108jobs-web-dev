@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
+import {useHttpPut} from "@/hooks/api/http/useHttpPut";
 import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
 import {isFailed, isSuccess} from "@/services/HttpService";
 import {CategoryRow} from "@/modules/admin/components/CategoryRow";
@@ -51,6 +52,7 @@ export default function AdminCategoriesPage() {
     const {data: categories, isLoading, state, execute: refetch} = useHttpGet("listCategories");
 
     const {execute: createCategory} = useHttpPost("createCategory");
+    const {execute: editCategory} = useHttpPut("editCategory");
     const {execute: deleteCategory} = useHttpDelete("deleteCategory");
 
     const {execute: uploadIcon} = useHttpPost("uploadCategoryIcon");
@@ -152,6 +154,19 @@ export default function AdminCategoriesPage() {
                 toast.error("Failed to create the category. Please try again.");
             }
             return;
+        }
+
+        if (editingCategory) {
+            const res = await editCategory({
+                categoryId: editingCategory.category.id,
+                title: form.name,
+                description: form.description,
+            });
+
+            if (isFailed(res)) {
+                toast.error("Failed to save changes. Please try again.");
+                return;
+            }
         }
 
         closeModal();
