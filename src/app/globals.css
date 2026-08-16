@@ -252,12 +252,32 @@
     --border-primary: #d6dae1;
     --border-secondary: #e8eaee;
     --skeleton: #e8eaee;
+    --destructive: #DC2626;
+    --destructive-foreground: #ffffff;
+    --success: #16A34A;
+    --success-foreground: #ffffff;
+    --muted: var(--fourth);
+    --muted-foreground: #6B7280;
+    --accent: var(--third);
+    --accent-foreground: #ffffff;
+    --card: var(--background);
+    --card-foreground: var(--foreground);
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --background: #0a0a0a;
         --foreground: #ededed;
+        --destructive: #F87171;
+        --destructive-foreground: #1B1A1D;
+        --success: #4ADE80;
+        --success-foreground: #1B1A1D;
+        --muted: #27272A;
+        --muted-foreground: #A1A1AA;
+        --accent: var(--third);
+        --accent-foreground: #ffffff;
+        --card: #18181B;
+        --card-foreground: var(--foreground);
     }
 }
 
