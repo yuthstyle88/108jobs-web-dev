@@ -3793,6 +3793,7 @@ export const en = {
                     loading: "Loading requests...",
                     noResults: "No withdrawal requests found",
                     noResultsHint: "Try adjusting the filters",
+                    fetchError: "Failed to load withdrawal requests. Please try again.",
                 },
                 review: "Review",
                 bankInfo: "Bank Information",

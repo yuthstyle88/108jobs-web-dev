@@ -37,7 +37,7 @@ const WithdrawCoins = () => {
 
     const debouncedFilters = useDebounce(filters, 500);
 
-    const {data, isLoading, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
+    const {data, isLoading, state, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
@@ -46,6 +46,7 @@ const WithdrawCoins = () => {
     const withdrawRequests = data?.withdrawRequests ?? [];
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
+    const isFetchFailed = isFailed(state);
 
     const {execute: approve, isMutating: approving} = useHttpPost("adminWithdrawWallet");
     const {execute: reject, isMutating: rejecting} = useHttpPost("adminRejectWithdrawRequest");
@@ -317,6 +318,14 @@ const WithdrawCoins = () => {
                                 <div className="space-y-4">
                                     {[...Array(3)].map((_, i) => <RequestSkeleton key={i}/>)}
                                 </div>
+                            ) : isFetchFailed ? (
+                                <Card className="p-12 text-center bg-red-50 border-red-100">
+                                    <div
+                                        className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                        <CreditCard className="w-8 h-8 text-red-500"/>
+                                    </div>
+                                    <p className="text-lg font-medium text-red-600">{t("admin.withdraw.list.fetchError")}</p>
+                                </Card>
                             ) : withdrawRequests.length === 0 ? (
                                 <Card className="p-12 text-center backdrop-blur-xl bg-white/60 border-white/30">
                                     <div
