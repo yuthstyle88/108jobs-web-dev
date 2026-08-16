@@ -90,6 +90,8 @@ import type {GetPostsResponse} from "./types/GetPostsResponse";
 import type {GetSiteMetadata} from "./types/GetSiteMetadata";
 import type {GetSiteMetadataResponse} from "./types/GetSiteMetadataResponse";
 import type {GetSiteResponse} from "./types/GetSiteResponse";
+import type {EditSiteRequest} from "./types/EditSiteRequest";
+import type {SiteResponse} from "./types/SiteResponse";
 import type {GetUnreadSnapshotResponse} from "./types/GetUnreadSnapshotResponse";
 import type {PresenceSnapshotItem} from "./types/PresenceSnapshotItem";
 import type {IdentityCardForm} from "./types/IdentityCardForm";
@@ -232,6 +234,24 @@ export class Api108Jobs extends Controller {
             HttpType.Get,
             "/site",
             {},
+            options,
+        );
+    }
+
+    /**
+     * Edit a site.
+     */
+    @Security("bearerAuth")
+    @Put("/site")
+    @Tags("Admin", "Site")
+    async updateSite(
+        @Body() form: EditSiteRequest,
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<EditSiteRequest, SiteResponse>(
+            HttpType.Put,
+            "/site",
+            form,
             options,
         );
     }
