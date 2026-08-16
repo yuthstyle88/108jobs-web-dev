@@ -1988,6 +1988,12 @@ export const th = {
                     hard: "ยาก",
                 },
             },
+            loadError: {
+                title: "ไม่สามารถโหลดข้อมูลไซต์ได้",
+                description: "เกิดข้อผิดพลาดขณะโหลดการตั้งค่าของไซต์นี้",
+                retry: "ลองใหม่",
+                retrying: "กำลังลองใหม่…",
+            },
             stats: {
                 totalUsers: "ผู้ใช้ทั้งหมด",
                 totalPosts: "โพสต์ทั้งหมด",

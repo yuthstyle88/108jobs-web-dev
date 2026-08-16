@@ -1,5 +1,6 @@
 "use client";
 
+import {useState} from "react";
 import {StatsCard} from "@/components/ui/StatsCard";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/Card";
 import {Users, MessageSquare, Globe, Activity, Shield, CheckCircle, AlertTriangle, Settings} from "lucide-react";
@@ -8,10 +9,12 @@ import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
 import {RegistrationMode} from "108jobs-client";
+import {callHttp, isSuccess} from "@/services/HttpService";
 
 const DashboardPage = () => {
     const {t} = useTranslation();
-    const {siteRes} = useSiteStore();
+    const {siteRes, setSiteRes} = useSiteStore();
+    const [retrying, setRetrying] = useState(false);
 
     const localSite = siteRes?.siteView?.localSite;
     const rateLimit = siteRes?.siteView?.localSiteRateLimit;
@@ -31,6 +34,34 @@ const DashboardPage = () => {
         medium: t("dashboard.siteInfo.captchaDifficulty.medium"),
         hard: t("dashboard.siteInfo.captchaDifficulty.hard"),
     };
+
+    const handleRetry = async () => {
+        setRetrying(true);
+        const res = await callHttp("getSite");
+        if (isSuccess(res)) {
+            setSiteRes(res.data);
+        }
+        setRetrying(false);
+    };
+
+    if (!localSite) {
+        return (
+            <AdminLayout>
+                <div className="flex flex-col items-center justify-center gap-4 py-24 text-center text-gray-600">
+                    <AlertTriangle className="w-10 h-10 text-destructive"/>
+                    <p className="text-lg font-medium">{t("dashboard.loadError.title")}</p>
+                    <p className="text-sm max-w-md">{t("dashboard.loadError.description")}</p>
+                    <button
+                        onClick={handleRetry}
+                        disabled={retrying}
+                        className="px-4 py-2 rounded-lg bg-primary text-white font-medium disabled:opacity-50"
+                    >
+                        {retrying ? t("dashboard.loadError.retrying") : t("dashboard.loadError.retry")}
+                    </button>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     const stats = [
         {
@@ -135,7 +166,7 @@ const DashboardPage = () => {
                                     <div>
                                         <p className="font-medium">{item.label}</p>
                                         <p className="text-sm">
-                                            {item.value} {item.value === 1 ? t("dashboard.activity.user") : t("dashboard.activity.users")}
+                                            {item.value} {item.value === 1n ? t("dashboard.activity.user") : t("dashboard.activity.users")}
                                         </p>
                                     </div>
                                     <div

@@ -2039,6 +2039,12 @@ export const vi = {
                     hard: "Khó",
                 },
             },
+            loadError: {
+                title: "Không thể tải thông tin trang web",
+                description: "Đã xảy ra lỗi khi tải cấu hình của trang web này.",
+                retry: "Thử lại",
+                retrying: "Đang thử lại…",
+            },
             stats: {
                 totalUsers: "Tổng người dùng",
                 totalPosts: "Tổng bài đăng",

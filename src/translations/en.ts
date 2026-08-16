@@ -2055,6 +2055,12 @@ export const en = {
                     hard: "Hard",
                 },
             },
+            loadError: {
+                title: "Unable to load site information",
+                description: "Something went wrong loading this site's configuration.",
+                retry: "Retry",
+                retrying: "Retrying…",
+            },
             stats: {
                 totalUsers: "Total Users",
                 totalPosts: "Total Posts",
