@@ -1865,7 +1865,7 @@ export const th = {
                 successWithReason: "แบนผู้ใช้แล้ว – {{reason}}",
             },
 
-            bannedSuccess: "แบน {name} แล้ว",
+            bannedSuccess: "แบน {{name}} แล้ว",
             unbannedSuccess: "ยกเลิกแบน {{name}} แล้ว",
             refresh: "รีเฟรช",
         },

@@ -97,7 +97,7 @@ const ManageUsers = () => {
             toast.success(
                 banReason
                     ? t("manageUsers.banConfirmationModal.successWithReason", {reason: banReason})
-                    : `${t("manageUsers.bannedSuccess")} ${banTarget.name}`
+                    : t("manageUsers.bannedSuccess", {name: banTarget.name})
             );
             refetch(); // Refresh user list
         } catch (error: any) {

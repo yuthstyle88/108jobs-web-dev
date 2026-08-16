@@ -13,6 +13,7 @@ import {JSX, useState} from "react";
 import {cn} from "@/lib/utils";
 import {RiderId, RiderView, VehicleType} from "108jobs-client";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
+import {isFailed, isSuccess} from "@/services/HttpService";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 
 const vehicleIconMap: Record<VehicleType, JSX.Element> = {
@@ -46,8 +47,8 @@ export default function AdminRidersManagementPage() {
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
 
     const handleVerify = async (riderId: RiderId, approve: boolean, reason?: string) => {
-        try {
-            await verifyRider({riderId, approve, reason: reason || undefined});
+        const res = await verifyRider({riderId, approve, reason: reason || undefined});
+        if (isSuccess(res)) {
             toast.success(
                 approve ? t("admin.riders.actionApproved") : t("admin.riders.actionRejected")
             );
@@ -56,7 +57,7 @@ export default function AdminRidersManagementPage() {
                 setRejectReason("");
             }
             await refetch();
-        } catch (err) {
+        } else if (isFailed(res)) {
             toast.error(t("common.errorOccurred") || "An error occurred");
         }
     };

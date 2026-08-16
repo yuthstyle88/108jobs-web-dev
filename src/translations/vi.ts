@@ -1916,7 +1916,7 @@ export const vi = {
                 successWithReason: "Đã cấm người dùng – {{reason}}",
             },
 
-            bannedSuccess: "Đã cấm {name}",
+            bannedSuccess: "Đã cấm {{name}}",
             unbannedSuccess: "Đã bỏ cấm {{name}}",
             refresh: "Làm mới",
         },
@@ -3936,6 +3936,10 @@ export const vi = {
                 fullName: "Họ và tên",
                 username: "Tên đăng nhập",
                 unknown: "Không xác định",
+
+                // Optional – if you add rejection reason later
+                rejectionReason: "Lý do từ chối",
+                rejectionReasonPlaceholder: "Nhập lý do từ chối (không bắt buộc)",
             },
         },
     },

@@ -125,7 +125,7 @@ export default function SiteAppearancePage() {
 
     const handleRemove = async (type: "icon" | "banner") => {
         const execute = type === "icon" ? removeIcon : removeBanner;
-        const res = await execute();
+        const res = await execute(undefined);
 
         if (isSuccess(res)) {
             toast.success(type === "icon" ? t("admin.picture.logoRemoved") : t("admin.picture.bannerRemoved"));
