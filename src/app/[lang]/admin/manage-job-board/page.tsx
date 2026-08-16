@@ -61,6 +61,10 @@ const AdminJobBoard = () => {
 
     const [searchInput, setSearchInput] = useState(sanitizedQuery);
 
+    useEffect(() => {
+        setSearchInput(sanitizedQuery);
+    }, [sanitizedQuery]);
+
     const handleSearchSubmit = useCallback(() => {
         const params = new URLSearchParams(searchParams);
         const trimmed = searchInput.trim();
