@@ -2067,7 +2067,7 @@ export const vi = {
                 postRateLimit: "Giới hạn đăng bài",
                 registerRateLimit: "Giới hạn đăng ký",
                 admins: "Admin",
-                perMinute: "bài / {minutes} phút",
+                perMinute: "bài / {{minutes}} phút",
                 perHour: "/ giờ",
                 activeAdmin: "admin đang hoạt động",
                 activeAdmins: "admin đang hoạt động",
