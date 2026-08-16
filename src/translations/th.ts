@@ -3756,6 +3756,7 @@ export const th = {
                 statusVerified: "ตรวจสอบแล้ว",
                 actionReject: "ปฏิเสธ",
                 actionApprove: "อนุมัติ",
+                verifyFailed: "ยืนยันบัญชีธนาคารไม่สำเร็จ",
             },
             riders: {
                 // Page title & tabs

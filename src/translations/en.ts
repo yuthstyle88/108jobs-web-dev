@@ -3840,6 +3840,7 @@ export const en = {
                 statusVerified: "Verified",
                 actionReject: "Reject",
                 actionApprove: "Approve",
+                verifyFailed: "Failed to verify bank account",
             },
             riders: {
                 // Page title & tabs

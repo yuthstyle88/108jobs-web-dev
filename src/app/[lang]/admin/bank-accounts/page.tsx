@@ -13,6 +13,7 @@ import {PaginationControls} from "@/components/PaginationControls";
 import {useState} from "react";
 import {cn} from "@/lib/utils";
 import {BankAccountId} from "108jobs-client";
+import {isSuccess, isFailed} from "@/services/HttpService";
 
 type ViewMode = "unverified" | "verified";
 
@@ -55,12 +56,12 @@ export default function AdminBankVerificationList() {
     };
 
     const handleVerify = async (bankAccountId: BankAccountId) => {
-        try {
-            await verify({bankAccountId});
+        const res = await verify({bankAccountId});
+        if (isSuccess(res)) {
             toast.success(t("admin.bankManagement.actionApprove"));
             await refetch();
-        } catch {
-            toast.error(t("admin.bankManagement.actionApprove"));
+        } else if (isFailed(res)) {
+            toast.error(t("admin.bankManagement.verifyFailed"));
         }
     };
 

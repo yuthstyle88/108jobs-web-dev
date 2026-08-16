@@ -3864,6 +3864,7 @@ export const vi = {
                 statusVerified: "Đã xác minh",
                 actionReject: "Từ chối",
                 actionApprove: "Duyệt",
+                verifyFailed: "Xác minh tài khoản ngân hàng thất bại",
             },
             riders: {
                 // Page title & tabs
