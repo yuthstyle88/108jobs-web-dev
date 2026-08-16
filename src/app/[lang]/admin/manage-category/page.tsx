@@ -48,7 +48,7 @@ export default function AdminCategoriesPage() {
     const [lightboxSrc, setLightboxSrc] = useState("");
     const [lightboxAlt, setLightboxAlt] = useState("");
 
-    const {data: categories, isLoading, error, execute: refetch} = useHttpGet("listCategories");
+    const {data: categories, isLoading, state, execute: refetch} = useHttpGet("listCategories");
 
     const {execute: createCategory} = useHttpPost("createCategory");
     const {execute: deleteCategory} = useHttpDelete("deleteCategory");
@@ -228,7 +228,7 @@ export default function AdminCategoriesPage() {
                                     <div
                                         className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                 </div>
-                            ) : error ? (
+                            ) : isFailed(state) ? (
                                 <div className="text-center py-16">
                                     <p className="text-red-600 text-lg">Something went wrong loading categories</p>
                                     <button onClick={() => refetch()}
