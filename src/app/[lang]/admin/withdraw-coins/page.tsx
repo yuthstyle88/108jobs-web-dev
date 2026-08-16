@@ -37,7 +37,7 @@ const WithdrawCoins = () => {
 
     const debouncedFilters = useDebounce(filters, 500);
 
-    const {data, isLoading, state, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
         ...debouncedFilters,
         pageCursor: currentCursor,
         pageBack: isGoingBack,
@@ -47,6 +47,7 @@ const WithdrawCoins = () => {
     const hasNextPage = !!data?.nextPage;
     const hasPreviousPage = cursorHistory.length > 0;
     const isFetchFailed = isFailed(state);
+    const showLoading = isLoading || isMutating;
 
     const {execute: approve, isMutating: approving} = useHttpPost("adminWithdrawWallet");
     const {execute: reject, isMutating: rejecting} = useHttpPost("adminRejectWithdrawRequest");
@@ -314,7 +315,7 @@ const WithdrawCoins = () => {
                     <div className="grid gap-6 lg:grid-cols-3">
                         {/* Request List */}
                         <div className="lg:col-span-2 space-y-4">
-                            {isLoading ? (
+                            {showLoading ? (
                                 <div className="space-y-4">
                                     {[...Array(3)].map((_, i) => <RequestSkeleton key={i}/>)}
                                 </div>
@@ -589,7 +590,7 @@ const WithdrawCoins = () => {
                             hasNext={hasNextPage}
                             onPrevious={handlePrevPage}
                             onNext={handleNextPage}
-                            isLoading={isLoading}
+                            isLoading={showLoading}
                         />
                     </div>
                 </div>
