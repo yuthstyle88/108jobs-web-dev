@@ -289,7 +289,6 @@ const ManageUsers = () => {
                     user={{
                         id: banTarget?.id ?? 0,
                         name: banTarget?.name ?? "",
-                        handle: banTarget?.displayName ?? "",
                     }}
                     reason={banReason}
                     onReasonChange={setBanReason}
