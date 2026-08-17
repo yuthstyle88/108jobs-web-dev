@@ -552,7 +552,24 @@ git add -A src/ tsconfig.tsbuildinfo && git commit -m "fix(client): correct drif
 
 ### Task 9: Final sweep and lint
 
-- [ ] **Step 1: Confirm no stale name survives in source**
+- [ ] **Step 1: Rename the last app-internal comment-named declaration**
+
+`src/utils/types.ts` still has `CommentViewType`, a display-mode enum. Like the three declarations Task 4 renamed in the same file, it is app-internal (not wire contract) and has zero references outside its own file. Rename it:
+
+```ts
+export enum ProposalViewType {
+    Tree,
+    Flat,
+}
+```
+
+Then confirm nothing referenced the old name:
+```bash
+grep -rnE "\bCommentViewType\b" src --include="*.ts" --include="*.tsx"
+```
+Expected: no matches.
+
+- [ ] **Step 2: Confirm no stale name survives in source**
 
 ```bash
 grep -rn "Comment" src/ --include="*.ts" --include="*.tsx" | grep -v "/dist/" | grep -v "src/translations/"
@@ -564,22 +581,25 @@ Expected remaining matches, and **only** these — each verified correct against
 
 Anything else is a miss — fix it.
 
-- [ ] **Step 2: Full typecheck and lint**
+- [ ] **Step 3: Full typecheck and lint**
 
 ```bash
 npx tsc --noEmit && npx eslint src --ext .ts,.tsx
 ```
 Expected: both clean. If eslint reports pre-existing errors in files this plan never touched, report them rather than fixing them.
 
-- [ ] **Step 3: Confirm the package build is current**
+- [ ] **Step 4: Clean-rebuild the package so `dist/` has no orphans**
+
+Every task so far left stale outputs in `dist/` — `tsc` does not delete the output of a source file that no longer exists, so `dist/CommentId.js`, `dist/CommentView.d.ts` and friends are still sitting there. They are gitignored and unreachable from `index.d.ts`, so they never affected the build, but they must not survive the branch.
 
 ```bash
+rm -rf src/lib/108jobs-client/dist
 cd src/lib/108jobs-client && npm run build && cd - && pnpm install && npx tsc --noEmit
-grep -rn "CommentView\|CommentId\|CreateComment" src/lib/108jobs-client/dist/ | head
+grep -rlnE "Comment" src/lib/108jobs-client/dist/ | head
 ```
-Expected: `tsc` silent; the `dist/` grep returns nothing, proving the built output is rebuilt rather than stale.
+Expected: `tsc` silent; the `dist/` grep returns nothing. If it still returns files, the clean rebuild did not happen — investigate rather than deleting the files by hand.
 
-- [ ] **Step 4: Commit any residual fixes**
+- [ ] **Step 5: Commit any residual fixes**
 
 ```bash
 git add -A src/ tsconfig.tsbuildinfo && git commit -m "chore(client): final Comment-to-Proposal sweep"
