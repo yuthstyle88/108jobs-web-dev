@@ -2278,7 +2278,7 @@ export const th = {
             accountInfo: "ข้อมูลบัญชี",
             companyHiringInfo: "ข้อมูลเพื่อจ้างในนามบริษัท",
             contactInfo: "ข้อมูลติดต่อ",
-            consentManage: "การจัดการความยินยอม",
+            settings: "การตั้งค่า",
             addressManage: "การจัดการที่อยู่",
             idInfo: "ข้อมูลบัตรประจำตัวประชาชน",
             bankInfo: "ข้อมูลธนาคาร",

@@ -2330,7 +2330,7 @@ export const vi = {
             accountInfo: "Thông tin tài khoản",
             companyHiringInfo: "Tuyển dụng với tư cách công ty",
             contactInfo: "Thông tin liên hệ",
-            consentManage: "Quản lý sự đồng ý",
+            settings: "Cài đặt",
             addressManage: "Quản lý địa chỉ",
             idInfo: "Thông tin CMND/CCCD",
             bankInfo: "Thông tin ngân hàng",

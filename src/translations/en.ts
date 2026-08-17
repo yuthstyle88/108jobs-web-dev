@@ -2343,7 +2343,7 @@ export const en = {
             accountInfo: "Account Information",
             companyHiringInfo: "Hiring as a Company",
             contactInfo: "Contact Information",
-            consentManage: "Consent management",
+            settings: "Settings",
             addressManage: "Address management",
             idInfo: "National ID Information",
             bankInfo: "Bank Information",
