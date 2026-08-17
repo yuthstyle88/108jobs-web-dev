@@ -2343,7 +2343,7 @@ export const en = {
             accountInfo: "Account Information",
             companyHiringInfo: "Hiring as a Company",
             contactInfo: "Contact Information",
-            consentManage: "Consent management",
+            settings: "Settings",
             addressManage: "Address management",
             idInfo: "National ID Information",
             bankInfo: "Bank Information",
@@ -3520,6 +3520,16 @@ export const en = {
         accountManage: {
             title: "Account Management",
             description: "Set up account information and security",
+            secureChat: {
+                title: "Secure Chat",
+                toggleLabel: "Encrypt chat messages",
+                toggleHint: "Applies to this account, on every device",
+                bodyInTransit: "Messages are encrypted between your device and 108jobs, so nobody on the network in between can read them.",
+                bodyNotE2e: "This is not end-to-end encryption: 108jobs holds the key and can read your messages, which is what lets us act on reports of abuse and scams.",
+                enabled: "Message encryption enabled",
+                disabled: "Message encryption disabled",
+                saveError: "Couldn't save that. Please try again.",
+            },
             passwordTitle: "Set Password",
             passwordDescription:
                 "Set a strong password to protect your account from unauthorized access.",

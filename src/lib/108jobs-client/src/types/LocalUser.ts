@@ -105,4 +105,10 @@ export type LocalUser = {
   showDownvotes: VoteShow;
   showUpvotePercentage: boolean;
   showPersonVotes: boolean;
+  /**
+   * Whether this account's chat messages are encrypted in transit.
+   *
+   * Not end-to-end: 108jobs holds the key so it can relay and moderate.
+   */
+  secureChatEnabled: boolean;
 };

@@ -47,7 +47,7 @@ const AccountSettingWrapper = memo(function AccountSettingWrapper() {
 
   const hiringMenu: MenuItemData[] = useMemo(
     () => [
-      { href: "/account-setting/manage", label: t("profileNavbar.consentManage"), icon: ShieldCheck },
+      { href: "/account-setting/manage", label: t("profileNavbar.settings"), icon: ShieldCheck },
       { href: "/account-setting/job-available-setting", label: t("profileNavbar.jobAvailability"), icon: Briefcase },
     ],
     [t]
