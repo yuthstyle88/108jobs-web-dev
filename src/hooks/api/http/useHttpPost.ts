@@ -9,8 +9,8 @@ import {useGlobalLoader} from "@/hooks/ui/GlobalLoaderContext";
  * with integrated Global Loading and Global Error wiring.
  *
  * @example
- * const { execute, data, isMutating } = useHttpPost("uploadImage");
- * await execute({ file });
+ * const { execute, data, isMutating } = useHttpPost("createCategory");
+ * await execute({ name: "Design", title: "Design" });
  */
 export const useHttpPost = <K extends keyof WrappedApi108Jobs>(method: K) => {
   /** GlobalLoaderContext */
