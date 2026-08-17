@@ -32,6 +32,8 @@ export const en = {
             budgetPositive: "Budget must be a positive number",
             budgetRequired: "Budget is required",
             urlInvalid: "URL is invalid",
+            tagsMin: "At least 2 tags are required",
+            tagsMax: "You can select up to 5 tags",
         },
         profileChat: {
             price: "Budget",
@@ -735,6 +737,8 @@ export const en = {
             serviceCategoryLabel: "Service Category",
             serviceCategoryPlaceholderUrl: "e.g. https://example.com",
             serviceCategoryPlaceholderSelect: "Select a service category...",
+            tagsLabel: "Tags",
+            tagsAllowance: "({{n}}/{{m}})",
             exampleUrl: "Example URL (optional)",
             budgetLabel: "Budget",
             budgetPlaceholder: "THB",

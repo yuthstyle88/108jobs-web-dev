@@ -1,10 +1,10 @@
 'use client'
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {notFound, useRouter} from "next/navigation";
 import useNotification from "@/hooks/ui/useNotification";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {CreatePost, IntendedUse, JobType, PostId, PostView} from "108jobs-client";
+import {CreatePost, IntendedUse, JobType, PostId, PostView, Tag} from "108jobs-client";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins, faExclamationCircle, faInfoCircle} from "@fortawesome/free-solid-svg-icons";
 import {z} from "zod";
@@ -25,8 +25,12 @@ interface PostFormProps {
     mode: "create" | "edit",
 }
 
-const postJobSchema = (t: (key: string) => string) => z.object({
+const postJobSchema = (
+    t: (key: string) => string,
+    availableTagsFor: (categoryId?: number | string) => Tag[],
+) => z.object({
     categoryId: z.coerce.number().int().positive(t("validation.categoryIdPositive")),
+    tags: z.array(z.coerce.number().int().positive()).max(5, t("validation.tagsMax")).default([]),
     jobTitle: z.string().min(5,
         t("validation.jobTitleMinLength")),
     description: z.string().min(20,
@@ -58,6 +62,19 @@ const postJobSchema = (t: (key: string) => string) => z.object({
             if (!val) return undefined;
             return `${val}T23:59:59Z`;
         }),
+}).superRefine((data, ctx) => {
+    // The backend (`update_post_tags`) enforces membership only, no count --
+    // 2-5 is purely a form convention. The maximum above is unconditional,
+    // but the minimum only binds when the category actually offers enough
+    // tags to satisfy it: a thinly-tagged category must stay postable.
+    const available = availableTagsFor(data.categoryId).length;
+    if (available >= 2 && (data.tags?.length ?? 0) < 2) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t("validation.tagsMin"),
+            path: ["tags"],
+        });
+    }
 });
 
 
@@ -85,8 +102,31 @@ export const PostForm: React.FC<PostFormProps> = ({
     const [postId, setPostId] = useState<PostId>(0);
     const categoriesResponse = useCategories();
     const catalogData = getCategoriesAtLevel(categoriesResponse.categories ?? undefined, 3);
+
+    // `categoriesResponse.categories.categories` (the raw list response, distinct
+    // from the level-filtered `catalogData` above) is honestly typed as
+    // CategoryView[] and already carries each category's tags -- no extra
+    // request needed. Keyed by category id, same lookup admin/manage-category
+    // built for the same gap: catalogData's items are typed CategoryNodeView,
+    // which does not carry postTags, only the flat CategoryView does.
+    const tagsByCategory = useMemo(() => {
+        const map = new Map<number, Tag[]>();
+        (categoriesResponse.categories?.categories ?? []).forEach((c) => {
+            map.set(c.category.id, c.postTags);
+        });
+        return map;
+    }, [categoriesResponse.categories]);
+
+    const availableTagsFor = useCallback(
+        (categoryId?: number | string): Tag[] => {
+            const id = Number(categoryId);
+            return Number.isFinite(id) && id > 0 ? tagsByCategory.get(id) ?? [] : [];
+        },
+        [tagsByCategory]
+    );
+
     // Create schema with translations
-    const jobSchema = postJobSchema(t);
+    const jobSchema = postJobSchema(t, availableTagsFor);
 
     const formMethods = useForm<z.input<typeof jobSchema>, never, z.output<typeof jobSchema>>({
         resolver: zodResolver(jobSchema),
@@ -94,6 +134,7 @@ export const PostForm: React.FC<PostFormProps> = ({
         criteriaMode: "all",
         defaultValues: {
             categoryId: undefined,
+            tags: [],
             jobTitle: "",
             description: "",
             workingFrom: JobType.Freelance,
@@ -119,6 +160,7 @@ export const PostForm: React.FC<PostFormProps> = ({
                 const post = postView.post
                 reset({
                     categoryId: post.categoryId,
+                    tags: postView.tags.map((tag) => tag.id),
                     jobTitle: post.name,
                     description: post.body ?? "",
                     isEnglishRequired: post.isEnglishRequired,
@@ -132,6 +174,26 @@ export const PostForm: React.FC<PostFormProps> = ({
             }
         },
         [postView]);
+
+    // A tag from the previously-selected category would be rejected by the
+    // backend's own membership check, so switching categories clears the
+    // selection. The ref only fires the clear on a REAL transition (one
+    // known categoryId to a different one) -- it deliberately does nothing
+    // the first time a categoryId is observed, whether that is the
+    // create-mode default or the value the reset() above just populated on
+    // edit, so loading an existing post's tags is never mistaken for the
+    // user switching away and immediately wiped.
+    const watchedCategoryId = watch("categoryId");
+    const previousCategoryIdRef = useRef<number | undefined>(undefined);
+
+    useEffect(() => {
+        const numericId = watchedCategoryId ? Number(watchedCategoryId) : undefined;
+        const previous = previousCategoryIdRef.current;
+        previousCategoryIdRef.current = numericId;
+        if (previous !== undefined && previous !== numericId) {
+            setValue("tags", []);
+        }
+    }, [watchedCategoryId, setValue]);
 
     const handleCreateSuccess = useCallback(async () => {
             router.replace("/job-board");
@@ -151,6 +213,9 @@ export const PostForm: React.FC<PostFormProps> = ({
                     url: data.url,
                     intendedUse: data.intendedUse,
                     budget: data.budget,
+                    // Send undefined rather than [] when nothing is selected,
+                    // so an untagged post doesn't transmit an empty array.
+                    tags: data.tags?.length ? data.tags : undefined,
                 };
 
                 const response = postId
@@ -178,6 +243,10 @@ export const PostForm: React.FC<PostFormProps> = ({
         },
         [createPost, editPost, handleCreateSuccess, successMessage, errorMessage, postId, t]
     );
+
+    const selectedCategoryTags = availableTagsFor(watchedCategoryId);
+    const selectedTagIds = (watch("tags") ?? []).map((id) => Number(id));
+    const selectedTagCount = selectedTagIds.length;
 
     return (
         <div className="bg-[#F6F9FE] min-h-screen py-8">
@@ -396,6 +465,55 @@ export const PostForm: React.FC<PostFormProps> = ({
                                 )}
                             </div>
                         </div>
+
+                        {/* Tags -- only once a category is selected and it actually
+                            offers tags; a category with none shows nothing at all. */}
+                        {watchedCategoryId && selectedCategoryTags.length > 0 && (
+                            <div className="mb-6">
+                                <label className="block text-gray-700 font-medium mb-2">
+                                    {t("createJob.tagsLabel")}
+                                    <span className="ml-2 text-sm font-normal text-gray-500">
+                                        {t("createJob.tagsAllowance", {n: selectedTagCount, m: 5})}
+                                    </span>
+                                </label>
+                                <div className="flex flex-wrap gap-3">
+                                    {selectedCategoryTags.map((tag) => {
+                                        const checked = selectedTagIds.includes(tag.id);
+                                        const atLimit = !checked && selectedTagCount >= 5;
+                                        return (
+                                            <div
+                                                key={tag.id}
+                                                className={`flex items-center p-3 border rounded-lg ${
+                                                    atLimit ? "border-gray-200 opacity-50" : "border-gray-300"
+                                                }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    id={`tag-${tag.id}`}
+                                                    value={tag.id}
+                                                    {...register("tags")}
+                                                    disabled={atLimit}
+                                                    className="h-4 w-4 text-primary disabled:cursor-not-allowed"
+                                                />
+                                                <label htmlFor={`tag-${tag.id}`} className="ml-2 text-gray-700">
+                                                    {tag.displayName}
+                                                </label>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {errors.tags && (
+                                    <p className="mt-1 text-red-500 text-sm flex items-center">
+                                        <FontAwesomeIcon
+                                            icon={faExclamationCircle}
+                                            className="mr-1"
+                                        />
+                                        {errors.tags.message}
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         {/* Budget and Deadline */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

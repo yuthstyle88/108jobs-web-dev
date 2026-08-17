@@ -32,6 +32,8 @@ export const th = {
             budgetPositive: "Budget ต้องเป็นตัวเลขบวก",
             budgetRequired: "จำเป็นต้องระบุงบประมาณ",
             urlInvalid: "Url ไม่ถูกต้อง",
+            tagsMin: "ต้องเลือกอย่างน้อย 2 แท็ก",
+            tagsMax: "เลือกได้สูงสุด 5 แท็ก",
         },
         profileChat: {
             price: "งบประมาณ",
@@ -719,6 +721,8 @@ export const th = {
             serviceCategoryLabel: "หมวดหมู่บริการ",
             serviceCategoryPlaceholderUrl: "เช่น https://example.com",
             serviceCategoryPlaceholderSelect: "เลือกหมวดหมู่บริการ...",
+            tagsLabel: "แท็ก",
+            tagsAllowance: "({{n}}/{{m}})",
             exampleUrl: "ตัวอย่าง URL (ไม่จำเป็น)",
             budgetLabel: "งบประมาณ",
             budgetPlaceholder: "บาท",

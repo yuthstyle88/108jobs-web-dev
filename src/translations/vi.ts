@@ -32,6 +32,8 @@ export const vi = {
             budgetPositive: "Ngân sách phải là số dương",
             budgetRequired: "Cần phải có ngân sách",
             urlInvalid: "URL is invalid",
+            tagsMin: "Cần chọn ít nhất 2 thẻ",
+            tagsMax: "Chỉ được chọn tối đa 5 thẻ",
         },
         profileChat: {
             price: "ngân sách",
@@ -725,6 +727,8 @@ export const vi = {
             exampleUrl: "Ví dụ URL (tuỳ chọn)",
             serviceCategoryPlaceholderUrl: "ví dụ: https://example.com",
             serviceCategoryPlaceholderSelect: "Chọn danh mục dịch vụ...",
+            tagsLabel: "Thẻ",
+            tagsAllowance: "({{n}}/{{m}})",
             budgetLabel: "Ngân sách",
             budgetPlaceholder: "VND",
             deadlineLabel: "Hạn chót (Tùy chọn)",
