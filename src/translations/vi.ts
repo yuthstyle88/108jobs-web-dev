@@ -3545,6 +3545,16 @@ export const vi = {
         accountManage: {
             title: "Quản lý tài khoản",
             description: "Thiết lập thông tin tài khoản và bảo mật",
+            secureChat: {
+                title: "Trò chuyện được mã hóa",
+                toggleLabel: "Mã hóa tin nhắn trò chuyện",
+                toggleHint: "Áp dụng cho tài khoản này trên mọi thiết bị",
+                bodyInTransit: "Tin nhắn được mã hóa giữa thiết bị của bạn và 108jobs, nên không ai trên đường truyền có thể đọc được.",
+                bodyNotE2e: "Đây không phải mã hóa đầu cuối: 108jobs giữ khóa và có thể đọc tin nhắn của bạn, điều này cho phép chúng tôi xử lý các báo cáo lạm dụng và lừa đảo.",
+                enabled: "Đã bật mã hóa tin nhắn",
+                disabled: "Đã tắt mã hóa tin nhắn",
+                saveError: "Không thể lưu. Vui lòng thử lại.",
+            },
             passwordTitle: "Đặt mật khẩu",
             passwordDescription:
                 "Đặt mật khẩu mạnh để bảo vệ tài khoản khỏi truy cập trái phép.",
