@@ -156,4 +156,8 @@ export type SaveUserSettings = {
      * Whether you are currently available for new jobs
      */
     available?: boolean,
+    /**
+     * Whether to encrypt this account's chat messages in transit.
+     */
+    secureChatEnabled?: boolean;
 };
