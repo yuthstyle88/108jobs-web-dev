@@ -1620,7 +1620,6 @@ export const en = {
             editSuccess: "Edit successfully!",
             copySuccess: "Copy successfully",
             invalidCode: "Invalid code",
-            invalidTotpCode: "Invalid TOTP code",
             verifyEmailLinkSent: "The verify email link has been sent to your email",
             checkInboxForEmail:
                 "Please check your inbox (If you don't see it, check your Spam and Junk folders) to continue.",
@@ -3521,17 +3520,6 @@ export const en = {
         accountManage: {
             title: "Account Management",
             description: "Set up account information and security",
-            totpTitle: "Two-Factor Authentication (TOTP)",
-            totpDescription:
-                "Add an extra layer of security using a TOTP-compatible authenticator app.",
-            totpEnabled: "Enabled",
-            totpDisabled: "Disabled",
-            totpStatus: "Status",
-            totpSuccessEnable: "Two-Factor Authentication Enabled",
-            totpSuccessDisable: "Two-Factor Authentication Disabled",
-            totpIncorrectCode: "Incorrect TOTP Code",
-            totpError: "Error while updating TOTP",
-            totpUnexpectedError: "Unexpected error occurred",
             passwordTitle: "Set Password",
             passwordDescription:
                 "Set a strong password to protect your account from unauthorized access.",
@@ -3673,35 +3661,6 @@ export const en = {
             title: "Room not found",
             description: "The chat room you are trying to access does not exist or may have been deleted.",
             goBack: "Go back to Chats"
-        },
-        totp: {
-            enableTotp: "Enable Two-Factor Authentication",
-            disableTotp: "Disable Two-Factor Authentication",
-            enterTotpCode: "Enter TOTP Code",
-            totpSetupInstruction:
-                "To enable Two-Factor Authentication (TOTP), scan the QR code below using an authenticator app on your phone.",
-            recommendedApps: "Recommended apps:",
-            totpAppGoogle: "Google Authenticator (Android / iOS)",
-            totpAppAuthy: "Authy by Twilio (Android / iOS / Desktop)",
-            totpAppMicrosoft: "Microsoft Authenticator",
-            totpAppPasswordMgr: "1Password or Bitwarden (if you use a password manager)",
-            totpCodeRefresh:
-                "After scanning, your app will generate a 6-digit code every 30 seconds. Enter that code below to verify setup.",
-            openTotpLink: "Open TOTP Setup Link",
-            scanQrCode: "Scan QR Code with Authenticator App",
-            enterTotpCodeLabel: "Enter TOTP Code",
-            totpHelpText: "6-digit code from your authenticator app",
-            verifying: "Verifying...",
-            submit: "Submit",
-            cancel: "Cancel",
-            invalidCode: "Invalid TOTP code. Please try again.",
-            invalidTotpCode: "Pasted text must contain only digits.",
-            incorrectTotpToken: "The TOTP code you entered is incorrect. Please try again.",
-            reminderTitle: "Reminder",
-            reminderRemoveOldApp:
-                "After disabling 2FA, please remember to remove the old entry from your authenticator app.",
-            agreeDisableNotice:
-                "I understand and want to disable two-factor authentication",
         },
         admin: {
             layout: {
