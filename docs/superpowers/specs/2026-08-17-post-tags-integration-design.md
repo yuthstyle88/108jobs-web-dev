@@ -49,7 +49,7 @@ This is invisible today only because no post has tags.
 | Object | Role of tags |
 |---|---|
 | Category | Owns the allowed tag list — the controlled vocabulary |
-| Post | Selects 2–5 of them, describing that job's requirements |
+| Post | Selects up to 5 of them, describing that job's requirements |
 | Proposal | Inherits the post's tags; has none of its own |
 
 Tags describe **what the job requires**, not who is offering. A rider post in
@@ -75,24 +75,35 @@ rider or freelancer *can do* — "motorcycle delivery", "Thai/English",
 "refrigerated delivery" — that belongs in **profile skills**, a different model
 attached to the person, not tags on each proposal.
 
-### The 2–5 rule is a web-form convention, not an API guarantee
+### Tags are optional, capped at 5
 
-`update_post_tags` validates membership only; it enforces no count. So the API
-accepts zero tags, or fifty. The form enforces 2–5, and Flutter or a direct API
-call will not.
+`update_post_tags` validates membership only; it enforces no count. The form
+caps selection at 5 and imposes **no minimum** — a post may carry none.
 
-Two edge cases would otherwise make posting impossible, so the rule bends in
-exactly two places:
+An earlier draft required 2 when the category offered at least 2. That was
+dropped, and the reason is worth recording because it is not a UX preference:
 
-- The **minimum applies only when the category offers at least 2 tags.** A
-  category with one tag, or none, cannot satisfy a 2-minimum, and a rule that
-  makes a whole category unpostable is worse than an untagged post.
-- The **maximum is absolute** — 5, always. Nothing about a thin category argues
-  for more.
+**A minimum makes tagging compulsory, and compulsory tagging is unsafe while
+`108jobs-flutter` is unfixed.** With a minimum, an admin adding two tags to a
+category means any author editing a post in that category — even to correct a
+budget — cannot save without selecting tags. That produces the first tagged
+post, and the first tagged post throws a `TypeError` parsing the whole
+`PostView` in every Flutter client. A rule intended to encourage adoption would
+instead have forced the exact event the release-order constraint exists to
+prevent.
 
-Editing a post created before this feature therefore requires tagging it before
-it can be saved, provided its category has tags to offer. That is intended: it
-is the only moment the author is looking at the post anyway.
+Optional tags keep the feature opt-in: nothing tags a post until someone
+chooses to. A minimum can be reintroduced the day the Flutter retype lands, as
+a one-line change.
+
+**A second reason, independent of Flutter:** clearing a post's last tag is
+impossible through the API. `update_post_tags` is called only when `tags` is
+`Some`, so an absent value leaves existing tags untouched; and `PostTag::set`
+derives its `post_id` from `tags.first()`, so an empty list resolves to post id
+0 — deleting nothing and inserting nothing. Neither route clears. With tags
+optional, a post that was never tagged cannot reach that state at all, which
+shrinks the blast radius of a backend gap this plan does not fix. Fixing it
+properly means giving `PostTag::set` an explicit `post_id`; see Out of scope.
 
 ## Design
 
@@ -172,9 +183,10 @@ previous one, because a tag from another category would be rejected by the
 backend's own validation. On edit, the post's existing tags arrive on
 `PostView.tags` and pre-select.
 
-Selection is bounded per the rule above: at most 5 always, at least 2 when the
-category offers 2 or more. The remaining allowance is worth showing — "3 of 5"
-reads better than discovering the ceiling by hitting it.
+Selection is capped at 5 with no minimum. The remaining allowance is worth
+showing — "3 of 5" reads better than discovering the ceiling by hitting it —
+and unselected options disable once 5 are chosen, rather than allowing a sixth
+click that is then rejected.
 
 ### E. Display
 
@@ -220,7 +232,11 @@ until it is.
   job's own requirements.
 - **Proposal tags.** There is no `proposal_tag` table and none should be added.
   Proposals inherit the post's tags; see The model above.
-- **Backend enforcement of the 2–5 count.** `update_post_tags` validates
+- **Clearing a post's last tag.** Not expressible through the API: `PostTag::set`
+  derives `post_id` from `tags.first()`, so an empty list targets post id 0. The
+  fix is to pass `post_id` explicitly, in `api-108jobs`. Out of scope here, and
+  made largely unreachable by tags being optional.
+- **Backend enforcement of a tag count.** `update_post_tags` validates
   membership only. Making the count a real invariant across every client means
   changing that function, and would reject edits to existing untagged posts from
   any client. Out of scope; the count stays a web-form convention.

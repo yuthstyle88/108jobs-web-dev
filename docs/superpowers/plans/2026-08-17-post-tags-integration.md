@@ -184,7 +184,7 @@ git add -A src/ tsconfig.tsbuildinfo && git commit -m "feat(admin): manage a cat
 
 The form calls `useCategories()` at line 86, which returns `ListCategoriesResponse.categories: Array<CategoryView>` — and `CategoryView` carries `postTags`. **Do not add a request.** Find the `CategoryView` whose `category.id` matches the currently-selected `categoryId` and read its `postTags`.
 
-- [ ] **Step 2: Add `tags` to the form state and schema, with the 2–5 rule**
+- [ ] **Step 2: Add `tags` to the form state and schema — optional, capped at 5**
 
 Add `tags: []` to the defaults (around line 96), and to the zod schema (around line 29, beside `categoryId`):
 
@@ -192,26 +192,9 @@ Add `tags: []` to the defaults (around line 96), and to the zod schema (around l
     tags: z.array(z.coerce.number().int().positive()).max(5, t("validation.tagsMax")).default([]),
 ```
 
-The **maximum is absolute**: 5, always. The **minimum is conditional** and cannot live in a plain field rule, because it depends on how many tags the chosen category offers — a category with fewer than 2 makes a 2-minimum unsatisfiable and would render that whole category unpostable.
+**No minimum.** Tags are optional; a post may carry none. A minimum would make tagging compulsory once a category has tags — an author editing a post to fix its budget could not save without tagging — which forces the first tagged post into existence while `108jobs-flutter` still crashes on tagged posts.
 
-Express it with a `superRefine` on the schema object (the file already uses zod object-level refinement — follow that existing shape):
-
-```ts
-    .superRefine((data, ctx) => {
-        const available = availableTagsFor(data.categoryId).length;
-        if (available >= 2 && (data.tags?.length ?? 0) < 2) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: t("validation.tagsMin"),
-                path: ["tags"],
-            });
-        }
-    })
-```
-
-`availableTagsFor` is the lookup from Step 1. If the schema is built inside a `useMemo` that does not already close over the category list, widen it — do not duplicate the lookup.
-
-**Why the rule bends:** the backend enforces no count at all (`update_post_tags` validates membership only), so this is a web-form convention. Its only job is to guide; a convention that blocks posting in a thinly-tagged category is worse than an untagged post.
+`tags: []` in `defaultValues` is **load-bearing, not redundant**: react-hook-form's `register` ref callback only takes the array branch for a single-checkbox group when `_defaultValues[name]` is an array. Without it, a category offering exactly one tag yields a bare string instead of an array. Leave it, with a comment saying why.
 
 - [ ] **Step 3: Render the picker**
 
