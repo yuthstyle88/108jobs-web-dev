@@ -2,7 +2,7 @@
 
 import React, {useState, useMemo, useEffect} from "react";
 import {buildCategoriesTree} from "@/utils/helpers";
-import {CategoryNodeView} from "108jobs-client";
+import {CategoryNodeView, Tag} from "108jobs-client";
 import {toast} from "sonner";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
@@ -18,6 +18,8 @@ import {isFailed, isSuccess} from "@/services/HttpService";
 import {CategoryRow} from "@/modules/admin/components/CategoryRow";
 import {CategoryModal} from "@/modules/admin/components/Modal/CategoryModal";
 import {DeleteCategoryModal} from "@/modules/admin/components/Modal/DeleteCategoryModal";
+import {TagModal} from "@/modules/admin/components/Modal/TagModal";
+import {DeleteTagModal} from "@/modules/admin/components/Modal/DeleteTagModal";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 
 interface CategoryFormData {
@@ -59,6 +61,15 @@ export default function AdminCategoriesPage() {
     const [deletingCategory, setDeletingCategory] = useState<CategoryNodeView | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Tags: `addTagCategoryId` set => the add-tag modal is open for that
+    // category; `editingTag` set => the same modal is open in rename mode.
+    // The two are mutually exclusive (closeTagModal clears both).
+    const [addTagCategoryId, setAddTagCategoryId] = useState<number | null>(null);
+    const [editingTag, setEditingTag] = useState<Tag | null>(null);
+    const [tagNameInput, setTagNameInput] = useState("");
+    const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
+    const [isDeletingTag, setIsDeletingTag] = useState(false);
+
     // Lightbox
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxSrc, setLightboxSrc] = useState("");
@@ -69,6 +80,10 @@ export default function AdminCategoriesPage() {
     const {execute: createCategory} = useHttpPost("createCategory");
     const {execute: editCategory} = useHttpPut("editCategory");
     const {execute: deleteCategory} = useHttpDelete("deleteCategory");
+
+    const {execute: createCategoryTag} = useHttpPost("createCategoryTag");
+    const {execute: updateCategoryTag} = useHttpPut("updateCategoryTag");
+    const {execute: deleteCategoryTag} = useHttpDelete("deleteCategoryTag");
 
     const {execute: uploadIcon} = useHttpPost("uploadCategoryIcon");
     const {execute: uploadBanner} = useHttpPost("uploadCategoryBanner");
@@ -83,6 +98,19 @@ export default function AdminCategoriesPage() {
                 .filter((node) => !node.category.deleted)
                 .map((node) => ({...node, children: prune(node.children || [])}));
         return prune(buildCategoriesTree(categories) || []);
+    }, [categories]);
+
+    // `categories.categories` (the raw list response, distinct from the
+    // `tree` built above) is honestly typed as CategoryView[] and already
+    // carries each category's tags -- no extra request needed. Keyed by
+    // category id so CategoryRow can look up a node's tags without needing
+    // its own (differently-typed) CategoryNodeView to carry postTags too.
+    const tagsByCategory = useMemo(() => {
+        const map = new Map<number, Tag[]>();
+        (categories?.categories ?? []).forEach((c) => {
+            map.set(c.category.id, c.postTags);
+        });
+        return map;
     }, [categories]);
 
     const openImageLightbox = (src: string, alt: string) => {
@@ -249,6 +277,71 @@ export default function AdminCategoriesPage() {
         }
     };
 
+    const openAddTagModal = (categoryId: number) => {
+        setEditingTag(null);
+        setAddTagCategoryId(categoryId);
+        setTagNameInput("");
+    };
+
+    const openEditTagModal = (tag: Tag) => {
+        setAddTagCategoryId(null);
+        setEditingTag(tag);
+        setTagNameInput(tag.displayName);
+    };
+
+    const closeTagModal = () => {
+        setAddTagCategoryId(null);
+        setEditingTag(null);
+        setTagNameInput("");
+    };
+
+    const handleSaveTag = async () => {
+        const displayName = tagNameInput.trim();
+        if (!displayName) {
+            toast.error(t("admin.category.tags.nameRequired"));
+            return;
+        }
+
+        if (editingTag) {
+            const res = await updateCategoryTag({tagId: editingTag.id, displayName});
+            if (isFailed(res)) {
+                toast.error(t("admin.category.tags.saveError"));
+                return;
+            }
+            // Mirrors editCategory: no success toast on rename, matching
+            // this page's existing edit-category behavior exactly.
+            closeTagModal();
+            await refetch();
+            return;
+        }
+
+        if (addTagCategoryId !== null) {
+            const res = await createCategoryTag({categoryId: addTagCategoryId, displayName});
+            if (isSuccess(res)) {
+                toast.success(t("admin.category.tags.created"));
+                closeTagModal();
+                await refetch();
+            } else if (isFailed(res)) {
+                toast.error(t("admin.category.tags.createError"));
+            }
+        }
+    };
+
+    const handleConfirmDeleteTag = async () => {
+        if (!deletingTag) return;
+        setIsDeletingTag(true);
+        const res = await deleteCategoryTag({tagId: deletingTag.id});
+        setIsDeletingTag(false);
+
+        if (isSuccess(res)) {
+            toast.success(t("admin.category.tags.deleted"));
+            setDeletingTag(null);
+            await refetch();
+        } else if (isFailed(res)) {
+            toast.error(t("admin.category.tags.deleteError"));
+        }
+    };
+
     const closeModal = () => {
         setIsAddingNew(false);
         setEditingCategory(null);
@@ -283,6 +376,7 @@ export default function AdminCategoriesPage() {
     };
 
     const isModalOpen = isAddingNew || !!editingCategory;
+    const isTagModalOpen = addTagCategoryId !== null || !!editingTag;
 
     return (
         <AdminLayout>
@@ -345,10 +439,14 @@ export default function AdminCategoriesPage() {
                                             key={root.category.id}
                                             node={root}
                                             depth={0}
+                                            tagsByCategory={tagsByCategory}
                                             onEdit={openEditModal}
                                             onDelete={(id) => setDeletingCategory(findNodeById(tree, id))}
                                             onAddChild={openAddModal}
                                             onImageClick={openImageLightbox}
+                                            onAddTag={openAddTagModal}
+                                            onEditTag={openEditTagModal}
+                                            onDeleteTag={setDeletingTag}
                                         />
                                     ))}
                                     </tbody>
@@ -389,6 +487,24 @@ export default function AdminCategoriesPage() {
                     onConfirm={handleConfirmDelete}
                     onCancel={() => setDeletingCategory(null)}
                     isLoading={isDeleting}
+                />
+
+                {/* Add/Rename Tag Modal */}
+                <TagModal
+                    isOpen={isTagModalOpen}
+                    isAddingNew={addTagCategoryId !== null}
+                    name={tagNameInput}
+                    setName={setTagNameInput}
+                    onSave={handleSaveTag}
+                    onClose={closeTagModal}
+                />
+
+                <DeleteTagModal
+                    isOpen={!!deletingTag}
+                    tagName={deletingTag?.displayName ?? ""}
+                    onConfirm={handleConfirmDeleteTag}
+                    onCancel={() => setDeletingTag(null)}
+                    isLoading={isDeletingTag}
                 />
 
                 {/* Lightbox */}

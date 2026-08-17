@@ -25,6 +25,7 @@ import {PaginationControls} from "@/components/PaginationControls";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {formatBudgetCompact} from "@/utils";
+import {Badge} from "@/components/ui/Badge";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -445,15 +446,31 @@ const JobBoard = () => {
                                                                         strokeLinecap="round" strokeLinejoin="round"/>
                                                                 </svg>
                                                             </div>
-                                                            <Link
-                                                                prefetch={false}
-                                                                href={`/${i18n.language}/job-board/${job.post.id}`}
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                className="hover:text-primary font-medium text-base text-text-primary block truncate max-w-[220px]"
-                                                                title={job.post.name || job.post.embedTitle || "Untitled"}
-                                                            >
-                                                                {job.post.name || job.post.embedTitle || "Untitled"}
-                                                            </Link>
+                                                            <div className="min-w-0">
+                                                                <Link
+                                                                    prefetch={false}
+                                                                    href={`/${i18n.language}/job-board/${job.post.id}`}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    className="hover:text-primary font-medium text-base text-text-primary block truncate max-w-[220px]"
+                                                                    title={job.post.name || job.post.embedTitle || "Untitled"}
+                                                                >
+                                                                    {job.post.name || job.post.embedTitle || "Untitled"}
+                                                                </Link>
+                                                                {job.tags.length > 0 && (
+                                                                    <div
+                                                                        className="mt-1.5 flex flex-wrap gap-1.5 whitespace-normal max-w-[220px]">
+                                                                        {job.tags.map((tag) => (
+                                                                            <Badge
+                                                                                key={tag.id}
+                                                                                variant="outline"
+                                                                                className="bg-gray-100 text-gray-800 border-gray-200"
+                                                                            >
+                                                                                {tag.displayName}
+                                                                            </Badge>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
@@ -524,9 +541,24 @@ const JobBoard = () => {
                                                                 </svg>
                                                             </div>
 
-                                                            <h3 className="text-lg font-bold text-text-primary leading-tight line-clamp-2 pr-20">
-                                                                {job.post.name || job.post.embedTitle || "Untitled"}
-                                                            </h3>
+                                                            <div className="min-w-0 flex-1">
+                                                                <h3 className="text-lg font-bold text-text-primary leading-tight line-clamp-2 pr-20">
+                                                                    {job.post.name || job.post.embedTitle || "Untitled"}
+                                                                </h3>
+                                                                {job.tags.length > 0 && (
+                                                                    <div className="mt-2 flex flex-wrap gap-1.5 pr-20">
+                                                                        {job.tags.map((tag) => (
+                                                                            <Badge
+                                                                                key={tag.id}
+                                                                                variant="outline"
+                                                                                className="bg-gray-100 text-gray-800 border-gray-200"
+                                                                            >
+                                                                                {tag.displayName}
+                                                                            </Badge>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
 
                                                         {/* Job Type Badge – positioned absolutely but with safe margin */}
