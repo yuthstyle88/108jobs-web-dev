@@ -4,9 +4,9 @@ import type {PersonId} from "./PersonId";
 import type {PostId} from "./PostId";
 
 /**
- * A comment.
+ * A proposal.
  */
-export type Comment = {
+export type Proposal = {
   id: ProposalId;
   creatorId: PersonId;
   postId: PostId;
@@ -39,4 +39,5 @@ export type Comment = {
   childCount: number;
   reportCount: number;
   unresolvedReportCount: number;
+  pending: boolean;
 };
