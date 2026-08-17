@@ -6,4 +6,5 @@ import type {TagId} from "./TagId";
  */
 export type UpdateCategoryTag = {
   tagId: TagId;
+  displayName: string;
 };

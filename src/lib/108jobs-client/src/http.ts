@@ -515,6 +515,60 @@ export class Api108Jobs extends Controller {
     }
 
     /**
+     * @summary Create a category post tag.
+     */
+    @Security("bearerAuth")
+    @Post("/category/tag")
+    @Tags("Category")
+    async createCategoryTag(
+        @Body() form: CreateCategoryTag,
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<CreateCategoryTag, Tag>(
+            HttpType.Post,
+            "/category/tag",
+            form,
+            options,
+        );
+    }
+
+    /**
+     * @summary Update a category post tag.
+     */
+    @Security("bearerAuth")
+    @Put("/category/tag")
+    @Tags("Category")
+    async updateCategoryTag(
+        @Body() form: UpdateCategoryTag,
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<UpdateCategoryTag, Tag>(
+            HttpType.Put,
+            "/category/tag",
+            form,
+            options,
+        );
+    }
+
+    /**
+     * @summary Delete a post tag in a category.
+     */
+    @Security("bearerAuth")
+    @Delete("/category/tag")
+    @Tags("Category")
+    async deleteCategoryTag(
+        @Body() form: DeleteCategoryTag,
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<DeleteCategoryTag, Tag>(
+            HttpType.Delete,
+            "/category/tag",
+            form,
+            options,
+        );
+    }
+
+    /**
      * @summary Create a post.
      */
     @Security("bearerAuth")
@@ -1066,60 +1120,6 @@ export class Api108Jobs extends Controller {
         return this.#wrapper<AdminVerifyRiderRequest, SuccessResponse>(
             HttpType.Post,
             "/admin/riders/verify",
-            form,
-            options,
-        );
-    }
-
-    /**
-     * @summary Create a category post tag.
-     */
-    @Security("bearerAuth")
-    @Post("/category/tag")
-    @Tags("Category")
-    createCategoryTag(
-        @Body() form: CreateCategoryTag,
-        @Inject() options?: RequestOptions,
-    ) {
-        return this.#wrapper<CreateCategoryTag, Tag>(
-            HttpType.Post,
-            "/category/tag",
-            form,
-            options,
-        );
-    }
-
-    /**
-     * @summary Update a category post tag.
-     */
-    @Security("bearerAuth")
-    @Put("/category/tag")
-    @Tags("Category")
-    updateCategoryTag(
-        @Body() form: UpdateCategoryTag,
-        @Inject() options?: RequestOptions,
-    ) {
-        return this.#wrapper<UpdateCategoryTag, Tag>(
-            HttpType.Put,
-            "/category/tag",
-            form,
-            options,
-        );
-    }
-
-    /**
-     * @summary Delete a post tag in a category.
-     */
-    @Security("bearerAuth")
-    @Delete("/category/tag")
-    @Tags("Category")
-    deleteCategoryTag(
-        @Body() form: DeleteCategoryTag,
-        @Inject() options?: RequestOptions,
-    ) {
-        return this.#wrapper<DeleteCategoryTag, Tag>(
-            HttpType.Delete,
-            "/category/tag",
             form,
             options,
         );
