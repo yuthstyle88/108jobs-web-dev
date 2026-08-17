@@ -276,9 +276,30 @@ git add -A src/ tsconfig.tsbuildinfo && git commit -m "feat(jobs): show a post's
 
 ---
 
-### Task 6: Final verification
+### Task 6: Close the `EditPost.tags` gap, then verify
 
-- [ ] **Step 1: Full gates**
+- [ ] **Step 1: Add the missing `tags` field to `EditPost.ts`**
+
+The backend's `EditPost` struct accepts `pub tags: Option<Vec<TagId>>` (`crates/db/src/source/post_view/api.rs`, line ~15), but `src/lib/108jobs-client/src/types/EditPost.ts` declares no `tags` field at all. Task 4's edit path works only because it spreads the payload — TypeScript does not apply excess-property checks through a spread — so tags reach the wire despite the type not describing them.
+
+That is drift of exactly the kind this package keeps producing: the type stops describing the wire, and the next person to touch it guesses. It is the same defect Task 2 fixed on `UpdateCategoryTag`.
+
+Add, matching how `CreatePost.ts` declares the same field:
+
+```ts
+  tags?: Array<TagId>;
+```
+
+with the `TagId` import alongside the file's existing type imports. Check `CreatePost.ts` first and mirror its declaration exactly rather than inventing a shape.
+
+Then rebuild and reinstall — this is an edit under `src/lib/108jobs-client/src/`:
+```bash
+cd src/lib/108jobs-client && npm run build && cd - && pnpm install
+```
+
+Confirm the spread in `PostForm` still compiles, and say in your report whether the field is now carried by the declared type rather than only by the spread.
+
+- [ ] **Step 2: Full gates**
 
 ```bash
 cd src/lib/108jobs-client && npm run build && cd - && pnpm install
@@ -286,14 +307,14 @@ npx tsc --noEmit && npx eslint src --ext .ts,.tsx
 ```
 Expected: `tsc` clean; eslint 0 errors. Pre-existing warnings in untouched files are reported, not fixed.
 
-- [ ] **Step 2: Confirm scope held**
+- [ ] **Step 3: Confirm scope held**
 
 ```bash
 grep -rn "post_tag\|tagFilter\|filterByTag" src --include="*.ts" --include="*.tsx" | grep -v "/dist/"
 ```
 Expected: no matches — no filtering crept in.
 
-- [ ] **Step 3: Commit any residual fixes**
+- [ ] **Step 4: Commit any residual fixes**
 
 ```bash
 git add -A src/ tsconfig.tsbuildinfo && git commit -m "chore(tags): final verification"
