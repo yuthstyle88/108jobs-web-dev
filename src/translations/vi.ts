@@ -3555,16 +3555,6 @@ export const vi = {
         accountManage: {
             title: "Quản lý tài khoản",
             description: "Thiết lập thông tin tài khoản và bảo mật",
-            totpTitle: "Xác thực hai lớp (TOTP)",
-            totpDescription: "Thêm một lớp bảo mật bằng ứng dụng xác thực TOTP.",
-            totpEnabled: "Đã bật",
-            totpDisabled: "Đã tắt",
-            totpStatus: "Trạng thái",
-            totpSuccessEnable: "Đã bật xác thực hai lớp",
-            totpSuccessDisable: "Đã tắt xác thực hai lớp",
-            totpIncorrectCode: "Mã TOTP không chính xác",
-            totpError: "Lỗi khi cập nhật TOTP",
-            totpUnexpectedError: "Đã xảy ra lỗi không mong muốn",
             passwordTitle: "Đặt mật khẩu",
             passwordDescription:
                 "Đặt mật khẩu mạnh để bảo vệ tài khoản khỏi truy cập trái phép.",
@@ -3706,35 +3696,6 @@ export const vi = {
             title: "Không tìm thấy phòng",
             description: "Phòng trò chuyện bạn đang cố gắng truy cập không tồn tại hoặc có thể đã bị xóa.",
             goBack: "Quay lại danh sách trò chuyện"
-        },
-        totp: {
-            enableTotp: "Bật Xác thực Hai yếu tố",
-            disableTotp: "Tắt Xác thực Hai yếu tố",
-            enterTotpCode: "Nhập mã TOTP",
-            totpSetupInstruction:
-                "Để bật Xác thực Hai yếu tố (TOTP), quét mã QR bên dưới bằng ứng dụng xác thực trên điện thoại của bạn.",
-            recommendedApps: "Ứng dụng được đề xuất:",
-            totpAppGoogle: "Google Authenticator (Android / iOS)",
-            totpAppAuthy: "Authy by Twilio (Android / iOS / Desktop)",
-            totpAppMicrosoft: "Microsoft Authenticator",
-            totpAppPasswordMgr: "1Password hoặc Bitwarden (nếu bạn dùng trình quản lý mật khẩu)",
-            totpCodeRefresh:
-                "Sau khi quét, ứng dụng sẽ tạo mã 6 chữ số mỗi 30 giây. Nhập mã đó vào ô dưới đây để xác nhận thiết lập.",
-            openTotpLink: "Mở liên kết thiết lập TOTP",
-            scanQrCode: "Quét mã QR bằng ứng dụng xác thực",
-            enterTotpCodeLabel: "Nhập mã TOTP",
-            totpHelpText: "Mã 6 chữ số từ ứng dụng xác thực của bạn",
-            verifying: "Đang xác minh...",
-            submit: "Gửi",
-            cancel: "Hủy",
-            invalidCode: "Mã TOTP không hợp lệ. Vui lòng thử lại.",
-            invalidTotpCode: "Văn bản dán chỉ được chứa chữ số.",
-            incorrectTotpToken: "Mã TOTP bạn nhập không đúng. Vui lòng thử lại.",
-            reminderTitle: "Nhắc nhở",
-            reminderRemoveOldApp:
-                "Sau khi tắt 2FA, vui lòng nhớ xóa mục cũ khỏi ứng dụng xác thực của bạn.",
-            agreeDisableNotice:
-                "Tôi hiểu và muốn tắt xác thực hai yếu tố",
         },
         admin: {
             layout: {

@@ -3446,17 +3446,6 @@ export const th = {
         accountManage: {
             title: "การจัดการบัญชี",
             description: "ตั้งค่าข้อมูลบัญชีและความปลอดภัย",
-            totpTitle: "การยืนยันตัวตนแบบสองชั้น (TOTP)",
-            totpDescription:
-                "เพิ่มความปลอดภัยอีกขั้นโดยใช้แอปยืนยันตัวตนที่รองรับ TOTP",
-            totpEnabled: "เปิดใช้งาน",
-            totpDisabled: "ปิดใช้งาน",
-            totpStatus: "สถานะ",
-            totpSuccessEnable: "เปิดใช้งานการยืนยันตัวตนแบบสองชั้นแล้ว",
-            totpSuccessDisable: "ปิดใช้งานการยืนยันตัวตนแบบสองชั้นแล้ว",
-            totpIncorrectCode: "รหัส TOTP ไม่ถูกต้อง",
-            totpError: "เกิดข้อผิดพลาดในการอัปเดต TOTP",
-            totpUnexpectedError: "เกิดข้อผิดพลาดที่ไม่คาดคิด",
             passwordTitle: "ตั้งรหัสผ่าน",
             passwordDescription:
                 "ตั้งรหัสผ่านที่รัดกุมเพื่อป้องกันการเข้าถึงโดยไม่ได้รับอนุญาต",
@@ -3598,35 +3587,6 @@ export const th = {
             title: "ไม่พบห้อง",
             description: "ห้องแชทที่คุณพยายามเข้าถึงไม่มีอยู่หรืออาจถูกลบไปแล้ว",
             goBack: "กลับไปที่แชท"
-        },
-        totp: {
-            enableTotp: "เปิดใช้งานการยืนยันตัวตนสองขั้นตอน",
-            disableTotp: "ปิดใช้งานการยืนยันตัวตนสองขั้นตอน",
-            enterTotpCode: "ป้อนรหัส TOTP",
-            totpSetupInstruction:
-                "เพื่อเปิดใช้งานการยืนยันตัวตนสองขั้นตอน (TOTP) ให้สแกน QR code ด้านล่างด้วยแอปยืนยันตัวตนบนโทรศัพท์ของคุณ",
-            recommendedApps: "แอปที่แนะนำ:",
-            totpAppGoogle: "Google Authenticator (Android / iOS)",
-            totpAppAuthy: "Authy by Twilio (Android / iOS / Desktop)",
-            totpAppMicrosoft: "Microsoft Authenticator",
-            totpAppPasswordMgr: "1Password หรือ Bitwarden (ถ้าคุณใช้ตัวจัดการรหัสผ่าน)",
-            totpCodeRefresh:
-                "หลังจากสแกนแล้ว แอปจะสร้างรหัส 6 หลักทุก 30 วินาที ใส่รหัสนั้นด้านล่างเพื่อยืนยันการตั้งค่า",
-            openTotpLink: "เปิดลิงก์ตั้งค่า TOTP",
-            scanQrCode: "สแกน QR Code ด้วยแอปยืนยันตัวตน",
-            enterTotpCodeLabel: "ป้อนรหัส TOTP",
-            totpHelpText: "รหัส 6 หลักจากแอปยืนยันตัวตนของคุณ",
-            verifying: "กำลังตรวจสอบ...",
-            submit: "ส่ง",
-            cancel: "ยกเลิก",
-            invalidCode: "รหัส TOTP ไม่ถูกต้อง กรุณาลองใหม่",
-            invalidTotpCode: "ข้อความที่วางต้องประกอบด้วยตัวเลขเท่านั้น",
-            incorrectTotpToken: "รหัส TOTP ที่คุณป้อนไม่ถูกต้อง กรุณาลองใหม่",
-            reminderTitle: "เตือนความจำ",
-            reminderRemoveOldApp:
-                "หลังจากปิดการใช้งาน 2FA กรุณาลบรายการเดิมออกจากแอปยืนยันตัวตนของคุณ",
-            agreeDisableNotice:
-                "ฉันเข้าใจและต้องการปิดการใช้งานการยืนยันตัวตนสองขั้นตอน",
         },
         admin: {
             layout: {
