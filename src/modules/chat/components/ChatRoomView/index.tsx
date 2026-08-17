@@ -359,7 +359,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 };
                 emitChatNewMessage(detail);
                 await sendMessage({
-                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, proposal: form.proposal}),
+                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.proposal}),
                     senderId: Number(localUser.id),
                     secure: Boolean((localUser as any)?.isMessageSecure),
                     id: messageId,
