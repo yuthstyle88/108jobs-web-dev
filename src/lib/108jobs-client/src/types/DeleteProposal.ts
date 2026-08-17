@@ -2,9 +2,9 @@
 import type {ProposalId} from "./ProposalId";
 
 /**
- * Edit a proposal.
+ * Delete your own proposal.
  */
-export type EditComment = {
+export type DeleteProposal = {
   proposalId: ProposalId;
-  content?: string;
+  deleted: boolean;
 };

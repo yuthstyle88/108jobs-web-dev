@@ -5,7 +5,7 @@ import type {PaginationCursor} from "./PaginationCursor";
 /**
  * The proposal list response (backend field is 'proposals').
  */
-export type GetCommentsResponse = {
+export type GetProposalsResponse = {
   proposals: Array<ProposalView>;
   nextPage?: PaginationCursor;
   prevPage?: PaginationCursor;

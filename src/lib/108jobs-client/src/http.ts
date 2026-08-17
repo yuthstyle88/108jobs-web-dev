@@ -20,7 +20,7 @@ import type {
     DeleteImageParamsI,
     GetBankAccountsI,
     GetBillingByRoomQueryI,
-    GetCommentsI,
+    GetProposalsI,
     GetCategoryI,
     GetPersonDetailsI,
     GetPostI,
@@ -40,29 +40,29 @@ import type {AdminListUsersResponse} from "./types/AdminListUsersResponse";
 import type {BanksResponse} from "./types/BankList";
 import type {BanPerson} from "./types/BanPerson";
 import type {BanPersonResponse} from "./types/BanPersonResponse";
-import type {CommentResponse} from "./types/CommentResponse";
+import type {ProposalResponse} from "./types/ProposalResponse";
 import type {CategoryIdQuery} from "./types/CategoryIdQuery";
 import type {CategoryResponse} from "./types/CategoryResponse";
 import type {CountriesResponse} from "./types/CountriesResponse";
 import type {BankAccountForm} from "./types/BankAccountForm";
-import type {CreateComment} from "./types/CreateComment";
+import type {CreateProposal} from "./types/CreateProposal";
 import type {CreateCategory} from "./types/CreateCategory";
 import type {CreateCategoryTag} from "./types/CreateCategoryTag";
 import type {CreatePost} from "./types/CreatePost";
 import type {DeleteAccount} from "./types/DeleteAccount";
 import type {DeleteBankAccount} from "./types/DeleteBankAccount";
-import type {DeleteComment} from "./types/DeleteComment";
+import type {DeleteProposal} from "./types/DeleteProposal";
 import type {DeleteCategory} from "./types/DeleteCategory";
 import type {DeleteCategoryTag} from "./types/DeleteCategoryTag";
 import type {DeletePost} from "./types/DeletePost";
-import type {EditComment} from "./types/EditComment";
+import type {EditProposal} from "./types/EditProposal";
 import type {EditCategory} from "./types/EditCategory";
 import type {EditPost} from "./types/EditPost";
 import type {ExchangeKey} from "./types/ExchangeKey";
 import type {ExchangeKeyResponse} from "./types/ExchangeKeyResponse";
 import type {BankAccountsResponse} from "./types/GetBankAccountResponse";
-import type {GetComments} from "./types/GetComments";
-import type {GetCommentsResponse} from "./types/GetCommentsResponse";
+import type {GetProposals} from "./types/GetProposals";
+import type {GetProposalsResponse} from "./types/GetProposalsResponse";
 import type {GetPost} from "./types/GetPost";
 import type {GetPostResponse} from "./types/GetPostResponse";
 import type {GetPosts} from "./types/GetPosts";
@@ -610,10 +610,10 @@ export class Api108Jobs extends Controller {
     @Post("/proposal")
     @Tags("Comment")
     async createComment(
-        @Body() form: CreateComment,
+        @Body() form: CreateProposal,
         @Inject() options?: RequestOptions,
     ) {
-        return this.#wrapper<CreateComment, CommentResponse>(
+        return this.#wrapper<CreateProposal, ProposalResponse>(
             HttpType.Post,
             "/proposal",
             form,
@@ -628,10 +628,10 @@ export class Api108Jobs extends Controller {
     @Put("/proposal")
     @Tags("Comment")
     async editComment(
-        @Body() form: EditComment,
+        @Body() form: EditProposal,
         @Inject() options?: RequestOptions,
     ) {
-        return this.#wrapper<EditComment, CommentResponse>(
+        return this.#wrapper<EditProposal, ProposalResponse>(
             HttpType.Put,
             "/proposal",
             form,
@@ -646,10 +646,10 @@ export class Api108Jobs extends Controller {
     @Post("/proposal/delete")
     @Tags("Comment")
     async deleteComment(
-        @Body() form: DeleteComment,
+        @Body() form: DeleteProposal,
         @Inject() options?: RequestOptions,
     ) {
-        return this.#wrapper<DeleteComment, CommentResponse>(
+        return this.#wrapper<DeleteProposal, ProposalResponse>(
             HttpType.Post,
             "/proposal/delete",
             form,
@@ -665,10 +665,10 @@ export class Api108Jobs extends Controller {
     @Get("/proposal/list")
     @Tags("Comment")
     async getComments(
-        @Queries() form: GetCommentsI = {},
+        @Queries() form: GetProposalsI = {},
         @Inject() options?: RequestOptions,
     ) {
-        return this.#wrapper<GetComments, GetCommentsResponse>(
+        return this.#wrapper<GetProposals, GetProposalsResponse>(
             HttpType.Get,
             "/proposal/list",
             form,

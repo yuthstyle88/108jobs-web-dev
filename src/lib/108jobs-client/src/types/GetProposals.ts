@@ -9,7 +9,7 @@ import type {PostId} from "./PostId";
 /**
  * Get a list of comments.
  */
-export type GetComments = {
+export type GetProposals = {
   type_?: ListingType;
   sort?: ProposalSortType;
   /**
