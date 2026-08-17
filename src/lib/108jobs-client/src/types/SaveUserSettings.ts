@@ -43,7 +43,7 @@ export type SaveUserSettings = {
     /**
      * The default comment sort, usually "hot"
      */
-    defaultCommentSortType?: ProposalSortType;
+    defaultProposalSortType?: ProposalSortType;
     /**
      * The language of the interface
      */
@@ -116,7 +116,7 @@ export type SaveUserSettings = {
     /**
      * Whether to auto-collapse bot comments.
      */
-    collapseBotComments?: boolean;
+    collapseBotProposals?: boolean;
     /**
      * Some vote display mode settings
      */

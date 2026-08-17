@@ -7,5 +7,5 @@ import type {PostId} from "./PostId";
  */
 export type GetPost = {
   id?: PostId;
-  commentId?: ProposalId;
+  proposalId?: ProposalId;
 };

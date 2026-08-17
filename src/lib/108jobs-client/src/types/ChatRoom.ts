@@ -8,5 +8,5 @@ export type ChatRoom = {
     createdAt: string;
     updatedAt?: string;
     postId?: PostId;
-    currentCommentId?: ProposalId
+    currentProposalId?: ProposalId
 }

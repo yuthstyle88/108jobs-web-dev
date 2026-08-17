@@ -9,12 +9,12 @@ export type PostActions = {
   /**
    * When was the last time you read the comments.
    */
-  readCommentsAt?: string;
+  readProposalsAt?: string;
   /**
    * The number of comments you read last. Subtract this from total comments to get an unread
    * count.
    */
-  readCommentsAmount?: number;
+  readProposalsAmount?: number;
   /**
    * When the post was liked.
    */

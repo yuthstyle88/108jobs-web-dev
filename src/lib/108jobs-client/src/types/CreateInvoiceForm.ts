@@ -9,7 +9,7 @@ import {WorkflowId} from "./WorkflowId";
 export type CreateInvoiceForm = {
     employerId: LocalUserId;
     postId: PostId;
-    commentId?: ProposalId | null; // Option<ProposalId> on backend
+    proposalId?: ProposalId | null; // Option<ProposalId> on backend
     seqNumber: number; // i16 in backend
     amount: number; // using number for simplicity; backend may accept numeric
     proposal: string;

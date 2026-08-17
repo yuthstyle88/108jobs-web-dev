@@ -11,7 +11,7 @@ export type Billing = {
   freelancerId: LocalUserId;
   employerId: LocalUserId;
   postId: PostId;
-  commentId: ProposalId;
+  proposalId?: ProposalId;
   amount: Coin;
   description: string;
   status: BillingStatus;

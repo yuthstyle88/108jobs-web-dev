@@ -81,8 +81,8 @@ export type LocalUser = {
   /**
    * Whether to auto-collapse bot comments.
    */
-  collapseBotComments: boolean;
-  defaultCommentSortType: ProposalSortType;
+  collapseBotProposals: boolean;
+  defaultProposalSortType: ProposalSortType;
   /**
    * Whether to automatically mark fetched posts as read.
    */

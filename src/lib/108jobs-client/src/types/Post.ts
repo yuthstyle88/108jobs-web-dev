@@ -80,7 +80,7 @@ export type Post = {
   /**
    * The time of the newest comment in the post.
    */
-  newestCommentTimeAt: string;
+  newestProposalTimeAt: string;
   reportCount: number;
   unresolvedReportCount: number;
   pending: boolean;
