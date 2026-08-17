@@ -23,7 +23,6 @@ export type {BankAccountId} from "./types/BankAccountId";
 export type {Comment} from "./types/Comment";
 export type {CommentActions} from "./types/CommentActions";
 export type {CommentResponse} from "./types/CommentResponse";
-export type {CommentSortType} from "./types/CommentSortType";
 export type {CommentView} from "./types/CommentView";
 export type {Category} from "./types/Category";
 export type {CategoryFollowerState} from "./types/CategoryFollowerState";
