@@ -569,7 +569,40 @@ grep -rnE "\bCommentViewType\b" src --include="*.ts" --include="*.tsx"
 ```
 Expected: no matches.
 
-- [ ] **Step 2: Confirm no stale name survives in source**
+- [ ] **Step 2: Update the docstring prose that still says "comment"**
+
+The renames left 26 doc comments describing the proposal domain in "comment" wording — including a type named `Proposal` whose own field docs read "Whether the comment has been removed". The backend's equivalent docstrings all say "proposal", so every one of these updates. Change the prose only; do not touch any identifier, field name, or string literal on these lines.
+
+In `src/lib/108jobs-client/src/`:
+
+| File | Lines |
+|---|---|
+| `http.ts` | 607, 625, 643, 661 (`@summary Create/Edit/Delete a proposal.`, `Get / fetch proposals.`), 1456 (`Get billing by proposal id.`) |
+| `types/Proposal.ts` | 15, 21, 25, 30, 37 |
+| `types/ProposalActions.ts` | 5, 9 |
+| `types/CreateProposal.ts` | 6 (`Create a proposal.`) |
+| `types/GetProposals.ts` | 10 (`Get a list of proposals.`) |
+| `types/ListingType.ts` | 4 (`A listing type for post and proposal list fetches.` — matches the backend's own wording) |
+| `types/LocalUser.ts` | 69, 82 |
+| `types/SaveUserSettings.ts` | 44, 104, 117 |
+| `types/PostActions.ts` | 10, 14 |
+| `types/Post.ts` | 81 |
+| `types/GetPost.ts` | 6 (`Needs either the post id, or proposal_id.`) |
+| `types/CreateChatRoomRequest.ts` | 12 |
+
+`types/ProposalView.ts:12` is different — it reads `A proposal view (formerly CommentView — backend calls this ProposalView).` The parenthetical was a transitional breadcrumb and is now noise. Replace the whole line with:
+
+```ts
+ * A proposal view.
+```
+
+Then confirm the prose is gone:
+```bash
+grep -rniE "comment" src/lib/108jobs-client/src/ --include="*.ts" | grep -E ":[0-9]+:\s*(\*|//)"
+```
+Expected: no matches.
+
+- [ ] **Step 3: Confirm no stale name survives in source**
 
 ```bash
 grep -rn "Comment" src/ --include="*.ts" --include="*.tsx" | grep -v "/dist/" | grep -v "src/translations/"
@@ -581,14 +614,14 @@ Expected remaining matches, and **only** these — each verified correct against
 
 Anything else is a miss — fix it.
 
-- [ ] **Step 3: Full typecheck and lint**
+- [ ] **Step 4: Full typecheck and lint**
 
 ```bash
 npx tsc --noEmit && npx eslint src --ext .ts,.tsx
 ```
 Expected: both clean. If eslint reports pre-existing errors in files this plan never touched, report them rather than fixing them.
 
-- [ ] **Step 4: Clean-rebuild the package so `dist/` has no orphans**
+- [ ] **Step 5: Clean-rebuild the package so `dist/` has no orphans**
 
 Every task so far left stale outputs in `dist/` — `tsc` does not delete the output of a source file that no longer exists, so `dist/CommentId.js`, `dist/CommentView.d.ts` and friends are still sitting there. They are gitignored and unreachable from `index.d.ts`, so they never affected the build, but they must not survive the branch.
 
@@ -599,7 +632,7 @@ grep -rlnE "Comment" src/lib/108jobs-client/dist/ | head
 ```
 Expected: `tsc` silent; the `dist/` grep returns nothing. If it still returns files, the clean rebuild did not happen — investigate rather than deleting the files by hand.
 
-- [ ] **Step 5: Commit any residual fixes**
+- [ ] **Step 6: Commit any residual fixes**
 
 ```bash
 git add -A src/ tsconfig.tsbuildinfo && git commit -m "chore(client): final Comment-to-Proposal sweep"
