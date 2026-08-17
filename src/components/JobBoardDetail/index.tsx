@@ -87,6 +87,19 @@ const JobBoardDetail = ({jobId}: Props) => {
                         <h1 className="text-3xl font-bold text-gray-900 mb-2 break-words">
                             {jobDetailData?.postView.post.name}
                         </h1>
+                        {!!jobDetailData?.postView.tags.length && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {jobDetailData?.postView.tags.map((tag) => (
+                                    <Badge
+                                        key={tag.id}
+                                        variant="outline"
+                                        className="text-xs bg-gray-100 text-gray-800 font-medium px-3 py-1 rounded-full border-gray-200"
+                                    >
+                                        {tag.displayName}
+                                    </Badge>
+                                ))}
+                            </div>
+                        )}
                         <div className="flex items-center gap-3 text-gray-600">
                             <Image
                                 src={jobDetailData?.postView.creator.avatar || ProfileImage.avatar}
