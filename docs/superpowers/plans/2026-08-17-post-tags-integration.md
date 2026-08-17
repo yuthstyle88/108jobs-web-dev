@@ -42,7 +42,18 @@ Expected: `0`. If it is already 1, stop — the fix has landed and this task is 
 
 - [ ] **Step 2: Add the attribute**
 
-In `crates/db/src/source/tag.rs`, on the `Tag` struct only, add `#[serde(rename_all = "camelCase")]` alongside the existing attributes. Place it directly after the `#[derive(...)]` line, matching how the sibling structs in `crates/db/src/source/` order theirs. Leave `#[skip_serializing_none]` where it is.
+In `crates/db/src/source/tag.rs`, on the `Tag` struct only, add **both** of these — the directional serde form, and ts-rs's own attribute:
+
+```rust
+#[serde(rename_all(serialize = "camelCase"))]
+#[cfg_attr(feature = "ts-rs", ts(optional_fields, export, rename_all = "camelCase"))]
+```
+
+**Do not use the plain `#[serde(rename_all = "camelCase")]`.** It renames both directions, and `Tag` is deserialized from Postgres via raw-SQL `json_agg(tag.*)` (through `impl FromSql<Nullable<Json>, Pg> for TagsView`), which emits real snake_case column names. The plain form makes every post, proposal, or category that has a tag fail to load. It fails the `post_tags_present` test with `missing field apId`.
+
+ts-rs does not parse the directional form and silently falls back to raw field names, which is why its own `rename_all` is needed alongside — otherwise the generated binding says `display_name` while the wire says `displayName`.
+
+Leave `#[skip_serializing_none]` where it is.
 
 Do **not** add it to any other struct in the file or the crate.
 

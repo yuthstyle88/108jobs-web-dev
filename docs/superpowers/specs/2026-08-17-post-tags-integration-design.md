@@ -98,14 +98,38 @@ is the only moment the author is looking at the post anyway.
 
 ### A. Fix the casing on the backend, not in the client
 
-Add `#[serde(rename_all = "camelCase")]` to `Tag` in
-`crates/db/src/source/tag.rs`, making it consistent with the other 131 structs
-and making the client's existing camelCase declaration correct as written.
+Make `Tag` serialize camelCase in `crates/db/src/source/tag.rs`, so the client's
+existing camelCase declaration becomes correct as written.
 
-Changing a wire shape is normally the expensive option. Here it is free exactly
-once: **nothing consumes tags today.** The web app has zero usage, and Flutter
-would crash on the current shape regardless. There is no consumer to break, and
-this is the last moment that will be true.
+**The attribute must be the directional form.** This is the single most
+important detail in this document, because the obvious version is wrong:
+
+```rust
+#[serde(rename_all(serialize = "camelCase"))]     // correct
+#[cfg_attr(feature = "ts-rs", ts(optional_fields, export, rename_all = "camelCase"))]
+```
+
+A plain `#[serde(rename_all = "camelCase")]` was tried first and **broke the
+database read path.** `post_tags_fragment()` and `category_post_tags_fragment()`
+build tag JSON with raw SQL `json_agg(tag.*)`, so Postgres emits the real
+snake_case column names, and `impl FromSql<Nullable<Json>, Pg> for TagsView`
+deserializes through the *same* serde impl. A bidirectional rename therefore
+makes any post, proposal, or category that has a tag fail to load — server-side,
+for every client. It was caught by the `post_tags_present` test failing with
+`missing field apId`.
+
+`Tag` is serialized only into HTTP responses and deserialized only from that
+`json_agg` — no handler takes it as a request body, and no request struct embeds
+it — so the two directions can safely have different rules.
+
+The separate `ts(rename_all = ...)` is required because **ts-rs does not parse
+the directional form** and silently falls back to raw field names, which would
+regenerate a snake_case TypeScript binding contradicting the camelCase wire.
+
+The earlier claim that this change was free because "nothing consumes tags"
+was wrong in exactly this way: the database read path consumes `Tag`'s serde
+impl. It remains true that no *client* consumes tags yet, which is what makes
+the HTTP-facing half of the change safe.
 
 `PostTag` needs no change. It appears only on the write path
 (`api_utils/src/tags.rs`, `impls/post_tag.rs`) and in two error variants; it is
