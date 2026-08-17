@@ -95,7 +95,7 @@ Expected: no matches.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A && git commit -m "refactor(client): rename CommentId to ProposalId"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename CommentId to ProposalId"
 ```
 
 ---
@@ -143,7 +143,7 @@ Expected: `tsc` silent, grep no matches.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A && git commit -m "refactor(client): drop duplicate CommentSortType in favour of ProposalSortType"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): drop duplicate CommentSortType in favour of ProposalSortType"
 ```
 
 ---
@@ -204,7 +204,7 @@ Expected: silent.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add -A && git commit -m "refactor(client): rename Comment/CommentActions to Proposal/ProposalActions, add missing pending field"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename Comment/CommentActions to Proposal/ProposalActions, add missing pending field"
 ```
 
 ---
@@ -271,7 +271,7 @@ Expected: `tsc` silent; grep no matches.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add -A && git commit -m "refactor(client): rename CommentView to ProposalView, make category optional, drop phantom categoryActions"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename CommentView to ProposalView, make category optional, drop phantom categoryActions"
 ```
 
 ---
@@ -342,7 +342,7 @@ Expected: silent.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add -A && git commit -m "refactor(client): rename Comment request/response types to Proposal"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename Comment request/response types to Proposal"
 ```
 
 ---
@@ -391,7 +391,7 @@ Expected: silent.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "refactor(client): rename comment methods to proposal"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename comment methods to proposal"
 ```
 
 ---
@@ -457,7 +457,7 @@ Note `Billing.commentId` became optional — if `tsc` flags a consumer that assu
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A && git commit -m "fix(client): correct drifted comment-named wire fields to proposal"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "fix(client): correct drifted comment-named wire fields to proposal"
 ```
 
 ---
@@ -519,7 +519,7 @@ Expected: clean.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add -A && git commit -m "fix(client): correct drifted comment enum literals, fix Site Settings sort options"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "fix(client): correct drifted comment enum literals, fix Site Settings sort options"
 ```
 
 ---
@@ -556,7 +556,7 @@ Expected: `tsc` silent; the `dist/` grep returns nothing, proving the built outp
 - [ ] **Step 4: Commit any residual fixes**
 
 ```bash
-git add -A && git commit -m "chore(client): final Comment-to-Proposal sweep"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "chore(client): final Comment-to-Proposal sweep"
 ```
 
 ---
