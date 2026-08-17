@@ -27,9 +27,11 @@ interface PostFormProps {
 
 const postJobSchema = (
     t: (key: string) => string,
-    availableTagsFor: (categoryId?: number | string) => Tag[],
 ) => z.object({
     categoryId: z.coerce.number().int().positive(t("validation.categoryIdPositive")),
+    // Tags are purely optional -- no minimum, regardless of how many tags
+    // the selected category offers. Only the maximum below is enforced;
+    // the backend (`update_post_tags`) itself only checks membership.
     tags: z.array(z.coerce.number().int().positive()).max(5, t("validation.tagsMax")).default([]),
     jobTitle: z.string().min(5,
         t("validation.jobTitleMinLength")),
@@ -62,19 +64,6 @@ const postJobSchema = (
             if (!val) return undefined;
             return `${val}T23:59:59Z`;
         }),
-}).superRefine((data, ctx) => {
-    // The backend (`update_post_tags`) enforces membership only, no count --
-    // 2-5 is purely a form convention. The maximum above is unconditional,
-    // but the minimum only binds when the category actually offers enough
-    // tags to satisfy it: a thinly-tagged category must stay postable.
-    const available = availableTagsFor(data.categoryId).length;
-    if (available >= 2 && (data.tags?.length ?? 0) < 2) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: t("validation.tagsMin"),
-            path: ["tags"],
-        });
-    }
 });
 
 
@@ -126,7 +115,7 @@ export const PostForm: React.FC<PostFormProps> = ({
     );
 
     // Create schema with translations
-    const jobSchema = postJobSchema(t, availableTagsFor);
+    const jobSchema = postJobSchema(t);
 
     const formMethods = useForm<z.input<typeof jobSchema>, never, z.output<typeof jobSchema>>({
         resolver: zodResolver(jobSchema),
@@ -134,6 +123,14 @@ export const PostForm: React.FC<PostFormProps> = ({
         criteriaMode: "all",
         defaultValues: {
             categoryId: undefined,
+            // Must stay `[]`, not be omitted. react-hook-form's register()
+            // ref callback only wires a single checkbox up to the "array"
+            // branch (push/remove this input's value from a field array)
+            // when `_defaultValues[name]` is already an array; otherwise it
+            // treats the field as a lone boolean/string. A category with
+            // exactly one tag renders exactly one checkbox, so without this
+            // default that checkbox's value would arrive as a bare string
+            // instead of a string[]. Confirmed with a jsdom repro in review.
             tags: [],
             jobTitle: "",
             description: "",

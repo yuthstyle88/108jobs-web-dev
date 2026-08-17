@@ -32,7 +32,6 @@ export const en = {
             budgetPositive: "Budget must be a positive number",
             budgetRequired: "Budget is required",
             urlInvalid: "URL is invalid",
-            tagsMin: "At least 2 tags are required",
             tagsMax: "You can select up to 5 tags",
         },
         profileChat: {

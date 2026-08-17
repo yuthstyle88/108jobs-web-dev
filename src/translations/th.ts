@@ -32,7 +32,6 @@ export const th = {
             budgetPositive: "Budget ต้องเป็นตัวเลขบวก",
             budgetRequired: "จำเป็นต้องระบุงบประมาณ",
             urlInvalid: "Url ไม่ถูกต้อง",
-            tagsMin: "ต้องเลือกอย่างน้อย 2 แท็ก",
             tagsMax: "เลือกได้สูงสุด 5 แท็ก",
         },
         profileChat: {

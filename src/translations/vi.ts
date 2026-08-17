@@ -32,7 +32,6 @@ export const vi = {
             budgetPositive: "Ngân sách phải là số dương",
             budgetRequired: "Cần phải có ngân sách",
             urlInvalid: "URL is invalid",
-            tagsMin: "Cần chọn ít nhất 2 thẻ",
             tagsMax: "Chỉ được chọn tối đa 5 thẻ",
         },
         profileChat: {
