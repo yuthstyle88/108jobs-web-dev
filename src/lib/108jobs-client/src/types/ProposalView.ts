@@ -2,7 +2,6 @@
 import type {Proposal} from "./Proposal";
 import type {ProposalActions} from "./ProposalActions";
 import type {Category} from "./Category";
-import type {CategoryActions} from "./CategoryActions";
 import type {InstanceActions} from "./InstanceActions";
 import type {Person} from "./Person";
 import type {PersonActions} from "./PersonActions";
@@ -12,12 +11,11 @@ import type {TagsView} from "./TagsView";
 /**
  * A proposal view (formerly CommentView — backend calls this ProposalView).
  */
-export type CommentView = {
+export type ProposalView = {
     proposal: Proposal;
     creator: Person;
     post: Post;
-    category: Category;
-    categoryActions?: CategoryActions;
+    category?: Category;
     proposalActions?: ProposalActions;
     personActions?: PersonActions;
     instanceActions?: InstanceActions;
