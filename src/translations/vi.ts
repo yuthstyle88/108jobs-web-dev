@@ -1634,7 +1634,6 @@ export const vi = {
             editSuccess: "Chỉnh sửa thành công!",
             copySuccess: "Sao chép thành công",
             invalidCode: "Mã không hợp lệ",
-            invalidTotpCode: "Mã TOTP không hợp lệ",
             verifyEmailLinkSent:
                 "Liên kết xác minh email đã được gửi đến email của bạn",
             checkInboxForEmail:

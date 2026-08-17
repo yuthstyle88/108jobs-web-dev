@@ -1629,7 +1629,6 @@ export const en = {
             editSuccess: "Edit successfully!",
             copySuccess: "Copy successfully",
             invalidCode: "Invalid code",
-            invalidTotpCode: "Invalid TOTP code",
             verifyEmailLinkSent: "The verify email link has been sent to your email",
             checkInboxForEmail:
                 "Please check your inbox (If you don't see it, check your Spam and Junk folders) to continue.",
