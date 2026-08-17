@@ -44,6 +44,56 @@ parser does `(json['tags'] as List).map((e) => e as String)`. The backend sends
 `TagsView` — `#[serde(transparent)]` over `Vec<Tag>` — an array of *objects*.
 This is invisible today only because no post has tags.
 
+## The model
+
+| Object | Role of tags |
+|---|---|
+| Category | Owns the allowed tag list — the controlled vocabulary |
+| Post | Selects 2–5 of them, describing that job's requirements |
+| Proposal | Inherits the post's tags; has none of its own |
+
+Tags describe **what the job requires**, not who is offering. A rider post in
+`Delivery riders` carries `motorcycle`, `food-delivery`, `Sukhumvit`,
+`evening-shift`, `own-vehicle`; a `Design` post carries `graphic-design`,
+`Figma`, `menu-design`, `social-media`. The rider's proposal answers with their
+price, availability, vehicle and message — it does not repeat the requirements.
+
+This is already what the backend implements, which is why the feature needs no
+new data model:
+
+- `Tag.category_id` is non-nullable, and `update_post_tags` rejects any tag
+  outside the post's category (`crates/api/api_utils/src/tags.rs:27`).
+- `ProposalView.post_tags` is populated by the *same* `post_tags_fragment()`
+  that fills `PostView.tags` — genuine inheritance from the associated post.
+- There is **no `proposal_tag` table and no `ProposalTag` type anywhere** in the
+  repo. Proposals having no tags of their own is a deliberate absence, not an
+  oversight.
+
+Separate proposal tags would duplicate the job's requirements at best and
+contradict them at worst. If it later becomes necessary to describe what a
+rider or freelancer *can do* — "motorcycle delivery", "Thai/English",
+"refrigerated delivery" — that belongs in **profile skills**, a different model
+attached to the person, not tags on each proposal.
+
+### The 2–5 rule is a web-form convention, not an API guarantee
+
+`update_post_tags` validates membership only; it enforces no count. So the API
+accepts zero tags, or fifty. The form enforces 2–5, and Flutter or a direct API
+call will not.
+
+Two edge cases would otherwise make posting impossible, so the rule bends in
+exactly two places:
+
+- The **minimum applies only when the category offers at least 2 tags.** A
+  category with one tag, or none, cannot satisfy a 2-minimum, and a rule that
+  makes a whole category unpostable is worse than an untagged post.
+- The **maximum is absolute** — 5, always. Nothing about a thin category argues
+  for more.
+
+Editing a post created before this feature therefore requires tagging it before
+it can be saved, provided its category has tags to offer. That is intended: it
+is the only moment the author is looking at the post anyway.
+
 ## Design
 
 ### A. Fix the casing on the backend, not in the client
@@ -98,11 +148,21 @@ previous one, because a tag from another category would be rejected by the
 backend's own validation. On edit, the post's existing tags arrive on
 `PostView.tags` and pre-select.
 
+Selection is bounded per the rule above: at most 5 always, at least 2 when the
+category offers 2 or more. The remaining allowance is worth showing — "3 of 5"
+reads better than discovering the ceiling by hitting it.
+
 ### E. Display
 
 Tag chips on the job-board cards and the job detail view, read from
 `PostView.tags` — `displayName` only. Chips are not links and not filters; see
 below.
+
+**Proposals get no chips.** `ProposalView.postTags` exists and is correctly
+populated, but every proposal under one job inherits the *same* tags from that
+job — rendering them on each would repeat the job's requirements once per
+offer, which is noise rather than information. The tags belong to the post, and
+that is where they are shown.
 
 ## Release-order constraint — this is not optional
 
@@ -121,10 +181,25 @@ until it is.
 
 ## Out of scope
 
-- **Filtering posts by tag.** `Tag`'s own doc comment says tags are "displayed
-  and filtered on", but only display exists — the only `post_tag` references in
-  the query layer are test fixtures. Real filtering means new query support in
-  `post_view`, a new request field, and filter UI. Its own change.
+- **Filtering and matching by tag.** This is the most likely thing to be
+  assumed already working, so stating it plainly: it does not exist. `Tag`'s own
+  doc comment says tags are "displayed and filtered on", but only display is
+  real — the only `post_tag` references in the query layer are test fixtures,
+  and no request struct carries a tag filter. Tagging posts is what makes
+  matching *possible* later; it does not make it happen. Real filtering means
+  new query support in `post_view`, a new request field, and filter UI. Its own
+  change.
+- **Profile skills.** Describing what a rider or freelancer *can do* —
+  "motorcycle delivery", "Thai/English", "refrigerated delivery" — is a separate
+  model attached to the person. It is named here so that the need for it is
+  never met by adding tags to proposals, which would duplicate or contradict the
+  job's own requirements.
+- **Proposal tags.** There is no `proposal_tag` table and none should be added.
+  Proposals inherit the post's tags; see The model above.
+- **Backend enforcement of the 2–5 count.** `update_post_tags` validates
+  membership only. Making the count a real invariant across every client means
+  changing that function, and would reject edits to existing untagged posts from
+  any client. Out of scope; the count stays a web-form convention.
 - **The Flutter retype.** Separate repo, flagged above as a release-order
   constraint rather than ignored.
 - **Fixing `convert-to-camel.ts`.** Needs an audit of every struct lacking

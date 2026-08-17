@@ -173,15 +173,42 @@ git add -A src/ tsconfig.tsbuildinfo && git commit -m "feat(admin): manage a cat
 
 The form calls `useCategories()` at line 86, which returns `ListCategoriesResponse.categories: Array<CategoryView>` — and `CategoryView` carries `postTags`. **Do not add a request.** Find the `CategoryView` whose `category.id` matches the currently-selected `categoryId` and read its `postTags`.
 
-- [ ] **Step 2: Add `tags` to the form state and schema**
+- [ ] **Step 2: Add `tags` to the form state and schema, with the 2–5 rule**
 
-Add `tags: z.array(z.coerce.number().int().positive()).optional()` to the zod schema (around line 29, beside `categoryId`), and `tags: []` to the defaults (around line 96).
+Add `tags: []` to the defaults (around line 96), and to the zod schema (around line 29, beside `categoryId`):
+
+```ts
+    tags: z.array(z.coerce.number().int().positive()).max(5, t("validation.tagsMax")).default([]),
+```
+
+The **maximum is absolute**: 5, always. The **minimum is conditional** and cannot live in a plain field rule, because it depends on how many tags the chosen category offers — a category with fewer than 2 makes a 2-minimum unsatisfiable and would render that whole category unpostable.
+
+Express it with a `superRefine` on the schema object (the file already uses zod object-level refinement — follow that existing shape):
+
+```ts
+    .superRefine((data, ctx) => {
+        const available = availableTagsFor(data.categoryId).length;
+        if (available >= 2 && (data.tags?.length ?? 0) < 2) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: t("validation.tagsMin"),
+                path: ["tags"],
+            });
+        }
+    })
+```
+
+`availableTagsFor` is the lookup from Step 1. If the schema is built inside a `useMemo` that does not already close over the category list, widen it — do not duplicate the lookup.
+
+**Why the rule bends:** the backend enforces no count at all (`update_post_tags` validates membership only), so this is a web-form convention. Its only job is to guide; a convention that blocks posting in a thinly-tagged category is worse than an untagged post.
 
 - [ ] **Step 3: Render the picker**
 
 A multi-select of the selected category's tags, labelled by `displayName`, placed directly after the category select (around line 363-372) since it depends on it.
 
 Render the section **only** when a category is selected and its `postTags` is non-empty. A category with no tags shows nothing at all — not an empty picker.
+
+Show the remaining allowance next to the label — "3 of 5" — so the ceiling is visible before it is hit rather than discovered by a validation error. Disable unselected options once 5 are chosen, rather than letting a sixth be clicked and then rejected.
 
 - [ ] **Step 4: Clear the selection when the category changes**
 
@@ -195,7 +222,9 @@ Do the same for the edit path, and pre-select from `post.tags` when editing — 
 
 - [ ] **Step 6: Translations**
 
-Keys for the picker label, its placeholder/helper text, and nothing else. Real Thai and Vietnamese.
+Keys for the picker label, its helper/allowance text ("{selected} of 5"), and the two validation messages `validation.tagsMax` and `validation.tagsMin`. Put the validation keys beside the file's existing `validation.*` entries, and the picker keys wherever the form's other field labels live — check where `categoryId`'s label lives rather than assuming.
+
+Real Thai and Vietnamese, matching how each file words similar counts and limits elsewhere.
 
 - [ ] **Step 7: Verify**
 
@@ -227,9 +256,11 @@ From `post.tags` (an `Array<Tag>`), render `tag.displayName` only. A post with n
 
 Chips are **not** interactive: not links, not filters. Filtering by tag does not exist on the backend, and a chip that looks clickable but does nothing is worse than a plain one.
 
-- [ ] **Step 3: Same on the detail view**
+- [ ] **Step 3: Same on the detail view — but not on proposals**
 
 Locate the component under `src/components/JobBoardDetail/` that renders the post header and add the same chip row there.
+
+**Do not add chips to the proposal list.** `ProposalView.postTags` exists and is correctly populated, but every proposal under a job inherits the *same* tags from that one job — rendering them per proposal repeats the job's requirements once per offer. Tags belong to the post and are shown there. `JobBoardProposal/index.tsx` stays untouched by this task.
 
 - [ ] **Step 4: Verify**
 
