@@ -122,7 +122,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [scrollParentEl, setScrollParentEl] = useState<HTMLElement | null>(null);
     const roomPostId = post?.id;
-    const roomProposalId = currentRoom.room.currentCommentId;
+    const roomProposalId = currentRoom.room.currentProposalId;
     const postCreatorId = post?.creatorId;
     const isEmployer = postCreatorId != null && person?.id != null ? String(postCreatorId) === String(person?.id) : undefined;
     const lastClientUpdateRef = useRef<{ status: StatusKey | null; timestamp: number }>({status: null, timestamp: 0});
@@ -343,7 +343,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 revieweeId: form.revieweeId,
                 workflowId: form.workflowId,
                 rating: form.rating,
-                comment: form.comment,
+                proposal: form.proposal,
             });
             if (response.state === REQUEST_STATE.SUCCESS) {
                 const tsIso = new Date().toISOString();
@@ -359,7 +359,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 };
                 emitChatNewMessage(detail);
                 await sendMessage({
-                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.comment}),
+                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.proposal}),
                     senderId: Number(localUser.id),
                     secure: Boolean((localUser as any)?.isMessageSecure),
                     id: messageId,

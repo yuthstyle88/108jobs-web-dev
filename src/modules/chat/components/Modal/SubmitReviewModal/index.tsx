@@ -34,7 +34,7 @@ export const SubmitReviewModal: React.FC<SubmitReviewModalProps> = ({
             revieweeId,
             workflowId: workflowId ?? 0,
             rating,
-            comment: comment.trim() || undefined,
+            proposal: comment.trim() || undefined,
         };
 
         try {

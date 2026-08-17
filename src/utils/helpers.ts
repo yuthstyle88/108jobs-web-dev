@@ -44,10 +44,10 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
 }
 
 type ImmutableListKey =
-    | "comment"
-    | "commentReply"
+    | "proposal"
+    | "proposalReply"
     | "personPostMention"
-    | "personCommentMention"
+    | "personProposalMention"
     | "category"
     | "privateMessage"
     | "post";

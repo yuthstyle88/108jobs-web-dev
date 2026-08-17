@@ -29,7 +29,7 @@ const getSiteSettingsSchema = (t: (key: string) => string) => z.object({
     defaultPostListingType: z.enum(["All", "Local"]).optional(),
     defaultPostListingMode: z.enum(["List", "Card", "SmallCard"]).optional(),
     defaultPostSortType: z.enum([
-        "Active", "Hot", "New", "Old", "Top", "MostComments", "NewComments", "Controversial", "Scaled",
+        "Active", "Hot", "New", "Old", "Top", "MostProposals", "NewProposals", "Controversial", "Scaled",
     ]).optional(),
     defaultPostTimeRangeSeconds: z.number({invalid_type_error: t("admin.siteSettings.fields.errorNotANumber")}).int().min(0, t("admin.siteSettings.fields.errorMinValue")).optional(),
     defaultProposalSortType: z.enum(["Hot", "Top", "New", "Old", "Controversial"]).optional(),
@@ -384,8 +384,8 @@ const SiteSettingsPage = () => {
                             <option value="New">{t("admin.siteSettings.fields.defaultPostSortType.new")}</option>
                             <option value="Old">{t("admin.siteSettings.fields.defaultPostSortType.old")}</option>
                             <option value="Top">{t("admin.siteSettings.fields.defaultPostSortType.top")}</option>
-                            <option value="MostComments">{t("admin.siteSettings.fields.defaultPostSortType.mostComments")}</option>
-                            <option value="NewComments">{t("admin.siteSettings.fields.defaultPostSortType.newComments")}</option>
+                            <option value="MostProposals">{t("admin.siteSettings.fields.defaultPostSortType.mostProposals")}</option>
+                            <option value="NewProposals">{t("admin.siteSettings.fields.defaultPostSortType.newProposals")}</option>
                             <option value="Controversial">{t("admin.siteSettings.fields.defaultPostSortType.controversial")}</option>
                             <option value="Scaled">{t("admin.siteSettings.fields.defaultPostSortType.scaled")}</option>
                         </select>

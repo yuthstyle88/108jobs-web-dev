@@ -8,7 +8,7 @@ export type UserReview = {
     revieweeId: LocalUserId;
     workflowId: WorkflowId;
     rating: number;
-    comment: string | null;
+    proposal: string | null;
     createdAt: string;
     updatedAt: string | null;
 };
