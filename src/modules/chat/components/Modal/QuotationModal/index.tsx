@@ -57,6 +57,7 @@ const QuotationModal: React.FC<QuotationModalProps> = ({
         const ProposedQuoteSchema = z.object({
             partnerId: z.number().int().nonnegative(),
             postId: z.number().int().nonnegative(),
+            proposalId: z.number().int().nonnegative().optional(),
             amount: z.number().positive({message: t('profileChat.validation.totalAmount') || 'Total amount must be greater than 0'}),
             proposal: z.string().min(1, t('profileChat.validation.invalidForm') || 'Proposal is required'),
             projectName: z.string().min(1, t('profileChat.validation.invalidForm') || 'Project name is required'),
