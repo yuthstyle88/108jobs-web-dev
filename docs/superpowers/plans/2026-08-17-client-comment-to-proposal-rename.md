@@ -359,7 +359,17 @@ Method names are a public surface here: `useHttpGet("getComments")` passes one a
 
 `createComment`→`createProposal`, `editComment`→`editProposal`, `deleteComment`→`deleteProposal`, `getComments`→`getProposals`. Leave every `@Post`/`@Put`/`@Get` decorator route string untouched — they are already `/proposal`, `/proposal/delete`, `/proposal/list`.
 
-- [ ] **Step 2: Update the two app call sites**
+- [ ] **Step 2: Rename the four `@Tags("Comment")` decorators**
+
+The same four methods each carry `@Tags("Comment")` (lines ~611, 629, 647, 666). `@Tags` is a documentation-grouping decorator used 93 times across this file, and every other tag names its domain (`"Category"`, `"Account"`, `"Site"`). Change all four to:
+
+```ts
+    @Tags("Proposal")
+```
+
+Change only the four on these methods. Do not touch the other 89.
+
+- [ ] **Step 3: Update the two app call sites**
 
 `proposal/page.tsx:41,54,75`:
 ```tsx
@@ -372,7 +382,7 @@ and the `createProposal(payload)` call plus the `useCallback` dependency array e
     const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getProposals", {
 ```
 
-- [ ] **Step 3: Check for any other string-keyed reference**
+- [ ] **Step 4: Check for any other string-keyed reference**
 
 ```bash
 grep -rnE "\"(createComment|editComment|deleteComment|getComments)\"" src --include="*.ts" --include="*.tsx"
@@ -381,17 +391,18 @@ Expected: no matches. If any appear, update them.
 
 Note: `src/hooks/ui/useNotification.ts` has `deleteComment:` as a *translation-map key*, not a client method name. Leave it alone.
 
-- [ ] **Step 4: Rebuild, reinstall, verify**
+- [ ] **Step 5: Rebuild, reinstall, verify**
 
 ```bash
 cd src/lib/108jobs-client && npm run build && cd - && pnpm install && npx tsc --noEmit
+grep -n '@Tags("Comment")' src/lib/108jobs-client/src/http.ts
 ```
-Expected: silent.
+Expected: `tsc` silent; grep no matches.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename comment methods to proposal"
+git add -A src/ tsconfig.tsbuildinfo && git commit -m "refactor(client): rename comment methods and doc tags to proposal"
 ```
 
 ---
