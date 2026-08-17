@@ -12,30 +12,40 @@ import {
     faEdit,
     faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import {CategoryNodeView} from "108jobs-client";
+import {CategoryNodeView, Tag} from "108jobs-client";
 import {useTranslation} from "react-i18next";
 import {toCamelCaseLastSegment} from "@/utils/helpers";
 
 interface CategoryRowProps {
     node: CategoryNodeView;
     depth: number;
+    /** Keyed by category id. Built once in the page from `CategoryView.postTags` -- see page.tsx. */
+    tagsByCategory: Map<number, Tag[]>;
     onEdit: (node: CategoryNodeView) => void;
     onDelete: (id: number) => void;
     onAddChild: (parentId: number) => void;
     onImageClick: (src: string, alt: string) => void;
+    onAddTag: (categoryId: number) => void;
+    onEditTag: (tag: Tag) => void;
+    onDeleteTag: (tag: Tag) => void;
 }
 
 export const CategoryRow: React.FC<CategoryRowProps> = ({
                                                             node,
                                                             depth,
+                                                            tagsByCategory,
                                                             onEdit,
                                                             onDelete,
                                                             onAddChild,
                                                             onImageClick,
+                                                            onAddTag,
+                                                            onEditTag,
+                                                            onDeleteTag,
                                                         }) => {
     const {t} = useTranslation();
     const [isOpen, setIsOpen] = useState(depth < 2);
     const hasChildren = node.children && node.children.length > 0;
+    const tags = tagsByCategory.get(node.category.id) ?? [];
 
     // Dynamic styling based on depth
     const depthPadding = 2 + depth * 6; // Increases indent with depth
@@ -155,6 +165,51 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                                     </div>
                                 )}
                             </div>
+
+                            {/* Tags */}
+                            <div className="mt-3">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                                    {t("admin.category.tags.heading")}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {tags.length === 0 && (
+                                        <span className="text-xs text-gray-400 italic">
+                                            {t("admin.category.tags.empty")}
+                                        </span>
+                                    )}
+                                    {tags.map((tag) => (
+                                        <span
+                                            key={tag.id}
+                                            className="inline-flex items-center gap-1 pl-3 pr-1.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary"
+                                        >
+                                            {tag.displayName}
+                                            <button
+                                                onClick={() => onEditTag(tag)}
+                                                className="p-1 rounded-full hover:bg-primary/20 transition-colors"
+                                                title={t("admin.category.tags.rename")}
+                                                aria-label={t("admin.category.tags.rename")}
+                                            >
+                                                <FontAwesomeIcon icon={faEdit} className="w-2.5 h-2.5"/>
+                                            </button>
+                                            <button
+                                                onClick={() => onDeleteTag(tag)}
+                                                className="p-1 rounded-full hover:bg-red-100 hover:text-red-600 transition-colors"
+                                                title={t("admin.category.tags.delete")}
+                                                aria-label={t("admin.category.tags.delete")}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} className="w-2.5 h-2.5"/>
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <button
+                                        onClick={() => onAddTag(node.category.id)}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border border-dashed border-primary/40 text-primary hover:bg-primary/10 transition-colors"
+                                    >
+                                        <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5"/>
+                                        {t("admin.category.tags.add")}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -225,10 +280,14 @@ export const CategoryRow: React.FC<CategoryRowProps> = ({
                         <CategoryRow
                             node={child}
                             depth={depth + 1}
+                            tagsByCategory={tagsByCategory}
                             onEdit={onEdit}
                             onDelete={onDelete}
                             onAddChild={onAddChild}
                             onImageClick={onImageClick}
+                            onAddTag={onAddTag}
+                            onEditTag={onEditTag}
+                            onDeleteTag={onDeleteTag}
                         />
                     </React.Fragment>
                 ))}
