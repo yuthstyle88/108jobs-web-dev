@@ -249,14 +249,29 @@ in alphabetical position; remove the `CommentView` line.
 
 - [ ] **Step 5: Update the two app consumers**
 
-`src/utils/types.ts:2,69` — import `ProposalView` and rename the alias:
+`src/utils/types.ts` — import `ProposalView`, and rename the three app-internal comment-named declarations in this file. All three are app-local names (not wire contract) and none is referenced anywhere outside this file, so nothing else needs updating:
+
+```ts
+export enum DataType {
+    Post,
+    Proposal,
+}
+```
 ```ts
 export type ProposalNodeView = ProposalView;
+
+export interface ProposalNodeI {
+    proposalView: ProposalNodeView;
+    children: Array<ProposalNodeI>;
+    depth: number;
+}
 ```
-Then update any consumer of `CommentNodeView`; find them with:
+
+Then confirm nothing else referenced the old names:
 ```bash
-grep -rn "CommentNodeView" src --include="*.ts" --include="*.tsx"
+grep -rnE "\b(CommentNodeView|CommentNodeI)\b" src --include="*.ts" --include="*.tsx"
 ```
+Expected: no matches. If any appear, update them.
 
 `src/components/JobBoardDetail/components/JobBoardProposal/index.tsx:6,46,95` — `import type {ProposalView} from "108jobs-client";` and both `cv: ProposalView` annotations.
 
@@ -264,7 +279,7 @@ grep -rn "CommentNodeView" src --include="*.ts" --include="*.tsx"
 
 ```bash
 cd src/lib/108jobs-client && npm run build && cd - && pnpm install && npx tsc --noEmit
-grep -rn "CommentView\|CommentNodeView\|categoryActions" src/ --include="*.ts" --include="*.tsx" | grep -v "/dist/"
+grep -rn "CommentView\|CommentNodeView\|CommentNodeI\|categoryActions" src/ --include="*.ts" --include="*.tsx" | grep -v "/dist/"
 ```
 Expected: `tsc` silent; grep no matches.
 
