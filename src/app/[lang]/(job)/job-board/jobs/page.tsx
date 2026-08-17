@@ -171,7 +171,7 @@ const MyJobs = () => {
                                                 <td className="px-6 py-6">
                                                         <span
                                                             className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">
-                                                            {job.post.comments}
+                                                            {job.post.proposals}
                                                         </span>
                                                 </td>
                                                 <td className="px-6 py-6 text-sm text-gray-600">
@@ -265,7 +265,7 @@ const MyJobs = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{t("profileJob.tableHeaderProposals")}</p>
-                                                    <p className="font-bold text-gray-800 mt-1">{job.post.comments}</p>
+                                                    <p className="font-bold text-gray-800 mt-1">{job.post.proposals}</p>
                                                 </div>
                                                 <div className="col-span-2">
                                                     <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{t("profileJob.tableHeaderDeadline")}</p>

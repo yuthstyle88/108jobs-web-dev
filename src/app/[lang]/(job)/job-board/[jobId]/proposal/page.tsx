@@ -10,7 +10,7 @@ import * as z from "zod";
 import {useTranslation} from "react-i18next";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {useCallback} from "react";
-import {CreateComment, PostId} from "108jobs-client";
+import {CreateProposal, PostId} from "108jobs-client";
 import {REQUEST_STATE} from "@/services/HttpService";
 import useNotification from "@/hooks/ui/useNotification";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
@@ -38,7 +38,7 @@ const JobApplication = () => {
         resolver: zodResolver(createJobApplicationSchema(t)),
     });
 
-    const {execute: createComment} = useHttpPost("createComment");
+    const {execute: createProposal} = useHttpPost("createProposal");
     const handleCreateSuccess = useCallback(async () => {
             route.replace("/job-board");
         },
@@ -46,12 +46,12 @@ const JobApplication = () => {
     const onSubmit = useCallback(
         async (data: JobApplicationFormData) => {
             try {
-                const payload: CreateComment = {
+                const payload: CreateProposal = {
                     postId,
                     content: data.whyHireYou,
                 };
 
-                const response = await createComment(payload);
+                const response = await createProposal(payload);
 
                 if (response.state === REQUEST_STATE.FAILED) {
                     const errName = response.err?.name ?? "unknownError";
@@ -72,7 +72,7 @@ const JobApplication = () => {
                 errorMessage(null, null, t("global.submissionFailed") ?? "Submission failed!");
             }
         },
-        [createComment, handleCreateSuccess, successMessage, errorMessage, t]
+        [createProposal, handleCreateSuccess, successMessage, errorMessage, t]
     );
 
     return (

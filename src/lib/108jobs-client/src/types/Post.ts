@@ -73,14 +73,14 @@ export type Post = {
    * Time at which the post will be published. None means publish immediately.
    */
   scheduledPublishTimeAt?: string;
-  comments: number;
+  proposals: number;
   score: number;
   upvotes: number;
   downvotes: number;
   /**
-   * The time of the newest comment in the post.
+   * The time of the newest proposal in the post.
    */
-  newestCommentTimeAt: string;
+  newestProposalTimeAt: string;
   reportCount: number;
   unresolvedReportCount: number;
   pending: boolean;

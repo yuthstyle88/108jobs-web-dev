@@ -7,14 +7,14 @@ export type PostActions = {
    */
   readAt?: string;
   /**
-   * When was the last time you read the comments.
+   * When was the last time you read the proposals.
    */
-  readCommentsAt?: string;
+  readProposalsAt?: string;
   /**
-   * The number of comments you read last. Subtract this from total comments to get an unread
+   * The number of proposals you read last. Subtract this from total proposals to get an unread
    * count.
    */
-  readCommentsAmount?: number;
+  readProposalsAmount?: number;
   /**
    * When the post was liked.
    */
