@@ -1,6 +1,6 @@
 import type {LocalUserId} from "./LocalUserId";
 import type {PostId} from "./PostId";
-import type {CommentId} from "./CommentId";
+import type {ProposalId} from "./ProposalId";
 import type {BillingStatus} from "./BillingStatus";
 import {ChatRoomId} from "./ChatRoomId";
 import {WorkflowId} from "./WorkflowId";
@@ -9,7 +9,7 @@ import {WorkflowId} from "./WorkflowId";
 export type CreateInvoiceForm = {
     employerId: LocalUserId;
     postId: PostId;
-    commentId?: CommentId | null; // Option<CommentId> on backend
+    commentId?: ProposalId | null; // Option<ProposalId> on backend
     seqNumber: number; // i16 in backend
     amount: number; // using number for simplicity; backend may accept numeric
     proposal: string;
