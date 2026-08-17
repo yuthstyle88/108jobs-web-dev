@@ -604,7 +604,7 @@ export class Api108Jobs extends Controller {
     }
 
     /**
-     * @summary Create a comment.
+     * @summary Create a proposal.
      */
     @Security("bearerAuth")
     @Post("/proposal")
@@ -622,7 +622,7 @@ export class Api108Jobs extends Controller {
     }
 
     /**
-     * @summary Edit a comment.
+     * @summary Edit a proposal.
      */
     @Security("bearerAuth")
     @Put("/proposal")
@@ -640,7 +640,7 @@ export class Api108Jobs extends Controller {
     }
 
     /**
-     * @summary Delete a comment.
+     * @summary Delete a proposal.
      */
     @Security("bearerAuth")
     @Post("/proposal/delete")
@@ -658,7 +658,7 @@ export class Api108Jobs extends Controller {
     }
 
     /**
-     * @summary Get / fetch comments.
+     * @summary Get / fetch proposals.
      */
     @Security("bearerAuth")
     @Security({})
@@ -1453,7 +1453,7 @@ export class Api108Jobs extends Controller {
     }
 
     /**
-     * @summary Get billing by comment id.
+     * @summary Get billing by proposal id.
      */
     @Security("bearerAuth")
     @Get("/account/services/billing/by-room")

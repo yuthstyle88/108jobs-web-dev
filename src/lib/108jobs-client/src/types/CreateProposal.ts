@@ -3,7 +3,7 @@ import type {ProposalId} from "./ProposalId";
 import type {PostId} from "./PostId";
 
 /**
- * Create a comment.
+ * Create a proposal.
  */
 export type CreateProposal = {
   content: string;

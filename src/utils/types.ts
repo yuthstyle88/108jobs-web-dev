@@ -51,7 +51,7 @@ export interface IRouteProps {
     sensitive?: boolean;
 }
 
-export enum CommentViewType {
+export enum ProposalViewType {
     Tree,
     Flat,
 }

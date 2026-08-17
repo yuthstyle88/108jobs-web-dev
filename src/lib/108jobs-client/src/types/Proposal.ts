@@ -12,29 +12,29 @@ export type Proposal = {
   postId: PostId;
   content: string;
   /**
-   * Whether the comment has been removed.
+   * Whether the proposal has been removed.
    */
   removed: boolean;
   publishedAt: string;
   updatedAt?: string;
   /**
-   * Whether the comment has been deleted by its creator.
+   * Whether the proposal has been deleted by its creator.
    */
   deleted: boolean;
   /**
-   * The path / tree location of a comment, separated by dots, ending with the comment's id. Ex:
+   * The path / tree location of a proposal, separated by dots, ending with the proposal's id. Ex:
    * 0.24.27
    */
   path: string;
   /**
-   * Whether the comment has been distinguished(speaking officially) by a mod.
+   * Whether the proposal has been distinguished(speaking officially) by a mod.
    */
   distinguished: boolean;
   score: number;
   upvotes: number;
   downvotes: number;
   /**
-   * The total number of children in this comment branch.
+   * The total number of children in this proposal branch.
    */
   childCount: number;
   reportCount: number;

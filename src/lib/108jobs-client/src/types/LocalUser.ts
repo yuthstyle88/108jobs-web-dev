@@ -66,7 +66,7 @@ export type LocalUser = {
   postListingMode: PostListingMode;
   totp2faEnabled: boolean;
   /**
-   * Whether to allow keyboard navigation (for browsing and interacting with posts and comments).
+   * Whether to allow keyboard navigation (for browsing and interacting with posts and proposals).
    */
   enableKeyboardNavigation: boolean;
   /**
@@ -79,7 +79,7 @@ export type LocalUser = {
    */
   enablePrivateMessages: boolean;
   /**
-   * Whether to auto-collapse bot comments.
+   * Whether to auto-collapse bot proposals.
    */
   collapseBotProposals: boolean;
   defaultProposalSortType: ProposalSortType;

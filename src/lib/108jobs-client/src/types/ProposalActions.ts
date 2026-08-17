@@ -2,11 +2,11 @@
 
 export type ProposalActions = {
   /**
-   * The like / score for the comment.
+   * The like / score for the proposal.
    */
   likeScore?: number;
   /**
-   * When the comment was liked.
+   * When the proposal was liked.
    */
   likedAt?: string;
 };

@@ -3,7 +3,7 @@ import type {ProposalId} from "./ProposalId";
 import type {PostId} from "./PostId";
 
 /**
- * Get a post. Needs either the post id, or comment_id.
+ * Get a post. Needs either the post id, or proposal_id.
  */
 export type GetPost = {
   id?: PostId;

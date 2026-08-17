@@ -9,7 +9,7 @@ export type CreateChatRoomRequest = {
   partnerPersonId: PersonId;
   roomId?: ChatRoomId;
   postId?: PostId;
-  // Optional: id of the current comment used to start the chat
+  // Optional: id of the current proposal used to start the chat
   currentProposalId?: ProposalId;
   roomName?: string;
 };

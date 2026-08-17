@@ -466,7 +466,7 @@ const JobBoard = () => {
                                                         {formatBudgetCompact(job.post.budget)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-text-primary">
-                                                        {job.post.comments}
+                                                        {job.post.proposals}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-text-primary">
                                                         {formatDate(job.post.publishedAt)}
@@ -562,7 +562,7 @@ const JobBoard = () => {
                                                         <div>
                                                             <p className="text-xs text-gray-500 uppercase tracking-wider">{t("profileJob.tableHeaderProposals")}</p>
                                                             <p className="font-semibold text-text-primary mt-0.5">
-                                                                {job.post.comments} proposal{job.post.comments !== 1 && "s"}
+                                                                {job.post.proposals} proposal{job.post.proposals !== 1 && "s"}
                                                             </p>
                                                         </div>
 

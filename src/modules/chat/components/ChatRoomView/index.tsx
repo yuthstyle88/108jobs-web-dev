@@ -343,7 +343,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 revieweeId: form.revieweeId,
                 workflowId: form.workflowId,
                 rating: form.rating,
-                comment: form.comment,
+                proposal: form.proposal,
             });
             if (response.state === REQUEST_STATE.SUCCESS) {
                 const tsIso = new Date().toISOString();
@@ -359,7 +359,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 };
                 emitChatNewMessage(detail);
                 await sendMessage({
-                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.comment}),
+                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, proposal: form.proposal}),
                     senderId: Number(localUser.id),
                     secure: Boolean((localUser as any)?.isMessageSecure),
                     id: messageId,

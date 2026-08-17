@@ -9,7 +9,7 @@ import type {Post} from "./Post";
 import type {TagsView} from "./TagsView";
 
 /**
- * A proposal view (formerly CommentView — backend calls this ProposalView).
+ * A proposal view.
  */
 export type ProposalView = {
     proposal: Proposal;

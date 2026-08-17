@@ -420,7 +420,7 @@ const AdminJobBoard = () => {
                                                 <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                                     {formatBudget(job.post.budget)}
                                                 </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">{job.post.comments}</td>
+                                                <td className="px-6 py-4 text-sm text-gray-600">{job.post.proposals}</td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
                                                     {formatDate(job.post.publishedAt)}
                                                 </td>

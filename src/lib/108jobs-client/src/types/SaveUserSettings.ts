@@ -41,7 +41,7 @@ export type SaveUserSettings = {
      */
     defaultPostTimeRangeSeconds?: number;
     /**
-     * The default comment sort, usually "hot"
+     * The default proposal sort, usually "hot"
      */
     defaultProposalSortType?: ProposalSortType;
     /**
@@ -101,7 +101,7 @@ export type SaveUserSettings = {
      */
     infiniteScrollEnabled?: boolean;
     /**
-     * Whether to allow keyboard navigation (for browsing and interacting with posts and comments).
+     * Whether to allow keyboard navigation (for browsing and interacting with posts and proposals).
      */
     enableKeyboardNavigation?: boolean;
     /**
@@ -114,7 +114,7 @@ export type SaveUserSettings = {
      */
     enablePrivateMessages?: boolean;
     /**
-     * Whether to auto-collapse bot comments.
+     * Whether to auto-collapse bot proposals.
      */
     collapseBotProposals?: boolean;
     /**

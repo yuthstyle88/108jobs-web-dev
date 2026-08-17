@@ -7,7 +7,7 @@ import type {PaginationCursor} from "./PaginationCursor";
 import type {PostId} from "./PostId";
 
 /**
- * Get a list of comments.
+ * Get a list of proposals.
  */
 export type GetProposals = {
   type_?: ListingType;

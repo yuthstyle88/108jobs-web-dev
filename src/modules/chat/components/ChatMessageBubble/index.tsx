@@ -47,7 +47,7 @@ interface ProposedQuoteMessage {
         deliveryDay: string;
     };
     rating?: number;
-    comment?: string;
+    proposal?: string;
 }
 
 const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
@@ -198,7 +198,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                     <Stars rating={parsed!.rating!} />
                                 </div>
                                 <div className="mt-1 text-xs text-gray-700 whitespace-pre-line break-words">
-                                    {parsed!.comment}
+                                    {parsed!.proposal}
                                 </div>
                             </div>
                         </div>
