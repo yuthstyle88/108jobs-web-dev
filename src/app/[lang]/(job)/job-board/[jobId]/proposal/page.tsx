@@ -38,7 +38,7 @@ const JobApplication = () => {
         resolver: zodResolver(createJobApplicationSchema(t)),
     });
 
-    const {execute: createComment} = useHttpPost("createComment");
+    const {execute: createProposal} = useHttpPost("createProposal");
     const handleCreateSuccess = useCallback(async () => {
             route.replace("/job-board");
         },
@@ -51,7 +51,7 @@ const JobApplication = () => {
                     content: data.whyHireYou,
                 };
 
-                const response = await createComment(payload);
+                const response = await createProposal(payload);
 
                 if (response.state === REQUEST_STATE.FAILED) {
                     const errName = response.err?.name ?? "unknownError";
@@ -72,7 +72,7 @@ const JobApplication = () => {
                 errorMessage(null, null, t("global.submissionFailed") ?? "Submission failed!");
             }
         },
-        [createComment, handleCreateSuccess, successMessage, errorMessage, t]
+        [createProposal, handleCreateSuccess, successMessage, errorMessage, t]
     );
 
     return (

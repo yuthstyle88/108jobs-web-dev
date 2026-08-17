@@ -608,8 +608,8 @@ export class Api108Jobs extends Controller {
      */
     @Security("bearerAuth")
     @Post("/proposal")
-    @Tags("Comment")
-    async createComment(
+    @Tags("Proposal")
+    async createProposal(
         @Body() form: CreateProposal,
         @Inject() options?: RequestOptions,
     ) {
@@ -626,8 +626,8 @@ export class Api108Jobs extends Controller {
      */
     @Security("bearerAuth")
     @Put("/proposal")
-    @Tags("Comment")
-    async editComment(
+    @Tags("Proposal")
+    async editProposal(
         @Body() form: EditProposal,
         @Inject() options?: RequestOptions,
     ) {
@@ -644,8 +644,8 @@ export class Api108Jobs extends Controller {
      */
     @Security("bearerAuth")
     @Post("/proposal/delete")
-    @Tags("Comment")
-    async deleteComment(
+    @Tags("Proposal")
+    async deleteProposal(
         @Body() form: DeleteProposal,
         @Inject() options?: RequestOptions,
     ) {
@@ -663,8 +663,8 @@ export class Api108Jobs extends Controller {
     @Security("bearerAuth")
     @Security({})
     @Get("/proposal/list")
-    @Tags("Comment")
-    async getComments(
+    @Tags("Proposal")
+    async getProposals(
         @Queries() form: GetProposalsI = {},
         @Inject() options?: RequestOptions,
     ) {

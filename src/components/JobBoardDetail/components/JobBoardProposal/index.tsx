@@ -28,7 +28,7 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
     const [startingChatFor, setStartingChatFor] = useState<number | null>(null);
     const {upsertRoom} = useRoomsStore();
-    const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getComments", {
+    const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getProposals", {
         pageCursor: currentCursor,
         ...(postId ? {postId} : {}),
     });
