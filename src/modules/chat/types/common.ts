@@ -8,6 +8,8 @@ export interface MessagePayload {
     senderId: LocalUserId;
     secure: boolean,
     id?: string;
+    /** See `ChatMessage.assetId`. Set only for attachment messages. */
+    assetId?: string;
 }
 /**
  * Canonical typing detail for `typing` events.

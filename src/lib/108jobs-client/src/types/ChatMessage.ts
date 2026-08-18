@@ -13,4 +13,11 @@ export type ChatMessage = {
   createdAt: string;
   // UI-only field to help rendering; not required from server
   isOwner?: boolean;
+  /**
+   * MAD asset id of an attachment this message carries, sent as a sibling of
+   * `content` because `content` may be encrypted. Mirrors `MessageModel`'s
+   * `assetId` on the server. Absent on plain messages and on everything sent
+   * before this shipped.
+   */
+  assetId?: string;
 };

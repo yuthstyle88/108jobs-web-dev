@@ -57,7 +57,13 @@ export const sendStructured = async (
     roomId: string,
     payload: Structured,
     senderId: LocalUserId,
-    opts: { previewText?: string; attach?: { url: string; name?: string } | null; secure?: boolean } = {}
+    opts: {
+        previewText?: string;
+        attach?: { url: string; name?: string } | null;
+        secure?: boolean;
+        /** See `ChatMessage.assetId`. */
+        assetId?: string;
+    } = {}
 ) => {
     const id = uuidv4();
     const content = serializeStructured(payload);
@@ -76,7 +82,7 @@ export const sendStructured = async (
     });
 
     const secure = typeof opts.secure === 'boolean' ? opts.secure : false;
-    await sendMessage({senderId: senderId, message, secure, id});
+    await sendMessage({senderId: senderId, message, secure, id, assetId: opts.assetId});
     return id;
 };
 
