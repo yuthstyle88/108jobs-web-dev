@@ -45,7 +45,13 @@ export function useHistoryBackfill({roomId, loadOlderUntilDone}: Options): void 
         }),
       )
       .finally(() => {
-        abortRef.current = null;
+        // Only clear it if it's still ours. The room-scoped cleanup below may
+        // already have aborted and cleared this ref for a room switch, and a
+        // fresh `start()` for the room now current may already have replaced
+        // it with a new controller by the time this settles. Nulling
+        // unconditionally here could drop that newer controller, making the
+        // next `start()` wrongly think nothing is running.
+        if (abortRef.current === controller) abortRef.current = null;
       });
   }, [roomId, loadOlderUntilDone, setBackfill]);
 
@@ -55,7 +61,19 @@ export function useHistoryBackfill({roomId, loadOlderUntilDone}: Options): void 
 
   useEffect(() => registerBackfillRunner(roomId, {start, cancel}), [roomId, start, cancel]);
 
-  // Leaving the room stops the pull; nothing is left fetching in the
-  // background for a conversation nobody is looking at.
-  useEffect(() => () => abortRef.current?.abort(), []);
+  // Room-scoped, not just unmount: switching conversations reuses this same
+  // hook instance instead of unmounting it, so an empty-deps cleanup here
+  // only ever fired when the whole component went away -- the old room's
+  // fetch kept running in the background, and its still-non-null `abortRef`
+  // made `start()` for the new room silently no-op until the stale fetch's
+  // own `.finally()` eventually cleared it. Keying this effect on `roomId`
+  // aborts *and* clears the previous room's controller on every room change,
+  // so the new room's `start()` never sees a stale, blocking ref. React still
+  // runs this same cleanup on unmount, so that case stays covered too.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+    };
+  }, [roomId]);
 }

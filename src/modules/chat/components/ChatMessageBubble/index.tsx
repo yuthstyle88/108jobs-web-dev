@@ -662,7 +662,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                                 rel="noopener noreferrer"
                                                 className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]"
                                             >
-                                                {attachment?.name || attachment?.url || "file"}
+                                                {attachment?.name}
                                             </a>
                                             {attachment?.mime && (
                                                 <span

@@ -45,27 +45,49 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     const isAtBottomRef = React.useRef(true);
 
     const pendingJumpMessageId = useChatPanelStore((s) => s.pendingJumpMessageId);
+    const jumpToken = useChatPanelStore((s) => s.jumpToken);
     const highlightedMessageId = useChatPanelStore((s) => s.highlightedMessageId);
 
     // A jump can arrive before the message it names is in `data` -- the panel
     // that asked may still be backfilling the page it lives on. Leaving the
     // request pending and re-running on `data` is what makes it land once the
     // page arrives, instead of silently doing nothing.
+    //
+    // `jumpToken` is in the deps alongside `pendingJumpMessageId` on purpose:
+    // a repeat click on the same search result calls `requestJump` with the
+    // id already sitting in `pendingJumpMessageId` (e.g. the first click's
+    // target hadn't arrived yet, so this effect returned early without
+    // consuming it) -- setting a field to the value it already holds is not
+    // a change that field alone can carry, but the bumped token is.
+    //
+    // No highlight timer in this effect: it depends on `pendingJumpMessageId`,
+    // and `consumeJump()` below resets that very field, which looks like a
+    // dep change on the next render and would tear a timer down long before
+    // it was meant to fire. The timer lives in its own effect below, keyed
+    // only on `highlightedMessageId`, so consuming the jump can't disturb it.
     React.useEffect(() => {
         if (!pendingJumpMessageId) return;
 
         const index = data.findIndex((m) => String((m as any)?.id) === pendingJumpMessageId);
         if (index < 0) return;
 
-        const {consumeJump, setHighlight, clearHighlight} = useChatPanelStore.getState();
+        const {consumeJump, setHighlight} = useChatPanelStore.getState();
         consumeJump();
 
         virtuosoRef.current?.scrollToIndex({index, behavior: 'smooth', align: 'center'});
         setHighlight(pendingJumpMessageId);
+    }, [pendingJumpMessageId, jumpToken, data]);
 
-        const timer = setTimeout(() => clearHighlight(), 2000);
+    // Owns the "ring for 2 seconds" timer exclusively. Kept separate from the
+    // effect above so that consuming the jump (which changes that effect's
+    // own deps) can't cut this timer short -- this one only re-runs when the
+    // highlighted message itself changes.
+    React.useEffect(() => {
+        if (!highlightedMessageId) return;
+
+        const timer = setTimeout(() => useChatPanelStore.getState().clearHighlight(), 2000);
         return () => clearTimeout(timer);
-    }, [pendingJumpMessageId, data]);
+    }, [highlightedMessageId]);
 
     const prevLengthRef = React.useRef(data.length);
     const headIdRef = React.useRef<string | null>(
