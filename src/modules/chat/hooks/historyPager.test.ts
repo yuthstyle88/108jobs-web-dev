@@ -195,6 +195,44 @@ describe("createHistoryPager", () => {
     expect(fetchPage).toHaveBeenLastCalledWith(null);
   });
 
+  it("Residual 2: a stale run resolving after a newer run has started must not report isFetching: false while that newer run is still in flight", async () => {
+    // Sequence under test: run1 starts and is left pending, reset() fires
+    // mid-flight (bumps the generation -- this is reachable in production,
+    // not just a defensive scenario: useChatHistory calls reset() on every
+    // room change), run2 starts fresh and is ALSO left pending, then run1's
+    // stale result lands. Without guarding the `isFetching = false` write in
+    // `finally` the same way the cursor/hasMoreFlag write in `try` is
+    // guarded, run1's late resolution reports the pager idle while run2 --
+    // the real, current fetch -- is still genuinely outstanding.
+    const d1 = deferred<{prevCursor: string | null}>();
+    const d2 = deferred<{prevCursor: string | null}>();
+    const fetchPage = vi.fn().mockReturnValueOnce(d1.promise).mockReturnValueOnce(d2.promise);
+    const states: HistoryPagerState[] = [];
+    const pager = createHistoryPager({fetchPage, onState: (s) => states.push({...s})});
+
+    const p1 = pager.fetchOnePage(); // run1: fetchPage call #1, still pending
+    pager.reset(); // simulates a room switch while run1 is still in flight
+    const p2 = pager.fetchOnePage(); // run2: fetchPage call #2, also still pending
+
+    states.length = 0; // only care about what's emitted from here on
+    d1.resolve({prevCursor: null}); // the stale run1 resolves now
+    await p1;
+
+    // The bug: an unguarded write here reports isFetching: false even
+    // though run2 is still genuinely fetching.
+    expect(states[states.length - 1]?.isFetching).toBe(true);
+
+    d2.resolve({prevCursor: "cursor-1"}); // run2, the real fetch, finishes
+    await p2;
+
+    expect(states[states.length - 1]).toEqual({
+      pageCursor: "cursor-1",
+      hasMore: true,
+      isFetching: false,
+    });
+    expect(fetchPage).toHaveBeenCalledTimes(2);
+  });
+
   it("reports isFetching around each page, and the resulting cursor/hasMore", async () => {
     const states: HistoryPagerState[] = [];
     const fetchPage = vi.fn(async () => ({prevCursor: "cursor-1"}));

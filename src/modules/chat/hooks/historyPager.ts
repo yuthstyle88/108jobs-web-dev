@@ -119,10 +119,17 @@ export function createHistoryPager(deps: HistoryPagerDeps): HistoryPager {
           hasMoreFlag = true;
         }
       } finally {
-        isFetching = false;
-        // Only clear the slot if no newer run has taken it over in the
-        // meantime (see the comment on `inFlightGeneration` above).
+        // Both writes guarded by the same generation check, for the same
+        // reason the cursor/hasMoreFlag writes above are: a newer run may
+        // already be genuinely in flight (its own `isFetching = true` at the
+        // top of this same function already ran). This run finishing late
+        // must not report the pager as idle out from under that newer run --
+        // reachable in production, not just defensive: `useChatHistory`
+        // calls `reset()` on every room change (`[roomId]` effect), so a
+        // slow page from the *previous* room can resolve after the new
+        // room's own fetch is already under way.
         if (inFlightGeneration === myGeneration) {
+          isFetching = false;
           inFlight = null;
         }
         emitState();

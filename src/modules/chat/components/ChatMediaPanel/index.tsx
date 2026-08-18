@@ -96,9 +96,14 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
             // Media lives inside JobFlowSidebar's slide-over, so without this
             // the drawer stayed open over the conversation and tapping
             // "Go to message" looked like it had done nothing (Finding 3,
-            // FINAL-findings.md). Same breakpoint check ChatSearchPanel
-            // already uses, so the two behave identically.
-            if (typeof window !== "undefined" && window.innerWidth < 640) setOpen(false);
+            // FINAL-findings.md). 768, not 640: this has to match the
+            // breakpoint JobFlowSidebar itself switches on (`md:hidden` on
+            // the mobile <aside>, `hidden md:flex` on the desktop one), not
+            // ChatSearchPanel's -- Search's overlay is `sm:`-scoped, so its
+            // own 640 check is correct for Search but wrong here. Do not
+            // "helpfully" realign this to 640; between 640-767px the drawer
+            // is still the visible one.
+            if (typeof window !== "undefined" && window.innerWidth < 768) setOpen(false);
         },
         [requestJump, setOpen],
     );
