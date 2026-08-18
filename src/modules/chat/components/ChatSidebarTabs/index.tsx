@@ -27,12 +27,22 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
     const sidebarTab = useChatPanelStore((s) => s.sidebarTab);
     const setSidebarTab = useChatPanelStore((s) => s.setSidebarTab);
 
+    // Roving-tabindex focus targets: both tab buttons are always mounted (only
+    // their tabIndex/aria-selected differ), so the ref for the tab an arrow
+    // key is about to select already exists by the time the handler runs.
+    const tabRefs = React.useRef<Map<SidebarTab, HTMLButtonElement>>(new Map());
+
     const onKeyDown = (e: React.KeyboardEvent) => {
         if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
         e.preventDefault();
         const index = TABS.findIndex((tab) => tab.id === sidebarTab);
         const next = e.key === "ArrowRight" ? index + 1 : index - 1;
-        setSidebarTab(TABS[(next + TABS.length) % TABS.length].id);
+        const nextId = TABS[(next + TABS.length) % TABS.length].id;
+        setSidebarTab(nextId);
+        // Moves the actual focus ring, not just aria-selected/tabIndex --
+        // without this the ring stays stranded on the old (now tabIndex=-1)
+        // button, which a keyboard user can no longer Tab back to.
+        tabRefs.current.get(nextId)?.focus();
     };
 
     return (
@@ -48,6 +58,10 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
                     return (
                         <button
                             key={tab.id}
+                            ref={(el) => {
+                                if (el) tabRefs.current.set(tab.id, el);
+                                else tabRefs.current.delete(tab.id);
+                            }}
                             id={`sidebar-tab-${tab.id}`}
                             role="tab"
                             type="button"
@@ -71,6 +85,7 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
                 id={`sidebar-panel-${sidebarTab}`}
                 role="tabpanel"
                 aria-labelledby={`sidebar-tab-${sidebarTab}`}
+                tabIndex={0}
                 className="flex min-h-0 flex-1 flex-col"
             >
                 {sidebarTab === "orders" ? (

@@ -48,9 +48,15 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
                         {t("profileChat.mediaPanel.thumbnailFailed")}
                     </span>
                 ) : (
+                    // Same reasoning as the video placeholder above, applied
+                    // to the one element in this tile that does fetch bytes:
+                    // `loading="lazy"` defers the authenticated media-proxy
+                    // request until the tile is actually near the viewport,
+                    // instead of every image in the grid firing at once.
                     <img
                         src={item.attachment.url}
                         alt=""
+                        loading="lazy"
                         onError={() => setFailed(true)}
                         className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                     />

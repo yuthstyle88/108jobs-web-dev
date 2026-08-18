@@ -40,6 +40,11 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
 
     const [viewing, setViewing] = React.useState<AttachmentItem | null>(null);
 
+    // Roving-tabindex focus targets -- see ChatSidebarTabs for why a ref map
+    // keyed by tab id is what lets the arrow-key handler move real DOM focus
+    // synchronously, instead of merely flipping which button is selected.
+    const tabRefs = React.useRef<Map<MediaTab, HTMLButtonElement>>(new Map());
+
     // Opening Media pulls the rest of the room's history, so the panel shows
     // everything rather than only what the user happened to scroll past.
     // Search shares this runner, so if it already ran this is instant.
@@ -71,7 +76,9 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
         e.preventDefault();
         const index = TABS.findIndex((tab) => tab.id === mediaTab);
         const next = e.key === "ArrowRight" ? index + 1 : index - 1;
-        setMediaTab(TABS[(next + TABS.length) % TABS.length].id);
+        const nextId = TABS[(next + TABS.length) % TABS.length].id;
+        setMediaTab(nextId);
+        tabRefs.current.get(nextId)?.focus();
     };
 
     const isFirstLoad = backfill.phase === "running" && items.length === 0;
@@ -89,6 +96,10 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                     return (
                         <button
                             key={tab.id}
+                            ref={(el) => {
+                                if (el) tabRefs.current.set(tab.id, el);
+                                else tabRefs.current.delete(tab.id);
+                            }}
                             id={`media-tab-${tab.id}`}
                             role="tab"
                             type="button"

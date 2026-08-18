@@ -22,8 +22,25 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump}) => {
     const {t} = useTranslation();
     const closeRef = React.useRef<HTMLButtonElement>(null);
 
+    // Mount-only: focuses the close button once, and restores focus to
+    // whatever triggered the lightbox when it unmounts. Deliberately `[]` --
+    // ChatMediaPanel re-renders while its own backfill delivers pages, which
+    // passes a brand-new `onClose` closure each time. If this effect
+    // depended on `onClose` it would re-run on every such render and yank
+    // focus back to Close mid-interaction, fighting whatever the keyboard
+    // user is doing with the video/jump controls at that moment.
     React.useEffect(() => {
+        const previouslyFocused = document.activeElement as HTMLElement | null;
         closeRef.current?.focus();
+        return () => {
+            previouslyFocused?.focus();
+        };
+    }, []);
+
+    // Separate effect for the Escape listener, which does need to stay
+    // current with `onClose` -- re-running this one only re-attaches a
+    // window listener, it never touches focus.
+    React.useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
         };
