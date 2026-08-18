@@ -51,6 +51,7 @@ import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
+import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
 import {emitChatNewMessage} from "@/modules/chat/events";
 import {useChatRoom} from '@/modules/chat/hooks/useChatRoom';
 import {useChatHistory} from '@/modules/chat/hooks/useChatHistory';
@@ -385,12 +386,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             if (!message && !selectedFile) return;
 
             const contentToSend = selectedFile
-                ? JSON.stringify({
-                    type: "file",
+                ? buildAttachmentEnvelope({
                     url: selectedFile.fileUrl,
                     name: selectedFile.fileName,
                     mime: selectedFile.fileType,
                     caption: message || undefined,
+                    assetId: selectedFile.assetId,
                 })
                 : message;
 
@@ -414,7 +415,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 message: contentToSend,
                 senderId: Number(localUser.id),
                 secure: Boolean((localUser as any)?.isMessageSecure),
-                id: messageId
+                id: messageId,
+                assetId: selectedFile?.assetId,
             });
 
             setSelectedFile(null);
