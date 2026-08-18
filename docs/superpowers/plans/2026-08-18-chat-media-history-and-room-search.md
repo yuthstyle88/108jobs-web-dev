@@ -2657,12 +2657,9 @@ After line 39 of `src/translations/vi.ts`:
 
 ```bash
 pnpm exec tsc --noEmit 2>&1 | head -20
-node --input-type=module -e "
-const {en} = await import('./src/translations/en.ts').catch(() => ({}));
-" 2>/dev/null || pnpm exec tsc --noEmit --noResolve src/translations/en.ts 2>&1 | head -5
 ```
 
-The authoritative check is `pnpm exec tsc --noEmit` reporting no errors, plus a manual read that all three files have the same key names.
+Expected: no errors. Then read all three inserted blocks side by side and confirm they declare the same key names — `tsc` will not catch a key that exists in `en` but is missing from `vi`, because each translation file is an independent object literal.
 
 - [ ] **Step 5: Commit**
 
@@ -3189,12 +3186,14 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
     const isVideo = item.attachment.kind === "video";
 
     return (
-        <li className="relative">
+        // `group` belongs on the li, not the tile button: the jump control is
+        // the button's sibling, so a group on the button would never reach it.
+        <li className="group relative">
             <button
                 type="button"
                 onClick={onOpen}
                 aria-label={item.attachment.name}
-                className="group block aspect-square w-full overflow-hidden rounded-md bg-gray-100 ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="block aspect-square w-full overflow-hidden rounded-md bg-gray-100 ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
                 {failed ? (
                     <span className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] text-gray-500">
@@ -3274,7 +3273,8 @@ import {useTranslation} from "react-i18next";
 import {FileText} from "lucide-react";
 
 import type {AttachmentItem} from "@/modules/chat/attachments";
-import {toLocalTime} from "@/utils/date";
+import {formatDateToLong} from "@/utils";
+import {getLocale} from "@/utils/date";
 
 import {MediaEmpty} from "./MediaStates";
 
@@ -3319,7 +3319,10 @@ export const MediaFileList: React.FC<Props> = ({items, partnerName, onJump}) => 
                         <p className="mt-0.5 text-xs text-gray-500">
                             <span>{typeLabel(item.attachment.name, item.attachment.mime)}</span>
                             <span aria-hidden> · </span>
-                            <span>{toLocalTime(item.createdAt as never, i18n?.language || "th-TH")}</span>
+                            {/* A date, not a time: these are files from across
+                                the whole conversation, so "14:32" alone says
+                                nothing about which day it landed. */}
+                            <span>{formatDateToLong(item.createdAt, getLocale(i18n?.language))}</span>
                             <span aria-hidden> · </span>
                             <span>
                                 {t("profileChat.mediaPanel.sentBy", {
@@ -3684,7 +3687,8 @@ import React from "react";
 import {useTranslation} from "react-i18next";
 
 import type {SearchHit} from "@/modules/chat/search/searchMessages";
-import {toLocalTime} from "@/utils/date";
+import {formatDateToLong} from "@/utils";
+import {getLocale, toLocalTime} from "@/utils/date";
 
 type Props = {hit: SearchHit; partnerName: string; onSelect: (messageId: string) => void};
 
@@ -3706,7 +3710,10 @@ export const SearchResultItem: React.FC<Props> = ({hit, partnerName, onSelect}) 
                     <span className="font-medium text-gray-700">
                         {hit.isOwner ? t("profileChat.mediaPanel.you") : partnerName}
                     </span>
-                    <span>{toLocalTime(hit.createdAt as never, i18n?.language || "th-TH")}</span>
+                    {/* Date and time both: a result may be from any point in
+                        the conversation, so the time alone does not place it. */}
+                    <span>{formatDateToLong(hit.createdAt, getLocale(i18n?.language))}</span>
+                    <span>{toLocalTime(hit.createdAt, i18n?.language || "th-TH")}</span>
                 </p>
                 <p className="mt-0.5 break-words text-sm text-gray-800">
                     {before}
