@@ -37,6 +37,8 @@ import type {
 import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
 import ChatRoomMessages from "../ChatRoomMessages";
+import ChatSearchPanel from "@/modules/chat/components/ChatSearchPanel";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 import {useRoomsStore} from '@/modules/chat/store/roomsStore';
 import FreelanceChatFlow, {FlowActions, StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
 import {createFlowActions} from "@/modules/chat/utils/flowActions";
@@ -120,6 +122,9 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const [currentRoom, setCurrentRoom] = useState<ChatRoomView>(roomData as ChatRoomView);
     const {getByRoom} = useChatStore();
     const messages = getByRoom(roomId);
+    const isSearchOpen = useChatPanelStore((s) => s.isSearchOpen);
+    const openSearch = useChatPanelStore((s) => s.openSearch);
+    const closeSearch = useChatPanelStore((s) => s.closeSearch);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -188,6 +193,11 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         upsertHistory,
     });
     useHistoryBackfill({roomId, loadOlderUntilDone});
+
+    // Close search when the room changes so it does not carry a stale query
+    // across conversations.
+    useEffect(() => () => closeSearch(), [roomId, closeSearch]);
+
     const {
         actions: {sendMessage, sendTyping, sendRoomUpdate, sendReadReceipt},
         state: {isPartnerTyping},
@@ -550,16 +560,23 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         onToggleFlow={() => setIsFlowOpen(!isFlowOpen)}
                         isFlowOpen={isFlowOpen}
                         partnerId={partnerId}
+                        onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
+                        isSearchOpen={isSearchOpen}
                     />
-                    <ChatRoomMessages
-                        messages={messages}
-                        partnerAvatar={partnerAvatar || ProfileImage.avatar}
-                        customScrollParent={scrollParentEl}
-                        onTopReached={handleOnTopReached}
-                        hasMore={hasMore}
-                        isFetching={isFetching}
-                        partnerId={partnerId}
-                    />
+                    <div className="relative flex min-h-0 flex-1 flex-col">
+                        {isSearchOpen && (
+                            <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
+                        )}
+                        <ChatRoomMessages
+                            messages={messages}
+                            partnerAvatar={partnerAvatar || ProfileImage.avatar}
+                            customScrollParent={scrollParentEl}
+                            onTopReached={handleOnTopReached}
+                            hasMore={hasMore}
+                            isFetching={isFetching}
+                            partnerId={partnerId}
+                        />
+                    </div>
                     <div ref={inputContainerRef} className="border-t px-3 py-2 sm:px-4 sm:py-3 bg-white">
                         <div className="flex items-center gap-2">
                             <div className="flex-1">
