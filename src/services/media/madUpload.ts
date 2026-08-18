@@ -21,9 +21,27 @@ export type MediaKind = "image" | "file";
  *  response so call sites do not care which one ran. */
 export type UploadedAsset = {
   url: string;
+  /**
+   * The handle the storage backend knows this by — the asset id on MAD, a
+   * real filename on the legacy path. It is what deletion is keyed on, which
+   * is why it is not the display name.
+   */
   filename: string;
   size: number;
   mimeType?: string;
+  /**
+   * MAD's asset id, named for what it is. Callers need it explicitly: it goes
+   * in the chat envelope so the server can persist `chat_message.asset_id`
+   * without reading encrypted content, and `media_proxy` resolves the owning
+   * room from that column to check membership.
+   */
+  assetId?: string;
+  /**
+   * The name the user's file actually had. MAD has no filename concept — the
+   * upload contract accepts only kind/length/content-type/visibility — so
+   * nothing recovers this if the caller drops it here.
+   */
+  originalFilename?: string;
 };
 
 const trimSlash = (value: string) => value.replace(/\/+$/, "");
@@ -141,6 +159,8 @@ export async function uploadToMad(
     filename: asset.assetId,
     size: file.size,
     mimeType: asset.contentType ?? contentType,
+    assetId: asset.assetId,
+    originalFilename: file.name,
   };
 }
 
