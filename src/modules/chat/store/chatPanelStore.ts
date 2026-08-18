@@ -26,6 +26,18 @@ interface ChatPanelState {
   backfillByRoom: Record<string, BackfillState>;
   /** A jump the message list has not acted on yet. */
   pendingJumpMessageId: string | null;
+  /**
+   * Bumped on every `requestJump` call, including a repeat request to the
+   * *same* message id.
+   *
+   * `pendingJumpMessageId` alone can't carry a repeat: setting it to the
+   * value it already holds is, from a `useSyncExternalStore`-based
+   * selector's point of view, no change at all, so a selector scoped to
+   * just that field never re-renders on the second click of the same
+   * search result. Select `jumpToken` alongside it (or pair them in one
+   * selector) to be notified of every request, including repeats.
+   */
+  jumpToken: number;
   /** The message currently wearing the "you jumped here" ring. */
   highlightedMessageId: string | null;
 }
@@ -59,6 +71,7 @@ export const useChatPanelStore = create<ChatPanelState & ChatPanelActions>((set,
   isSearchOpen: false,
   backfillByRoom: {},
   pendingJumpMessageId: null,
+  jumpToken: 0,
   highlightedMessageId: null,
 
   setSidebarTab: (sidebarTab) => set({sidebarTab}),
@@ -74,7 +87,8 @@ export const useChatPanelStore = create<ChatPanelState & ChatPanelActions>((set,
       },
     })),
 
-  requestJump: (messageId) => set({pendingJumpMessageId: messageId}),
+  requestJump: (messageId) =>
+    set((s) => ({pendingJumpMessageId: messageId, jumpToken: s.jumpToken + 1})),
 
   consumeJump: () => {
     const pending = get().pendingJumpMessageId;

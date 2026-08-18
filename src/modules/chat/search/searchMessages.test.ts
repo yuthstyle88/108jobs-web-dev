@@ -51,9 +51,35 @@ describe("searchMessages", () => {
     expect(searchMessages([message({id: "a", content: attachment})], "media-proxy")).toEqual([]);
   });
 
+  it("does not match the url even when it stands in for a missing name", () => {
+    // A url ending in "/" has no path segment for parseAttachment's
+    // nameFromUrl fallback to extract, so it falls back to the url itself.
+    // That is still a url, not something a human typed, so it must not
+    // reintroduce the exact match the previous test guards against.
+    const attachment = JSON.stringify({
+      type: "file",
+      url: "https://x.test/api/v4/media-proxy/",
+      mime: "application/pdf",
+    });
+    expect(searchMessages([message({id: "a", content: attachment})], "media-proxy")).toEqual([]);
+  });
+
   it("ignores workflow messages, which are machine json", () => {
     const quote = JSON.stringify({type: "proposed-quote", quote: {projectName: "Website build"}});
     expect(searchMessages([message({id: "a", content: quote})], "website")).toEqual([]);
+    expect(searchMessages([message({id: "a", content: quote})], "proposed")).toEqual([]);
+  });
+
+  it("treats text that merely starts with '{' as searchable, not structured", () => {
+    // parseStructured -- not a bare startsWith("{") guess -- decides what
+    // counts as structured JSON. Text that starts with "{" but doesn't
+    // parse (a pasted snippet, say) is still something a human wrote.
+    const hits = searchMessages([message({id: "a", content: "{not json at all"})], "json");
+    expect(hits).toHaveLength(1);
+  });
+
+  it("still excludes a real workflow envelope via parseStructured", () => {
+    const quote = JSON.stringify({type: "proposed-quote", quote: {projectName: "Website build"}});
     expect(searchMessages([message({id: "a", content: quote})], "proposed")).toEqual([]);
   });
 

@@ -14,6 +14,7 @@ const reset = () =>
     isSearchOpen: false,
     backfillByRoom: {},
     pendingJumpMessageId: null,
+    jumpToken: 0,
     highlightedMessageId: null,
   });
 
@@ -59,6 +60,25 @@ describe("chatPanelStore", () => {
     expect(useChatPanelStore.getState().consumeJump()).toBe("m-1");
     expect(useChatPanelStore.getState().pendingJumpMessageId).toBeNull();
     expect(useChatPanelStore.getState().consumeJump()).toBeNull();
+  });
+
+  it("notifies again on a repeat jump request to the same message", () => {
+    // The real story: someone clicks a search result, scrolls away, then
+    // clicks the *same* result again. pendingJumpMessageId alone repeats
+    // "m-1" -> "m-1", which a useSyncExternalStore-based selector scoped to
+    // just that field sees as no change at all -- and never re-renders.
+    // jumpToken is the piece that must move on every request, including
+    // this one, so a selector paired with it always observes the repeat.
+    useChatPanelStore.getState().requestJump("m-1");
+    const {pendingJumpMessageId: idAfterFirst, jumpToken: tokenAfterFirst} =
+      useChatPanelStore.getState();
+
+    useChatPanelStore.getState().requestJump("m-1");
+    const {pendingJumpMessageId: idAfterSecond, jumpToken: tokenAfterSecond} =
+      useChatPanelStore.getState();
+
+    expect(idAfterSecond).toBe(idAfterFirst);
+    expect(tokenAfterSecond).not.toBe(tokenAfterFirst);
   });
 
   it("highlights and clears", () => {

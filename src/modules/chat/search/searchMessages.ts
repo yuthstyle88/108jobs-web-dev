@@ -2,6 +2,7 @@ import type {ChatMessage} from "108jobs-client";
 
 import {parseAttachment} from "@/modules/chat/attachments";
 import {compareNewestFirst} from "@/modules/chat/utils/ordering";
+import {parseStructured} from "@/modules/chat/utils/structured";
 
 export type SearchHit = {
   messageId: string;
@@ -36,10 +37,22 @@ export function searchableText(message: ChatMessage): string | null {
 
   const attachment = parseAttachment(content);
   if (attachment) {
-    return [attachment.name, attachment.caption].filter(Boolean).join(" ");
+    // `parseAttachment` falls back to the url itself as an attachment's
+    // "name" when the envelope has neither `name` nor a path segment to
+    // derive one from (a url ending in `/`). That fallback is still a url,
+    // not something a human typed -- drop it so it can't reintroduce the
+    // exact url match this function otherwise deliberately excludes.
+    const name = attachment.name === attachment.url ? undefined : attachment.name;
+    return [name, attachment.caption].filter(Boolean).join(" ");
   }
 
-  if (content.trim().startsWith("{")) return null;
+  // `parseStructured` -- not a bare `startsWith("{")` guess -- is the
+  // codebase's one definition of "this content is structured JSON, not text
+  // a person wrote." A message that merely starts with `{` (a pasted code
+  // snippet, say) but fails to parse is still plain text and stays
+  // searchable; `parseAttachment` above already shares this same guard for
+  // envelopes that do parse.
+  if (parseStructured(content) !== null) return null;
   return content;
 }
 
