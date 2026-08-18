@@ -40,6 +40,19 @@ interface ChatPanelState {
   jumpToken: number;
   /** The message currently wearing the "you jumped here" ring. */
   highlightedMessageId: string | null;
+  /**
+   * Bumped on every `setHighlight` call, including a repeat call for the
+   * message that is *already* highlighted -- the same problem `jumpToken`
+   * solves for `pendingJumpMessageId`, one level downstream.
+   *
+   * Clicking the same search result again while its ring is still showing
+   * calls `setHighlight` with the id it already holds. `highlightedMessageId`
+   * alone can't carry that: from a selector's point of view it is no change
+   * at all, so `ChatRoomMessages`'s timer effect (keyed on
+   * `highlightedMessageId`) never re-runs, and the ring expires on the
+   * first click's 2s schedule instead of getting a fresh one.
+   */
+  highlightToken: number;
 }
 
 interface ChatPanelActions {
@@ -73,6 +86,7 @@ export const useChatPanelStore = create<ChatPanelState & ChatPanelActions>((set,
   pendingJumpMessageId: null,
   jumpToken: 0,
   highlightedMessageId: null,
+  highlightToken: 0,
 
   setSidebarTab: (sidebarTab) => set({sidebarTab}),
   setMediaTab: (mediaTab) => set({mediaTab}),
@@ -96,7 +110,8 @@ export const useChatPanelStore = create<ChatPanelState & ChatPanelActions>((set,
     return pending;
   },
 
-  setHighlight: (messageId) => set({highlightedMessageId: messageId}),
+  setHighlight: (messageId) =>
+    set((s) => ({highlightedMessageId: messageId, highlightToken: s.highlightToken + 1})),
   clearHighlight: () => set({highlightedMessageId: null}),
 }));
 

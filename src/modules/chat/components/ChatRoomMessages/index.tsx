@@ -47,6 +47,7 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     const pendingJumpMessageId = useChatPanelStore((s) => s.pendingJumpMessageId);
     const jumpToken = useChatPanelStore((s) => s.jumpToken);
     const highlightedMessageId = useChatPanelStore((s) => s.highlightedMessageId);
+    const highlightToken = useChatPanelStore((s) => s.highlightToken);
 
     // A jump can arrive before the message it names is in `data` -- the panel
     // that asked may still be backfilling the page it lives on. Leaving the
@@ -82,12 +83,20 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     // effect above so that consuming the jump (which changes that effect's
     // own deps) can't cut this timer short -- this one only re-runs when the
     // highlighted message itself changes.
+    //
+    // `highlightToken` is in the deps alongside `highlightedMessageId` for
+    // the same reason `jumpToken` sits beside `pendingJumpMessageId` above:
+    // a repeat click on the search result that is *already* highlighted
+    // calls `setHighlight` with the id it already holds, which
+    // `highlightedMessageId` alone can't carry as a change -- so without the
+    // token this effect would not re-run, and the ring would expire on the
+    // first click's schedule instead of getting a fresh 2s.
     React.useEffect(() => {
         if (!highlightedMessageId) return;
 
         const timer = setTimeout(() => useChatPanelStore.getState().clearHighlight(), 2000);
         return () => clearTimeout(timer);
-    }, [highlightedMessageId]);
+    }, [highlightedMessageId, highlightToken]);
 
     const prevLengthRef = React.useRef(data.length);
     const headIdRef = React.useRef<string | null>(
@@ -151,7 +160,17 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
         const isPrepend = prevHeadId !== newHeadId;
         const isAppend = prevTailId !== newTailId;
 
-        if (isPrepend) {
+        // Gated on the user already being at (or near) the top of the loaded
+        // window -- i.e. exactly the case this anchor exists for: they
+        // scrolled up and asked for more, so snapping back to just past the
+        // new page keeps their place. Ungated, this fired on *every* prepend,
+        // including the ones the backfill now drives unprompted from the
+        // moment Media opens or a query is typed (Finding 1,
+        // FINAL-findings.md) -- dragging a user reading further down back up
+        // to the head of the loaded window on every single page, and
+        // overwriting the jump's smooth `scrollToIndex({align:'center'})`
+        // moments after it landed.
+        if (isPrepend && rangeRef.current.startIndex <= 2) {
             setTimeout(() => {
                 virtuosoRef.current?.scrollToIndex({
                     index: added,

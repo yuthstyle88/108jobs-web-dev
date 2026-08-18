@@ -16,6 +16,7 @@ const reset = () =>
     pendingJumpMessageId: null,
     jumpToken: 0,
     highlightedMessageId: null,
+    highlightToken: 0,
   });
 
 describe("chatPanelStore", () => {
@@ -86,6 +87,24 @@ describe("chatPanelStore", () => {
     expect(useChatPanelStore.getState().highlightedMessageId).toBe("m-1");
     useChatPanelStore.getState().clearHighlight();
     expect(useChatPanelStore.getState().highlightedMessageId).toBeNull();
+  });
+
+  it("notifies again on a repeat highlight of the same message (Finding 6)", () => {
+    // The real story: a search result is still ringed from the first click,
+    // and the user clicks it again. `highlightedMessageId` alone repeats
+    // "m-1" -> "m-1", which the ring's timer effect (keyed on that field)
+    // would see as no change and let the original 2s timer run out on the
+    // first click's schedule. `highlightToken` is the piece that must move
+    // on every call, including this one, so the effect always re-runs and
+    // restarts the ring's countdown.
+    useChatPanelStore.getState().setHighlight("m-1");
+    const tokenAfterFirst = useChatPanelStore.getState().highlightToken;
+
+    useChatPanelStore.getState().setHighlight("m-1");
+    const {highlightedMessageId, highlightToken: tokenAfterSecond} = useChatPanelStore.getState();
+
+    expect(highlightedMessageId).toBe("m-1");
+    expect(tokenAfterSecond).not.toBe(tokenAfterFirst);
   });
 
   it("routes start and cancel to the room's registered runner", () => {
