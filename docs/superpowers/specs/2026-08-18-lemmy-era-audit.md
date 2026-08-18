@@ -33,7 +33,7 @@ implemented. What survives:
 | Remnant | Status |
 |---|---|
 | `tag.ap_id` | **Removed** (PR #237) — was the last `ap_id` column |
-| `person.private_key` | Column exists; `#[serde(skip)]`; no Rust reads the field |
+| `person.private_key` | **Removed** (#240) — no query, no trigger, no view |
 | `person.instance_id` | Real FK to `instance` |
 | `category.instance_id` | Column exists with **no FK constraint** — dangling |
 | `person.last_refreshed_at`, `category.last_refreshed_at` | `#[serde(skip)]`; refresh-from-remote timestamps with no remote |
@@ -103,11 +103,19 @@ and are blocked on the same Flutter change.
 | Table | Rows | Reachable? |
 |---|---|---|
 | `tagline` | 0 | No route in `api_routes.rs`; 11 Rust files reference it |
-| `admin_purge_post` | 0 | No route; 2 Rust files |
+| `admin_purge_post` | 0 | **Reachable — see correction below** |
 | `instance` | 229 (test detritus) | No route; 91 Rust files |
 
-All three are empty of real data. `tagline` is Lemmy's rotating homepage quote;
-`admin_purge_post` its purge audit trail.
+`tagline` is Lemmy's rotating homepage quote and is genuinely dead — removed in
+api-108jobs #240.
+
+> **Correction (2026-08-18).** This section originally listed `admin_purge_post`
+> as unreachable. It is not. `POST /admin/site/purge/post` routes to
+> `purge_post`, which writes an audit row (`api_routes.rs:459`); sibling routes
+> purge persons and proposals. The error was in the method: I grepped
+> `api_routes.rs` for the **table name**, which never appears there because
+> routes name the *handler*. Row count is not evidence of deadness either — an
+> audit table is empty until someone purges something. `admin_purge_post` stays.
 
 ## 6. `ModlogActionType` — 16 variants, no modlog
 
@@ -140,8 +148,10 @@ worth a closer look individually.
 ## Suggested order, if this is pursued
 
 1. **Client-type deletions** (§7) — frontend-only, no wire change, no risk.
-2. **`tagline` / `admin_purge_post`** — empty, unreachable, unreferenced by any
-   route.
+2. **`tagline`** — empty, unreachable, optional-and-always-null on the wire.
+   Done in api-108jobs #240, together with `ModlogActionType` and
+   `person.private_key`. (`admin_purge_post` was in this tier and has been
+   removed from it — it is live.)
 3. **`ModlogActionType`** — unreachable enum; check nothing serializes it first.
 4. **One coordinated Flutter change** making the required-but-meaningless fields
    optional: `reportCount`/`unresolvedReportCount` on Category, Post, Proposal;
@@ -152,6 +162,35 @@ worth a closer look individually.
 6. **Voting** — only after deciding what `Hot` and `Scaled` mean here.
 7. **`instance`** — largest and least urgent; 91 files, and the payoff is
    deleting a table that stores test garbage.
+
+## Two ways this audit was wrong, and the method behind both
+
+Both errors came from asking a question that was easier to grep than the one
+that mattered.
+
+**A struct field can be dead while its column is alive.** Diesel queries
+reference *columns* (`category::random_number`, `key::users_active_month`), not
+struct fields, so "no Rust reads `self.foo`" says nothing about whether the
+column is load-bearing. This has now caught three fields:
+
+- `category.interactions_month` — read by `impls/post.rs` to compute
+  `post.scaled_rank`
+- `category.users_active_*` / `subscribers_local` — backed five `CategorySortType`
+  sort variants
+- `category.random_number` — orders random category selection (the MediaWiki
+  algorithm)
+
+In every case the struct field was removable and the column was not. Check both
+separately, always.
+
+**Route greps must name the handler, not the table.** `api_routes.rs` never
+mentions a table name, so grepping it for one always returns nothing — which
+reads as "unreachable" and is meaningless. `admin_purge_post` was declared dead
+this way and is in fact written by a live purge endpoint. Grep for the handler,
+or work backwards from the route list.
+
+A corollary: **an empty table is not evidence of deadness.** An audit table is
+empty until someone does the thing it audits.
 
 ## What I did not check
 
