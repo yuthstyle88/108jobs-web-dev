@@ -15,7 +15,12 @@ import type {TagsView} from "./TagsView";
 export type PostView = {
     post: Post;
     creator: Person;
-    category: Category;
+    /**
+     * Optional for delivery posts (which rely on post_kind for distinction).
+     * Matches `pub category: Option<Category>` in api-108jobs
+     * crates/db/src/source/post_view/mod.rs.
+     */
+    category?: Category;
     imageDetails?: ImageDetails;
     categoryActions?: CategoryActions;
     personActions?: PersonActions;

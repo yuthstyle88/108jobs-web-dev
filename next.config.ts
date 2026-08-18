@@ -154,6 +154,30 @@ const nextConfig: NextConfig = {
                 return '';
             }
         })();
+        // uploadToMad (madUpload.ts) runs MAD's three-call upload handshake
+        // (open session / PUT bytes / complete) as plain fetch()es straight from
+        // the browser to the media gateway -- same cross-origin exception as
+        // apiOrigin/identityOrigin above, and easy to miss because without it the
+        // failure looks identical to a network-layer problem: the browser blocks
+        // the connection before it ever reaches the wire, so no request appears in
+        // the gateway's logs, and the error surfaced to JS is the generic
+        // `TypeError: Failed to fetch` either way. NEXT_PUBLIC_MEDIA_PUBLIC_URL is
+        // usually the same host as the gateway but is allowed to differ (e.g. a
+        // CDN in front of it), so both are added.
+        const mediaGatewayOrigin = (() => {
+            try {
+                return new URL(process.env.NEXT_PUBLIC_MEDIA_GATEWAY_URL ?? '').origin;
+            } catch {
+                return '';
+            }
+        })();
+        const mediaPublicOrigin = (() => {
+            try {
+                return new URL(process.env.NEXT_PUBLIC_MEDIA_PUBLIC_URL ?? '').origin;
+            } catch {
+                return '';
+            }
+        })();
         // Next.js dev mode (Fast Refresh / React's dev-only debugging) uses
         // eval() to reconstruct call stacks -- blocked without 'unsafe-eval',
         // which breaks every page in dev (confirmed: React itself states it
@@ -167,7 +191,7 @@ const nextConfig: NextConfig = {
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https://cdn.108jobs.com",
             "font-src 'self' data:",
-            `connect-src ${["'self'", apiOrigin, apiWsOrigin, identityOrigin].filter(Boolean).join(' ')}`,
+            `connect-src ${[...new Set(["'self'", apiOrigin, apiWsOrigin, identityOrigin, mediaGatewayOrigin, mediaPublicOrigin].filter(Boolean))].join(' ')}`,
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
