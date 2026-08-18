@@ -4,8 +4,18 @@ import { useCallback, useState } from 'react';
 import { REQUEST_STATE } from '@/services/HttpService';
 import { useHttpPost } from '@/hooks/api/http/useHttpPost';
 import { madGatewayUrl, uploadToMad, type MediaKind, type MediaVisibility } from '@/services/media/madUpload';
+import { uploadKindForMime } from '@/modules/chat/hooks/uploadKind';
 
-export type UploadedFile = { fileUrl: string; fileType: string; fileName: string } | null;
+export type UploadedFile = {
+    fileUrl: string;
+    fileType: string;
+    /** What the user called it — this is what recipients see. */
+    fileName: string;
+    /** What the storage backend knows it by; deletion is keyed on this. */
+    storageKey: string;
+    /** MAD only. Goes in the chat envelope so the asset stays authorizable. */
+    assetId?: string;
+} | null;
 
 // Define interface for opts to satisfy Next.js serialization requirements
 interface UseFileUploadProps {
@@ -27,15 +37,16 @@ interface UseFileUploadProps {
      */
     visibility?: MediaVisibility;
     /**
-     * What kind of asset this upload is. Defaults to `'image'`, matching
-     * every caller before the resume feature. Only meaningful on the MAD
+     * What kind of asset this upload is. Left unset, it is inferred from the
+     * file's own mime — see `uploadKindForMime`. Pass it explicitly only when
+     * the caller knows better than the mime does. Only meaningful on the MAD
      * path — the legacy `/account/files` endpoint has no such concept.
      */
     kind?: MediaKind;
 }
 
 export const useFileUpload = (opts: UseFileUploadProps) => {
-    const { setError, t, visibility = 'private', kind = 'image' } = opts;
+    const { setError, t, visibility = 'private', kind } = opts;
     const [selectedFile, setSelectedFile] = useState<UploadedFile>(null);
     const [isDeletingFile, setIsDeletingFile] = useState<boolean>(false);
 
@@ -67,11 +78,19 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 // which is what makes the cutover safe to land ahead of time.
                 let uploaded: UploadedFile;
                 if (madGatewayUrl()) {
-                    const asset = await uploadToMad(file, visibility, kind);
+                    // `kind` is a per-call override for callers that know
+                    // better (the resume form uploads a document as `file`
+                    // whatever its mime says); everything else infers it from
+                    // the file, because taking the old `'image'` default meant
+                    // declaring every pdf and video an image.
+                    const resolvedKind = kind ?? uploadKindForMime(fileType, file.name);
+                    const asset = await uploadToMad(file, visibility, resolvedKind);
                     uploaded = {
                         fileUrl: asset.url,
                         fileType: asset.mimeType || fileType,
-                        fileName: asset.filename,
+                        fileName: asset.originalFilename || file.name,
+                        storageKey: asset.filename,
+                        assetId: asset.assetId,
                     };
                 } else {
                     // Pass file as UploadImage interface
@@ -83,10 +102,12 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                     }
 
                     const data: any = res.data;
+                    const legacyName = String(data?.filename || file.name || 'file');
                     uploaded = {
                         fileUrl: String(data?.url || ''),
                         fileType,
-                        fileName: String(data?.filename || file.name || 'file'),
+                        fileName: legacyName,
+                        storageKey: legacyName,
                     };
                 }
 
@@ -115,8 +136,10 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 setIsDeletingFile(true);
                 setError(null);
 
-                // Pass fileName directly as a string
-                const res = await deleteFile(selectedFile.fileName);
+                // Deletion is keyed on the storage handle, which is the asset
+                // id on MAD and a real filename on the legacy path -- not the
+                // display name, which is now the user's own.
+                const res = await deleteFile(selectedFile.storageKey);
                 if (res.state !== REQUEST_STATE.SUCCESS) {
                     const msg = t('upload.deleteError') || 'Failed to delete file';
                     setError(msg);
@@ -124,7 +147,7 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 }
 
                 setSelectedFile(null);
-                console.log('File deleted successfully:', { fileName: selectedFile.fileName }); // Debug
+                console.log('File deleted successfully:', { storageKey: selectedFile.storageKey }); // Debug
             } catch (err) {
                 setError(t('upload.deleteError') || 'Failed to delete file');
                 console.error('File delete error:', err); // Debug
