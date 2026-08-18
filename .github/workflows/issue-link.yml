@@ -1,0 +1,109 @@
+name: Issue link
+
+# A bug fix names the issue it closes.
+#
+# The record of "what broke, and has it been fixed?" is the issue; `Fixes #N` is
+# what closes it on merge. Without that line the issue stays open forever and the
+# PR title becomes the only trace of the bug -- and a PR is titled after the fix,
+# so nobody can find it later by the symptom they are looking at.
+#
+# This only fires on pull requests that look like bug fixes: a `fix/` branch, a
+# title starting with fix/bug/hotfix, or the `bug` label. Everything else passes
+# untouched.
+#
+# To ship a fix that genuinely has no issue -- something you broke and fixed
+# inside your own unmerged branch -- add the `no-issue` label, or a
+# `No-issue: <reason>` line in the description. The reason is the point: it leaves
+# the record the issue would have left.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+# One verdict per pull request. Editing a description three times should not
+# leave three runs racing to report on it.
+concurrency:
+  group: issue-link-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  fixes-line:
+    name: A bug fix names its issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const title  = pr.title || '';
+            const body   = pr.body  || '';
+            const branch = pr.head.ref || '';
+            const labels = (pr.labels || []).map(l => l.name.toLowerCase());
+            const repo   = `${context.repo.owner}/${context.repo.repo}`;
+
+            const looksLikeAFix =
+              /^(fix|bugfix|hotfix)[\/:_-]/i.test(branch) ||
+              /^(fix|bug|hotfix)\b/i.test(title) ||
+              labels.includes('bug');
+
+            if (!looksLikeAFix) {
+              core.info('Branch, title and labels all say this is not a bug fix — nothing to check.');
+              return;
+            }
+
+            const declined = /^[ \t]*no-issue:[ \t]*\S+/im.exec(body);
+            if (labels.includes('no-issue') || declined) {
+              core.notice(`Allowed without an issue: ${declined ? declined[0].trim() : 'the no-issue label is set'}`);
+              return;
+            }
+
+            // GitHub only auto-closes from the PR description, so that is what is checked.
+            const refs = [...body.matchAll(
+              /\b(?:fix|fixes|fixed|close|closes|closed|resolve|resolves|resolved)\s+([\w.-]+\/[\w.-]+)?#(\d+)\b/gi
+            )];
+
+            if (refs.length === 0) {
+              core.setFailed(
+                'This looks like a bug fix, but its description has no `Fixes #N` line.\n\n' +
+                'Open the issue first — search the closed ones too, it may already be resolved:\n' +
+                `  gh issue list -R ${repo} --state all --search "<symptom>"\n` +
+                `  gh issue create -R ${repo} -t "<symptom>" -l bug\n\n` +
+                'Then put `Fixes #N` in this description — one line per issue this closes — so\n' +
+                'merging closes the issue and leaves the record.\n\n' +
+                'If this fix genuinely has no issue, add the `no-issue` label or a\n' +
+                '`No-issue: <reason>` line to the description.'
+              );
+              return;
+            }
+
+            // A number is not a record: check that each same-repo reference is a real
+            // issue and not a pull request, so `Fixes #999` cannot pass as a link.
+            const problems = [];
+            const closes = [];
+            for (const [, elsewhere, n] of refs) {
+              if (elsewhere && elsewhere.toLowerCase() !== repo.toLowerCase()) {
+                closes.push(`${elsewhere}#${n}`);
+                continue;
+              }
+              try {
+                const { data: issue } = await github.rest.issues.get({
+                  owner: context.repo.owner, repo: context.repo.repo, issue_number: Number(n),
+                });
+                if (issue.pull_request) problems.push(`#${n} is a pull request, not an issue`);
+                else closes.push(`#${n} (${issue.state}) ${issue.title}`);
+              } catch (err) {
+                problems.push(`#${n} does not exist in ${repo}`);
+              }
+            }
+
+            if (problems.length) {
+              core.setFailed('The description links something that is not an open record of the bug:\n  ' +
+                             problems.join('\n  '));
+              return;
+            }
+            core.info('Closes on merge:\n  ' + closes.join('\n  '));
