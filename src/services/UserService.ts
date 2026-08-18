@@ -5,6 +5,7 @@ import {HttpService} from "./index";
 import {isSuccess} from "./HttpService";
 import {toast} from "sonner";
 import {VALID_LANGUAGES} from "@/constants/language";
+import {getClientCurrentLanguage} from "@/utils/getClientCurrentLanguage";
 
 export const JOBS_ADMIN_ROLE = "jobs:admin";
 
@@ -46,6 +47,7 @@ export class UserService {
     public acceptedTerms: boolean = false;
 
     private constructor() {
+        this.currentLanguage = getClientCurrentLanguage();
         this.#setAuthInfo();
         this.#hydrateReadLastMap();
         this.#scheduleRefresh();
@@ -70,6 +72,10 @@ export class UserService {
     public async login(accessToken: string, refreshToken?: string, showToast = false): Promise<void> {
         if (!isBrowser() || !accessToken) return;
 
+        // The locale in the current URL/cookie is the user's active selection.
+        // It must win over an older profile preference returned by the API.
+        this.currentLanguage = getClientCurrentLanguage(true);
+
         if (showToast) {
             toast("loggedIn");
         }
@@ -93,7 +99,6 @@ export class UserService {
             if (isSuccess(myUser)) {
                 this.myUserInfo = myUser.data;
                 const localUser = myUser.data.localUserView.localUser;
-                this.currentLanguage = localUser.interfaceLanguage || this.currentLanguage || 'th';
                 this.acceptedTerms = Boolean(localUser.acceptedTerms);
             }
         } catch (e) {
@@ -144,8 +149,10 @@ export class UserService {
                 await HttpService.client.logout();
             } catch {}
 
-            // Redirect to language-aware login/home page
-            const lang = (this.currentLanguage && this.currentLanguage === "browser") ? "th" : this.currentLanguage;
+            // Read the active locale at redirect time so a language change made
+            // during this session is preserved on the login page.
+            const lang = getClientCurrentLanguage(true);
+            this.currentLanguage = lang;
             const redirectPath = `/${lang}/login`;
             setTimeout(() => {
                 if (isBrowser()) location.replace(redirectPath);
