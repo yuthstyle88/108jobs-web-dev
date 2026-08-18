@@ -33,14 +33,23 @@ export const MediaError: React.FC<{onRetry: () => void}> = ({onRetry}) => {
 
 /** The progressive-history banner: what is happening, and how to stop it. */
 export const MediaBackfillBanner: React.FC<{
-    phase: "running" | "capped";
+    phase: "running" | "capped" | "cancelled";
     onCancel: () => void;
 }> = ({phase, onCancel}) => {
     const {t} = useTranslation();
 
-    if (phase === "capped") {
+    if (phase === "capped" || phase === "cancelled") {
+        // Same live-region treatment as `running` below: a silent, plain <p>
+        // here would mean a screen-reader user hears "loading older…" and
+        // then nothing when it lands on capped/cancelled instead of running
+        // to completion -- the same gap Task 20's review found and fixed in
+        // the search panel's matching notice.
         return (
-            <p className="px-3 py-2 text-xs text-gray-600 bg-amber-50 border-b border-amber-100">
+            <p
+                className="px-3 py-2 text-xs text-gray-600 bg-amber-50 border-b border-amber-100"
+                role="status"
+                aria-live="polite"
+            >
                 {t("profileChat.mediaPanel.partial")}
             </p>
         );

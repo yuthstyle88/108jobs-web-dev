@@ -10,7 +10,23 @@ type Props = {
     item: AttachmentItem;
     onClose: () => void;
     onJump: (messageId: string) => void;
+    /**
+     * Where to send focus on close if the element that originally opened the
+     * lightbox is no longer in the document (e.g. the user switched the
+     * imageVideo/files tab while the lightbox was open, which unmounts the
+     * tile underneath it). Optional so this component doesn't require a
+     * caller to supply one, but without it the fallback is `document.body`.
+     */
+    fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 };
+
+/** Elements a keyboard user can land on inside the dialog, in DOM order. */
+const FOCUSABLE_SELECTOR =
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])';
+
+function getFocusable(container: HTMLElement): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+}
 
 /**
  * Full-size viewer for one image or video.
@@ -18,31 +34,82 @@ type Props = {
  * Video is `controls` + `preload="metadata"` and never autoplays — opening a
  * viewer is not the same as asking for sound.
  */
-export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump}) => {
+export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackFocusRef}) => {
     const {t} = useTranslation();
     const closeRef = React.useRef<HTMLButtonElement>(null);
+    const dialogRef = React.useRef<HTMLDivElement>(null);
 
-    // Mount-only: focuses the close button once, and restores focus to
-    // whatever triggered the lightbox when it unmounts. Deliberately `[]` --
-    // ChatMediaPanel re-renders while its own backfill delivers pages, which
-    // passes a brand-new `onClose` closure each time. If this effect
-    // depended on `onClose` it would re-run on every such render and yank
-    // focus back to Close mid-interaction, fighting whatever the keyboard
-    // user is doing with the video/jump controls at that moment.
+    // Mount-only in effect, if not literally in deps: focuses the close
+    // button once, and restores focus to whatever triggered the lightbox
+    // when it unmounts. Does *not* depend on `onClose` -- ChatMediaPanel
+    // re-renders while its own backfill delivers pages, which passes a
+    // brand-new `onClose` closure each time, and depending on it here would
+    // re-run this effect on every such render, yanking focus back to Close
+    // mid-interaction and fighting whatever the keyboard user is doing with
+    // the video/jump controls at that moment. `fallbackFocusRef` doesn't have
+    // that problem -- it's a ref object, stable for the component's whole
+    // lifetime -- so including it doesn't reintroduce the churn `onClose`
+    // would have caused; it's here only so the cleanup reads its current
+    // `.current` rather than one captured before ChatMediaPanel attached it.
     React.useEffect(() => {
         const previouslyFocused = document.activeElement as HTMLElement | null;
+        // Captured now, not read fresh in the cleanup below: `fallbackFocusRef`
+        // points at ChatMediaPanel's tabpanel div, which this effect's own
+        // `[fallbackFocusRef]` dep confirms doesn't change identity for as
+        // long as this lightbox instance lives, so there's nothing to gain
+        // from a live read and eslint's `exhaustive-deps` flags one anyway
+        // (a stale ref in a cleanup is generally unsafe, even though it
+        // isn't here).
+        const fallbackTarget = fallbackFocusRef?.current ?? null;
         closeRef.current?.focus();
         return () => {
-            previouslyFocused?.focus();
+            // `previouslyFocused` can be a detached node by the time this
+            // runs: switching the imageVideo/files tab while the lightbox is
+            // open unmounts MediaGrid/MediaFileList underneath it (the
+            // lightbox itself isn't keyed to either), so the tile that
+            // opened it may already be gone. Calling `.focus()` on a
+            // detached element is a silent no-op, which would otherwise drop
+            // focus to `<body>` with no indication anything happened.
+            if (previouslyFocused && document.contains(previouslyFocused)) {
+                previouslyFocused.focus();
+            } else {
+                fallbackTarget?.focus();
+            }
         };
-    }, []);
+    }, [fallbackFocusRef]);
 
-    // Separate effect for the Escape listener, which does need to stay
+    // Separate effect for the Escape/Tab listeners, which do need to stay
     // current with `onClose` -- re-running this one only re-attaches a
-    // window listener, it never touches focus.
+    // window listener, it never touches focus on setup (only in response to
+    // a keypress), so it can't fight the mount-only effect above.
     React.useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") {
+                onClose();
+                return;
+            }
+            if (e.key !== "Tab") return;
+
+            // Focus trap: `aria-modal="true"` claims this dialog is the only
+            // thing the page exposes to assistive tech, but nothing enforces
+            // that on its own -- without this, Tab from the last focusable
+            // element (or Shift+Tab from the first) walks focus straight
+            // into the tablist behind it.
+            const container = dialogRef.current;
+            if (!container) return;
+            const focusable = getFocusable(container);
+            if (focusable.length === 0) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const active = document.activeElement;
+            const outside = !active || !container.contains(active);
+            const shouldWrap = e.shiftKey ? outside || active === first : outside || active === last;
+
+            if (shouldWrap) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+            }
         };
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
@@ -50,6 +117,7 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump}) => {
 
     return (
         <div
+            ref={dialogRef}
             className="fixed inset-0 z-50 flex flex-col bg-black/90"
             role="dialog"
             aria-modal="true"

@@ -45,11 +45,25 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
     // synchronously, instead of merely flipping which button is selected.
     const tabRefs = React.useRef<Map<MediaTab, HTMLButtonElement>>(new Map());
 
+    // Where the lightbox restores focus to if the tile that opened it is gone
+    // by the time it closes (e.g. the user switched imageVideo/files while it
+    // was open, which unmounts MediaGrid/MediaFileList underneath it). This
+    // div survives that swap -- only its children change -- so it's always a
+    // valid landing spot.
+    const tabpanelRef = React.useRef<HTMLDivElement>(null);
+
     // Opening Media pulls the rest of the room's history, so the panel shows
     // everything rather than only what the user happened to scroll past.
     // Search shares this runner, so if it already ran this is instant.
+    //
+    // Gated on "not running and not complete", not "idle" -- see the matching
+    // comment in ChatSearchPanel. `cancelled`/`capped`/`error` all mean there
+    // may be more history than what's loaded, and nothing ever moves the
+    // phase back to `idle`; gating on `idle` alone means cancelling once and
+    // reopening Media later in the same room would never retry, permanently
+    // stuck showing only what had loaded at the moment of cancellation.
     React.useEffect(() => {
-        if (backfill.phase === "idle") startBackfill(roomId);
+        if (backfill.phase !== "running" && backfill.phase !== "complete") startBackfill(roomId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [roomId]);
 
@@ -119,7 +133,9 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                 })}
             </div>
 
-            {(backfill.phase === "running" || backfill.phase === "capped") && (
+            {(backfill.phase === "running" ||
+                backfill.phase === "capped" ||
+                backfill.phase === "cancelled") && (
                 <MediaBackfillBanner
                     phase={backfill.phase}
                     onCancel={() => cancelBackfill(roomId)}
@@ -127,6 +143,7 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
             )}
 
             <div
+                ref={tabpanelRef}
                 id={`media-panel-${mediaTab}`}
                 role="tabpanel"
                 aria-labelledby={`media-tab-${mediaTab}`}
@@ -145,7 +162,12 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
             </div>
 
             {viewing && (
-                <MediaLightbox item={viewing} onClose={() => setViewing(null)} onJump={onJump} />
+                <MediaLightbox
+                    item={viewing}
+                    onClose={() => setViewing(null)}
+                    onJump={onJump}
+                    fallbackFocusRef={tabpanelRef}
+                />
             )}
         </div>
     );

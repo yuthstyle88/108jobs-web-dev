@@ -50,8 +50,20 @@ export const ChatSearchPanel: React.FC<Props> = ({roomId, partnerName}) => {
 
     // Only once there is something to search for -- opening the box should not
     // pull a year of history on its own.
+    //
+    // Gated on "not running and not complete", not "idle": `cancelled`,
+    // `capped`, and `error` all mean there may still be older history this
+    // room hasn't loaded, and `BackfillPhase` has no path back to `idle` once
+    // it leaves that state. Gating on `idle` alone would mean a Stop click
+    // permanently wedges this room's search at whatever was loaded at that
+    // moment -- every later query would silently search only that partial
+    // set and report "no results" as if the room had been searched in full.
+    // `startBackfill` itself is idempotent (its runner no-ops a second start
+    // while one is already in flight), so re-asking here is always safe.
     React.useEffect(() => {
-        if (query.trim() && backfill.phase === "idle") startBackfill(roomId);
+        if (query.trim() && backfill.phase !== "running" && backfill.phase !== "complete") {
+            startBackfill(roomId);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query, roomId]);
 
@@ -66,10 +78,23 @@ export const ChatSearchPanel: React.FC<Props> = ({roomId, partnerName}) => {
     );
 
     const trimmed = query.trim();
-    const isSearchingOlder = Boolean(trimmed) && backfill.phase === "running";
+    // Not gated on `trimmed`: a backfill kicked off by an earlier query keeps
+    // running (and stays cancellable) even if the query that started it was
+    // since cleared -- hiding the Stop control here would strand a fetch the
+    // user has no other way to reach from this panel.
+    const isSearchingOlder = backfill.phase === "running";
+    const isPartial =
+        Boolean(trimmed) && (backfill.phase === "capped" || backfill.phase === "cancelled");
 
     return (
-        <div className="absolute inset-x-0 top-0 z-30 flex max-h-[70%] flex-col border-b bg-white shadow-lg">
+        <div
+            className="absolute inset-x-0 top-0 z-30 flex max-h-[70%] flex-col border-b bg-white shadow-lg"
+            onKeyDown={(e) => {
+                // Bound to the panel, not just the input, so Escape closes it
+                // from a result row, the Stop button, or the Close button too.
+                if (e.key === "Escape") closeSearch();
+            }}
+        >
             <div className="flex items-center gap-2 border-b px-3 py-2">
                 <Search className="h-4 w-4 flex-shrink-0 text-gray-400" aria-hidden />
                 <input
@@ -77,7 +102,6 @@ export const ChatSearchPanel: React.FC<Props> = ({roomId, partnerName}) => {
                     type="search"
                     value={rawQuery}
                     onChange={(e) => setRawQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Escape" && closeSearch()}
                     placeholder={t("profileChat.roomSearch.placeholder")}
                     aria-label={t("profileChat.roomSearch.placeholder")}
                     className="min-w-0 flex-1 rounded bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -109,8 +133,12 @@ export const ChatSearchPanel: React.FC<Props> = ({roomId, partnerName}) => {
                 </div>
             )}
 
-            {trimmed && backfill.phase === "capped" && (
-                <p className="border-b border-amber-100 bg-amber-50 px-3 py-2 text-xs text-gray-600">
+            {isPartial && (
+                <p
+                    className="border-b border-amber-100 bg-amber-50 px-3 py-2 text-xs text-gray-600"
+                    role="status"
+                    aria-live="polite"
+                >
                     {t("profileChat.roomSearch.partial")}
                 </p>
             )}
@@ -127,7 +155,11 @@ export const ChatSearchPanel: React.FC<Props> = ({roomId, partnerName}) => {
                         {t("profileChat.roomSearch.hint")}
                     </p>
                 ) : hits.length === 0 ? (
-                    <p className="px-3 py-6 text-center text-sm text-gray-500">
+                    <p
+                        className="px-3 py-6 text-center text-sm text-gray-500"
+                        role="status"
+                        aria-live="polite"
+                    >
                         {isSearchingOlder
                             ? t("profileChat.roomSearch.searching")
                             : t("profileChat.roomSearch.noResults", {query: trimmed})}
