@@ -412,7 +412,7 @@ const AdminJobBoard = () => {
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
-                                                    {t(`catalogs.${toCamelCaseLastSegment(job.category.path)}`)}
+                                                    {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
                                                     {getJobTypeLabel(job.post.jobType, t)}

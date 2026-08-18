@@ -75,7 +75,7 @@ const JobBoardDetail = ({jobId}: Props) => {
                             </Badge>
                             <Badge variant="outline"
                                    className="text-xs bg-amber-500 font-medium px-3 py-1 rounded-full border-gray-300">
-                                {t(`catalogs.${toCamelCaseLastSegment(jobDetailData?.categoryView.category.path)}`, {defaultValue: jobDetailData?.categoryView.category.name})}
+                                {t(`catalogs.${toCamelCaseLastSegment(jobDetailData?.categoryView?.category?.path)}`, {defaultValue: jobDetailData?.categoryView?.category?.name})}
                             </Badge>
                             {jobDetailData?.postView.post.isEnglishRequired && (
                                 <Badge variant="outline"
@@ -182,7 +182,7 @@ const JobBoardDetail = ({jobId}: Props) => {
                     <div>
                         <span className="text-gray-600 font-medium">{t("jobBoardDetail.category")}:</span>
                         <span
-                            className="ml-2 text-gray-800"> {t(`catalogs.${toCamelCaseLastSegment(jobDetailData?.categoryView.category.path)}`, {defaultValue: jobDetailData?.categoryView.category.name})}</span>
+                            className="ml-2 text-gray-800"> {t(`catalogs.${toCamelCaseLastSegment(jobDetailData?.categoryView?.category?.path)}`, {defaultValue: jobDetailData?.categoryView?.category?.name})}</span>
                     </div>
                     {jobDetailData?.postView.post.isEnglishRequired && (
                         <div>

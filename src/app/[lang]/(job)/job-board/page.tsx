@@ -474,7 +474,7 @@ const JobBoard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
-                                                        {t(`catalogs.${toCamelCaseLastSegment(job.category.path)}`) || "-"}
+                                                        {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
                                                         {getJobTypeLabel(job.post.jobType, t)}
@@ -587,7 +587,7 @@ const JobBoard = () => {
                                                         <div>
                                                             <p className="text-xs text-gray-500 uppercase tracking-wider">{t("profileJob.tableHeaderCategory")}</p>
                                                             <p className="font-medium text-gray-900 truncate mt-0.5">
-                                                                {t(`catalogs.${toCamelCaseLastSegment(job.category.path)}`) || "-"}
+                                                                {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
                                                             </p>
                                                         </div>
 
