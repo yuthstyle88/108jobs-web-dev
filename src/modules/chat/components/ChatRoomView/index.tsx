@@ -37,6 +37,8 @@ import type {
 import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
 import ChatRoomMessages from "../ChatRoomMessages";
+import ChatSearchPanel from "@/modules/chat/components/ChatSearchPanel";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 import {useRoomsStore} from '@/modules/chat/store/roomsStore';
 import FreelanceChatFlow, {FlowActions, StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
 import {createFlowActions} from "@/modules/chat/utils/flowActions";
@@ -48,9 +50,12 @@ import {Trash2} from "lucide-react";
 import {JobDetailModal} from "@/modules/chat/components/Modal/JobDetailModal";
 import {ReviewDeliveryModal} from "@/modules/chat/components/Modal/ReviewDeliveryModal";
 import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
+import ChatSidebarTabs from "@/modules/chat/components/ChatSidebarTabs";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
+import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
+import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
 import {emitChatNewMessage} from "@/modules/chat/events";
 import {useChatRoom} from '@/modules/chat/hooks/useChatRoom';
 import {useChatHistory} from '@/modules/chat/hooks/useChatHistory';
@@ -117,6 +122,9 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const [currentRoom, setCurrentRoom] = useState<ChatRoomView>(roomData as ChatRoomView);
     const {getByRoom} = useChatStore();
     const messages = getByRoom(roomId);
+    const isSearchOpen = useChatPanelStore((s) => s.isSearchOpen);
+    const openSearch = useChatPanelStore((s) => s.openSearch);
+    const closeSearch = useChatPanelStore((s) => s.closeSearch);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -173,7 +181,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // `receivedSet` prevents double-inserting messages when pages overlap.
     const {
         state: {hasMore, isFetching},
-        actions: {fetchHistory},
+        actions: {fetchHistory, loadOlderUntilDone},
     } = useChatHistory({
         roomId,
         pageSize: 40,
@@ -184,6 +192,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         },
         upsertHistory,
     });
+    useHistoryBackfill({roomId, loadOlderUntilDone});
+
+    // Close search when the room changes so it does not carry a stale query
+    // across conversations.
+    useEffect(() => () => closeSearch(), [roomId, closeSearch]);
+
     const {
         actions: {sendMessage, sendTyping, sendRoomUpdate, sendReadReceipt},
         state: {isPartnerTyping},
@@ -385,12 +399,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             if (!message && !selectedFile) return;
 
             const contentToSend = selectedFile
-                ? JSON.stringify({
-                    type: "file",
+                ? buildAttachmentEnvelope({
                     url: selectedFile.fileUrl,
                     name: selectedFile.fileName,
                     mime: selectedFile.fileType,
                     caption: message || undefined,
+                    assetId: selectedFile.assetId,
                 })
                 : message;
 
@@ -414,7 +428,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 message: contentToSend,
                 senderId: Number(localUser.id),
                 secure: Boolean((localUser as any)?.isMessageSecure),
-                id: messageId
+                id: messageId,
+                assetId: selectedFile?.assetId,
             });
 
             setSelectedFile(null);
@@ -495,14 +510,21 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // Provide JobFlowContent to the global sidebar
+    // Provide the sidebar (Orders + Media tabs) to the global sidebar.
+    // Orders renders today's JobFlowContent verbatim; nothing about it changes.
     useLayoutEffect(() => {
         setContent(
-            <JobFlowContent
-                setIsFlowOpen={setIsFlowOpen}
-                renderFlowContent={renderFlowContent}
-                setShowJobDetailModal={setShowJobDetailModal}
-                currentRoom={currentRoom}
+            <ChatSidebarTabs
+                roomId={roomId}
+                partnerName={partnerName || "User"}
+                orders={
+                    <JobFlowContent
+                        setIsFlowOpen={setIsFlowOpen}
+                        renderFlowContent={renderFlowContent}
+                        setShowJobDetailModal={setShowJobDetailModal}
+                        currentRoom={currentRoom}
+                    />
+                }
             />
         );
 
@@ -522,6 +544,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         availableBalance,
         latestQuoteAmount,
         currentStatus,
+        roomId,
+        partnerName,
     ]);
 
     return (
@@ -536,16 +560,23 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         onToggleFlow={() => setIsFlowOpen(!isFlowOpen)}
                         isFlowOpen={isFlowOpen}
                         partnerId={partnerId}
+                        onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
+                        isSearchOpen={isSearchOpen}
                     />
-                    <ChatRoomMessages
-                        messages={messages}
-                        partnerAvatar={partnerAvatar || ProfileImage.avatar}
-                        customScrollParent={scrollParentEl}
-                        onTopReached={handleOnTopReached}
-                        hasMore={hasMore}
-                        isFetching={isFetching}
-                        partnerId={partnerId}
-                    />
+                    <div className="relative flex min-h-0 flex-1 flex-col">
+                        {isSearchOpen && (
+                            <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
+                        )}
+                        <ChatRoomMessages
+                            messages={messages}
+                            partnerAvatar={partnerAvatar || ProfileImage.avatar}
+                            customScrollParent={scrollParentEl}
+                            onTopReached={handleOnTopReached}
+                            hasMore={hasMore}
+                            isFetching={isFetching}
+                            partnerId={partnerId}
+                        />
+                    </div>
                     <div ref={inputContainerRef} className="border-t px-3 py-2 sm:px-4 sm:py-3 bg-white">
                         <div className="flex items-center gap-2">
                             <div className="flex-1">

@@ -9,6 +9,7 @@ import {useParams} from "next/navigation";
 import {formatDateToLong} from "@/utils";
 import {getLocale} from "@/utils/date";
 import {useTranslation} from "react-i18next";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 
 interface ChatRoomMessagesProps {
     messages: ChatMessage[];
@@ -42,6 +43,60 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     const virtuosoRef = React.useRef<VirtuosoHandle | null>(null);
     const [isAtBottom, setIsAtBottom] = React.useState(true);
     const isAtBottomRef = React.useRef(true);
+
+    const pendingJumpMessageId = useChatPanelStore((s) => s.pendingJumpMessageId);
+    const jumpToken = useChatPanelStore((s) => s.jumpToken);
+    const highlightedMessageId = useChatPanelStore((s) => s.highlightedMessageId);
+    const highlightToken = useChatPanelStore((s) => s.highlightToken);
+
+    // A jump can arrive before the message it names is in `data` -- the panel
+    // that asked may still be backfilling the page it lives on. Leaving the
+    // request pending and re-running on `data` is what makes it land once the
+    // page arrives, instead of silently doing nothing.
+    //
+    // `jumpToken` is in the deps alongside `pendingJumpMessageId` on purpose:
+    // a repeat click on the same search result calls `requestJump` with the
+    // id already sitting in `pendingJumpMessageId` (e.g. the first click's
+    // target hadn't arrived yet, so this effect returned early without
+    // consuming it) -- setting a field to the value it already holds is not
+    // a change that field alone can carry, but the bumped token is.
+    //
+    // No highlight timer in this effect: it depends on `pendingJumpMessageId`,
+    // and `consumeJump()` below resets that very field, which looks like a
+    // dep change on the next render and would tear a timer down long before
+    // it was meant to fire. The timer lives in its own effect below, keyed
+    // only on `highlightedMessageId`, so consuming the jump can't disturb it.
+    React.useEffect(() => {
+        if (!pendingJumpMessageId) return;
+
+        const index = data.findIndex((m) => String((m as any)?.id) === pendingJumpMessageId);
+        if (index < 0) return;
+
+        const {consumeJump, setHighlight} = useChatPanelStore.getState();
+        consumeJump();
+
+        virtuosoRef.current?.scrollToIndex({index, behavior: 'smooth', align: 'center'});
+        setHighlight(pendingJumpMessageId);
+    }, [pendingJumpMessageId, jumpToken, data]);
+
+    // Owns the "ring for 2 seconds" timer exclusively. Kept separate from the
+    // effect above so that consuming the jump (which changes that effect's
+    // own deps) can't cut this timer short -- this one only re-runs when the
+    // highlighted message itself changes.
+    //
+    // `highlightToken` is in the deps alongside `highlightedMessageId` for
+    // the same reason `jumpToken` sits beside `pendingJumpMessageId` above:
+    // a repeat click on the search result that is *already* highlighted
+    // calls `setHighlight` with the id it already holds, which
+    // `highlightedMessageId` alone can't carry as a change -- so without the
+    // token this effect would not re-run, and the ring would expire on the
+    // first click's schedule instead of getting a fresh 2s.
+    React.useEffect(() => {
+        if (!highlightedMessageId) return;
+
+        const timer = setTimeout(() => useChatPanelStore.getState().clearHighlight(), 2000);
+        return () => clearTimeout(timer);
+    }, [highlightedMessageId, highlightToken]);
 
     const prevLengthRef = React.useRef(data.length);
     const headIdRef = React.useRef<string | null>(
@@ -105,7 +160,17 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
         const isPrepend = prevHeadId !== newHeadId;
         const isAppend = prevTailId !== newTailId;
 
-        if (isPrepend) {
+        // Gated on the user already being at (or near) the top of the loaded
+        // window -- i.e. exactly the case this anchor exists for: they
+        // scrolled up and asked for more, so snapping back to just past the
+        // new page keeps their place. Ungated, this fired on *every* prepend,
+        // including the ones the backfill now drives unprompted from the
+        // moment Media opens or a query is typed (Finding 1,
+        // FINAL-findings.md) -- dragging a user reading further down back up
+        // to the head of the loaded window on every single page, and
+        // overwriting the jump's smooth `scrollToIndex({align:'center'})`
+        // moments after it landed.
+        if (isPrepend && rangeRef.current.startIndex <= 2) {
             setTimeout(() => {
                 virtuosoRef.current?.scrollToIndex({
                     index: added,
@@ -190,10 +255,15 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
                         </div>
                     </div>
                 )}
-                <ChatMessageItem message={msg} partnerAvatar={partnerAvatar} partnerId={partnerId}/>
+                <ChatMessageItem
+                    message={msg}
+                    partnerAvatar={partnerAvatar}
+                    partnerId={partnerId}
+                    isHighlighted={highlightedMessageId === String((msg as any)?.id)}
+                />
             </div>
         );
-    }, [data, currentLocale, partnerAvatar, partnerId]);
+    }, [data, currentLocale, partnerAvatar, partnerId, highlightedMessageId]);
 
     const computeItemKey = React.useCallback((_index: number, msg: ChatMessage) => {
         const m: any = msg as any;

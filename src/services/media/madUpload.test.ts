@@ -191,4 +191,27 @@ describe("uploadToMad", () => {
     // bytes were rejected would mint an asset with nothing behind it.
     expect(calls).toHaveLength(2);
   });
+
+  it("keeps the user's filename alongside the storage handle", async () => {
+    // MAD stores no filename at all, so if this call drops it the name is
+    // gone for good and the recipient sees a UUID.
+    stubFetch([SESSION, BYTES, COMPLETE]);
+
+    const asset = await uploadToMad(file, "private");
+
+    expect(asset).toMatchObject({
+      assetId: "asset-9",
+      originalFilename: file.name,
+      filename: "asset-9",
+    });
+  });
+
+  it("still reports an asset id when MAD omits the content type", async () => {
+    stubFetch([SESSION, BYTES, {status: 200, body: {assetId: "asset-9"}}]);
+
+    const asset = await uploadToMad(file, "private");
+
+    expect(asset.assetId).toBe("asset-9");
+    expect(asset.mimeType).toBe(file.type);
+  });
 });
