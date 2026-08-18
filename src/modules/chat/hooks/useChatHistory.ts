@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {fetchHistoryPage} from '@/modules/chat/utils/chatSocketUtils';
 import {runBackfill, type BackfillOutcome} from '@/modules/chat/hooks/historyBackfill';
+import {createHistoryPager, type HistoryPager} from '@/modules/chat/hooks/historyPager';
 import {ChatMessage} from "108jobs-client";
 
 export type UseChatHistoryOptions = {
@@ -41,69 +42,68 @@ export function useChatHistory(opts: UseChatHistoryOptions): UseChatHistoryResul
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [hasMore, setHasMore] = useState<boolean>(true);
 
-    // Refs, not state, because a programmatic backfill calls the fetcher many
-    // times inside one render: a state-closed cursor would still be page one
-    // on every iteration.
-    const cursorRef = useRef<string | null>(null);
-    const hasMoreRef = useRef<boolean>(true);
-    const lastCursorRef = useRef<string | null>(null);
-    // Single-flight. The scroll handler and the backfill both fetch, and
-    // handing the second caller the promise already running is what keeps
-    // them from interleaving pages against a shared cursor.
-    const inFlightRef = useRef<Promise<void> | null>(null);
+    // The pager below is created exactly once per hook instance and lives
+    // for the component's lifetime (see pagerRef). This ref holds whatever
+    // the latest render's fetch inputs were, so the pager's long-lived
+    // fetchPage callback reads current values at call time instead of
+    // whatever was in scope the one time the pager was constructed. Written
+    // from an effect, not during render: refs may only be mutated outside
+    // the render phase, in an effect or an event handler.
+    const latestRef = useRef({roomId, pageSize, localUserId, receivedSet, broadcast, upsertHistory});
+    useEffect(() => {
+        latestRef.current = {roomId, pageSize, localUserId, receivedSet, broadcast, upsertHistory};
+    });
+
+    // One pager per hook instance, created once on mount and held for the
+    // component's lifetime. It owns the cursor/hasMore/last-cursor/in-flight
+    // machinery that must not live in React state or be rebuilt on every
+    // render -- see historyPager.ts for why, and for the single-flight/reset
+    // mechanism this hook merely wires up here.
+    //
+    // Built inside an effect, not during render: `createHistoryPager` is a
+    // plain function, not a React hook, so React's lint rules can't verify
+    // it won't call `fetchPage` (which reads `latestRef.current`)
+    // synchronously -- so a ref-capturing closure can't be constructed or
+    // passed to it during render. The `== null` guard is what the lazy-init
+    // pattern requires so this only ever runs once.
+    const pagerRef = useRef<HistoryPager | null>(null);
+    useEffect(() => {
+        if (pagerRef.current == null) {
+            pagerRef.current = createHistoryPager({
+                fetchPage: async (cursor) => {
+                    const {roomId, pageSize, localUserId, receivedSet, broadcast, upsertHistory} = latestRef.current;
+                    const {prev, items} = await fetchHistoryPage(
+                        {roomId, cursor, limit: pageSize},
+                        {localUserId, receivedSet, broadcast},
+                    );
+
+                    if (items && Array.isArray(items)) {
+                        // Reverse items before inserting to match ascending render order
+                        upsertHistory(roomId, items.reverse());
+                    }
+
+                    // For backfill, use `prev` to continue going backward.
+                    const prevCursor = (typeof prev === 'string' && prev.length > 0) ? prev : null;
+                    return {prevCursor};
+                },
+                onState: (state) => {
+                    setPageCursor(state.pageCursor);
+                    setHasMore(state.hasMore);
+                    setIsFetching(state.isFetching);
+                },
+            });
+        }
+    }, []);
 
     // Reset cursor/state when room changes
     useEffect(() => {
-        setPageCursor(null);
-        setHasMore(true);
-        cursorRef.current = null;
-        hasMoreRef.current = true;
-        lastCursorRef.current = null;
-        inFlightRef.current = null;
+        pagerRef.current?.reset();
     }, [roomId]);
 
-    const fetchOnePage = useCallback(async (): Promise<void> => {
-        if (isE2EMock || !hasMoreRef.current) return;
-        if (inFlightRef.current) return inFlightRef.current;
-
-        const run = (async () => {
-            setIsFetching(true);
-            try {
-                const {prev, items} = await fetchHistoryPage(
-                    {roomId, cursor: cursorRef.current, limit: pageSize},
-                    {localUserId, receivedSet, broadcast},
-                );
-
-                if (items && Array.isArray(items)) {
-                    // Reverse items before inserting to match ascending render order
-                    upsertHistory(roomId, items.reverse());
-                }
-
-                // For backfill, use `prev` to continue going backward.
-                const prevCursor = (typeof prev === 'string' && prev.length > 0) ? prev : null;
-                const sameCursor = prevCursor !== null && prevCursor === lastCursorRef.current;
-
-                if (!prevCursor || sameCursor) {
-                    cursorRef.current = null;
-                    hasMoreRef.current = false;
-                    setPageCursor(null);
-                    setHasMore(false);
-                } else {
-                    lastCursorRef.current = prevCursor;
-                    cursorRef.current = prevCursor;
-                    hasMoreRef.current = true;
-                    setPageCursor(prevCursor);
-                    setHasMore(true);
-                }
-            } finally {
-                setIsFetching(false);
-                inFlightRef.current = null;
-            }
-        })();
-
-        inFlightRef.current = run;
-        return run;
-    }, [isE2EMock, roomId, pageSize, localUserId, receivedSet, broadcast, upsertHistory]);
+    const fetchOnePage = useCallback((): Promise<void> => {
+        if (isE2EMock) return Promise.resolve();
+        return pagerRef.current?.fetchOnePage() ?? Promise.resolve();
+    }, [isE2EMock]);
 
     // The public action keeps swallowing errors exactly as it always did --
     // its callers are scroll handlers that have nowhere to show one. The
@@ -121,7 +121,7 @@ export function useChatHistory(opts: UseChatHistoryOptions): UseChatHistoryResul
         (loadOpts?: {signal?: AbortSignal; onPage?: (pagesLoaded: number) => void}) =>
             runBackfill({
                 fetchOnePage,
-                hasMore: () => hasMoreRef.current,
+                hasMore: () => pagerRef.current?.hasMore() ?? false,
                 signal: loadOpts?.signal,
                 onPage: loadOpts?.onPage,
             }),
@@ -129,13 +129,7 @@ export function useChatHistory(opts: UseChatHistoryOptions): UseChatHistoryResul
     );
 
     const reset = useCallback(() => {
-        setPageCursor(null);
-        setHasMore(true);
-        setIsFetching(false);
-        cursorRef.current = null;
-        hasMoreRef.current = true;
-        lastCursorRef.current = null;
-        inFlightRef.current = null;
+        pagerRef.current?.reset();
     }, []);
 
     return {
