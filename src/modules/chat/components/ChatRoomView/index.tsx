@@ -48,9 +48,11 @@ import {Trash2} from "lucide-react";
 import {JobDetailModal} from "@/modules/chat/components/Modal/JobDetailModal";
 import {ReviewDeliveryModal} from "@/modules/chat/components/Modal/ReviewDeliveryModal";
 import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
+import ChatSidebarTabs from "@/modules/chat/components/ChatSidebarTabs";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
+import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
 import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
 import {emitChatNewMessage} from "@/modules/chat/events";
 import {useChatRoom} from '@/modules/chat/hooks/useChatRoom';
@@ -174,7 +176,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // `receivedSet` prevents double-inserting messages when pages overlap.
     const {
         state: {hasMore, isFetching},
-        actions: {fetchHistory},
+        actions: {fetchHistory, loadOlderUntilDone},
     } = useChatHistory({
         roomId,
         pageSize: 40,
@@ -185,6 +187,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         },
         upsertHistory,
     });
+    useHistoryBackfill({roomId, loadOlderUntilDone});
     const {
         actions: {sendMessage, sendTyping, sendRoomUpdate, sendReadReceipt},
         state: {isPartnerTyping},
@@ -497,14 +500,21 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // Provide JobFlowContent to the global sidebar
+    // Provide the sidebar (Orders + Media tabs) to the global sidebar.
+    // Orders renders today's JobFlowContent verbatim; nothing about it changes.
     useLayoutEffect(() => {
         setContent(
-            <JobFlowContent
-                setIsFlowOpen={setIsFlowOpen}
-                renderFlowContent={renderFlowContent}
-                setShowJobDetailModal={setShowJobDetailModal}
-                currentRoom={currentRoom}
+            <ChatSidebarTabs
+                roomId={roomId}
+                partnerName={partnerName || "User"}
+                orders={
+                    <JobFlowContent
+                        setIsFlowOpen={setIsFlowOpen}
+                        renderFlowContent={renderFlowContent}
+                        setShowJobDetailModal={setShowJobDetailModal}
+                        currentRoom={currentRoom}
+                    />
+                }
             />
         );
 
@@ -524,6 +534,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         availableBalance,
         latestQuoteAmount,
         currentStatus,
+        roomId,
+        partnerName,
     ]);
 
     return (
