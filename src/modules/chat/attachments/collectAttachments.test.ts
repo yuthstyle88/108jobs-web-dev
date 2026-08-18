@@ -63,4 +63,16 @@ describe("collectAttachments", () => {
   it("is empty for a room with nothing in it", () => {
     expect(collectAttachments([])).toEqual([]);
   });
+
+  // Not in the brief: collectAttachments guards each entry with `message?.`,
+  // which implies the store can hand back a nullish slot. Every message
+  // parser here must never throw, so that guard needs its own case.
+  it("skips a nullish entry in the messages array instead of throwing", () => {
+    const items = collectAttachments([
+      null as unknown as ChatMessage,
+      message({id: "good", content: file("a.pdf", "application/pdf")}),
+    ]);
+    expect(items).toHaveLength(1);
+    expect(items[0].messageId).toBe("good");
+  });
 });

@@ -91,4 +91,13 @@ describe("parseAttachment", () => {
     expect(parsed?.caption).toBeUndefined();
     expect(parsed?.assetId).toBeUndefined();
   });
+
+  // Not in the brief: a well-formed JSON object with no `type` field at all
+  // takes a different branch (`typeof record.type !== "string"`) than the
+  // "wrong type value" case above, and every message in a room -- including
+  // ones this parser was never designed against -- has to survive it.
+  it("ignores a structured object with no type field", () => {
+    expect(parseAttachment(JSON.stringify({url: "https://x.test/a.pdf", name: "a.pdf"}))).toBeNull();
+    expect(parseAttachment("{}")).toBeNull();
+  });
 });
