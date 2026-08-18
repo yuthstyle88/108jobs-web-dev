@@ -32,6 +32,15 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
     // key is about to select already exists by the time the handler runs.
     const tabRefs = React.useRef<Map<SidebarTab, HTMLButtonElement>>(new Map());
 
+    // JobFlowSidebar mounts a desktop `<aside>` (`hidden md:flex`, so still
+    // present in the DOM even when only the mobile one is visible) and,
+    // while open, a mobile `<aside>` too -- both rendering the same `content`,
+    // so both mount a copy of this component at once. Without a per-instance
+    // suffix, `sidebar-tab-*`/`sidebar-panel-*` collide between the two, and
+    // id-based resolution (`aria-controls`/`aria-labelledby`) always picks
+    // the first (hidden) one (Finding 4, FINAL-findings.md).
+    const uid = React.useId();
+
     const onKeyDown = (e: React.KeyboardEvent) => {
         if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
         e.preventDefault();
@@ -62,11 +71,11 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
                                 if (el) tabRefs.current.set(tab.id, el);
                                 else tabRefs.current.delete(tab.id);
                             }}
-                            id={`sidebar-tab-${tab.id}`}
+                            id={`sidebar-tab-${tab.id}-${uid}`}
                             role="tab"
                             type="button"
                             aria-selected={selected}
-                            aria-controls={`sidebar-panel-${tab.id}`}
+                            aria-controls={`sidebar-panel-${tab.id}-${uid}`}
                             tabIndex={selected ? 0 : -1}
                             onClick={() => setSidebarTab(tab.id)}
                             className={`mr-6 border-b-2 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-base ${
@@ -82,9 +91,9 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
             </div>
 
             <div
-                id={`sidebar-panel-${sidebarTab}`}
+                id={`sidebar-panel-${sidebarTab}-${uid}`}
                 role="tabpanel"
-                aria-labelledby={`sidebar-tab-${sidebarTab}`}
+                aria-labelledby={`sidebar-tab-${sidebarTab}-${uid}`}
                 tabIndex={0}
                 className="flex min-h-0 flex-1 flex-col"
             >

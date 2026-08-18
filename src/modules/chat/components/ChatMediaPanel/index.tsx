@@ -5,6 +5,7 @@ import React from "react";
 import {useTranslation} from "react-i18next";
 
 import {collectAttachments, type AttachmentItem} from "@/modules/chat/attachments";
+import {useJobFlowSidebar} from "@/modules/chat/contexts/JobFlowSidebarContext";
 import {useChatStore} from "@/modules/chat/store/chatStore";
 import {
     cancelBackfill,
@@ -37,8 +38,18 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
     const setMediaTab = useChatPanelStore((s) => s.setMediaTab);
     const requestJump = useChatPanelStore((s) => s.requestJump);
     const backfill = useChatPanelStore(selectBackfill(roomId));
+    const {setOpen} = useJobFlowSidebar();
 
     const [viewing, setViewing] = React.useState<AttachmentItem | null>(null);
+
+    // Suffixes every id this panel renders. JobFlowSidebar mounts both a
+    // desktop `<aside>` (`hidden md:flex`, so still present in the DOM) and,
+    // while open, a mobile one -- each carrying its own copy of `content`, so
+    // without a per-instance suffix the two ChatMediaPanel instances would
+    // render identical `media-tab-*`/`media-panel-*` ids, and id-based
+    // resolution (`aria-controls`/`aria-labelledby`) would always pick the
+    // first (hidden) one (Finding 4, FINAL-findings.md).
+    const uid = React.useId();
 
     // Roving-tabindex focus targets -- see ChatSidebarTabs for why a ref map
     // keyed by tab id is what lets the arrow-key handler move real DOM focus
@@ -81,8 +92,15 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
         (messageId: string) => {
             setViewing(null);
             requestJump(messageId);
+            // Spec: "On mobile, jumping closes the drawer or search overlay."
+            // Media lives inside JobFlowSidebar's slide-over, so without this
+            // the drawer stayed open over the conversation and tapping
+            // "Go to message" looked like it had done nothing (Finding 3,
+            // FINAL-findings.md). Same breakpoint check ChatSearchPanel
+            // already uses, so the two behave identically.
+            if (typeof window !== "undefined" && window.innerWidth < 640) setOpen(false);
         },
-        [requestJump],
+        [requestJump, setOpen],
     );
 
     const onTabKeyDown = (e: React.KeyboardEvent) => {
@@ -114,11 +132,11 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                                 if (el) tabRefs.current.set(tab.id, el);
                                 else tabRefs.current.delete(tab.id);
                             }}
-                            id={`media-tab-${tab.id}`}
+                            id={`media-tab-${tab.id}-${uid}`}
                             role="tab"
                             type="button"
                             aria-selected={selected}
-                            aria-controls={`media-panel-${tab.id}`}
+                            aria-controls={`media-panel-${tab.id}-${uid}`}
                             tabIndex={selected ? 0 : -1}
                             onClick={() => setMediaTab(tab.id)}
                             className={`mr-4 border-b-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -144,9 +162,9 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
 
             <div
                 ref={tabpanelRef}
-                id={`media-panel-${mediaTab}`}
+                id={`media-panel-${mediaTab}-${uid}`}
                 role="tabpanel"
-                aria-labelledby={`media-tab-${mediaTab}`}
+                aria-labelledby={`media-tab-${mediaTab}-${uid}`}
                 tabIndex={0}
                 className="flex-1 overflow-y-auto focus:outline-none"
             >

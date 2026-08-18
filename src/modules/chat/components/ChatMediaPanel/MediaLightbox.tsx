@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import {createPortal} from "react-dom";
 import {useTranslation} from "react-i18next";
 import {X} from "lucide-react";
 
@@ -115,7 +116,24 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackF
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [onClose]);
 
-    return (
+    // Next.js renders this component's tree on the server first, where
+    // `document` does not exist -- but by the time `viewing` (the state that
+    // gates whether ChatMediaPanel even mounts this component) is truthy,
+    // a browser click already set it, so this guard never actually trips in
+    // practice. It stays because a portal target that assumes a browser is
+    // exactly the kind of thing that turns into a server-render crash the
+    // moment this component is reused somewhere less careful.
+    if (typeof document === "undefined") return null;
+
+    // Portalled straight to <body>, not rendered in place: on mobile,
+    // JobFlowSidebar's slide-over carries a `translate-x-*` utility, and any
+    // non-`none` CSS transform establishes a containing block for `position:
+    // fixed` descendants -- so without the portal, this dialog's
+    // `fixed inset-0` would resolve against the drawer's box instead of the
+    // viewport, and the lightbox would render cropped to the drawer instead
+    // of full-screen (Finding 2, FINAL-findings.md). Desktop's `<aside>` has
+    // no transform, which is why the bug was mobile-only.
+    return createPortal(
         <div
             ref={dialogRef}
             className="fixed inset-0 z-50 flex flex-col bg-black/90"
@@ -161,6 +179,7 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackF
                     />
                 )}
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 };
