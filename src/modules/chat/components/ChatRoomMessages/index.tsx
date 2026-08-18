@@ -9,6 +9,7 @@ import {useParams} from "next/navigation";
 import {formatDateToLong} from "@/utils";
 import {getLocale} from "@/utils/date";
 import {useTranslation} from "react-i18next";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 
 interface ChatRoomMessagesProps {
     messages: ChatMessage[];
@@ -42,6 +43,29 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     const virtuosoRef = React.useRef<VirtuosoHandle | null>(null);
     const [isAtBottom, setIsAtBottom] = React.useState(true);
     const isAtBottomRef = React.useRef(true);
+
+    const pendingJumpMessageId = useChatPanelStore((s) => s.pendingJumpMessageId);
+    const highlightedMessageId = useChatPanelStore((s) => s.highlightedMessageId);
+
+    // A jump can arrive before the message it names is in `data` -- the panel
+    // that asked may still be backfilling the page it lives on. Leaving the
+    // request pending and re-running on `data` is what makes it land once the
+    // page arrives, instead of silently doing nothing.
+    React.useEffect(() => {
+        if (!pendingJumpMessageId) return;
+
+        const index = data.findIndex((m) => String((m as any)?.id) === pendingJumpMessageId);
+        if (index < 0) return;
+
+        const {consumeJump, setHighlight, clearHighlight} = useChatPanelStore.getState();
+        consumeJump();
+
+        virtuosoRef.current?.scrollToIndex({index, behavior: 'smooth', align: 'center'});
+        setHighlight(pendingJumpMessageId);
+
+        const timer = setTimeout(() => clearHighlight(), 2000);
+        return () => clearTimeout(timer);
+    }, [pendingJumpMessageId, data]);
 
     const prevLengthRef = React.useRef(data.length);
     const headIdRef = React.useRef<string | null>(
@@ -190,10 +214,15 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
                         </div>
                     </div>
                 )}
-                <ChatMessageItem message={msg} partnerAvatar={partnerAvatar} partnerId={partnerId}/>
+                <ChatMessageItem
+                    message={msg}
+                    partnerAvatar={partnerAvatar}
+                    partnerId={partnerId}
+                    isHighlighted={highlightedMessageId === String((msg as any)?.id)}
+                />
             </div>
         );
-    }, [data, currentLocale, partnerAvatar, partnerId]);
+    }, [data, currentLocale, partnerAvatar, partnerId, highlightedMessageId]);
 
     const computeItemKey = React.useCallback((_index: number, msg: ChatMessage) => {
         const m: any = msg as any;

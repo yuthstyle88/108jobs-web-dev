@@ -19,6 +19,8 @@ interface ChatMessageItemProps {
     message: ChatMessage;
     partnerAvatar?: string | StaticImageData;
     partnerId: LocalUserId;
+    /** Briefly ringed after the user jumped here from search or media. */
+    isHighlighted?: boolean;
 }
 
 interface ProposedQuoteMessage {
@@ -53,7 +55,8 @@ interface ProposedQuoteMessage {
 const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                                              message,
                                                              partnerAvatar,
-                                                             partnerId
+                                                             partnerId,
+                                                             isHighlighted = false
                                                          }) => {
     const {t, i18n} = useTranslation();
     const {resend} = useChatServices();
@@ -132,7 +135,13 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         <div
             data-testid="chat-message"
             data-status={viewMsg.status}
-            className={`flex ${isIncoming ? "justify-start" : "justify-end"}`}
+            className={`flex ${isIncoming ? "justify-start" : "justify-end"} ${
+                isHighlighted
+                    // A static ring rather than a keyframe pulse, so this needs
+                    // no prefers-reduced-motion special case.
+                    ? "rounded-xl ring-2 ring-amber-400 ring-offset-2 ring-offset-white"
+                    : ""
+            }`}
         >
             {isIncoming && (
                 <Image
