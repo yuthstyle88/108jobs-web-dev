@@ -72,6 +72,29 @@ describe("runBackfill", () => {
     expect(s.fetchOnePage).not.toHaveBeenCalled();
   });
 
+  it("reports cancelled when the abort lands on the very last page", async () => {
+    // Regression guard for the post-fetch abort check. With exactly one page
+    // left, `hasMore()` flips to false in the same tick `onPage` sets the
+    // abort flag -- so there is no "next loop turn" for the pre-fetch check
+    // to catch it on. Only the check immediately after `fetchOnePage` can
+    // still report "cancelled" here; without it the loop would see
+    // `hasMore() === false` and fall through to "complete" instead.
+    const s = source(1);
+    const signal = {aborted: false};
+
+    const outcome = await runBackfill({
+      fetchOnePage: s.fetchOnePage,
+      hasMore: s.hasMore,
+      signal,
+      onPage: () => {
+        signal.aborted = true;
+      },
+    });
+
+    expect(outcome).toBe("cancelled");
+    expect(s.fetchOnePage).toHaveBeenCalledTimes(1);
+  });
+
   it("gives up rather than looping forever when the cursor never advances", async () => {
     // A server that keeps handing back a next-cursor would otherwise spin
     // here until the tab dies. `capped` exists so the UI can say the results
