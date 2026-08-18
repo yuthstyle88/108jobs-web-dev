@@ -144,9 +144,19 @@ export const ChatSearchPanel: React.FC<Props> = ({roomId, partnerName}) => {
             )}
 
             {trimmed && backfill.phase === "error" && (
-                <p className="border-b border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
-                    {t("profileChat.roomSearch.error")}
-                </p>
+                <div
+                    className="flex items-center justify-between gap-2 border-b border-red-100 bg-red-50 px-3 py-2 text-xs text-red-700"
+                    role="alert"
+                >
+                    <span>{t("profileChat.roomSearch.error")}</span>
+                    <button
+                        type="button"
+                        onClick={() => startBackfill(roomId)}
+                        className="rounded px-2 py-1 font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                        {t("profileChat.roomSearch.retry")}
+                    </button>
+                </div>
             )}
 
             <div className="min-h-0 flex-1 overflow-y-auto">

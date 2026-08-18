@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatMessage } from "108jobs-client";
 import { sendChatMessage, sendDeliveryAck, sendReadReceipt, sendTyping } from "@/modules/chat/events/sendEvents";
 import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 import { useChatStore } from "@/modules/chat/store/chatStore";
+import { decrypt } from "@/modules/chat/utils/security/crypto";
+import { UserService } from "@/services";
 import type { SendMessageDeps } from "@/modules/chat/types";
 
 // A fake adapter that just records what gets pushed, so these tests assert
@@ -91,26 +93,52 @@ function makeDeps(sent: ChatMessage[]): SendMessageDeps {
 }
 
 describe("sendChatMessage attachment metadata", () => {
+  const originalAuthInfo = UserService.Instance.authInfo;
+
   beforeEach(() => {
     useChatStore.setState({ retryMeta: {}, listMessages: [], messagesByRoom: {} });
   });
 
+  afterEach(() => {
+    // This suite is the only one in the file that ever populates
+    // authInfo.sharedKey -- restore it so a real key set up for one test
+    // can't silently make a *later* test (here or in another file sharing
+    // this module registry) start encrypting when it did not ask to.
+    UserService.Instance.authInfo = originalAuthInfo;
+  });
+
   it("puts the asset id beside the encrypted content, not inside it", async () => {
+    // The previous version of this test never put a `sharedKey` in the
+    // fixture, so `sendChatMessage`'s `useEnc` check was always false and
+    // `encrypt()` was never called -- it asserted only the sibling field
+    // and its name overstated what it proved (Finding 8, FINAL-findings.md).
+    // A real AES-GCM key here, and a round trip back through `decrypt()`
+    // with that same key, is what actually proves the server-visible
+    // `content` is ciphertext and not the plaintext JSON envelope.
+    const key = await crypto.subtle.generateKey({name: "AES-GCM", length: 256}, true, [
+      "encrypt",
+      "decrypt",
+    ]);
+    UserService.Instance.authInfo = {sharedKey: key};
+
     // The server cannot read an encrypted envelope, so this is the only way
     // chat_message.asset_id gets populated -- and media_proxy resolves the
     // owning room from that column to check membership.
     const sent: any[] = [];
     const deps = makeDeps(sent);   // reuse the helper this file already has
+    const plaintext = JSON.stringify({type: "file", url: "u", name: "n.pdf", assetId: "a-1"});
 
     await sendChatMessage(deps, {
-      message: JSON.stringify({type: "file", url: "u", name: "n.pdf", assetId: "a-1"}),
+      message: plaintext,
       senderId: 1 as never,
       secure: true,
       id: "m-1",
       assetId: "a-1",
     });
 
-    expect(sent[0]).toMatchObject({assetId: "a-1"});
+    expect(sent[0]).toMatchObject({assetId: "a-1", secure: true});
+    expect(sent[0].content).not.toBe(plaintext);
+    await expect(decrypt(sent[0].content, key)).resolves.toBe(plaintext);
   });
 
   it("omits the field entirely for an ordinary text message", async () => {
