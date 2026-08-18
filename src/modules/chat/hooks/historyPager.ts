@@ -95,6 +95,19 @@ export function createHistoryPager(deps: HistoryPagerDeps): HistoryPager {
       emitState();
       try {
         const {prevCursor} = await fetchPage(cursor);
+
+        // A newer run has since taken the in-flight slot -- meaning `reset()`
+        // ran while this fetch was still outstanding (see the comment on
+        // `inFlightGeneration` above). This run's result describes a room
+        // state that no longer exists; writing it now would clobber
+        // whatever `reset()` (or a fresher run already in flight) has since
+        // established. Concretely: a stale page reporting `prevCursor: null`
+        // would otherwise set `hasMoreFlag = false` on a pager `reset()`
+        // just promised callers was back to a fresh room's `hasMore() ===
+        // true`, so the next `fetchOnePage()`/`runBackfill` would silently
+        // no-op and report "complete" having made zero network calls.
+        if (inFlightGeneration !== myGeneration) return;
+
         const sameCursor = prevCursor !== null && prevCursor === lastCursor;
 
         if (!prevCursor || sameCursor) {
@@ -126,6 +139,11 @@ export function createHistoryPager(deps: HistoryPagerDeps): HistoryPager {
     lastCursor = null;
     isFetching = false;
     inFlight = null;
+    // Invalidates any run still executing in the background: its eventual
+    // `cursor`/`hasMoreFlag` writes are for the room state this reset just
+    // discarded, and the generation check in `fetchOnePage`'s `try` block
+    // above drops them instead of applying them.
+    inFlightGeneration += 1;
     emitState();
   };
 

@@ -157,6 +157,7 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                 <MediaBackfillBanner
                     phase={backfill.phase}
                     onCancel={() => cancelBackfill(roomId)}
+                    onRetry={() => startBackfill(roomId)}
                 />
             )}
 

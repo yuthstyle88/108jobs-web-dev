@@ -35,7 +35,8 @@ export const MediaError: React.FC<{onRetry: () => void}> = ({onRetry}) => {
 export const MediaBackfillBanner: React.FC<{
     phase: "running" | "capped" | "cancelled";
     onCancel: () => void;
-}> = ({phase, onCancel}) => {
+    onRetry: () => void;
+}> = ({phase, onCancel, onRetry}) => {
     const {t} = useTranslation();
 
     if (phase === "capped" || phase === "cancelled") {
@@ -44,14 +45,28 @@ export const MediaBackfillBanner: React.FC<{
         // then nothing when it lands on capped/cancelled instead of running
         // to completion -- the same gap Task 20's review found and fixed in
         // the search panel's matching notice.
+        //
+        // Retry button: without it, this state had no way back other than
+        // switching the sidebar tab away and back (Finding 5,
+        // FINAL-findings.md) -- Search self-heals on its next keystroke,
+        // but Media has no equivalent repeated trigger. Same
+        // `profileChat.mediaPanel.retry` string `MediaError` already uses
+        // below, not a new key.
         return (
-            <p
-                className="px-3 py-2 text-xs text-gray-600 bg-amber-50 border-b border-amber-100"
+            <div
+                className="flex items-center justify-between gap-2 px-3 py-2 text-xs text-gray-600 bg-amber-50 border-b border-amber-100"
                 role="status"
                 aria-live="polite"
             >
-                {t("profileChat.mediaPanel.partial")}
-            </p>
+                <span>{t("profileChat.mediaPanel.partial")}</span>
+                <button
+                    type="button"
+                    onClick={onRetry}
+                    className="rounded px-2 py-1 font-medium text-primary hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    {t("profileChat.mediaPanel.retry")}
+                </button>
+            </div>
         );
     }
 

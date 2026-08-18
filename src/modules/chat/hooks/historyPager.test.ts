@@ -164,6 +164,37 @@ describe("createHistoryPager", () => {
     await p3;
   });
 
+  it("Finding 7: a stale run resolving after reset() must not clobber the reset pager's cursor/hasMore", async () => {
+    // Sequence under test: run1 starts (page one, cursor=null), reset()
+    // fires while it is still in flight (e.g. a room switch), and only then
+    // does run1's stale result land -- reporting `prevCursor: null`, i.e.
+    // "no more pages". Without bumping the generation in reset() and
+    // checking it before writing cursor/hasMoreFlag, that stale result
+    // unconditionally sets hasMoreFlag = false, clobbering the fresh-room
+    // state reset() just established -- so a subsequent fetchOnePage()
+    // silently no-ops instead of fetching page one again.
+    const d = deferred<{prevCursor: string | null}>();
+    const fetchPage = vi.fn().mockReturnValueOnce(d.promise);
+    const pager = createHistoryPager({fetchPage});
+
+    const stale = pager.fetchOnePage(); // run1: fetchPage call #1, cursor=null
+    pager.reset();
+    expect(pager.hasMore()).toBe(true); // fresh-room default, right after reset()
+
+    d.resolve({prevCursor: null}); // the stale run reports "no more pages"
+    await stale;
+
+    // The bug: an unguarded write here leaves hasMore() false, and the
+    // reset room silently never pages again.
+    expect(pager.hasMore()).toBe(true);
+
+    fetchPage.mockResolvedValueOnce({prevCursor: "cursor-1"});
+    await pager.fetchOnePage();
+
+    expect(fetchPage).toHaveBeenCalledTimes(2); // the real, post-reset page one
+    expect(fetchPage).toHaveBeenLastCalledWith(null);
+  });
+
   it("reports isFetching around each page, and the resulting cursor/hasMore", async () => {
     const states: HistoryPagerState[] = [];
     const fetchPage = vi.fn(async () => ({prevCursor: "cursor-1"}));
