@@ -67,4 +67,21 @@ describe("buildAttachmentEnvelope", () => {
       assetId: "a-2",
     });
   });
+
+  it("round-trips a delivery submission through the parser", () => {
+    const json = buildAttachmentEnvelope({
+      type: "submit-delivery",
+      url: "https://x.test/d.zip",
+      name: "d.zip",
+      assetId: "d-1",
+    });
+    expect(parseAttachment(json)).toEqual({
+      kind: "file",
+      url: "https://x.test/d.zip",
+      name: "d.zip",
+      mime: undefined,
+      caption: undefined,
+      assetId: "d-1",
+    });
+  });
 });

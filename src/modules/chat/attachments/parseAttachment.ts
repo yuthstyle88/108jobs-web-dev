@@ -1,3 +1,5 @@
+import {parseStructured} from "@/modules/chat/utils/structured";
+
 import {classifyMime} from "./classifyMime";
 import {ATTACHMENT_MESSAGE_TYPES, type ChatAttachment} from "./types";
 
@@ -29,22 +31,15 @@ function nameFromUrl(url: string): string {
  * Returns `null` for everything that is not one — plain text, malformed JSON,
  * workflow messages, envelopes with no usable url — and never throws, because
  * it runs against every message in a room including ones written by older
- * clients.
+ * clients. The string/JSON/object guard is shared with `parseStructured`, the
+ * same way `buildAttachmentEnvelope` shares the write side with its sibling
+ * `serializeStructured` — one place decides what counts as a structured
+ * message.
  */
 export function parseAttachment(content: unknown): ChatAttachment | null {
-  if (typeof content !== "string") return null;
-  const trimmed = content.trim();
-  if (!trimmed.startsWith("{")) return null;
+  const record = parseStructured(content);
+  if (!record) return null;
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(trimmed);
-  } catch {
-    return null;
-  }
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
-
-  const record = parsed as Record<string, unknown>;
   if (typeof record.type !== "string" || !ATTACHMENT_TYPES.has(record.type)) return null;
 
   const url = optionalString(record.url);
