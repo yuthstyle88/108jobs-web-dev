@@ -20,5 +20,3 @@ Fixes #
 
 <!-- The test that fails without this change, the command you ran, or the layer you
      read to prove it. "CI is green" is not verification of a behaviour. -->
-
-<!-- probe: proves the required check blocks a merge; never merged -->
