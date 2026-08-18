@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 
-import {buildAttachmentEnvelope} from "@/modules/chat/attachments/buildAttachmentEnvelope";
+import {attachmentEnvelopeFields, buildAttachmentEnvelope} from "@/modules/chat/attachments/buildAttachmentEnvelope";
 import {parseAttachment} from "@/modules/chat/attachments/parseAttachment";
 
 describe("buildAttachmentEnvelope", () => {
@@ -83,5 +83,60 @@ describe("buildAttachmentEnvelope", () => {
       caption: undefined,
       assetId: "d-1",
     });
+  });
+});
+
+describe("attachmentEnvelopeFields", () => {
+  // sendStructured (src/modules/chat/utils/structured.ts) takes an object and
+  // serializes it itself; handing it buildAttachmentEnvelope's string would
+  // double-encode. This is the object form senders like submitDelivery build
+  // from directly instead of hand-rolling their own envelope object (and
+  // drifting from this contract, which is how `assetId` went missing once).
+
+  it("omits absent optional fields", () => {
+    const fields = attachmentEnvelopeFields({url: "https://x.test/a.pdf", name: "a.pdf"});
+    expect(fields).toEqual({
+      type: "file",
+      url: "https://x.test/a.pdf",
+      name: "a.pdf",
+    });
+    expect(fields).not.toHaveProperty("mime");
+    expect(fields).not.toHaveProperty("caption");
+    expect(fields).not.toHaveProperty("assetId");
+  });
+
+  it("includes optional fields when present", () => {
+    const fields = attachmentEnvelopeFields({
+      url: "https://x.test/api/v4/media-proxy/asset-1",
+      name: "Q3 quotation.pdf",
+      mime: "application/pdf",
+      caption: "here you go",
+      assetId: "asset-1",
+    });
+    expect(fields).toEqual({
+      type: "file",
+      url: "https://x.test/api/v4/media-proxy/asset-1",
+      name: "Q3 quotation.pdf",
+      mime: "application/pdf",
+      caption: "here you go",
+      assetId: "asset-1",
+    });
+  });
+
+  it("is exactly what buildAttachmentEnvelope serializes", () => {
+    const inputs = [
+      {url: "https://x.test/a.pdf", name: "a.pdf"},
+      {
+        url: "https://x.test/api/v4/media-proxy/asset-1",
+        name: "Q3 quotation.pdf",
+        mime: "application/pdf",
+        caption: "here you go",
+        assetId: "asset-1",
+      },
+      {type: "submit-delivery" as const, url: "https://x.test/d.zip", name: "d.zip", assetId: "d-1"},
+    ];
+    for (const input of inputs) {
+      expect(buildAttachmentEnvelope(input)).toBe(JSON.stringify(attachmentEnvelopeFields(input)));
+    }
   });
 });
