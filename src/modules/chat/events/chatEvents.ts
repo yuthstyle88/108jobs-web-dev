@@ -2,52 +2,12 @@
 // This provides typed helpers to emit and subscribe to chat CustomEvents
 // keeping window and event-name details in one place.
 import {isBrowser} from "@/utils/browser";
-import {ChatStatus} from "108jobs-client";
-
-type AnyRecord = Record<string, unknown>;
-
-function stripUndef<T extends AnyRecord>(obj: T): T {
-    const copy: AnyRecord = {...(obj as AnyRecord)};
-    for (const k of Object.keys(copy)) {
-        if (copy[k] === undefined) delete copy[k];
-    }
-    return copy as T;
-}
 
 export const CHAT_EVENT = Object.freeze({
-    MESSAGE: 'chat:message',
     TYPING: 'chat:typing',
     READ: 'chat:read',
     WS_RECONNECTED: 'ws:reconnected',
 } as const);
-
-export type ChatNewMessageDetail = {
-    roomId: string;          // required: UI context
-    id: string;              // required: for de-dup & updates
-    senderId: number;
-    content: string;         // required: message text (already decrypted for UI)
-    createdAt: string;       // ISO string; defaults to now if omitted
-    status: ChatStatus;      // pending | sent | failed
-};
-
-// Normalize detail for consistent UI handling (no socket dependency)
-export function normalizeChatNewMessageDetail(detail: ChatNewMessageDetail): ChatNewMessageDetail {
-    const now = new Date().toISOString();
-    return stripUndef({
-        ...detail,
-        createdAt: detail.createdAt ?? now,
-    });
-}
-
-export function emitChatNewMessage(detail: ChatNewMessageDetail): void {
-    if (!isBrowser()) return;
-    try {
-        const normalized = normalizeChatNewMessageDetail(detail);
-        window.dispatchEvent(new CustomEvent(CHAT_EVENT.MESSAGE, {detail: normalized}));
-    } catch {
-        // swallow errors to keep callers simple
-    }
-}
 
 export function emitWsReconnected(): void {
     if (!isBrowser()) return;
