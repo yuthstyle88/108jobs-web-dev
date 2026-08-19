@@ -111,7 +111,7 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
                 <button
                     type="button"
                     onClick={() => setOpen(false)}
-                    aria-label="Close job flow drawer"
+                    aria-label={t("profileChat.closeDrawer")}
                     className="ml-2 flex-shrink-0 rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden"
                 >
                     <X className="h-4 w-4" />
