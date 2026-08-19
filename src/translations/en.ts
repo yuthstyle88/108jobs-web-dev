@@ -40,6 +40,31 @@ export const en = {
             orders: "Orders",
             media: "Media",
             closeDrawer: "Close",
+            howToHire: {
+                promptTitle: "Not sure where to start?",
+                promptSubtitle: "Don't worry, here's a quick guide.",
+                open: "How to hire",
+                title: "How to hire",
+                close: "Close hiring guide",
+                dismiss: "Got it",
+                discuss: {
+                    title: "Discuss the work",
+                    scope: "Agree on the scope and expected results",
+                    price: "Confirm the price and delivery date",
+                },
+                pay: {
+                    title: "Approve the quotation and pay",
+                    quotation: "The freelancer sends a quotation through 108jobs",
+                    payment: "Approve it and complete payment through 108jobs",
+                },
+                review: {
+                    title: "Review and approve delivery",
+                    delivery: "The freelancer submits the work in the conversation",
+                    approval: "Review the delivery and approve it to release payment",
+                },
+                hintTitle: "Keep it on 108jobs",
+                hint: "Keep your agreement, files, delivery, and payment in this conversation so 108jobs can help if you need support.",
+            },
             mediaPanel: {
                 imageVideo: "Image & Video",
                 files: "Files",

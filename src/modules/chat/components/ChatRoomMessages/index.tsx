@@ -10,28 +10,29 @@ import {formatDateToLong} from "@/utils";
 import {getLocale} from "@/utils/date";
 import {useTranslation} from "react-i18next";
 import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
+import {
+    CHAT_TIMELINE_START_INDEX,
+    getTimelineArrayIndex,
+    syncChatTimeline,
+} from "@/modules/chat/components/ChatRoomMessages/timeline";
 
 interface ChatRoomMessagesProps {
     messages: ChatMessage[];
     partnerAvatar: StaticImageData | string;
-    customScrollParent?: HTMLElement | null;
     onTopReached?: () => void;
     hasMore?: boolean;
     isFetching?: boolean;
     onAtBottomChange?: (isAtBottom: boolean) => void;
-    initialLoadDone?: boolean;
     partnerId: LocalUserId;
 }
 
 const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
                                                                messages,
                                                                partnerAvatar,
-                                                               customScrollParent,
                                                                onTopReached,
                                                                hasMore,
                                                                isFetching,
                                                                onAtBottomChange,
-                                                               initialLoadDone = false,
                                                                partnerId
                                                            }) => {
     const {t} = useTranslation();
@@ -39,15 +40,25 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
 
     const currentLang = (params?.lang as string) || "th";
     const currentLocale = getLocale(currentLang);
-    const data = React.useMemo(() => [...messages], [messages]);
+    const [timeline, setTimeline] = React.useState(() => ({
+        items: messages,
+        firstItemIndex: CHAT_TIMELINE_START_INDEX,
+    }));
+    const data = timeline.items;
     const virtuosoRef = React.useRef<VirtuosoHandle | null>(null);
     const [isAtBottom, setIsAtBottom] = React.useState(true);
-    const isAtBottomRef = React.useRef(true);
 
     const pendingJumpMessageId = useChatPanelStore((s) => s.pendingJumpMessageId);
     const jumpToken = useChatPanelStore((s) => s.jumpToken);
     const highlightedMessageId = useChatPanelStore((s) => s.highlightedMessageId);
     const highlightToken = useChatPanelStore((s) => s.highlightToken);
+
+    // Keep the prop-driven message store and Virtuoso's inverse-scroll index
+    // in one layout update. Older history becomes a real prepend, not a
+    // delayed correction against an unrelated DOM scroll container.
+    React.useLayoutEffect(() => {
+        setTimeline((current) => syncChatTimeline(current, messages));
+    }, [messages]);
 
     // A jump can arrive before the message it names is in `data` -- the panel
     // that asked may still be backfilling the page it lives on. Leaving the
@@ -98,27 +109,13 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
         return () => clearTimeout(timer);
     }, [highlightedMessageId, highlightToken]);
 
-    const prevLengthRef = React.useRef(data.length);
-    const headIdRef = React.useRef<string | null>(
-        data.length ? String((data[0] as any)?.id ?? '') : null
-    );
-    const tailIdRef = React.useRef<string | null>(
-        data.length ? String((data[data.length - 1] as any)?.id ?? '') : null
-    );
-
-    const rangeRef = React.useRef({startIndex: 0, endIndex: 0});
     const hasMoreRef = React.useRef(hasMore);
     const isFetchingRef = React.useRef(isFetching);
-    const initialLoadDoneRef = React.useRef(initialLoadDone);
 
     React.useEffect(() => {
         hasMoreRef.current = hasMore;
         isFetchingRef.current = isFetching;
     }, [hasMore, isFetching]);
-
-    React.useEffect(() => {
-        initialLoadDoneRef.current = initialLoadDone;
-    }, [initialLoadDone]);
 
     const onTopReachedRef = React.useRef(onTopReached);
     React.useEffect(() => {
@@ -130,67 +127,7 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
         onTopReachedRef.current?.();
     }, []);
 
-    const handleRangeChanged = React.useCallback((range: { startIndex: number; endIndex: number }) => {
-        rangeRef.current = range;
-        if (!initialLoadDoneRef.current && range.startIndex === 0) {
-            return;
-        }
-        if (range.startIndex <= 2 && hasMoreRef.current && !isFetchingRef.current) {
-            handleTopReached();
-        }
-    }, [handleTopReached]);
-
-    React.useEffect(() => {
-        const prevLength = prevLengthRef.current;
-        const newLength = data.length;
-        const added = newLength - prevLength;
-
-        const prevHeadId = headIdRef.current;
-        const newHeadId = newLength ? String((data[0] as any)?.id ?? '') : null;
-
-        const prevTailId = tailIdRef.current;
-        const newTailId = newLength ? String((data[newLength - 1] as any)?.id ?? '') : null;
-
-        prevLengthRef.current = newLength;
-        headIdRef.current = newHeadId;
-        tailIdRef.current = newTailId;
-
-        if (added <= 0) return;
-
-        const isPrepend = prevHeadId !== newHeadId;
-        const isAppend = prevTailId !== newTailId;
-
-        // Gated on the user already being at (or near) the top of the loaded
-        // window -- i.e. exactly the case this anchor exists for: they
-        // scrolled up and asked for more, so snapping back to just past the
-        // new page keeps their place. Ungated, this fired on *every* prepend,
-        // including the ones the backfill now drives unprompted from the
-        // moment Media opens or a query is typed (Finding 1,
-        // FINAL-findings.md) -- dragging a user reading further down back up
-        // to the head of the loaded window on every single page, and
-        // overwriting the jump's smooth `scrollToIndex({align:'center'})`
-        // moments after it landed.
-        if (isPrepend && rangeRef.current.startIndex <= 2) {
-            setTimeout(() => {
-                virtuosoRef.current?.scrollToIndex({
-                    index: added,
-                    behavior: 'auto',
-                    align: 'start',
-                });
-            }, 10);
-        } else if (isAppend || isAtBottomRef.current) {
-            setTimeout(() => {
-                virtuosoRef.current?.scrollToIndex({
-                    index: newLength - 1,
-                    behavior: 'auto',
-                    align: 'end',
-                });
-            }, 10);
-        }
-    }, [data]);
-
     const handleAtBottomChange = React.useCallback((bottom: boolean) => {
-        isAtBottomRef.current = bottom;
         setIsAtBottom((prev) => {
             if (prev === bottom) return prev;
             return bottom;
@@ -240,16 +177,17 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
 
     const itemContent = React.useCallback((index: number, msg: ChatMessage) => {
         const currentDate = formatDateToLong(msg.createdAt, currentLocale);
-        const prev = index > 0 ? data[index - 1] : null;
+        const arrayIndex = getTimelineArrayIndex(index, timeline.firstItemIndex);
+        const prev = arrayIndex > 0 ? data[arrayIndex - 1] : null;
         const prevDate = prev ? formatDateToLong(prev.createdAt, currentLocale) : null;
         const showDate = currentDate !== prevDate;
 
         return (
-            <div className="px-2 sm:px-4 last:mb-0"> {/* Responsive padding */}
+            <div className="px-3 py-1 sm:px-6 sm:py-1.5">
                 {showDate && (
-                    <div className="w-full flex justify-center my-2 sm:my-3">
+                    <div className="my-3 flex w-full justify-center sm:my-4">
                         <div
-                            className="inline-block px-2 sm:px-3 py-1 min-w-[80px] sm:min-w-[100px] text-gray-600 bg-gray-100 text-xs sm:text-sm font-medium text-center rounded-full"
+                            className="inline-block rounded-full bg-slate-200/80 px-3 py-1 text-xs font-medium text-slate-600"
                         >
                             {currentDate}
                         </div>
@@ -263,7 +201,7 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
                 />
             </div>
         );
-    }, [data, currentLocale, partnerAvatar, partnerId, highlightedMessageId]);
+    }, [data, timeline.firstItemIndex, currentLocale, partnerAvatar, partnerId, highlightedMessageId]);
 
     const computeItemKey = React.useCallback((_index: number, msg: ChatMessage) => {
         const m: any = msg as any;
@@ -308,14 +246,11 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
             <Virtuoso
                 ref={virtuosoRef}
                 data={data}
-                followOutput={true}
-                customScrollParent={customScrollParent ?? undefined}
+                firstItemIndex={timeline.firstItemIndex}
+                followOutput={(isAtBottom) => isAtBottom ? "auto" : false}
                 computeItemKey={computeItemKey}
                 alignToBottom
-                rangeChanged={handleRangeChanged}
-                atTopStateChange={(atTop) => {
-                    // Intentionally empty to avoid double fetching
-                }}
+                startReached={handleTopReached}
                 atBottomStateChange={handleAtBottomChange}
                 components={{
                     Footer: FooterComponent,

@@ -47,7 +47,6 @@ import {useWorkflowStepper} from "@/hooks/utils/useWorkflowMachine";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {apiToUiStatus, useStateMachineStore} from "@/modules/chat/store/stateMachineStore";
 import {Trash2} from "lucide-react";
-import {JobDetailModal} from "@/modules/chat/components/Modal/JobDetailModal";
 import {ReviewDeliveryModal} from "@/modules/chat/components/Modal/ReviewDeliveryModal";
 import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
 import ChatSidebarTabs from "@/modules/chat/components/ChatSidebarTabs";
@@ -114,7 +113,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const [showReviewDeliveryModal, setShowReviewDeliveryModal] = useState<boolean>(false);
     const [showSubmitReviewModal, setShowSubmitReviewModal] = useState<boolean>(false);
     const [showQuotationModal, setShowQuotationModal] = useState<boolean>(false);
-    const [showJobDetailModal, setShowJobDetailModal] = useState<boolean>(false);
     const [hasStarted, setHasStarted] = useState<boolean>(false);
     // Flow sidebar is now managed globally via JobFlowSidebarProvider
     const {isOpen: isFlowOpen, setOpen: setIsFlowOpen, setContent} = useJobFlowSidebar();
@@ -126,8 +124,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const closeSearch = useChatPanelStore((s) => s.closeSearch);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const [scrollParentEl, setScrollParentEl] = useState<HTMLElement | null>(null);
     const roomPostId = post?.id;
     const roomProposalId = currentRoom.room.currentProposalId;
     const postCreatorId = post?.creatorId;
@@ -157,10 +153,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const {execute: submitReviewApi} = useHttpPost("submitUserReview");
 
     const inputContainerRef = useRef<HTMLDivElement>(null);
-    useCallback((el: HTMLDivElement | null) => {
-        scrollContainerRef.current = el;
-        if (el) setScrollParentEl(el);
-    }, []);
 
     const {
         selectedFile,
@@ -448,30 +440,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         approveWork: async () => await approveWorkWrapped(),
     });
 
-    // Load older history when user scrolls above halfway from the bottom.
+    // ChatRoomMessages owns the actual Virtuoso scroller and asks for one
+    // page when its top edge is reached. The pager coalesces duplicate calls.
     const handleOnTopReached = useCallback(() => {
         if (!hasMore || isFetching) return;
-        const rootEl = scrollContainerRef.current ?? scrollParentEl;
-
-        // Always fetch when ChatRoomMessages reports top reached; preserve position if we can
-        if (!rootEl) {
-            fetchHistory().catch(() => {
-            });
-            return;
-        }
-
-        const oldHeight = rootEl.scrollHeight;
-        fetchHistory()
-            .then(() => {
-                // Use requestAnimationFrame to ensure DOM is updated
-                requestAnimationFrame(() => {
-                    const newHeight = rootEl.scrollHeight;
-                    rootEl.scrollTop += newHeight - oldHeight; // preserve visual position
-                });
-            })
-            .catch(() => {
-            });
-    }, [hasMore, isFetching, scrollParentEl, fetchHistory]);
+        void fetchHistory();
+    }, [hasMore, isFetching, fetchHistory]);
 
     const renderFlowContent = () => (
         <>
@@ -505,8 +479,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // Provide the sidebar (Orders + Media tabs) to the global sidebar.
-    // Orders renders today's JobFlowContent verbatim; nothing about it changes.
+    // Provide the workflow-only Orders tab and the Media tab to the global sidebar.
     useLayoutEffect(() => {
         setContent(
             <ChatSidebarTabs
@@ -515,8 +488,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 orders={
                     <JobFlowContent
                         renderFlowContent={renderFlowContent}
-                        setShowJobDetailModal={setShowJobDetailModal}
-                        currentRoom={currentRoom}
                     />
                 }
             />
@@ -527,7 +498,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     }, [
         currentRoom,
         setContent,
-        setShowJobDetailModal,
         isEmployer,
         isEmployerKnown,
         hasStarted,
@@ -556,14 +526,14 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
                         isSearchOpen={isSearchOpen}
                     />
-                    <div className="relative flex min-h-0 flex-1 flex-col">
+                    <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
                         {isSearchOpen && (
                             <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
                         )}
                         <ChatRoomMessages
+                            key={roomId}
                             messages={messages}
                             partnerAvatar={partnerAvatar || ProfileImage.avatar}
-                            customScrollParent={scrollParentEl}
                             onTopReached={handleOnTopReached}
                             hasMore={hasMore}
                             isFetching={isFetching}
@@ -724,14 +694,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     revieweeId={partnerPersonId}
                     workflowId={currentRoom.workflow?.id}
                     submitReview={submitReview}
-                />
-            )}
-            {/* Job detail modal (post/room metadata) */}
-            {showJobDetailModal && (
-                <JobDetailModal
-                    showJobDetailModal={showJobDetailModal}
-                    setShowJobDetailModal={setShowJobDetailModal}
-                    post={post}
                 />
             )}
             {/* Quotation modal (propose/approve quotation for current job) */}

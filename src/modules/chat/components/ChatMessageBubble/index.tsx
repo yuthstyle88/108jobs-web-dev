@@ -272,7 +272,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         <div
             data-testid="chat-message"
             data-status={message.status}
-            className={`flex ${isIncoming ? "justify-start" : "justify-end"} ${
+            className={`flex w-full py-0.5 ${isIncoming ? "justify-start" : "justify-end"} ${
                 isHighlighted
                     // A static ring rather than a keyframe pulse, so this needs
                     // no prefers-reduced-motion special case.
@@ -286,11 +286,11 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                     alt="avatar"
                     width={32}
                     height={32}
-                    className="w-8 h-8 rounded-full mr-3 self-end"
+                    className="mr-2 size-7 self-end rounded-full sm:mr-3 sm:size-8"
                 />
             )}
             <div
-                className={`flex flex-col gap-1.5 ${isIncoming ? "items-start" : "items-end"} max-w-[90%]`}
+                className={`flex min-w-0 max-w-[88%] flex-col gap-1.5 sm:max-w-[72%] ${isIncoming ? "items-start" : "items-end"}`}
             >
                 {/* Keep MessageStatusIndicator outside the message card */}
                 <div className="text-xs text-gray-500 flex items-center gap-1.5">
@@ -927,20 +927,21 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                     </div>
                 ) : (
                     <div
-                        className={`max-w-[80vw] sm:max-w-xs px-3 py-2 rounded-2xl text-[15px] leading-relaxed font-sans break-words whitespace-pre-line shadow-sm ${
+                        className={`min-w-0 max-w-full rounded-2xl px-3.5 py-2.5 font-sans text-sm leading-6 shadow-sm sm:px-4 sm:text-[15px] ${
                             isIncoming
-                                ? "bg-[#E5E5E5] text-gray-800 rounded-bl-sm ring-1 ring-gray-200"
-                                : "bg-primary text-white rounded-br-sm"
+                                ? "rounded-bl-sm border border-slate-200 bg-white text-slate-800"
+                                : "rounded-br-sm bg-primary text-white"
                         }`}
                     >
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="flex-1">{message.content}</span>
-                            <span
-                                className="text-xs min-w-fit"
-                                style={{color: isIncoming ? "gray" : "rgba(255, 255, 255, 0.7)"}}
-                            >
-                                {time}
-                            </span>
+                        <div className="min-w-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                            {message.content}
+                        </div>
+                        <div
+                            className={`mt-1 text-right text-[11px] leading-4 ${
+                                isIncoming ? "text-slate-500" : "text-white/70"
+                            }`}
+                        >
+                            {time}
                         </div>
                     </div>
                 )}
