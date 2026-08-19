@@ -514,6 +514,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         currentStatus,
         roomId,
         partnerName,
+        roomPostId,
+        lang,
     ]);
 
     return (
