@@ -40,6 +40,31 @@ export const vi = {
             orders: "Đơn hàng",
             media: "Phương tiện",
             closeDrawer: "Đóng",
+            howToHire: {
+                promptTitle: "Bạn chưa biết bắt đầu từ đâu?",
+                promptSubtitle: "Đừng lo, đây là hướng dẫn nhanh dành cho bạn.",
+                open: "Cách thuê freelancer",
+                title: "Cách thuê freelancer",
+                close: "Đóng hướng dẫn thuê freelancer",
+                dismiss: "Đã hiểu",
+                discuss: {
+                    title: "Trao đổi về công việc",
+                    scope: "Thống nhất phạm vi công việc và kết quả mong đợi",
+                    price: "Chốt báo giá và thời hạn bàn giao",
+                },
+                pay: {
+                    title: "Duyệt báo giá và thanh toán",
+                    quotation: "Freelancer gửi báo giá qua 108jobs",
+                    payment: "Duyệt báo giá và thanh toán qua 108jobs",
+                },
+                review: {
+                    title: "Kiểm tra và duyệt bàn giao",
+                    delivery: "Freelancer gửi sản phẩm trong cuộc trò chuyện",
+                    approval: "Kiểm tra sản phẩm và duyệt để giải ngân",
+                },
+                hintTitle: "Trao đổi trên 108jobs",
+                hint: "Hãy giữ thỏa thuận, tệp, sản phẩm bàn giao và thanh toán trong cuộc trò chuyện này để 108jobs có thể hỗ trợ khi cần.",
+            },
             mediaPanel: {
                 imageVideo: "Ảnh và video",
                 files: "Tệp",
