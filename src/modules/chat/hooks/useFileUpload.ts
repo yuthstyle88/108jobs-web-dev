@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { REQUEST_STATE } from '@/services/HttpService';
 import { useHttpPost } from '@/hooks/api/http/useHttpPost';
 import { madGatewayUrl, uploadToMad, type MediaKind, type MediaVisibility } from '@/services/media/madUpload';
 import { uploadKindForMime } from '@/modules/chat/hooks/uploadKind';
+import { classifyMime, type AttachmentKind } from '@/modules/chat/attachments';
 import { useLocalAttachmentPreviewStore } from '@/modules/chat/store/localAttachmentPreviewStore';
 
 export type UploadedFile = {
@@ -17,6 +18,22 @@ export type UploadedFile = {
     /** MAD only. Goes in the chat envelope so the asset stays authorizable. */
     assetId?: string;
 } | null;
+
+/**
+ * A picked-but-not-yet-necessarily-uploaded file, shown in the composer the
+ * instant it is picked. `url` is a local `URL.createObjectURL(file)` blob —
+ * the bytes are already in the browser, so this needs no network round trip
+ * and stays valid whether the upload is still in flight or has already
+ * finished. Lives until the attachment is sent, removed, or replaced by a
+ * new pick, at which point its object URL is revoked (see
+ * `localAttachmentPreviewStore.ts` for the same lifecycle idiom applied to a
+ * different stage of the same attachment's life).
+ */
+export type AttachmentPreview = {
+    url: string;
+    kind: AttachmentKind;
+    name: string;
+};
 
 // Define interface for opts to satisfy Next.js serialization requirements
 interface UseFileUploadProps {
@@ -48,14 +65,83 @@ interface UseFileUploadProps {
 
 export const useFileUpload = (opts: UseFileUploadProps) => {
     const { setError, t, visibility = 'private', kind } = opts;
-    const [selectedFile, setSelectedFile] = useState<UploadedFile>(null);
+    const [selectedFile, setSelectedFileState] = useState<UploadedFile>(null);
     const [isDeletingFile, setIsDeletingFile] = useState<boolean>(false);
+    const [isUploading, setIsUploading] = useState<boolean>(false);
+    // Fraction in [0, 1], or null while indeterminate (no progress event has
+    // reported a computable length yet -- e.g. the legacy /account/files path,
+    // which has no progress source at all, or the brief window before MAD's
+    // first XHR progress event arrives).
+    const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+    const [attachmentPreview, setAttachmentPreview] = useState<AttachmentPreview | null>(null);
+
+    const abortControllerRef = useRef<AbortController | null>(null);
+    // Bumped on every new pick and every removal. Anything async (an
+    // in-flight uploadToMad call, its onProgress callback) checks this
+    // before touching state, so a pick the user has since replaced or
+    // removed can never resurrect itself or clobber whatever replaced it.
+    const uploadGenerationRef = useRef(0);
+    // Mirrors `attachmentPreview` for the unmount cleanup below, which
+    // cannot read component state directly.
+    const attachmentPreviewRef = useRef<AttachmentPreview | null>(null);
+    useEffect(() => {
+        attachmentPreviewRef.current = attachmentPreview;
+    }, [attachmentPreview]);
+
+    // Revoke whatever preview is still live if this hook instance unmounts
+    // mid-upload (room switch, navigation) -- otherwise its blob outlives
+    // the component that created it for the rest of the tab's life.
+    useEffect(() => {
+        return () => {
+            if (attachmentPreviewRef.current) {
+                URL.revokeObjectURL(attachmentPreviewRef.current.url);
+            }
+        };
+    }, []);
+
+    /** Revokes and clears whatever preview is live, atomically -- a plain
+     *  `revoke(); setState(null)` pair would race a concurrent replace. */
+    const clearAttachmentPreview = useCallback(() => {
+        setAttachmentPreview(prev => {
+            if (prev) URL.revokeObjectURL(prev.url);
+            return null;
+        });
+    }, []);
+
+    /** Revokes whatever preview was live and installs `next` in its place,
+     *  atomically, for the same reason as `clearAttachmentPreview`. */
+    const replaceAttachmentPreview = useCallback((next: AttachmentPreview) => {
+        setAttachmentPreview(prev => {
+            if (prev) URL.revokeObjectURL(prev.url);
+            return next;
+        });
+    }, []);
+
+    // The only thing outside this hook that ever calls this passes `null`
+    // (ChatRoomView.onSubmit / useWorkflowActions, once they have consumed
+    // `selectedFile` by sending it) -- so folding the preview's cleanup into
+    // the same call is exactly "clear the attachment", not a second concept
+    // callers need to remember separately.
+    const setSelectedFile = useCallback((value: UploadedFile) => {
+        setSelectedFileState(value);
+        if (value === null) {
+            clearAttachmentPreview();
+        }
+    }, [clearAttachmentPreview]);
 
     const { execute: uploadFile } = useHttpPost('uploadFile');
     const { execute: deleteFile } = useHttpPost('deleteFile');
 
     const handleFileUpload = useCallback(
         async (e: Event) => {
+            // Stays null for a call that returns before it ever starts an
+            // upload (no file picked, file too large) -- only assigned once
+            // this call actually claims a generation, below. Every place that
+            // later checks "is this call still current" must also check this
+            // is non-null first: without that, a no-op early return could
+            // coincidentally match whatever generation number a genuinely
+            // in-flight upload already owns and clobber its state.
+            let generation: number | null = null;
             try {
                 const input = e.target as HTMLInputElement | null;
                 const file = (input?.files && input.files[0]) || (e as any).dataTransfer?.files?.[0];
@@ -73,6 +159,21 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
 
                 setError(null);
 
+                // A new pick supersedes whatever was previously in flight --
+                // cancel its request and revoke its blob before starting this
+                // one's.
+                abortControllerRef.current?.abort();
+                generation = ++uploadGenerationRef.current;
+                const isCurrent = () => uploadGenerationRef.current === generation;
+
+                replaceAttachmentPreview({
+                    url: URL.createObjectURL(file),
+                    kind: classifyMime(fileType, file.name),
+                    name: file.name,
+                });
+                setIsUploading(true);
+                setUploadProgress(null);
+
                 // MAD when `.env` names a gateway, `/account/files` otherwise.
                 // The key is unset in every environment today, so this branch
                 // is the legacy one until somebody deploys MAD and sets it —
@@ -85,7 +186,41 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                     // the file, because taking the old `'image'` default meant
                     // declaring every pdf and video an image.
                     const resolvedKind = kind ?? uploadKindForMime(fileType, file.name);
-                    const asset = await uploadToMad(file, visibility, resolvedKind);
+
+                    const controller = new AbortController();
+                    abortControllerRef.current = controller;
+
+                    let asset;
+                    try {
+                        asset = await uploadToMad(file, visibility, resolvedKind, {
+                            signal: controller.signal,
+                            onProgress: (fraction) => {
+                                if (!isCurrent()) return;
+                                setUploadProgress(fraction);
+                            },
+                        });
+                    } catch (err) {
+                        if (err instanceof DOMException && err.name === 'AbortError') {
+                            // A deliberate cancel (the user removed the file
+                            // while it was still uploading) -- not a failure,
+                            // so no error toast. handleRemoveSelectedFile has
+                            // already cleared the preview/progress state.
+                            return null;
+                        }
+                        throw err;
+                    } finally {
+                        if (abortControllerRef.current === controller) {
+                            abortControllerRef.current = null;
+                        }
+                    }
+
+                    if (!isCurrent()) {
+                        // Superseded by a newer pick or a removal while this
+                        // request was finishing -- discard quietly rather than
+                        // resurrecting a file the user already moved on from.
+                        return null;
+                    }
+
                     uploaded = {
                         fileUrl: asset.url,
                         fileType: asset.mimeType || fileType,
@@ -111,9 +246,11 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 } else {
                     // Pass file as UploadImage interface
                     const res = await uploadFile({ image: file });
+                    if (!isCurrent()) return null;
                     if (res.state !== REQUEST_STATE.SUCCESS) {
                         const msg = t('upload.error') || 'Failed to upload file';
                         setError(msg);
+                        clearAttachmentPreview();
                         return null;
                     }
 
@@ -129,24 +266,51 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
 
                 if (!uploaded.fileUrl) {
                     setError(t('upload.error') || 'Failed to upload file');
+                    clearAttachmentPreview();
                     return null;
                 }
 
-                setSelectedFile(uploaded);
+                // The raw setState, not the wrapped `setSelectedFile` --
+                // committing a value must never also clear the preview that
+                // is this same attachment's own thumbnail.
+                setSelectedFileState(uploaded);
                 if (input) input.value = '';
                 return uploaded;
             } catch (err) {
+                if (generation !== null && uploadGenerationRef.current === generation) {
+                    clearAttachmentPreview();
+                }
                 setError(t('upload.error') || 'Failed to upload file. Please try again later');
                 console.error('File upload error:', err); // Debug
                 return null;
+            } finally {
+                if (generation !== null && uploadGenerationRef.current === generation) {
+                    setIsUploading(false);
+                }
             }
         },
-        [setError, t, uploadFile, visibility, kind],
+        [setError, t, uploadFile, visibility, kind, replaceAttachmentPreview, clearAttachmentPreview],
     );
 
     const handleRemoveSelectedFile = useCallback(
         async () => {
-            if (!selectedFile || isDeletingFile) return;
+            if (isDeletingFile) return;
+
+            if (isUploading) {
+                // Cancel the in-flight upload rather than deleting a finished
+                // asset -- there is no finished asset yet. Bumping the
+                // generation first means the abort's own rejection (and any
+                // progress event still in flight) is guaranteed to see itself
+                // as stale even if ordering ever surprises us.
+                uploadGenerationRef.current += 1;
+                abortControllerRef.current?.abort();
+                setIsUploading(false);
+                setUploadProgress(null);
+                setSelectedFile(null); // no-op on the value; revokes the preview
+                return;
+            }
+
+            if (!selectedFile) return;
 
             try {
                 setIsDeletingFile(true);
@@ -171,7 +335,7 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                 setIsDeletingFile(false);
             }
         },
-        [isDeletingFile, selectedFile, setError, t, deleteFile],
+        [isDeletingFile, isUploading, selectedFile, setError, t, deleteFile, setSelectedFile],
     );
 
     return {
@@ -180,5 +344,8 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
         isDeletingFile,
         handleFileUpload,
         handleRemoveSelectedFile,
+        isUploading,
+        uploadProgress,
+        attachmentPreview,
     } as const;
 };

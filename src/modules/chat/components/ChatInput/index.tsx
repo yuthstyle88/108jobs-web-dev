@@ -13,6 +13,17 @@ interface ChatInputProps {
     onSubmit: (data: MessageForm) => void;
     disabled?: boolean;
     disabledHint?: string;
+    /**
+     * A picked file is still uploading -- true from the moment a file is
+     * selected until `useFileUpload` either resolves it into `selectedFile`
+     * or fails. Shows a spinner over the paperclip, and -- unlike `disabled`,
+     * which also greys out the textarea -- blocks only sending: the envelope
+     * needs the final assetId/URL, which does not exist yet, but a caption
+     * can still be typed while the upload finishes. Blocking submission
+     * without also disabling+styling the Send button would repeat the exact
+     * silently-dead-button bug `hasAttachment` below was added to fix, just
+     * for a different cause.
+     */
     isUploading?: boolean;
     onFileUpload?: (e: Event) => void;
     onTyping?: (typing: boolean) => void;
@@ -128,8 +139,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }, [watch("message")]);
 
     // === SUBMIT ===
+    // Also blocked while a file is still uploading: the envelope needs the
+    // final assetId/URL, which only exists once useFileUpload resolves it
+    // into `selectedFile`. The Send button below mirrors this in its own
+    // `disabled` attribute so the block is visible, not just silent.
+    const sendBlocked = disabled || Boolean(isUploading);
+
     const internalSubmit = (data: MessageForm) => {
-        if (disabled) return;
+        if (sendBlocked) return;
         const text = (data.message ?? "").trim();
         // A file attached with no caption is a legitimate send -- only block
         // when there is truly nothing to send.
@@ -279,8 +296,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 {/* Send Button */}
                 <button
                     type="submit"
-                    className={`ml-3 ${disabled ? "text-gray-300" : "text-blue-500 hover:text-primary"}`}
-                    disabled={disabled}
+                    className={`ml-3 ${sendBlocked ? "text-gray-300" : "text-blue-500 hover:text-primary"}`}
+                    disabled={sendBlocked}
+                    aria-label={t("profileChat.sendMessage") || "Send message"}
+                    aria-disabled={sendBlocked}
+                    title={isUploading ? t("profileChat.uploadingLabel") || "Uploading" : undefined}
                 >
                     <Send size={20} />
                 </button>

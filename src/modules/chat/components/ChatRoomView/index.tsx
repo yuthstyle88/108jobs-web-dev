@@ -167,8 +167,16 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         setSelectedFile,
         isDeletingFile,
         handleFileUpload,
-        handleRemoveSelectedFile
+        handleRemoveSelectedFile,
+        isUploading,
+        uploadProgress,
+        attachmentPreview,
     } = useFileUpload({setError, t: (k: string) => t(k)});
+    // Rounded once here rather than at each of the progress indicator's two
+    // render sites (thumbnail overlay, file-chip bar) below, so they can
+    // never disagree by a rounding edge case. Null while indeterminate --
+    // see `useFileUpload`'s own doc comment on `uploadProgress` for when.
+    const uploadPercent = uploadProgress != null ? Math.round(uploadProgress * 100) : null;
     const upsertHistory = useChatStore(s => s.upsertHistory);
     const markRoomReadInStore = useRoomsStore(s => s.markRoomRead);
 
@@ -556,23 +564,110 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         <div className="flex items-center gap-2">
                             <div className="flex-1">
                                 {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-                                {selectedFile && (
+                                {attachmentPreview && (
                                     <div
-                                        className="mb-2 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <span aria-hidden className="text-blue-600">📎</span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-medium text-blue-900 truncate">
-                                                    {selectedFile.fileName}
-                                                </p>
+                                        className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                                        {attachmentPreview.kind === "file" ? (
+                                            <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
+                                        ) : (
+                                            <div
+                                                className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/5 ring-1 ring-black/5">
+                                                {attachmentPreview.kind === "image" ? (
+                                                    <img
+                                                        src={attachmentPreview.url}
+                                                        alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : (
+                                                    // No `controls`: this is a static pick-time preview, not a
+                                                    // player, and it must never autoplay -- omitting `autoPlay`
+                                                    // (rather than setting it false) is what guarantees that.
+                                                    <video
+                                                        src={attachmentPreview.url}
+                                                        muted
+                                                        playsInline
+                                                        preload="metadata"
+                                                        aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                )}
+                                                {isUploading && (
+                                                    uploadPercent != null ? (
+                                                        <div
+                                                            role="progressbar"
+                                                            aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                            aria-valuemin={0}
+                                                            aria-valuemax={100}
+                                                            aria-valuenow={uploadPercent}
+                                                            aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                        >
+                                                            <span aria-hidden className="text-xs font-semibold text-white">
+                                                                {uploadPercent}%
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            role="status"
+                                                            aria-live="polite"
+                                                            aria-busy="true"
+                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                        >
+                                                            <span
+                                                                aria-hidden
+                                                                className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                                            />
+                                                            <span className="sr-only">
+                                                                {t("profileChat.uploadingLabel") || "Uploading"}
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                )}
                                             </div>
+                                        )}
+
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-blue-900 truncate">
+                                                {attachmentPreview.name}
+                                            </p>
+                                            {isUploading && attachmentPreview.kind === "file" && (
+                                                uploadPercent != null ? (
+                                                    <div
+                                                        role="progressbar"
+                                                        aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                        aria-valuemin={0}
+                                                        aria-valuemax={100}
+                                                        aria-valuenow={uploadPercent}
+                                                        aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
+                                                    >
+                                                        <div
+                                                            className="h-full rounded-full bg-blue-500 transition-[width]"
+                                                            style={{width: `${uploadPercent}%`}}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        role="status"
+                                                        aria-live="polite"
+                                                        aria-busy="true"
+                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
+                                                    >
+                                                        <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-400"/>
+                                                        <span className="sr-only">
+                                                            {t("profileChat.uploadingLabel") || "Uploading"}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            )}
                                         </div>
+
                                         <button
                                             type="button"
                                             onClick={handleRemoveSelectedFile}
                                             disabled={isDeletingFile}
-                                            className={`ml-2 p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
-                                            aria-label="Remove attached file"
+                                            className={`ml-2 shrink-0 self-start p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
+                                            aria-label={t("profileChat.removeAttachment") || "Remove attachment"}
                                         >
                                             <Trash2 className={`h-4 w-4 ${isDeletingFile ? 'animate-spin' : ''}`}/>
                                         </button>
@@ -582,6 +677,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                     onSubmit={onSubmit}
                                     disabledHint=""
                                     hasAttachment={!!selectedFile}
+                                    isUploading={isUploading}
                                     onFileUpload={(ev: any) => handleFileUpload(ev as any)}
                                     onTyping={(v) => {
                                         try {

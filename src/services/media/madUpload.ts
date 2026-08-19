@@ -88,6 +88,102 @@ async function madJson<T>(
     : ((await response.json()) as T);
 }
 
+/** Options for the byte-streaming leg of {@link uploadToMad}. The session-open
+ *  and complete calls are single small JSON round trips with nothing worth
+ *  reporting progress on or cancelling mid-flight, so neither field applies
+ *  to them. */
+export type UploadToMadOptions = {
+  /**
+   * Fraction of the byte upload sent so far, in `[0, 1]`. Only invoked when
+   * the browser can compute it (`ProgressEvent.lengthComputable`) — a `File`
+   * body's size is known up front, so in practice this fires for every
+   * upload, but the check is kept honest rather than assumed, so a caller
+   * never sees `NaN` or a fabricated percentage.
+   */
+  onProgress?: (fraction: number) => void;
+  /**
+   * Lets a caller cancel an in-flight upload — e.g. the composer's remove
+   * button while a just-picked file is still uploading. Rejects with a
+   * `DOMException` named `"AbortError"`, matching what `fetch` itself does
+   * for an aborted `signal`, so a caller can tell a deliberate cancel apart
+   * from a real failure with the same `error.name` check it would already
+   * use for `fetch`.
+   */
+  signal?: AbortSignal;
+};
+
+/**
+ * Streams `file` to `url` over `XMLHttpRequest` rather than `fetch`.
+ *
+ * `fetch` has no request-side progress events at all — there is nothing in
+ * the Fetch API that reports bytes already sent, only bytes received back.
+ * `XMLHttpRequest.upload.onprogress` is the one DOM API that does, which is
+ * why this single leg of an otherwise all-`fetch` handshake is different.
+ */
+function uploadBytesWithProgress(
+  url: string,
+  token: string,
+  contentType: string,
+  file: File,
+  options?: UploadToMadOptions,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const signal = options?.signal;
+
+    const onAbort = () => xhr.abort();
+    const detachAbort = () => signal?.removeEventListener("abort", onAbort);
+
+    xhr.upload.onprogress = (event) => {
+      if (!options?.onProgress) return;
+      // `lengthComputable` false means the browser could not determine the
+      // total size -- reporting a fraction against an unknown denominator
+      // would be a fabricated number, so this skips the callback entirely
+      // rather than emitting NaN or a bogus percentage.
+      if (!event.lengthComputable || event.total <= 0) return;
+      options.onProgress(event.loaded / event.total);
+    };
+
+    xhr.onload = () => {
+      detachAbort();
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`MAD byte upload failed: ${xhr.status}`));
+      }
+    };
+    // No HTTP response at all (offline, DNS failure, CORS rejection, …).
+    // `xhr.status` is 0 here, which keeps this on the exact same message
+    // shape the non-2xx branch above uses rather than a differently-worded
+    // error a caller would need a second check for.
+    xhr.onerror = () => {
+      detachAbort();
+      reject(new Error(`MAD byte upload failed: ${xhr.status}`));
+    };
+    xhr.onabort = () => {
+      detachAbort();
+      reject(new DOMException("MAD byte upload aborted", "AbortError"));
+    };
+
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("content-type", contentType);
+
+    if (signal) {
+      if (signal.aborted) {
+        // Already cancelled before this leg ever opened a connection --
+        // reject the same way a mid-flight abort would, without sending
+        // anything.
+        reject(new DOMException("MAD byte upload aborted", "AbortError"));
+        return;
+      }
+      signal.addEventListener("abort", onAbort);
+    }
+
+    xhr.send(file);
+  });
+}
+
 /**
  * Upload one file to MAD and return where it now lives.
  *
@@ -104,6 +200,7 @@ export async function uploadToMad(
   file: File,
   visibility: MediaVisibility,
   kind: MediaKind = "image",
+  options?: UploadToMadOptions,
 ): Promise<UploadedAsset> {
   const gateway = madGatewayUrl();
   if (!gateway) {
@@ -129,17 +226,13 @@ export async function uploadToMad(
     }),
   });
 
-  const bytes = await fetch(`${gateway}/uploads/${session.sessionId}/bytes`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "content-type": contentType,
-    },
-    body: file,
-  });
-  if (!bytes.ok) {
-    throw new Error(`MAD byte upload failed: ${bytes.status}`);
-  }
+  await uploadBytesWithProgress(
+    `${gateway}/uploads/${session.sessionId}/bytes`,
+    token,
+    contentType,
+    file,
+    options,
+  );
 
   const asset = await madJson<{assetId: string; contentType?: string}>(
     `${gateway}/uploads/complete`,
