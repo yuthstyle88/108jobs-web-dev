@@ -79,3 +79,35 @@ describe("next.config headers() CSP connect-src", () => {
     expect(directive.trim().endsWith(" ")).toBe(false);
   });
 });
+
+// Regression coverage for the same-origin media proxy (src/app/api/media/[assetId]/route.ts).
+// `afterFiles` already has a catch-all `/api/:path*` rewrite straight to the backend, and
+// `/api/media/[assetId]` is a *dynamic* route -- unlike `/api/auth/session` and
+// `/api/auth/refresh` (non-dynamic, guarded via a `beforeFiles` self-mapping above), a
+// `beforeFiles` self-mapping does not force a dynamic route to resolve before the catch-all
+// (confirmed empirically against a real dev server: it fell through to the catch-all and got
+// proxied to `${apiBase}/media/:path*`, a path the backend does not serve). The self-mapping
+// has to live in `afterFiles`, positioned before the catch-all, for Next to re-check dynamic
+// routes against it.
+describe("next.config rewrites() media proxy precedence", () => {
+  it("maps /api/media/* to itself in afterFiles, positioned before the catch-all backend proxy", async () => {
+    const result = await nextConfig.rewrites!();
+    const afterFiles = Array.isArray(result) ? result : (result.afterFiles ?? []);
+
+    const mediaIndex = afterFiles.findIndex(
+      (r) => r.source === "/api/media/:path*" && r.destination === "/api/media/:path*",
+    );
+    const catchAllIndex = afterFiles.findIndex((r) => r.source === "/api/:path*");
+
+    expect(mediaIndex).toBeGreaterThanOrEqual(0);
+    expect(catchAllIndex).toBeGreaterThanOrEqual(0);
+    expect(mediaIndex).toBeLessThan(catchAllIndex);
+  });
+
+  it("does not rely on a beforeFiles self-mapping for the (dynamic) media route -- that mechanism only works for non-dynamic routes", async () => {
+    const result = await nextConfig.rewrites!();
+    const beforeFiles = Array.isArray(result) ? [] : (result.beforeFiles ?? []);
+
+    expect(beforeFiles.some((r) => r.source.startsWith("/api/media"))).toBe(false);
+  });
+});
