@@ -177,6 +177,18 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // never disagree by a rounding edge case. Null while indeterminate --
     // see `useFileUpload`'s own doc comment on `uploadProgress` for when.
     const uploadPercent = uploadProgress != null ? Math.round(uploadProgress * 100) : null;
+    // Belt-and-suspenders for the composer thumbnail's own <img>/<video>:
+    // unlike ChatMessageBubble's local preview (handleMediaElementError),
+    // this element has no server-backed URL to fall back to while a file is
+    // still only picked/uploading, so a failed blob load (e.g. a
+    // misconfigured `img-src`/`media-src` CSP -- `'self'` does not cover
+    // `blob:`) must degrade to the same file chip a non-media attachment
+    // gets rather than rendering nothing. Compared against the preview's own
+    // url (not a plain boolean) so a new pick -- which always carries a
+    // fresh `URL.createObjectURL` value -- automatically stops treating
+    // itself as failed without needing a separate reset effect.
+    const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
+    const thumbLoadFailed = attachmentPreview !== null && attachmentPreview.url === failedPreviewUrl;
     const upsertHistory = useChatStore(s => s.upsertHistory);
     const markRoomReadInStore = useRoomsStore(s => s.markRoomRead);
 
@@ -567,7 +579,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                 {attachmentPreview && (
                                     <div
                                         className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                                        {attachmentPreview.kind === "file" ? (
+                                        {attachmentPreview.kind === "file" || thumbLoadFailed ? (
                                             <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
                                         ) : (
                                             <div
@@ -577,6 +589,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                                         src={attachmentPreview.url}
                                                         alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
                                                         className="h-full w-full object-cover"
+                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
                                                     />
                                                 ) : (
                                                     // No `controls`: this is a static pick-time preview, not a
@@ -589,6 +602,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                                         preload="metadata"
                                                         aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
                                                         className="h-full w-full object-cover"
+                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
                                                     />
                                                 )}
                                                 {isUploading && (
@@ -630,7 +644,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                             <p className="text-sm font-medium text-blue-900 truncate">
                                                 {attachmentPreview.name}
                                             </p>
-                                            {isUploading && attachmentPreview.kind === "file" && (
+                                            {isUploading && (attachmentPreview.kind === "file" || thumbLoadFailed) && (
                                                 uploadPercent != null ? (
                                                     <div
                                                         role="progressbar"

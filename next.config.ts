@@ -189,7 +189,30 @@ const nextConfig: NextConfig = {
             "default-src 'self'",
             scriptSrc,
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: https://cdn.108jobs.com",
+            // `blob:` is required alongside `data:` here, not covered by it or
+            // by `'self'` -- CSP treats `blob:`/`filesystem:` as their own
+            // scheme sources that must be listed explicitly (this is why
+            // `data:` above is already spelled out rather than assumed under
+            // `'self'`; `blob:` needs the exact same treatment and was
+            // missing). Two independent features create
+            // `URL.createObjectURL(file)` previews of a locally-picked/just-
+            // uploaded file and hand them straight to an <img>/<video> src:
+            // the composer's own pick-time thumbnail (useFileUpload.ts
+            // `attachmentPreview`) and the chat bubble's just-sent-message
+            // preview (localAttachmentPreviewStore.ts). Without `blob:` here,
+            // the browser silently blocks both -- the bubble's is masked
+            // because ChatMessageBubble's `handleMediaElementError` catches
+            // the failed load and falls back to the real (slower,
+            // retry-hardened) `/api/media/{assetId}` URL, but the composer's
+            // preview has no such fallback, so it never renders at all.
+            "img-src 'self' data: blob: https://cdn.108jobs.com",
+            // `<video>`/`<audio>` sources fall back to `default-src` when
+            // `media-src` is unset, which -- like `img-src` before this
+            // change -- does not cover `blob:` either. Spelled out
+            // separately (rather than widening `default-src`) so this stays
+            // as narrow as the `img-src` fix above and does not loosen any
+            // other fallback category still relying on `default-src 'self'`.
+            "media-src 'self' blob:",
             "font-src 'self' data:",
             `connect-src ${[...new Set(["'self'", apiOrigin, apiWsOrigin, identityOrigin, mediaGatewayOrigin, mediaPublicOrigin].filter(Boolean))].join(' ')}`,
             "frame-ancestors 'none'",
