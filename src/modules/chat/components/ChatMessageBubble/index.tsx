@@ -215,7 +215,9 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     const {
         attemptKey: mediaAttemptKey,
         failed: mediaLoadFailed,
+        loaded: mediaLoaded,
         handleError: handleMediaError,
+        handleLoad: handleMediaLoad,
     } = useMediaLoadRetry(attachmentUrl ?? "");
 
     const handleMediaElementError = useCallback(() => {
@@ -788,27 +790,93 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                             aria-label={attachment.name}
                                             className="block self-start overflow-hidden rounded-md ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
-                                            <img
-                                                key={mediaAttemptKey}
-                                                src={displayUrl}
-                                                alt={attachment.name}
-                                                onError={handleMediaElementError}
-                                                className="block max-w-full sm:max-w-[320px] max-h-80 w-auto h-auto object-contain bg-gray-50"
-                                            />
+                                            {/*
+                                              Fixed-size, `animate-pulse` skeleton box while
+                                              pending -- same idiom as the Media grid's tile
+                                              chrome (`bg-gray-100 ring-1 ring-black/5`) and
+                                              the failed-state box above (`h-40 ...
+                                              sm:max-w-[320px]`), so this is also roughly
+                                              where the loaded image will end up sitting.
+                                              `relative` so the `<img>` can be pinned to
+                                              exactly this box via `absolute inset-0` while
+                                              it is invisible -- once `mediaLoaded`, both this
+                                              wrapper's fixed size and the `<img>`'s absolute
+                                              positioning drop out together, in the same
+                                              commit, handing sizing back to the image's own
+                                              natural dimensions exactly as before this
+                                              change. The `<img>` itself is never
+                                              unmounted here (same `key`, same node,
+                                              className-only changes) -- only `opacity`
+                                              hides it, never `display: none`, which would
+                                              stop the browser from ever fetching it: a
+                                              `display: none` element has no layout box, so
+                                              it cannot be observed as "near the viewport"
+                                              and this codebase has no lazy-loaded `<img>`
+                                              equivalent here to worry about, but `opacity`
+                                              is what keeps this element's behavior identical
+                                              to `MediaGrid`'s (which does lazy-load) rather
+                                              than diverging by accident.
+                                            */}
+                                            <span
+                                                className={`relative block ${
+                                                    mediaLoaded
+                                                        ? ""
+                                                        : "h-40 w-full animate-pulse rounded-md bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
+                                                }`}
+                                            >
+                                                <img
+                                                    key={mediaAttemptKey}
+                                                    src={displayUrl}
+                                                    alt={attachment.name}
+                                                    onError={handleMediaElementError}
+                                                    onLoad={handleMediaLoad}
+                                                    className={`block max-w-full sm:max-w-[320px] max-h-80 object-contain bg-gray-50 transition-opacity duration-200 ${
+                                                        mediaLoaded
+                                                            ? "w-auto h-auto opacity-100"
+                                                            : "absolute inset-0 h-full w-full opacity-0"
+                                                    }`}
+                                                />
+                                            </span>
                                         </button>
                                     ) : (
-                                        <video
-                                            key={mediaAttemptKey}
-                                            src={displayUrl}
-                                            onError={handleMediaElementError}
-                                            controls
-                                            preload="metadata"
-                                            // Never autoplay: a room full of clips
-                                            // would all start talking at once.
-                                            className="w-full max-w-full sm:max-w-[320px] max-h-80 rounded-md ring-1 ring-black/5 bg-black"
+                                        // Same pending/loaded treatment as the image above,
+                                        // sharing the same skeleton box. `controls` itself
+                                        // is withheld until `mediaLoaded`: an invisible
+                                        // (`opacity-0`) control bar would still be reachable
+                                        // by Tab while the skeleton visually covers it, and
+                                        // there is nothing useful to control before
+                                        // `onLoadedMetadata` has fired anyway. `<video>`
+                                        // never fires a generic `load` event the way `<img>`
+                                        // does (confirmed against MDN's HTMLMediaElement
+                                        // event list) -- `onLoadedMetadata` is the matching
+                                        // "this attempt actually got bytes back" signal for
+                                        // `preload="metadata"`, and it does not fire when
+                                        // `onError` fires instead.
+                                        <span
+                                            className={`relative block ${
+                                                mediaLoaded
+                                                    ? ""
+                                                    : "h-40 w-full animate-pulse rounded-md bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
+                                            }`}
                                         >
-                                            {t("profileChat.mediaPanel.videoUnsupported")}
-                                        </video>
+                                            <video
+                                                key={mediaAttemptKey}
+                                                src={displayUrl}
+                                                onError={handleMediaElementError}
+                                                onLoadedMetadata={handleMediaLoad}
+                                                controls={mediaLoaded}
+                                                preload="metadata"
+                                                // Never autoplay: a room full of clips
+                                                // would all start talking at once.
+                                                className={`w-full max-w-full sm:max-w-[320px] max-h-80 rounded-md ring-1 ring-black/5 bg-black transition-opacity duration-200 ${
+                                                    mediaLoaded
+                                                        ? "opacity-100"
+                                                        : "absolute inset-0 h-full opacity-0"
+                                                }`}
+                                            >
+                                                {t("profileChat.mediaPanel.videoUnsupported")}
+                                            </video>
+                                        </span>
                                     )}
                                     <div className="flex items-center gap-2 flex-wrap">
                                         <span className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]">

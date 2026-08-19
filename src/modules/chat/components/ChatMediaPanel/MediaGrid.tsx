@@ -29,7 +29,12 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
     // grid's old immediate give-up-on-first-error with a bounded retry,
     // landing on the exact same `thumbnailFailed` treatment once (and only
     // once) every attempt is exhausted.
-    const {attemptKey, failed, handleError} = useMediaLoadRetry(src);
+    const {attemptKey, failed, loaded, handleError, handleLoad} = useMediaLoadRetry(src);
+    // Only the image branch below ever renders something that can be
+    // "pending" -- the video branch is a static card, never a real
+    // `<video>` element (see its own comment) -- but this still reads as
+    // `false` for it either way, so the ternary below stays simple.
+    const isPending = !isVideo && !failed && !loaded;
 
     return (
         // `group` belongs on the li, not the tile button: the jump control is
@@ -39,7 +44,15 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
                 type="button"
                 onClick={onOpen}
                 aria-label={item.attachment.name}
-                className="block aspect-square w-full overflow-hidden rounded-md bg-gray-100 ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                // This tile's own `bg-gray-100 ring-1 ring-black/5` already
+                // *is* the quiet placeholder: while pending, the `<img>`
+                // below is `opacity-0`, so this background shows through in
+                // its place -- no separate skeleton element needed.
+                // `animate-pulse` is the only thing added for the pending
+                // case, to read as "loading" rather than a dead tile.
+                className={`block aspect-square w-full overflow-hidden rounded-md bg-gray-100 ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isPending ? "animate-pulse" : ""
+                }`}
             >
                 {isVideo ? (
                     // Deliberately not a <video preload="metadata"> here: the
@@ -48,7 +61,9 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
                     // media-proxy request per video the instant Media opens,
                     // whether or not it is ever played. A flat card costs
                     // nothing over the wire -- the real video loads once, on
-                    // demand, when the lightbox opens it.
+                    // demand, when the lightbox opens it. Nothing to retry or
+                    // hide here: this card never fetches anything, so it has
+                    // no broken-image moment to guard against.
                     <span className="flex h-full w-full items-center justify-center bg-gray-800" />
                 ) : failed ? (
                     <span className="flex h-full w-full items-center justify-center px-1 text-center text-[10px] text-gray-500">
@@ -60,13 +75,26 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
                     // `loading="lazy"` defers the authenticated media-proxy
                     // request until the tile is actually near the viewport,
                     // instead of every image in the grid firing at once.
+                    // Kept mounted (never conditionally removed) and hidden
+                    // via `opacity`, not `display: none`, for the entire
+                    // pending/retrying window: a `display: none` image has no
+                    // layout box, so it can never be observed as "near the
+                    // viewport" and `loading="lazy"` would never fire its
+                    // request at all while hidden that way (verified against
+                    // the IntersectionObserver spec, which native lazy-load
+                    // shares its viewport-distance heuristic with) --
+                    // `opacity` keeps the box, so the fetch (and this retry)
+                    // still happens exactly as before.
                     <img
                         key={attemptKey}
                         src={src}
                         alt=""
                         loading="lazy"
                         onError={handleError}
-                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        onLoad={handleLoad}
+                        className={`h-full w-full object-cover transition duration-200 group-hover:scale-105 ${
+                            loaded ? "opacity-100" : "opacity-0"
+                        }`}
                     />
                 )}
             </button>
