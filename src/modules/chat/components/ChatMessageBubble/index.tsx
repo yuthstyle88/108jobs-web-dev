@@ -8,6 +8,7 @@ import React, {useMemo, useEffect, useState, useCallback} from "react";
 import {Maximize2} from "lucide-react";
 import {toLocalTime} from "@/utils/date";
 import MessageStatusIndicator from "@/modules/chat/components/MessageStatusIndicator";
+import {ChatMessageAvatar} from "@/modules/chat/components/ChatMessageAvatar";
 import {dbg} from "@/modules/chat/utils";
 import {isSameOrAfter, isApproxSame} from "@/modules/chat/utils/helpers";
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
@@ -281,13 +282,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
             }`}
         >
             {isIncoming && (
-                <Image
-                    src={partnerAvatar || MessageImage.chatAvt}
-                    alt="avatar"
-                    width={32}
-                    height={32}
-                    className="mr-2 size-7 self-end rounded-full sm:mr-3 sm:size-8"
-                />
+                <ChatMessageAvatar src={partnerAvatar || MessageImage.chatAvt}/>
             )}
             <div
                 className={`flex min-w-0 max-w-[88%] flex-col gap-1.5 sm:max-w-[72%] ${isIncoming ? "items-start" : "items-end"}`}
