@@ -9,12 +9,14 @@ describe("ChatMessageAvatar", () => {
         const markup = renderToStaticMarkup(
             createElement(ChatMessageAvatar, {src: "/partner-avatar.jpg"}),
         );
+        const wrapper = markup.match(/<span\b[^>]*>/)?.[0] ?? "";
+        const image = markup.match(/<img\b[^>]*>/)?.[0] ?? "";
 
-        expect(markup).toContain("size-7");
-        expect(markup).toContain("sm:size-8");
-        expect(markup).toContain("shrink-0");
-        expect(markup).toContain("overflow-hidden");
-        expect(markup).toContain("rounded-full");
-        expect(markup).toContain("object-cover");
+        expect(wrapper).toContain("size-7");
+        expect(wrapper).toContain("sm:size-8");
+        expect(wrapper).toContain("shrink-0");
+        expect(wrapper).toContain("overflow-hidden");
+        expect(wrapper).toContain("rounded-full");
+        expect(image).toContain("object-cover");
     });
 });
