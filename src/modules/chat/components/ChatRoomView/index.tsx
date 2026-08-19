@@ -24,6 +24,7 @@
 
 import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
+import {useParams} from "next/navigation";
 import {v4 as uuidv4} from "uuid";
 import {ProfileImage} from "@/constants/images";
 import type {
@@ -92,6 +93,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                                        localUser
                                                    }) => {
     const {t} = useTranslation();
+    const params = useParams<{lang?: string}>();
+    const lang = params?.lang || "th";
     const {person, userInfo} = useUserStore();
     const {wasUnread, clearWasUnread, getRoom} = useRoomsStore();
     const roomData = getRoom(roomId);
@@ -124,7 +127,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const closeSearch = useChatPanelStore((s) => s.closeSearch);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
-    const roomPostId = post?.id;
+    const roomPostId = post?.id ?? currentRoom.room.postId;
     const roomProposalId = currentRoom.room.currentProposalId;
     const postCreatorId = post?.creatorId;
     const isEmployer = postCreatorId != null && person?.id != null ? String(postCreatorId) === String(person?.id) : undefined;
@@ -488,6 +491,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 orders={
                     <JobFlowContent
                         renderFlowContent={renderFlowContent}
+                        jobId={roomPostId}
+                        lang={lang}
                     />
                 }
             />
