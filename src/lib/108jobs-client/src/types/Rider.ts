@@ -14,8 +14,6 @@ export type Rider = {
     // Vehicle
     vehicleType: VehicleType;
     vehiclePlateNumber?: string | null;
-    licenseNumber?: string | null;
-    licenseExpiryDate?: string | null;
 
     // Verification
     isVerified: boolean;

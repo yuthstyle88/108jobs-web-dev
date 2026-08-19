@@ -143,6 +143,7 @@ import {VerifyBankAccount} from "./types/VerifyBankAccount";
 import {ListRidersQuery} from "./types/ListRidersQuery";
 import {ListRidersResponse} from "./types/ListRidersResponse";
 import {AdminVerifyRiderRequest} from "./types/AdminVerifyRiderRequest";
+import {GetRiderResponse} from "./types/GetRiderResponse";
 import {ListUserChatRoomsQuery} from "./types/ListUserChatRoomsQuery";
 
 enum HttpType {
@@ -1121,6 +1122,25 @@ export class Api108Jobs extends Controller {
             HttpType.Post,
             "/admin/riders/verify",
             form,
+            options,
+        );
+    }
+
+    /**
+     * @summary Read one rider's profile, with their application when the
+     * caller is the rider or an admin.
+     */
+    @Security("bearerAuth")
+    @Get("/riders/profile/{riderId}")
+    @Tags("Riders")
+    async getRiderApplication(
+        @Path() riderId: number,
+        @Inject() options?: RequestOptions,
+    ): Promise<GetRiderResponse> {
+        return this.#wrapper<object, GetRiderResponse>(
+            HttpType.Get,
+            `/riders/profile/${riderId}`,
+            {},
             options,
         );
     }
