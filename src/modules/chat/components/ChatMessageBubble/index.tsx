@@ -5,7 +5,7 @@ import type {ChatMessage, LocalUserId} from "108jobs-client";
 import {MessageImage} from "@/constants/images";
 import {useTranslation} from "react-i18next";
 import {useChatStore} from "@/modules/chat/store/chatStore";
-import React, {useMemo, useEffect, useState} from "react";
+import React, {useMemo, useEffect, useState, useCallback} from "react";
 import {toLocalTime} from "@/utils/date";
 import MessageStatusIndicator from "@/modules/chat/components/MessageStatusIndicator";
 import {dbg} from "@/modules/chat/utils";
@@ -17,6 +17,7 @@ import {useChatServices} from "@/modules/chat/contexts/ChatBridgeProvider";
 import {attachmentSrc, parseAttachment, type AttachmentItem} from "@/modules/chat/attachments";
 import {MediaLightbox} from "@/modules/chat/components/ChatMediaPanel/MediaLightbox";
 import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
+import {useLocalAttachmentPreviewStore} from "@/modules/chat/store/localAttachmentPreviewStore";
 import {useMediaLoadRetry} from "@/modules/chat/hooks/useMediaLoadRetry";
 
 interface ChatMessageItemProps {
@@ -187,16 +188,50 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         [attachment],
     );
 
+    // Only ever non-empty for a message *this tab* uploaded: `useFileUpload`
+    // registers a local object URL keyed by the same MAD assetId the
+    // envelope carries, right after upload, so the sender can see their own
+    // just-sent image/video instantly -- no network request at all -- while
+    // the server-side persistence race `mediaRetryPolicy.ts` works around is
+    // still running. `isOwner` is redundant with that in practice (a
+    // recipient's tab can never hold this file's bytes) but keeps the
+    // intent explicit. Reads `undefined` once the store releases the entry
+    // (a bounded time after registration), which is what hands rendering
+    // back to `attachmentUrl` below.
+    const localPreviewUrl = useLocalAttachmentPreviewStore((s) =>
+        isOwner && attachment ? s.byAssetId[attachment.assetId ?? ""] : undefined,
+    );
+    const usingLocalPreview = localPreviewUrl != null;
+    const displayUrl = localPreviewUrl ?? attachmentUrl;
+
     // Bounded retry for the image/video below -- see `mediaRetryPolicy.ts`
     // for why a just-sent attachment's first load can 404 for both the
-    // sender and the recipient. One hook instance covers both kinds: the
-    // image and video branches below are mutually exclusive, so only one of
-    // them ever actually mounts an element that can call `handleMediaError`.
+    // sender and the recipient. Tracks `attachmentUrl` (the network path)
+    // specifically, not `displayUrl`: a blob URL either resolves or it does
+    // not, and there is nothing about it that improves by retrying the same
+    // string. One hook instance covers both kinds below: the image and
+    // video branches are mutually exclusive, so only one of them ever
+    // actually mounts an element that can call `handleMediaError`.
     const {
         attemptKey: mediaAttemptKey,
         failed: mediaLoadFailed,
         handleError: handleMediaError,
     } = useMediaLoadRetry(attachmentUrl ?? "");
+
+    const handleMediaElementError = useCallback(() => {
+        if (usingLocalPreview) {
+            // The local blob itself failed -- release it so the next render
+            // falls back to `attachmentUrl` and its own retry above, rather
+            // than staying stuck on a blob that cannot succeed if reloaded
+            // as-is (unlike a 404, there is no server-side race for a blob
+            // URL to win by waiting).
+            if (attachment?.assetId) {
+                useLocalAttachmentPreviewStore.getState().release(attachment.assetId);
+            }
+            return;
+        }
+        handleMediaError();
+    }, [usingLocalPreview, attachment, handleMediaError]);
 
     // `submit-delivery` carries the same url/assetId shape as a plain file
     // attachment (see `useWorkflowActions.submitDelivery`) but this bubble
@@ -755,17 +790,17 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                         >
                                             <img
                                                 key={mediaAttemptKey}
-                                                src={attachmentUrl}
+                                                src={displayUrl}
                                                 alt={attachment.name}
-                                                onError={handleMediaError}
+                                                onError={handleMediaElementError}
                                                 className="block max-w-full sm:max-w-[320px] max-h-80 w-auto h-auto object-contain bg-gray-50"
                                             />
                                         </button>
                                     ) : (
                                         <video
                                             key={mediaAttemptKey}
-                                            src={attachmentUrl}
-                                            onError={handleMediaError}
+                                            src={displayUrl}
+                                            onError={handleMediaElementError}
                                             controls
                                             preload="metadata"
                                             // Never autoplay: a room full of clips
