@@ -5,6 +5,7 @@ import { REQUEST_STATE } from '@/services/HttpService';
 import { useHttpPost } from '@/hooks/api/http/useHttpPost';
 import { madGatewayUrl, uploadToMad, type MediaKind, type MediaVisibility } from '@/services/media/madUpload';
 import { uploadKindForMime } from '@/modules/chat/hooks/uploadKind';
+import { useLocalAttachmentPreviewStore } from '@/modules/chat/store/localAttachmentPreviewStore';
 
 export type UploadedFile = {
     fileUrl: string;
@@ -92,6 +93,21 @@ export const useFileUpload = (opts: UseFileUploadProps) => {
                         storageKey: asset.filename,
                         assetId: asset.assetId,
                     };
+
+                    // `private` only: this is what lets a chat bubble show the
+                    // sender's own just-sent image/video instantly, from the
+                    // bytes already in this tab, instead of waiting on a
+                    // network round trip -- see localAttachmentPreviewStore.ts.
+                    // A `public` upload (e.g. the resume form's `visibility:
+                    // 'public'` call) has no optimistic-message concept to
+                    // preview into, so there is nothing here that would ever
+                    // read it back; registering one anyway would just be a
+                    // blob nobody looks up until it self-expires.
+                    if (visibility === 'private' && asset.assetId) {
+                        useLocalAttachmentPreviewStore
+                            .getState()
+                            .register(asset.assetId, URL.createObjectURL(file));
+                    }
                 } else {
                     // Pass file as UploadImage interface
                     const res = await uploadFile({ image: file });

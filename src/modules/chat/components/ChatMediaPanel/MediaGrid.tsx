@@ -5,6 +5,7 @@ import {useTranslation} from "react-i18next";
 import {Play} from "lucide-react";
 
 import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
+import {useMediaLoadRetry} from "@/modules/chat/hooks/useMediaLoadRetry";
 
 import {MediaEmpty} from "./MediaStates";
 
@@ -21,8 +22,14 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
     onJump,
 }) => {
     const {t} = useTranslation();
-    const [failed, setFailed] = React.useState(false);
     const isVideo = item.attachment.kind === "video";
+    const src = attachmentSrc(item.attachment);
+    // A just-sent attachment can 404 on its first load, for the sender and
+    // any recipient alike -- see `mediaRetryPolicy.ts`. This replaces the
+    // grid's old immediate give-up-on-first-error with a bounded retry,
+    // landing on the exact same `thumbnailFailed` treatment once (and only
+    // once) every attempt is exhausted.
+    const {attemptKey, failed, handleError} = useMediaLoadRetry(src);
 
     return (
         // `group` belongs on the li, not the tile button: the jump control is
@@ -54,10 +61,11 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
                     // request until the tile is actually near the viewport,
                     // instead of every image in the grid firing at once.
                     <img
-                        src={attachmentSrc(item.attachment)}
+                        key={attemptKey}
+                        src={src}
                         alt=""
                         loading="lazy"
-                        onError={() => setFailed(true)}
+                        onError={handleError}
                         className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                     />
                 )}
