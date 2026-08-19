@@ -3,15 +3,24 @@ import {create} from "zustand";
 /**
  * How long a just-uploaded file's local preview outlives its upload before
  * falling back to the network URL. Generous relative to
- * `MEDIA_RETRY_DELAYS_MS`'s ~3.5s worst case (see `mediaRetryPolicy.ts`), so
- * the handoff is not itself a race: by the time this fires, the row that
- * whole policy works around has essentially always already landed, and
- * `ChatMessageBubble` falls back to the ordinary, retry-hardened
- * `attachmentSrc()` URL, which by then is virtually always already
- * servable. Bounded rather than held for the rest of the session because an
- * object URL pins the whole file's bytes in memory for as long as it lives.
+ * `MEDIA_RETRY_DELAYS_MS`'s ~15.5s worst case (see `mediaRetryPolicy.ts`,
+ * whose own doc comment ties that number to api-108jobs's 10s chat-flush
+ * interval), so the handoff is not itself a race: by the time this fires,
+ * the row that whole policy works around has essentially always already
+ * landed, and `ChatMessageBubble` falls back to the ordinary,
+ * retry-hardened `attachmentSrc()` URL, which by then is virtually always
+ * already servable. Bounded rather than held for the rest of the session
+ * because an object URL pins the whole file's bytes in memory for as long
+ * as it lives.
+ *
+ * Was 20s when the retry budget below it was ~3.5s (a 16.5s margin). That
+ * budget widened to cover a 10s server-side flush interval it had
+ * originally underestimated -- see `mediaRetryPolicy.ts` -- which would
+ * have squeezed this hold's margin down to 4.5s if left unchanged. Widened
+ * in step, to roughly 2x the new retry ceiling, to keep a comparably
+ * comfortable cushion rather than a thin one.
  */
-export const LOCAL_PREVIEW_HOLD_MS = 20_000;
+export const LOCAL_PREVIEW_HOLD_MS = 30_000;
 
 interface LocalAttachmentPreviewState {
   /**
