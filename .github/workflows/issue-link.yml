@@ -62,9 +62,48 @@ jobs:
               return;
             }
 
-            // GitHub only auto-closes from the PR description, so that is what is checked.
-            const refs = [...body.matchAll(
-              /\b(?:fix|fixes|fixed|close|closes|closed|resolve|resolves|resolved)\s+([\w.-]+\/[\w.-]+)?#(\d+)\b/gi
+            // GitHub only auto-closes from the PR description, so that is what is checked
+            // -- minus anything inside backticks. A description that DOCUMENTS the wrong
+            // form ("`Fixes #1, #2` closes only #1") is prose about issue references, not
+            // a set of them, and reading it literally means resolving example numbers
+            // against this repo and failing on whatever they happen to be here. This
+            // gate's own fix hit exactly that.
+            const prose = body
+              .replace(/```[\s\S]*?```/g, " ")
+              .replace(/~~~[\s\S]*?~~~/g, " ")
+              .replace(/`[^`\n]*`/g, " ");
+
+            const KEYWORD =
+              /\b(?:fix|fixes|fixed|close|closes|closed|resolve|resolves|resolved)\s+/;
+
+            // `Fixes #72, #73, #74` closes ONE issue, not three. GitHub needs the keyword
+            // before every number; the ones it skips stay open forever behind a green
+            // check -- the exact record this gate exists to keep.
+            //
+            // Not hypothetical: yuthstyle88/pos108-terminal-dev#76 carried
+            // "Fixes #72, #73, #74, #75", closed #72, and left three issues open. The
+            // author had no way to know -- the check passed, because one valid reference
+            // was all it ever looked for.
+            //
+            // Only the comma/`and` list is flagged. "Fixes #10. See also #11" and
+            // "Fixes #10, Fixes #11" are both left alone.
+            const lists = [...prose.matchAll(
+              new RegExp(KEYWORD.source + "(?:[\\w.-]+\\/[\\w.-]+)?#\\d+(?:\\s*(?:,|and)\\s+#\\d+)+", "gi")
+            )];
+            if (lists.length) {
+              core.setFailed(
+                'A comma-separated list closes only its FIRST issue:\n  ' +
+                lists.map(m => m[0].replace(/\s+/g, ' ')).join('\n  ') + '\n\n' +
+                'GitHub needs the closing keyword before every number. One per line:\n' +
+                '  Fixes #72\n  Fixes #73\n\n' +
+                'Left as a list, every issue after the first stays open with nothing\n' +
+                'recorded to say why.'
+              );
+              return;
+            }
+
+            const refs = [...prose.matchAll(
+              new RegExp(KEYWORD.source + "([\\w.-]+\\/[\\w.-]+)?#(\\d+)\\b", "gi")
             )];
 
             if (refs.length === 0) {
