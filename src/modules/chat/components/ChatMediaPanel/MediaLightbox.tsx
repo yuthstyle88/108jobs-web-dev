@@ -5,7 +5,7 @@ import {createPortal} from "react-dom";
 import {useTranslation} from "react-i18next";
 import {X} from "lucide-react";
 
-import type {AttachmentItem} from "@/modules/chat/attachments";
+import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
 
 type Props = {
     item: AttachmentItem;
@@ -164,7 +164,7 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackF
             <div className="flex flex-1 items-center justify-center overflow-auto p-4">
                 {item.attachment.kind === "video" ? (
                     <video
-                        src={item.attachment.url}
+                        src={attachmentSrc(item.attachment)}
                         controls
                         preload="metadata"
                         className="max-h-full max-w-full"
@@ -173,7 +173,7 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackF
                     </video>
                 ) : (
                     <img
-                        src={item.attachment.url}
+                        src={attachmentSrc(item.attachment)}
                         alt={item.attachment.name}
                         className="max-h-full max-w-full object-contain"
                     />

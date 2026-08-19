@@ -5,7 +5,7 @@ import type {ChatMessage, LocalUserId} from "108jobs-client";
 import {MessageImage} from "@/constants/images";
 import {useTranslation} from "react-i18next";
 import {useChatStore} from "@/modules/chat/store/chatStore";
-import React, {useMemo, useEffect} from "react";
+import React, {useMemo, useEffect, useState} from "react";
 import {toLocalTime} from "@/utils/date";
 import MessageStatusIndicator from "@/modules/chat/components/MessageStatusIndicator";
 import {dbg} from "@/modules/chat/utils";
@@ -14,7 +14,9 @@ import {useReadLastIdStore} from "@/modules/chat/store/readStore";
 import {usePeerOnline} from "@/modules/chat/store/presenceStore";
 import {Stars} from "@/components/RatingDisplay";
 import {useChatServices} from "@/modules/chat/contexts/ChatBridgeProvider";
-import {parseAttachment} from "@/modules/chat/attachments";
+import {attachmentSrc, parseAttachment, type AttachmentItem} from "@/modules/chat/attachments";
+import {MediaLightbox} from "@/modules/chat/components/ChatMediaPanel/MediaLightbox";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 
 interface ChatMessageItemProps {
     message: ChatMessage;
@@ -52,6 +54,41 @@ interface ProposedQuoteMessage {
     rating?: number;
     comment?: string;
 }
+
+/**
+ * The small pill-shaped "Open" link shown under an attachment. Shared
+ * between the generic file card and the image/video card so the two markup
+ * copies cannot drift, the same way `attachmentSrc` keeps their url the
+ * same. Module-scoped (not nested in `ChatMessageItem`) so it is not
+ * recreated -- and its DOM remounted -- on every parent render.
+ */
+const AttachmentOpenLink: React.FC<{href: string; isIncoming: boolean}> = ({href, isIncoming}) => {
+    const {t} = useTranslation();
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-md transition-colors ${
+                isIncoming
+                    ? "bg-gray-900 hover:bg-black text-white"
+                    : "bg-primary hover:bg-[#063a68] text-white"
+            }`}
+        >
+            <svg
+                className="w-4 h-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+            >
+                <path
+                    d="M12.293 2.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414L9.414 16H5v-4.414l8.293-8.293z"
+                />
+            </svg>
+            <span>{t("global.open")}</span>
+        </a>
+    );
+};
 
 const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                                              message,
@@ -138,6 +175,47 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     const attachment = useMemo(
         () => (isFileMsg ? parseAttachment(viewMsg?.content) : null),
         [isFileMsg, viewMsg.content],
+    );
+
+    // Same derivation the Media panel uses (`attachmentSrc`) -- a same-origin
+    // `/api/media/{assetId}` when the envelope carries one, else the stored
+    // (backend) url unchanged. Computed once here rather than at each of the
+    // several places below that read it.
+    const attachmentUrl = useMemo(
+        () => (attachment ? attachmentSrc(attachment) : undefined),
+        [attachment],
+    );
+
+    // `submit-delivery` carries the same url/assetId shape as a plain file
+    // attachment (see `useWorkflowActions.submitDelivery`) but this bubble
+    // reads it off the loosely-typed `parsed` object below rather than
+    // through `parseAttachment`, since that workflow card's copy predates the
+    // attachment module. Same same-origin derivation regardless.
+    const deliveryUrl = useMemo(() => {
+        const url = (parsed as any)?.url;
+        if (typeof url !== "string" || !url) return undefined;
+        return attachmentSrc({url, assetId: (parsed as any)?.assetId});
+    }, [parsed]);
+
+    const requestJump = useChatPanelStore((s) => s.requestJump);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+    // What `MediaLightbox` needs to render this message's attachment full
+    // size. It is the same shape `collectAttachments` builds for the Media
+    // panel, assembled here instead of there because this bubble is the one
+    // place that already has both `attachment` and the rest of the message.
+    const lightboxItem = useMemo<AttachmentItem | null>(
+        () =>
+            attachment
+                ? {
+                    messageId: String(viewMsg.id),
+                    senderId: Number(viewMsg.senderId) || 0,
+                    createdAt,
+                    isOwner,
+                    attachment,
+                }
+                : null,
+        [attachment, viewMsg.id, viewMsg.senderId, createdAt, isOwner],
     );
 
     return (
@@ -548,10 +626,10 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                 <div className="mt-1 text-xs text-primary break-words">
                                     {(parsed as any)?.name || (parsed as any)?.url || ""}
                                 </div>
-                                {(parsed as any)?.url && (
+                                {deliveryUrl && (
                                     <div className="mt-2">
                                         <a
-                                            href={(parsed as any).url}
+                                            href={deliveryUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-md transition-colors ${
@@ -616,99 +694,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                         }`}
                     >
                         <div className={`px-4 py-3 ${isIncoming ? "bg-gray-50" : "bg-blue-100"}`}>
-                            {attachment ? (
-                                <div className="flex items-start gap-3 flex-wrap">
-                                    {attachment.kind === "image" ? (
-                                        <a
-                                            href={attachment.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="block flex-shrink-0"
-                                        >
-                                            <img
-                                                src={attachment.url}
-                                                alt={attachment.name}
-                                                className="w-16 h-16 object-cover rounded-md ring-1 ring-black/5"
-                                            />
-                                        </a>
-                                    ) : attachment.kind === "video" ? (
-                                        <video
-                                            src={attachment.url}
-                                            controls
-                                            preload="metadata"
-                                            // Never autoplay: a room full of clips
-                                            // would all start talking at once.
-                                            className="w-40 sm:w-56 rounded-md ring-1 ring-black/5 bg-black"
-                                        >
-                                            {t("profileChat.mediaPanel.videoUnsupported")}
-                                        </video>
-                                    ) : (
-                                        <div
-                                            className="w-12 h-12 rounded-md flex items-center justify-center bg-white ring-1 ring-black/5 text-gray-600"
-                                            aria-hidden
-                                        >
-                                            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                                                <path
-                                                    d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM8 18h8v2H8v-2zm0-4h8v2H8v-2zm6-7v5h5"
-                                                />
-                                            </svg>
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <a
-                                                href={attachment?.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]"
-                                            >
-                                                {attachment?.name}
-                                            </a>
-                                            {attachment?.mime && (
-                                                <span
-                                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700 ring-1 ring-black/5"
-                                                >
-                                                    {String(attachment.mime).split("/").pop()}
-                                                </span>
-                                            )}
-                                            <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
-                                        </div>
-                                        {attachment?.caption && (
-                                            <div
-                                                className="mt-1 text-xs text-gray-700 whitespace-pre-line break-words"
-                                            >
-                                                {String(attachment.caption)}
-                                            </div>
-                                        )}
-                                        {attachment?.url && (
-                                            <div className="mt-2">
-                                                <a
-                                                    href={attachment.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-md transition-colors ${
-                                                        isIncoming
-                                                            ? "bg-gray-900 hover:bg-black text-white"
-                                                            : "bg-primary hover:bg-[#063a68] text-white"
-                                                    }`}
-                                                >
-                                                    <svg
-                                                        className="w-4 h-4"
-                                                        viewBox="0 0 20 20"
-                                                        fill="currentColor"
-                                                        aria-hidden="true"
-                                                    >
-                                                        <path
-                                                            d="M12.293 2.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414L9.414 16H5v-4.414l8.293-8.293z"
-                                                        />
-                                                    </svg>
-                                                    <span>{t("global.open")}</span>
-                                                </a>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
+                            {!attachment ? (
                                 // `isFileMsg` is true (the envelope's `type` is "file") but
                                 // `parseAttachment` could not find a usable `url` -- an
                                 // older or malformed message. Nothing to link to or preview,
@@ -732,6 +718,101 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                         <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
                                     </div>
                                 </div>
+                            ) : attachment.kind === "image" || attachment.kind === "video" ? (
+                                // Shown properly inline -- constrained to a sensible max
+                                // size, aspect ratio preserved (`object-contain`, no
+                                // `object-cover` crop), never wider than the card itself
+                                // (`max-w-full`) so a huge original never blows out the
+                                // bubble or overflows on mobile.
+                                <div className="flex flex-col gap-2">
+                                    {attachment.kind === "image" ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsLightboxOpen(true)}
+                                            aria-label={attachment.name}
+                                            className="block self-start overflow-hidden rounded-md ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <img
+                                                src={attachmentUrl}
+                                                alt={attachment.name}
+                                                className="block max-w-full sm:max-w-[320px] max-h-80 w-auto h-auto object-contain bg-gray-50"
+                                            />
+                                        </button>
+                                    ) : (
+                                        <video
+                                            src={attachmentUrl}
+                                            controls
+                                            preload="metadata"
+                                            // Never autoplay: a room full of clips
+                                            // would all start talking at once.
+                                            className="w-full max-w-full sm:max-w-[320px] max-h-80 rounded-md ring-1 ring-black/5 bg-black"
+                                        >
+                                            {t("profileChat.mediaPanel.videoUnsupported")}
+                                        </video>
+                                    )}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]">
+                                            {attachment.name}
+                                        </span>
+                                        {attachment.mime && (
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700 ring-1 ring-black/5">
+                                                {String(attachment.mime).split("/").pop()}
+                                            </span>
+                                        )}
+                                        <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
+                                    </div>
+                                    {attachment.caption && (
+                                        <div className="text-xs text-gray-700 whitespace-pre-line break-words">
+                                            {String(attachment.caption)}
+                                        </div>
+                                    )}
+                                    {attachmentUrl && <AttachmentOpenLink href={attachmentUrl} isIncoming={isIncoming} />}
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-3 flex-wrap">
+                                    <div
+                                        className="w-12 h-12 rounded-md flex items-center justify-center bg-white ring-1 ring-black/5 text-gray-600"
+                                        aria-hidden
+                                    >
+                                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM8 18h8v2H8v-2zm0-4h8v2H8v-2zm6-7v5h5"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <a
+                                                href={attachmentUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]"
+                                            >
+                                                {attachment.name}
+                                            </a>
+                                            {attachment.mime && (
+                                                <span
+                                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700 ring-1 ring-black/5"
+                                                >
+                                                    {String(attachment.mime).split("/").pop()}
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
+                                        </div>
+                                        {attachment.caption && (
+                                            <div
+                                                className="mt-1 text-xs text-gray-700 whitespace-pre-line break-words"
+                                            >
+                                                {String(attachment.caption)}
+                                            </div>
+                                        )}
+                                        {attachmentUrl && (
+                                            <div className="mt-2">
+                                                <AttachmentOpenLink href={attachmentUrl} isIncoming={isIncoming} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -753,6 +834,17 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                             </span>
                         </div>
                     </div>
+                )}
+
+                {isLightboxOpen && lightboxItem && (
+                    <MediaLightbox
+                        item={lightboxItem}
+                        onClose={() => setIsLightboxOpen(false)}
+                        onJump={(messageId) => {
+                            setIsLightboxOpen(false);
+                            requestJump(messageId);
+                        }}
+                    />
                 )}
             </div>
         </div>

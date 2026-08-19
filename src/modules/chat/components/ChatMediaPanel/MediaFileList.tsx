@@ -4,7 +4,7 @@ import React from "react";
 import {useTranslation} from "react-i18next";
 import {FileText} from "lucide-react";
 
-import type {AttachmentItem} from "@/modules/chat/attachments";
+import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
 import {formatDateToLong} from "@/utils";
 import {getLocale} from "@/utils/date";
 
@@ -65,7 +65,7 @@ export const MediaFileList: React.FC<Props> = ({items, partnerName, onJump}) => 
 
                         <div className="mt-1.5 flex items-center gap-3">
                             <a
-                                href={item.attachment.url}
+                                href={attachmentSrc(item.attachment)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-xs font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"

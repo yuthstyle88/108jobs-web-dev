@@ -4,7 +4,7 @@ import React from "react";
 import {useTranslation} from "react-i18next";
 import {Play} from "lucide-react";
 
-import type {AttachmentItem} from "@/modules/chat/attachments";
+import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
 
 import {MediaEmpty} from "./MediaStates";
 
@@ -54,7 +54,7 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
                     // request until the tile is actually near the viewport,
                     // instead of every image in the grid firing at once.
                     <img
-                        src={item.attachment.url}
+                        src={attachmentSrc(item.attachment)}
                         alt=""
                         loading="lazy"
                         onError={() => setFailed(true)}

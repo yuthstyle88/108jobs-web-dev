@@ -237,7 +237,14 @@ const nextConfig: NextConfig = {
         }
         const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108jobs.com';
         return {
-            // Ensure these filesystem routes win before any proxying
+            // Ensure these filesystem routes win before any proxying. This only
+            // works for *non-dynamic* routes -- Next resolves static files and
+            // non-dynamic pages right after `beforeFiles`, before `afterFiles` is
+            // even consulted, so a self-mapping here is enough to keep them out of
+            // the catch-all below. A dynamic route (e.g. `[assetId]`) is not
+            // resolved at that point regardless of what's declared here -- see the
+            // `afterFiles` entry for `/api/media/*` below, which needs the other
+            // mechanism.
             beforeFiles: [
                 { source: '/session', destination: '/api/session' },
                 { source: '/:lang(th|en|vi)/session', destination: '/api/session' },
@@ -247,6 +254,19 @@ const nextConfig: NextConfig = {
             ],
             // Proxy other API routes and static uploads
             afterFiles: [
+                // Same-origin media proxy (src/app/api/media/[assetId]/route.ts).
+                // `[assetId]` makes this a *dynamic* route, so the `beforeFiles`
+                // self-mapping trick above does not apply to it -- Next only
+                // re-checks dynamic routes against a rewrite's result when the
+                // match happens in `afterFiles` (confirmed empirically: with this
+                // rule in `beforeFiles` instead, every /api/media/* request fell
+                // through to the catch-all below and was proxied straight to
+                // `${apiBase}/media/:path*`, a path the backend doesn't even serve,
+                // and the route handler that reads the caller's own cookie and
+                // forwards it as a bearer never ran at all). Ordered before the
+                // catch-all so it wins for this one prefix; every other /api/* path
+                // still falls through to the proxy below exactly as before.
+                { source: '/api/media/:path*', destination: '/api/media/:path*' },
                 { source: '/api/:path*', destination: `${apiBase}/:path*` },
                 { source: '/uploads/:path*', destination: 'https://cdn.108jobs.com/uploads/:path*' },
             ],

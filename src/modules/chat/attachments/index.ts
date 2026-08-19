@@ -1,3 +1,4 @@
+export {attachmentSrc} from "./attachmentSrc";
 export {classifyMime} from "./classifyMime";
 export {parseAttachment} from "./parseAttachment";
 export {collectAttachments, type AttachmentItem} from "./collectAttachments";
