@@ -46,6 +46,7 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     }));
     const data = timeline.items;
     const virtuosoRef = React.useRef<VirtuosoHandle | null>(null);
+    const hasPositionedInitialMessagesRef = React.useRef(false);
     const [isAtBottom, setIsAtBottom] = React.useState(true);
 
     const pendingJumpMessageId = useChatPanelStore((s) => s.pendingJumpMessageId);
@@ -59,6 +60,17 @@ const ChatRoomMessages: React.FC<ChatRoomMessagesProps> = ({
     React.useLayoutEffect(() => {
         setTimeline((current) => syncChatTimeline(current, messages));
     }, [messages]);
+
+    // A room can mount with cached messages already present or receive its
+    // first page just after mount. In both cases, start at the newest message
+    // exactly once. Later prepends keep their viewport through firstItemIndex,
+    // so they must never trigger another jump to the tail.
+    React.useLayoutEffect(() => {
+        if (hasPositionedInitialMessagesRef.current || data.length === 0) return;
+
+        hasPositionedInitialMessagesRef.current = true;
+        virtuosoRef.current?.scrollToIndex({index: "LAST", behavior: "auto", align: "end"});
+    }, [data.length]);
 
     // A jump can arrive before the message it names is in `data` -- the panel
     // that asked may still be backfilling the page it lives on. Leaving the
