@@ -15,25 +15,32 @@ vi.mock("react-i18next", () => ({
     }),
 }));
 
-const renderFlowContent = () => createElement("div", {"data-testid": "job-flow"}, "job flow");
-
 describe("JobFlowContent", () => {
-    it("shows the hiring prompt instead of the job flow when no job is linked", () => {
+    it("shows the hiring prompt without invoking the workflow when no job is linked", () => {
+        const renderFlowContent = vi.fn(() =>
+            createElement("button", {type: "button", "data-testid": "start-workflow"}, "Start workflow"),
+        );
         const markup = renderToStaticMarkup(
             createElement(JobFlowContent, {renderFlowContent, jobId: undefined, lang: "en"}),
         );
 
+        expect(renderFlowContent).not.toHaveBeenCalled();
         expect(markup).toContain("Not sure where to start?");
-        expect(markup).not.toContain('data-testid="job-flow"');
+        expect(markup).not.toContain('data-testid="start-workflow"');
     });
 
-    it("shows job details and the workflow when a job is linked", () => {
+    it("keeps the workflow action alongside the localized Job Details link when a job is linked", () => {
+        const renderFlowContent = vi.fn(() =>
+            createElement("button", {type: "button", "data-testid": "start-workflow"}, "Start workflow"),
+        );
         const markup = renderToStaticMarkup(
             createElement(JobFlowContent, {renderFlowContent, jobId: 731, lang: "en"}),
         );
 
+        expect(renderFlowContent).toHaveBeenCalledTimes(1);
         expect(markup).toContain('href="/en/job-board/731"');
-        expect(markup).toContain('data-testid="job-flow"');
+        expect(markup).toContain('data-testid="start-workflow"');
+        expect(markup).toContain("Start workflow");
         expect(markup).not.toContain("Not sure where to start?");
     });
 });
