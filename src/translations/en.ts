@@ -4086,6 +4086,7 @@ export const en = {
             riders: {
                 // Page title & tabs
                 title: "Rider Management",
+                description: "Manage riders for 108jobs",
                 tabUnverified: "Unverified",
                 tabVerified: "Verified",
 

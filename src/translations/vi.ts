@@ -4110,6 +4110,7 @@ export const vi = {
             riders: {
                 // Page title & tabs
                 title: "Quản lý tài xế",
+                description: "Quản lý tài xế cho 108jobs",
                 tabUnverified: "Chưa xác minh",
                 tabVerified: "Đã xác minh",
 

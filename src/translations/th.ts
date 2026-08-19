@@ -4000,6 +4000,7 @@ export const th = {
             riders: {
                 // Page title & tabs
                 title: "จัดการไรเดอร์",
+                description: "จัดการไรเดอร์สำหรับ 108jobs",
                 tabUnverified: "ยังไม่ยืนยัน",
                 tabVerified: "ยืนยันแล้ว",
 

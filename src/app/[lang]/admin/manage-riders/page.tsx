@@ -4,20 +4,16 @@ import Image from "next/image";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
 import {Card} from "@/components/ui/Card";
-import {CheckCircle, Loader2, UserCheck, UserX, Bike, Motorbike, Car, Star} from "lucide-react";
-import {toast} from "sonner";
+import {CheckCircle, Eye, Loader2, UserCheck, UserX, Motorbike, Car, Star} from "lucide-react";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {JSX, useState} from "react";
 import {cn} from "@/lib/utils";
-import {RiderId, RiderView, VehicleType} from "108jobs-client";
-import {useHttpPost} from "@/hooks/api/http/useHttpPost";
-import {isFailed, isSuccess} from "@/services/HttpService";
+import {Rider, RiderView, VehicleType} from "108jobs-client";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 
 const vehicleIconMap: Record<VehicleType, JSX.Element> = {
-    Bicycle: <Bike className="w-4 h-4"/>,
     Motorcycle: <Motorbike className="w-4 h-4"/>,
     Car: <Car className="w-4 h-4"/>,
 };
@@ -28,8 +24,13 @@ export default function AdminRidersManagementPage() {
     const {t} = useTranslation();
 
     const [viewMode, setViewMode] = useState<ViewMode>("unverified");
-    const [rejectingRiderId, setRejectingRiderId] = useState<RiderId | null>(null);
-    const [rejectReason, setRejectReason] = useState("");
+
+    // Placeholder for Task 13: the review modal isn't built yet, so nothing
+    // reads `reviewingRider` and setting it is a visible no-op for now. The
+    // Eye button below already wires the setter; Task 13 adds the modal that
+    // consumes this state (and the approve/reject calls that used to live
+    // inline in the row).
+    const [reviewingRider, setReviewingRider] = useState<Rider | null>(null);
 
     const {
         riders,
@@ -39,28 +40,10 @@ export default function AdminRidersManagementPage() {
         hasPreviousPage,
         loadNextPage,
         loadPreviousPage,
-        refetch,
     } = usePaginatedRiders({
         verified: viewMode === "verified",
         limit: 10,
     });
-    const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
-
-    const handleVerify = async (riderId: RiderId, approve: boolean, reason?: string) => {
-        const res = await verifyRider({riderId, approve, reason: reason || undefined});
-        if (isSuccess(res)) {
-            toast.success(
-                approve ? t("admin.riders.actionApproved") : t("admin.riders.actionRejected")
-            );
-            if (!approve) {
-                setRejectingRiderId(null);
-                setRejectReason("");
-            }
-            await refetch();
-        } else if (isFailed(res)) {
-            toast.error(t("common.errorOccurred") || "An error occurred");
-        }
-    };
 
     const handleTabChange = (mode: ViewMode) => {
         setViewMode(mode);
@@ -69,41 +52,29 @@ export default function AdminRidersManagementPage() {
 
     return (
         <AdminLayout>
-            <div className="max-w-6xl mx-auto space-y-6 p-4 sm:p-6 lg:p-8 text-gray-700 dark:text-gray-200">
-                {/* Header */}
-                <div className="text-center space-y-5">
-                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        {t("admin.riders.title")}
-                    </h1>
-
-                    <div className="flex flex-wrap justify-center gap-3">
-                        <button
-                            onClick={() => handleTabChange("unverified")}
-                            className={cn(
-                                "flex-1 min-w-[160px] px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-sm",
-                                viewMode === "unverified"
-                                    ? "bg-amber-600 text-white shadow-amber-200/50"
-                                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                            )}
-                        >
-                            <UserX className="w-4 h-4"/>
-                            {t("admin.riders.tabUnverified")}
-                        </button>
-
-                        <button
-                            onClick={() => handleTabChange("verified")}
-                            className={cn(
-                                "flex-1 min-w-[160px] px-6 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all shadow-sm",
-                                viewMode === "verified"
-                                    ? "bg-emerald-600 text-white shadow-emerald-200/50"
-                                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                            )}
-                        >
-                            <UserCheck className="w-4 h-4"/>
-                            {t("admin.riders.tabVerified")}
-                        </button>
+            <div className="max-w-5xl mx-auto text-gray-600 dark:text-gray-300 p-6 space-y-8">
+                <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-light tracking-tight">{t("admin.riders.title")}</h1>
+                        <p className="text-sm text-muted-foreground mt-1">{t("admin.riders.description")}</p>
                     </div>
-                </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant={viewMode === "unverified" ? "default" : "outline"}
+                            onClick={() => handleTabChange("unverified")}
+                        >
+                            <UserX className="w-4 h-4 mr-2"/>
+                            {t("admin.riders.tabUnverified")}
+                        </Button>
+                        <Button
+                            variant={viewMode === "verified" ? "default" : "outline"}
+                            onClick={() => handleTabChange("verified")}
+                        >
+                            <UserCheck className="w-4 h-4 mr-2"/>
+                            {t("admin.riders.tabVerified")}
+                        </Button>
+                    </div>
+                </header>
 
                 {/* Error */}
                 {error && (
@@ -248,65 +219,16 @@ export default function AdminRidersManagementPage() {
                                                     </div>
                                                 </div>
 
-                                                {isUnverified && (
-                                                    <div
-                                                        className="flex flex-col gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                                        {rejectingRiderId === rider.id ? (
-                                                            <div className="space-y-3">
-                                                                <textarea
-                                                                    value={rejectReason}
-                                                                    onChange={(e) => setRejectReason(e.target.value)}
-                                                                    placeholder={t("admin.riders.rejectionReasonPlaceholder")}
-                                                                    className="w-full min-h-20 p-3 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                                    rows={2}
-                                                                />
-                                                                <div className="flex flex-col sm:flex-row gap-3">
-                                                                    <Button
-                                                                        className="flex-1 h-11 text-base bg-red-600 hover:bg-red-700 text-white"
-                                                                        onClick={() => handleVerify(rider.id, false, rejectReason)}
-                                                                        disabled={verifying}
-                                                                    >
-                                                                        {verifying && (
-                                                                            <Loader2 className="w-5 h-5 animate-spin mr-2"/>
-                                                                        )}
-                                                                        {t("admin.riders.actionReject")}
-                                                                    </Button>
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        className="flex-1 h-11 text-base"
-                                                                        onClick={() => setRejectingRiderId(null)}
-                                                                        disabled={verifying}
-                                                                    >
-                                                                        {t("common.cancel") || "Cancel"}
-                                                                    </Button>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex flex-col sm:flex-row gap-3">
-                                                                <Button
-                                                                    className="flex-1 h-11 text-base bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                                    onClick={() => handleVerify(rider.id, true)}
-                                                                    disabled={verifying}
-                                                                >
-                                                                    {verifying ? (
-                                                                        <Loader2 className="w-5 h-5 animate-spin mr-2"/>
-                                                                    ) : (
-                                                                        <CheckCircle className="w-5 h-5 mr-2"/>
-                                                                    )}
-                                                                    {t("admin.riders.actionApprove")}
-                                                                </Button>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    className="flex-1 h-11 text-base border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
-                                                                    onClick={() => setRejectingRiderId(rider.id)}
-                                                                    disabled={verifying}
-                                                                >
-                                                                    {t("admin.riders.actionReject")}
-                                                                </Button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setReviewingRider(rider)}
+                                                        className="text-muted-foreground hover:text-foreground"
+                                                    >
+                                                        <Eye className="w-4 h-4"/>
+                                                    </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     </Card>
