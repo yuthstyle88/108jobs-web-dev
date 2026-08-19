@@ -4133,6 +4133,7 @@ export const vi = {
                 verifiedAt: "Ngày xác minh",
 
                 // Action buttons
+                reviewRiderLabel: "Xem xét tài xế",
                 actionApprove: "Phê duyệt",
                 actionReject: "Từ chối",
                 actionApproved: "Đã phê duyệt tài xế thành công",

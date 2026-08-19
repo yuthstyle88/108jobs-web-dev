@@ -4021,6 +4021,7 @@ export const th = {
                 verifiedAt: "วันที่ยืนยัน",
 
                 // Actions & toasts
+                reviewRiderLabel: "ตรวจสอบไรเดอร์",
                 actionApprove: "อนุมัติ",
                 actionReject: "ปฏิเสธ",
                 actionApproved: "อนุมัติไรเดอร์เรียบร้อยแล้ว",

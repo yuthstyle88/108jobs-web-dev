@@ -1,15 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
 import {Card} from "@/components/ui/Card";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
 import {CheckCircle, Eye, Loader2, UserCheck, UserX, Motorbike, Car, Star} from "lucide-react";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {JSX, useState} from "react";
-import {cn} from "@/lib/utils";
 import {Rider, RiderView, VehicleType} from "108jobs-client";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 
@@ -78,34 +77,25 @@ export default function AdminRidersManagementPage() {
 
                 {/* Error */}
                 {error && (
-                    <div className="bg-red-50 p-4 rounded-lg shadow-sm border border-red-100 text-center">
-                        <p className="text-red-600 text-sm">{error}</p>
-                    </div>
+                    <Card className="border-dashed p-12 text-center">
+                        <UserX className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>
+                        <p className="text-sm text-muted-foreground">{error}</p>
+                    </Card>
                 )}
 
                 {/* Loading */}
                 {isLoading && (
-                    <div className="space-y-4">
-                        {[...Array(5)].map((_, i) => (
-                            <Card key={i} className="p-6 animate-pulse bg-gray-50 dark:bg-gray-800">
-                                <div className="space-y-4">
-                                    <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-                                    <div className="space-y-3">
-                                        <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-full"></div>
-                                        <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-5/6"></div>
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
+                    <div className="flex justify-center py-16">
+                        <div
+                            className="w-8 h-8 border-2 border-t-transparent border-foreground/30 rounded-full animate-spin"></div>
                     </div>
                 )}
 
                 {/* Empty state */}
                 {!isLoading && riders.length === 0 && !error && (
-                    <Card
-                        className="p-12 text-center bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                        <UserX className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4"/>
-                        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                    <Card className="border-dashed p-12 text-center">
+                        <UserX className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>
+                        <p className="text-sm text-muted-foreground">
                             {viewMode === "unverified"
                                 ? t("admin.riders.emptyUnverified")
                                 : t("admin.riders.emptyVerified")}
@@ -124,111 +114,88 @@ export default function AdminRidersManagementPage() {
                                 return (
                                     <Card
                                         key={rider.id}
-                                        className="overflow-hidden border border-border-secondary hover:shadow-lg transition-shadow duration-200"
+                                        className="p-5 hover:shadow-sm transition-shadow duration-200 border"
                                     >
-                                        <div
-                                            className={cn(
-                                                "p-5 sm:p-6",
-                                                isUnverified
-                                                    ? "bg-gradient-to-r from-amber-50/70 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/30"
-                                                    : "bg-gradient-to-r from-emerald-50/70 to-teal-50/50 dark:from-emerald-950/30 dark:to-teal-950/30"
-                                            )}
-                                        >
-                                            <div className="flex flex-col gap-5">
-                                                {/* Main info */}
-                                                <div className="flex items-start gap-5">
-                                                    <div
-                                                        className="p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex-shrink-0 overflow-hidden flex items-center justify-center">
-                                                        {person.avatar ? (
-                                                            <Image
-                                                                src={person.avatar}
-                                                                alt={person.name || person.displayName || t("admin.riders.unknown")}
-                                                                width={28}
-                                                                height={28}
-                                                                className="w-7 h-7 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <UserCheck
-                                                                className={cn("w-7 h-7", isUnverified ? "text-amber-600" : "text-emerald-600")}
-                                                            />
+                                        <div className="flex flex-col gap-5">
+                                            {/* Main info */}
+                                            <div className="flex items-start gap-5">
+                                                <Avatar className="h-11 w-11 shrink-0">
+                                                    <AvatarImage src={person.avatar}/>
+                                                    <AvatarFallback className="text-xs font-medium">
+                                                        {person.name[0].toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+
+                                                <div className="flex-1 min-w-0 space-y-3">
+                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                        <h3 className="text-lg sm:text-xl font-bold text-primary truncate">
+                                                            {person.name || person.displayName || t("admin.riders.unknown")}
+                                                        </h3>
+                                                        <Badge
+                                                            variant={isUnverified ? "secondary" : "default"}
+                                                            className="text-xs sm:text-sm px-3 py-1"
+                                                        >
+                                                            {isUnverified ? (
+                                                                <>
+                                                                    <Loader2
+                                                                        className="w-3.5 h-3.5 mr-1 animate-spin"/>
+                                                                    {t("admin.riders.statusPending")}
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <CheckCircle className="w-3.5 h-3.5 mr-1"/>
+                                                                    {t("admin.riders.statusVerified")}
+                                                                </>
+                                                            )}
+                                                        </Badge>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                                                        <div>
+                                                            <span
+                                                                className="font-medium">{t("admin.riders.vehicle")}:</span>{" "}
+                                                            <span className="inline-flex items-center gap-1.5">
+                                                                {vehicleIconMap[rider.vehicleType]}
+                                                                {rider.vehicleType}
+                                                                {rider.vehiclePlateNumber && ` • ${rider.vehiclePlateNumber}`}
+                                                            </span>
+                                                        </div>
+
+                                                        <div>
+                                                            <span
+                                                                className="font-medium">{t("admin.riders.rating")}:</span>{" "}
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500"/>
+                                                                {rider.rating.toFixed(1)} ({rider.completedJobs}/{rider.totalJobs})
+                                                            </span>
+                                                        </div>
+
+                                                        <div>
+                                                            <span
+                                                                className="font-medium">{t("admin.riders.id")}:</span> {rider.id}
+                                                        </div>
+
+                                                        {rider.verifiedAt && (
+                                                            <div>
+                                                                <span
+                                                                    className="font-medium">{t("admin.riders.verifiedAt")}:</span>{" "}
+                                                                {new Date(rider.verifiedAt).toLocaleDateString()}
+                                                            </div>
                                                         )}
                                                     </div>
-
-                                                    <div className="flex-1 min-w-0 space-y-3">
-                                                        <div className="flex items-center gap-3 flex-wrap">
-                                                            <h3 className="text-lg sm:text-xl font-bold text-primary truncate">
-                                                                {person.name || person.displayName || t("admin.riders.unknown")}
-                                                            </h3>
-                                                            <Badge
-                                                                variant={isUnverified ? "secondary" : "default"}
-                                                                className={cn(
-                                                                    "text-xs sm:text-sm px-3 py-1",
-                                                                    isUnverified
-                                                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
-                                                                        : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-                                                                )}
-                                                            >
-                                                                {isUnverified ? (
-                                                                    <>
-                                                                        <Loader2
-                                                                            className="w-3.5 h-3.5 mr-1 animate-spin"/>
-                                                                        {t("admin.riders.statusPending")}
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <CheckCircle className="w-3.5 h-3.5 mr-1"/>
-                                                                        {t("admin.riders.statusVerified")}
-                                                                    </>
-                                                                )}
-                                                            </Badge>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                                            <div>
-                                                                <span
-                                                                    className="font-medium">{t("admin.riders.vehicle")}:</span>{" "}
-                                                                <span className="inline-flex items-center gap-1.5">
-                                  {vehicleIconMap[rider.vehicleType]}
-                                                                    {rider.vehicleType}
-                                                                    {rider.vehiclePlateNumber && ` • ${rider.vehiclePlateNumber}`}
-                                </span>
-                                                            </div>
-
-                                                            <div>
-                                                                <span
-                                                                    className="font-medium">{t("admin.riders.rating")}:</span>{" "}
-                                                                <span className="inline-flex items-center gap-1">
-                                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500"/>
-                                                                    {rider.rating.toFixed(1)} ({rider.completedJobs}/{rider.totalJobs})
-                                </span>
-                                                            </div>
-
-                                                            <div>
-                                                                <span
-                                                                    className="font-medium">{t("admin.riders.id")}:</span> {rider.id}
-                                                            </div>
-
-                                                            {rider.verifiedAt && (
-                                                                <div>
-                                                                    <span
-                                                                        className="font-medium">{t("admin.riders.verifiedAt")}:</span>{" "}
-                                                                    {new Date(rider.verifiedAt).toLocaleDateString()}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
                                                 </div>
+                                            </div>
 
-                                                <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setReviewingRider(rider)}
-                                                        className="text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        <Eye className="w-4 h-4"/>
-                                                    </Button>
-                                                </div>
+                                            <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setReviewingRider(rider)}
+                                                    aria-label={t("admin.riders.reviewRiderLabel")}
+                                                    className="text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <Eye className="w-4 h-4"/>
+                                                </Button>
                                             </div>
                                         </div>
                                     </Card>

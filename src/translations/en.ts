@@ -4107,6 +4107,7 @@ export const en = {
                 verifiedAt: "Verified Date",
 
                 // Actions & toasts
+                reviewRiderLabel: "Review rider",
                 actionApprove: "Approve",
                 actionReject: "Reject",
                 actionApproved: "Rider approved successfully",
