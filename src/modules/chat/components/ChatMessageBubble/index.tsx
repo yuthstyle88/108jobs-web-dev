@@ -17,6 +17,7 @@ import {useChatServices} from "@/modules/chat/contexts/ChatBridgeProvider";
 import {attachmentSrc, parseAttachment, type AttachmentItem} from "@/modules/chat/attachments";
 import {MediaLightbox} from "@/modules/chat/components/ChatMediaPanel/MediaLightbox";
 import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
+import {useMediaLoadRetry} from "@/modules/chat/hooks/useMediaLoadRetry";
 
 interface ChatMessageItemProps {
     message: ChatMessage;
@@ -185,6 +186,17 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         () => (attachment ? attachmentSrc(attachment) : undefined),
         [attachment],
     );
+
+    // Bounded retry for the image/video below -- see `mediaRetryPolicy.ts`
+    // for why a just-sent attachment's first load can 404 for both the
+    // sender and the recipient. One hook instance covers both kinds: the
+    // image and video branches below are mutually exclusive, so only one of
+    // them ever actually mounts an element that can call `handleMediaError`.
+    const {
+        attemptKey: mediaAttemptKey,
+        failed: mediaLoadFailed,
+        handleError: handleMediaError,
+    } = useMediaLoadRetry(attachmentUrl ?? "");
 
     // `submit-delivery` carries the same url/assetId shape as a plain file
     // attachment (see `useWorkflowActions.submitDelivery`) but this bubble
@@ -725,7 +737,16 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                 // (`max-w-full`) so a huge original never blows out the
                                 // bubble or overflows on mobile.
                                 <div className="flex flex-col gap-2">
-                                    {attachment.kind === "image" ? (
+                                    {mediaLoadFailed ? (
+                                        // Every retry in `useMediaLoadRetry` is exhausted --
+                                        // same "preview unavailable" copy the malformed-
+                                        // envelope case above and the Media grid both use,
+                                        // sized to roughly where the real image/video would
+                                        // have sat instead of collapsing to nothing.
+                                        <div className="flex h-40 w-full max-w-full items-center justify-center rounded-md bg-gray-50 ring-1 ring-black/5 text-xs text-gray-500 sm:max-w-[320px]">
+                                            {t("profileChat.mediaPanel.thumbnailFailed")}
+                                        </div>
+                                    ) : attachment.kind === "image" ? (
                                         <button
                                             type="button"
                                             onClick={() => setIsLightboxOpen(true)}
@@ -733,14 +754,18 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                             className="block self-start overflow-hidden rounded-md ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             <img
+                                                key={mediaAttemptKey}
                                                 src={attachmentUrl}
                                                 alt={attachment.name}
+                                                onError={handleMediaError}
                                                 className="block max-w-full sm:max-w-[320px] max-h-80 w-auto h-auto object-contain bg-gray-50"
                                             />
                                         </button>
                                     ) : (
                                         <video
+                                            key={mediaAttemptKey}
                                             src={attachmentUrl}
+                                            onError={handleMediaError}
                                             controls
                                             preload="metadata"
                                             // Never autoplay: a room full of clips
