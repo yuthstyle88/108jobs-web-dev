@@ -2,7 +2,7 @@
 
 import React from "react";
 import {useTranslation} from "react-i18next";
-import {FileText} from "lucide-react";
+import {FileText, FileX} from "lucide-react";
 
 import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
 import {formatDateToLong} from "@/utils";
@@ -30,13 +30,18 @@ export const MediaFileList: React.FC<Props> = ({items, partnerName, onJump}) => 
     const {t, i18n} = useTranslation();
 
     if (items.length === 0) {
-        return <MediaEmpty messageKey="profileChat.mediaPanel.emptyFiles" />;
+        return (
+            <MediaEmpty
+                messageKey="profileChat.mediaPanel.emptyFiles"
+                icon={<FileX className="h-8 w-8 text-gray-300" aria-hidden="true" />}
+            />
+        );
     }
 
     return (
         <ul className="divide-y divide-gray-100">
             {items.map((item) => (
-                <li key={item.messageId} className="flex items-start gap-3 px-3 py-3">
+                <li key={item.messageId} className="flex items-start gap-3 px-3 py-3 sm:px-4">
                     <span
                         aria-hidden
                         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500"

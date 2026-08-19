@@ -3,6 +3,7 @@
 import type {ChatMessage} from "108jobs-client";
 import React from "react";
 import {useTranslation} from "react-i18next";
+import {LoaderCircle} from "lucide-react";
 
 import {collectAttachments, type AttachmentItem} from "@/modules/chat/attachments";
 import {useJobFlowSidebar} from "@/modules/chat/contexts/JobFlowSidebarContext";
@@ -126,7 +127,7 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                 role="tablist"
                 aria-label={t("profileChat.media")}
                 onKeyDown={onTabKeyDown}
-                className="flex border-b border-gray-200 px-2"
+                className="flex border-b border-gray-200 px-3 sm:px-4"
             >
                 {TABS.map((tab) => {
                     const selected = tab.id === mediaTab;
@@ -144,7 +145,7 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                             aria-controls={`media-panel-${tab.id}-${uid}`}
                             tabIndex={selected ? 0 : -1}
                             onClick={() => setMediaTab(tab.id)}
-                            className={`mr-4 border-b-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            className={`mr-4 border-b-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                 selected
                                     ? "border-primary text-primary"
                                     : "border-transparent text-gray-500 hover:text-gray-700"
@@ -177,7 +178,9 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                 {backfill.phase === "error" && items.length === 0 ? (
                     <MediaError onRetry={() => startBackfill(roomId)} />
                 ) : isFirstLoad ? (
-                    <MediaNotice>{t("profileChat.mediaPanel.loading")}</MediaNotice>
+                    <MediaNotice icon={<LoaderCircle className="h-8 w-8 animate-spin text-gray-300" aria-hidden="true" />}>
+                        {t("profileChat.mediaPanel.loading")}
+                    </MediaNotice>
                 ) : mediaTab === "imageVideo" ? (
                     <MediaGrid items={gridItems} onOpen={setViewing} onJump={onJump} />
                 ) : (

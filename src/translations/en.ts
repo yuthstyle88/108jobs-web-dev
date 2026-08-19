@@ -39,6 +39,7 @@ export const en = {
             jobFlow: "Job Flow",
             orders: "Orders",
             media: "Media",
+            closeDrawer: "Close",
             mediaPanel: {
                 imageVideo: "Image & Video",
                 files: "Files",

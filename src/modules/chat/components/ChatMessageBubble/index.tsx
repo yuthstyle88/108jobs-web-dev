@@ -5,6 +5,7 @@ import type {ChatMessage, LocalUserId} from "108jobs-client";
 import {MessageImage} from "@/constants/images";
 import {useTranslation} from "react-i18next";
 import React, {useMemo, useEffect, useState, useCallback} from "react";
+import {Maximize2} from "lucide-react";
 import {toLocalTime} from "@/utils/date";
 import MessageStatusIndicator from "@/modules/chat/components/MessageStatusIndicator";
 import {dbg} from "@/modules/chat/utils";
@@ -736,6 +737,115 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                             </div>
                         </div>
                     </div>
+                ) : isFileMsg && attachment && (attachment.kind === "image" || attachment.kind === "video") ? (
+                    // Messenger-style bare media: no card chrome, no filename,
+                    // no type badge, no "Open" button -- just the picture (or
+                    // clip) with its caption and the timestamp underneath.
+                    // Everything else in this file wraps its content in a
+                    // padded, backgrounded card (see the `isFileMsg` branch
+                    // below for the non-media case, which still needs that
+                    // chrome); a photo does not, the same way it doesn't in
+                    // Messenger itself. `MessageStatusIndicator` already sits
+                    // above every bubble type (rendered once, outside this
+                    // ternary entirely -- see the top of this component), so
+                    // it needs no special handling here; the timestamp below
+                    // is the one piece of message state that used to live
+                    // inside the now-removed filename row and would otherwise
+                    // disappear.
+                    <>
+                        {mediaLoadFailed ? (
+                            // Same "preview unavailable" placeholder the
+                            // non-media branch and the Media grid use, just
+                            // rounded to match this bubble's own corners
+                            // rather than the card's.
+                            <div className="flex h-40 w-full max-w-full items-center justify-center rounded-2xl bg-gray-100 ring-1 ring-black/5 text-xs text-gray-500 sm:max-w-[320px]">
+                                {t("profileChat.mediaPanel.thumbnailFailed")}
+                            </div>
+                        ) : attachment.kind === "image" ? (
+                            // The whole photo is the click target -- a real
+                            // `<button>` so Enter/Space open the lightbox
+                            // exactly like a click, and its `aria-label` keeps
+                            // the filename available to assistive tech even
+                            // though it's no longer printed on screen.
+                            <button
+                                type="button"
+                                onClick={() => setIsLightboxOpen(true)}
+                                aria-label={attachment.name}
+                                className="block self-start overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <span
+                                    className={`relative block ${
+                                        mediaLoaded
+                                            ? ""
+                                            : "h-40 w-full animate-pulse rounded-2xl bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
+                                    }`}
+                                >
+                                    <img
+                                        key={mediaAttemptKey}
+                                        src={displayUrl}
+                                        alt={attachment.name}
+                                        onError={handleMediaElementError}
+                                        onLoad={handleMediaLoad}
+                                        className={`block max-w-full sm:max-w-[320px] max-h-80 rounded-2xl object-contain bg-gray-50 transition-opacity duration-200 ${
+                                            mediaLoaded
+                                                ? "w-auto h-auto opacity-100"
+                                                : "absolute inset-0 h-full w-full opacity-0"
+                                        }`}
+                                    />
+                                </span>
+                            </button>
+                        ) : (
+                            // Video keeps its own native `controls` for inline
+                            // playback (never autoplays, `preload="metadata"`
+                            // -- unchanged) -- that rules out wrapping it in a
+                            // `<button>` the way the image is (a `<video
+                            // controls>` is interactive content and invalid
+                            // inside `<button>`, and it would fight the
+                            // control bar for clicks). Instead a small,
+                            // always-present expand button sits over the
+                            // top-right corner, clear of the controls strip
+                            // at the bottom, and opens the exact same
+                            // lightbox. Same `bg-black/60`/`focus:ring-white`
+                            // treatment `MediaGrid`'s jump button and
+                            // `MediaLightbox`'s close button already use for
+                            // an overlay control on top of media.
+                            <span
+                                className={`relative block ${
+                                    mediaLoaded
+                                        ? ""
+                                        : "h-40 w-full animate-pulse rounded-2xl bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
+                                }`}
+                            >
+                                <video
+                                    key={mediaAttemptKey}
+                                    src={displayUrl}
+                                    onError={handleMediaElementError}
+                                    onLoadedMetadata={handleMediaLoad}
+                                    controls={mediaLoaded}
+                                    preload="metadata"
+                                    className={`w-full max-w-full sm:max-w-[320px] max-h-80 rounded-2xl bg-black transition-opacity duration-200 ${
+                                        mediaLoaded ? "opacity-100" : "absolute inset-0 h-full opacity-0"
+                                    }`}
+                                >
+                                    {t("profileChat.mediaPanel.videoUnsupported")}
+                                </video>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsLightboxOpen(true)}
+                                    aria-label={attachment.name}
+                                    className="absolute right-2 top-2 z-10 inline-flex items-center justify-center rounded-full bg-black/60 p-1.5 text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-white"
+                                >
+                                    <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                                </button>
+                            </span>
+                        )}
+                        {attachment.caption && (
+                            <div className="max-w-[90vw] text-xs text-gray-700 whitespace-pre-line break-words sm:max-w-[320px]">
+                                {String(attachment.caption)}
+                            </div>
+                        )}
+                        <div className="text-xs text-gray-500">{time}</div>
+                    </>
                 ) : isFileMsg ? (
                     <div
                         className={`max-w-[90vw] sm:max-w-md w-full rounded-xl shadow-sm ring-1 overflow-hidden ${
@@ -766,135 +876,6 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                         </span>
                                         <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
                                     </div>
-                                </div>
-                            ) : attachment.kind === "image" || attachment.kind === "video" ? (
-                                // Shown properly inline -- constrained to a sensible max
-                                // size, aspect ratio preserved (`object-contain`, no
-                                // `object-cover` crop), never wider than the card itself
-                                // (`max-w-full`) so a huge original never blows out the
-                                // bubble or overflows on mobile.
-                                <div className="flex flex-col gap-2">
-                                    {mediaLoadFailed ? (
-                                        // Every retry in `useMediaLoadRetry` is exhausted --
-                                        // same "preview unavailable" copy the malformed-
-                                        // envelope case above and the Media grid both use,
-                                        // sized to roughly where the real image/video would
-                                        // have sat instead of collapsing to nothing.
-                                        <div className="flex h-40 w-full max-w-full items-center justify-center rounded-md bg-gray-50 ring-1 ring-black/5 text-xs text-gray-500 sm:max-w-[320px]">
-                                            {t("profileChat.mediaPanel.thumbnailFailed")}
-                                        </div>
-                                    ) : attachment.kind === "image" ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsLightboxOpen(true)}
-                                            aria-label={attachment.name}
-                                            className="block self-start overflow-hidden rounded-md ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            {/*
-                                              Fixed-size, `animate-pulse` skeleton box while
-                                              pending -- same idiom as the Media grid's tile
-                                              chrome (`bg-gray-100 ring-1 ring-black/5`) and
-                                              the failed-state box above (`h-40 ...
-                                              sm:max-w-[320px]`), so this is also roughly
-                                              where the loaded image will end up sitting.
-                                              `relative` so the `<img>` can be pinned to
-                                              exactly this box via `absolute inset-0` while
-                                              it is invisible -- once `mediaLoaded`, both this
-                                              wrapper's fixed size and the `<img>`'s absolute
-                                              positioning drop out together, in the same
-                                              commit, handing sizing back to the image's own
-                                              natural dimensions exactly as before this
-                                              change. The `<img>` itself is never
-                                              unmounted here (same `key`, same node,
-                                              className-only changes) -- only `opacity`
-                                              hides it, never `display: none`, which would
-                                              stop the browser from ever fetching it: a
-                                              `display: none` element has no layout box, so
-                                              it cannot be observed as "near the viewport"
-                                              and this codebase has no lazy-loaded `<img>`
-                                              equivalent here to worry about, but `opacity`
-                                              is what keeps this element's behavior identical
-                                              to `MediaGrid`'s (which does lazy-load) rather
-                                              than diverging by accident.
-                                            */}
-                                            <span
-                                                className={`relative block ${
-                                                    mediaLoaded
-                                                        ? ""
-                                                        : "h-40 w-full animate-pulse rounded-md bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
-                                                }`}
-                                            >
-                                                <img
-                                                    key={mediaAttemptKey}
-                                                    src={displayUrl}
-                                                    alt={attachment.name}
-                                                    onError={handleMediaElementError}
-                                                    onLoad={handleMediaLoad}
-                                                    className={`block max-w-full sm:max-w-[320px] max-h-80 object-contain bg-gray-50 transition-opacity duration-200 ${
-                                                        mediaLoaded
-                                                            ? "w-auto h-auto opacity-100"
-                                                            : "absolute inset-0 h-full w-full opacity-0"
-                                                    }`}
-                                                />
-                                            </span>
-                                        </button>
-                                    ) : (
-                                        // Same pending/loaded treatment as the image above,
-                                        // sharing the same skeleton box. `controls` itself
-                                        // is withheld until `mediaLoaded`: an invisible
-                                        // (`opacity-0`) control bar would still be reachable
-                                        // by Tab while the skeleton visually covers it, and
-                                        // there is nothing useful to control before
-                                        // `onLoadedMetadata` has fired anyway. `<video>`
-                                        // never fires a generic `load` event the way `<img>`
-                                        // does (confirmed against MDN's HTMLMediaElement
-                                        // event list) -- `onLoadedMetadata` is the matching
-                                        // "this attempt actually got bytes back" signal for
-                                        // `preload="metadata"`, and it does not fire when
-                                        // `onError` fires instead.
-                                        <span
-                                            className={`relative block ${
-                                                mediaLoaded
-                                                    ? ""
-                                                    : "h-40 w-full animate-pulse rounded-md bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
-                                            }`}
-                                        >
-                                            <video
-                                                key={mediaAttemptKey}
-                                                src={displayUrl}
-                                                onError={handleMediaElementError}
-                                                onLoadedMetadata={handleMediaLoad}
-                                                controls={mediaLoaded}
-                                                preload="metadata"
-                                                // Never autoplay: a room full of clips
-                                                // would all start talking at once.
-                                                className={`w-full max-w-full sm:max-w-[320px] max-h-80 rounded-md ring-1 ring-black/5 bg-black transition-opacity duration-200 ${
-                                                    mediaLoaded
-                                                        ? "opacity-100"
-                                                        : "absolute inset-0 h-full opacity-0"
-                                                }`}
-                                            >
-                                                {t("profileChat.mediaPanel.videoUnsupported")}
-                                            </video>
-                                        </span>
-                                    )}
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]">
-                                            {attachment.name}
-                                        </span>
-                                        {attachment.mime && (
-                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700 ring-1 ring-black/5">
-                                                {String(attachment.mime).split("/").pop()}
-                                            </span>
-                                        )}
-                                        <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
-                                    </div>
-                                    {attachment.caption && (
-                                        <div className="text-xs text-gray-700 whitespace-pre-line break-words">
-                                            {String(attachment.caption)}
-                                        </div>
-                                    )}
-                                    {attachmentUrl && <AttachmentOpenLink href={attachmentUrl} isIncoming={isIncoming} />}
                                 </div>
                             ) : (
                                 <div className="flex items-start gap-3 flex-wrap">

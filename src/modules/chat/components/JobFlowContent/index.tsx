@@ -1,42 +1,28 @@
-import {useTranslation} from 'react-i18next';
 import React from "react";
 import {ChatRoomView} from "108jobs-client";
 
 interface JobFlowContentProps {
-    setIsFlowOpen: (open: boolean) => void;
     renderFlowContent: () => React.ReactNode;
     setShowJobDetailModal: (show: boolean) => void;
     currentRoom: ChatRoomView;
 }
 
+// This used to open with its own "Job Flow" header bar -- redundant under the
+// Orders tab, which already says as much, and it stacked a second blue bar
+// directly beneath ChatSidebarTabs' own one. That header's only other job,
+// the mobile drawer's close button, moved to ChatSidebarTabs (it sits next to
+// the tabs now, so it stays reachable on the Media tab too, not just here).
 export const JobFlowContent: React.FC<JobFlowContentProps> = ({
-                                                                  setIsFlowOpen,
                                                                   renderFlowContent,
                                                                   setShowJobDetailModal,
                                                                   currentRoom,
                                                               }) => {
-    const {t} = useTranslation();
-
     return (
         <>
-            <div className="p-3 sm:p-4 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
-                <h2 className="text-base sm:text-lg font-semibold text-primary">
-                    {t("profileChat.jobFlow") || "Job Flow"}
-                </h2>
-                <button
-                    className="md:hidden p-2 bg-primary text-white rounded-full hover:bg-[#063a68] transition-all duration-200"
-                    onClick={() => setIsFlowOpen(false)}
-                    aria-label="Close job flow drawer"
-                >
-                    <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto border-b border-gray-200">
+            <div className="flex-1 p-3 sm:p-4 overflow-y-auto border-b border-gray-200">
                 {renderFlowContent()}
             </div>
-            <div className="p-3 sm:p-4 md:p-6 bg-white border-t border-gray-200">
+            <div className="p-3 sm:p-4 bg-white border-t border-gray-200">
                 <div
                     className="flex items-center bg-white rounded-lg shadow-sm p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:transform hover:scale-105 cursor-pointer"
                     aria-label="Job details"

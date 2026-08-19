@@ -39,6 +39,7 @@ export const vi = {
             jobFlow: "Quy trình công việc",
             orders: "Đơn hàng",
             media: "Phương tiện",
+            closeDrawer: "Đóng",
             mediaPanel: {
                 imageVideo: "Ảnh và video",
                 files: "Tệp",

@@ -39,6 +39,7 @@ export const th = {
             jobFlow: "ลำดับงาน",
             orders: "คำสั่งงาน",
             media: "สื่อ",
+            closeDrawer: "ปิด",
             mediaPanel: {
                 imageVideo: "รูปภาพและวิดีโอ",
                 files: "ไฟล์",
