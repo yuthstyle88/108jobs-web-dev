@@ -18,6 +18,13 @@ interface ChatInputProps {
     onTyping?: (typing: boolean) => void;
     typingHint?: string;
     sendLatestRead: () => void;
+    /**
+     * Whether a file is currently attached and ready to send. ChatInput owns
+     * the message text but not the selected file (that lives in
+     * `ChatRoomView`), so without this it has no way to know an empty
+     * textarea still has something worth sending -- see `internalSubmit`.
+     */
+    hasAttachment?: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -29,6 +36,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                                                  onTyping,
                                                  typingHint,
                                                  sendLatestRead,
+                                                 hasAttachment = false,
                                              }) => {
     const { t } = useTranslation();
     const { register, handleSubmit, reset, watch, setValue, getValues } = useForm<MessageForm>();
@@ -123,7 +131,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     const internalSubmit = (data: MessageForm) => {
         if (disabled) return;
         const text = (data.message ?? "").trim();
-        if (!text) return;
+        // A file attached with no caption is a legitimate send -- only block
+        // when there is truly nothing to send.
+        if (!text && !hasAttachment) return;
         onSubmit({ message: text });
         onTyping?.(false);
         typingLastStateRef.current = false;

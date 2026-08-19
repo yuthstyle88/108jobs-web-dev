@@ -606,6 +606,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                 <ChatInput
                                     onSubmit={onSubmit}
                                     disabledHint=""
+                                    hasAttachment={!!selectedFile}
                                     onFileUpload={(ev: any) => handleFileUpload(ev as any)}
                                     onTyping={(v) => {
                                         try {
