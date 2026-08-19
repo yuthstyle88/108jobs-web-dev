@@ -1,5 +1,7 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
+import {MEDIA_RETRY_DELAYS_MS} from "@/modules/chat/hooks/mediaRetryPolicy";
+
 import {
   LOCAL_PREVIEW_HOLD_MS,
   useLocalAttachmentPreviewStore,
@@ -85,6 +87,21 @@ describe("localAttachmentPreviewStore", () => {
 
     expect(() => vi.advanceTimersByTime(LOCAL_PREVIEW_HOLD_MS)).not.toThrow();
     expect(useLocalAttachmentPreviewStore.getState().byAssetId["asset-1"]).toBeUndefined();
+  });
+
+  it("comfortably outlives the media retry budget it hands off to (see mediaRetryPolicy.ts)", () => {
+    // The handoff from this local blob to the network `attachmentSrc()` URL
+    // must land after that URL's own retry-hardened load has essentially
+    // always already succeeded -- otherwise releasing the blob early would
+    // reintroduce the exact broken-image window `MEDIA_RETRY_DELAYS_MS`
+    // exists to cover. Asserted here, against the real constant, instead of
+    // relying on the two files' doc comments staying in sync by hand.
+    const mediaRetryTotalCoverageMs = MEDIA_RETRY_DELAYS_MS.reduce(
+      (sum, delay) => sum + delay,
+      0,
+    );
+
+    expect(LOCAL_PREVIEW_HOLD_MS).toBeGreaterThan(mediaRetryTotalCoverageMs);
   });
 
   it("releaseAll revokes and forgets everything", () => {
