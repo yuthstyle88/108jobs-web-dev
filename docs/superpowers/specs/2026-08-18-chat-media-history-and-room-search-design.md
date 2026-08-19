@@ -238,11 +238,45 @@ keyframe animation, so reduced-motion needs no special case. If the id is not ye
 in the list, the request stays pending and is retried when the data changes. On
 mobile, jumping closes the drawer or search overlay.
 
-Thumbnails work as plain `<img src>` / `<video src>`: `read_auth_token`
-(`crates/api/api_utils/src/utils.rs:527`) falls back to the auth cookie, so the
-private proxy authenticates without a fetch-to-blob dance. Deployment caveat: if
-the API is served from a different origin than the app, that cookie needs
-`SameSite=None; Secure`.
+**Correction (found after this landed): plain `<img src>` against the backend
+proxy directly does not work.** `read_auth_token`
+(`crates/api/api_utils/src/utils.rs:527`) accepts only an `Authorization:
+Bearer` header or a cookie literally named `jwt`. This app's auth cookie is
+named after `NEXT_PUBLIC_APP_NAME` (`authCookieName` in `src/utils/config.ts`,
+`108Jobs` in this deployment) — not `jwt` — so a browser `<img>`/`<video>` tag
+pointed straight at `media-proxy` sends the `108Jobs` cookie the backend never
+looks for, and gets `401` every time. Confirmed against a real browser
+request and the backend's own access log.
+
+The fix is a same-origin byte proxy, `src/app/api/media/[assetId]/route.ts`.
+It reads the token with the existing `getJwtFromRequest`
+(`src/utils/helper-server.ts`, which already checks `jwt` then falls back to
+`authCookieName`), forwards it as `Authorization: Bearer <token>` to the
+backend's `media-proxy`, and streams the response straight back — preserving
+status, `Content-Type`/`Content-Length`, and forwarding `Range` /
+`Content-Range` / `Accept-Ranges` so video seeking still works. Every response
+carries `Cache-Control: private, no-store`: the backend's room-membership
+check is the sole authority over whether the bytes may be read, and this
+route must never let a cache outlive that check.
+
+The stored envelope is unaffected — `url` still holds the backend
+`media-proxy` address, exactly as before, because Flutter builds and reads
+the same envelope with its own bearer and changing the stored shape would
+fork that cross-client contract. The web client instead derives the display
+url at render time: `attachmentSrc(attachment)`
+(`src/modules/chat/attachments/`) returns `/api/media/{assetId}` when
+`assetId` is present and falls back to the stored `url` for legacy messages
+that have none. `ChatMessageBubble`, the Media panel's grid, file list and
+lightbox all read through it, so none of them talk to the backend origin
+directly any more.
+
+One consequence for CSP: image/video reads no longer need the backend origin
+anywhere in `img-src` or `connect-src`. The browser only ever requests the
+same-origin `/api/media/...` path, which `img-src 'self'` (already present)
+covers; the Next.js *server*, not the browser, makes the authenticated call
+to the backend, so that hop is never subject to the browser's CSP at all. (The
+backend origin stays in `connect-src` for the unrelated calls the generated
+client still makes directly from the browser — login, register, refresh.)
 
 ## Localization
 
