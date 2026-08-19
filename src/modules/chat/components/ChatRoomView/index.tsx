@@ -56,7 +56,6 @@ import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
 import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
 import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
-import {emitChatNewMessage} from "@/modules/chat/events";
 import {useChatRoom} from '@/modules/chat/hooks/useChatRoom';
 import {useChatHistory} from '@/modules/chat/hooks/useChatHistory';
 import {useChatStore} from "@/modules/chat/store/chatStore";
@@ -360,18 +359,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 proposal: form.proposal,
             });
             if (response.state === REQUEST_STATE.SUCCESS) {
-                const tsIso = new Date().toISOString();
                 const messageId = uuidv4();
-                const content = t('profileChat.reviewSubmitted') || 'Review submitted successfully.';
-                const detail = {
-                    roomId,
-                    id: messageId,
-                    senderId: Number(localUser.id),
-                    content,
-                    createdAt: tsIso,
-                    status: 'sending' as const,
-                };
-                emitChatNewMessage(detail);
                 await sendMessage({
                     message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.proposal}),
                     senderId: Number(localUser.id),
@@ -387,7 +375,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             setError(t('profileChat.submitReviewError') || 'Failed to submit review. Please try again.');
             return false;
         }
-    }, [submitReviewApi, roomId, localUser.id, sendMessage, setError, t, emitChatNewMessage]);
+    }, [submitReviewApi, localUser.id, sendMessage, setError, t]);
 
     /**
      * Handle message submit from ChatInput.
@@ -411,19 +399,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             isSubmittingRef.current = true;
             const messageId = uuidv4();
 
-            const preview = selectedFile
-                ? (message || `[File] ${selectedFile.fileName}`)
-                : message;
-
-            emitChatNewMessage({
-                roomId,
-                id: messageId,
-                senderId: Number(localUser.id),
-                content: preview,
-                createdAt: new Date().toISOString(),
-                status: 'sending',
-            });
-
             await sendMessage({
                 message: contentToSend,
                 senderId: Number(localUser.id),
@@ -435,7 +410,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             setSelectedFile(null);
             isSubmittingRef.current = false;
         },
-        [sendMessage, roomId, selectedFile, localUser, emitChatNewMessage, setSelectedFile]
+        [sendMessage, selectedFile, localUser, setSelectedFile]
     );
     const flowActions: FlowActions = createFlowActions({
         t,
@@ -630,7 +605,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     goToStatus={goToStatus}
                     sendMessage={sendMessage}
                     requestRevisionAction={requestRevision}
-                    roomId={roomId}
                     localUser={localUser}
                 />
             )}

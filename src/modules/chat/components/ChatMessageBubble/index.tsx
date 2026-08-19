@@ -4,7 +4,6 @@ import Image, {StaticImageData} from "next/image";
 import type {ChatMessage, LocalUserId} from "108jobs-client";
 import {MessageImage} from "@/constants/images";
 import {useTranslation} from "react-i18next";
-import {useChatStore} from "@/modules/chat/store/chatStore";
 import React, {useMemo, useEffect, useState, useCallback} from "react";
 import {toLocalTime} from "@/utils/date";
 import MessageStatusIndicator from "@/modules/chat/components/MessageStatusIndicator";
@@ -100,16 +99,17 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                                          }) => {
     const {t, i18n} = useTranslation();
     const {resend} = useChatServices();
-    const liveMessage = useChatStore((s) => {
-        const mid = message?.id;
-        if (!mid) return undefined;
-        return (
-            s.listMessages || []).find((m: any) => String(m.id) === String(mid)
-        );
-    });
-    const viewMsg = liveMessage || message;
-    const createdAt = (viewMsg as any)?.createdAt as any;
-    const roomIdStr = String((viewMsg as any)?.roomId ?? "");
+    // `message` is already sourced from the store's `messagesByRoom` by the
+    // caller (see ChatRoomView). A `liveMessage` re-lookup used to live here,
+    // reading `useChatStore((s) => s.listMessages)` -- but no real
+    // message-adding code path (addMessage/addSending/upsertMessage) ever
+    // populates `listMessages`, so that lookup always returned `undefined`
+    // and silently fell through to `message` anyway. Same class of bug as
+    // `selectFailedMessagesForResend` in ChatBridgeProvider.tsx: routed
+    // around by reading `message` directly instead of trying to repopulate
+    // the dead field.
+    const createdAt = (message as any)?.createdAt as any;
+    const roomIdStr = String((message as any)?.roomId ?? "");
     const selectPeerLastReadAt = useMemo(
         () => (s: any) => s?.getPeerLastReadAt?.(roomIdStr, partnerId) ?? null,
         [roomIdStr, partnerId]
@@ -118,10 +118,10 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     useEffect(() => {
         dbg('lastReadAt', lastReadAt);
     }, [lastReadAt]);
-    const isIncoming = !viewMsg.isOwner;
+    const isIncoming = !message.isOwner;
 
     const time = toLocalTime(createdAt, i18n?.language || "th-TH");
-    const isOwner = !!viewMsg.isOwner;
+    const isOwner = !!message.isOwner;
 
     const peerOnline = usePeerOnline(Number(partnerId));
 
@@ -149,7 +149,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     }, [isLastRead, lastReadAt, i18n?.language]);
 
     const parsed = useMemo<ProposedQuoteMessage | null>(() => {
-        const c = viewMsg?.content;
+        const c = message?.content;
         if (c && c.trim().startsWith("{")) {
             try {
                 return JSON.parse(c) as ProposedQuoteMessage;
@@ -158,7 +158,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
             }
         }
         return null;
-    }, [viewMsg?.content]);
+    }, [message?.content]);
 
     const isEmployerStarted = parsed && parsed.type === "employer-started";
     const isProposedQuote = parsed && parsed.type === "proposed-quote" && parsed.quote;
@@ -175,8 +175,8 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     // the one place a file envelope is read, and it is the same reader the
     // media panel uses, so the two cannot drift.
     const attachment = useMemo(
-        () => (isFileMsg ? parseAttachment(viewMsg?.content) : null),
-        [isFileMsg, viewMsg.content],
+        () => (isFileMsg ? parseAttachment(message?.content) : null),
+        [isFileMsg, message.content],
     );
 
     // Same derivation the Media panel uses (`attachmentSrc`) -- a same-origin
@@ -255,20 +255,20 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
         () =>
             attachment
                 ? {
-                    messageId: String(viewMsg.id),
-                    senderId: Number(viewMsg.senderId) || 0,
+                    messageId: String(message.id),
+                    senderId: Number(message.senderId) || 0,
                     createdAt,
                     isOwner,
                     attachment,
                 }
                 : null,
-        [attachment, viewMsg.id, viewMsg.senderId, createdAt, isOwner],
+        [attachment, message.id, message.senderId, createdAt, isOwner],
     );
 
     return (
         <div
             data-testid="chat-message"
-            data-status={viewMsg.status}
+            data-status={message.status}
             className={`flex ${isIncoming ? "justify-start" : "justify-end"} ${
                 isHighlighted
                     // A static ring rather than a keyframe pulse, so this needs
@@ -292,16 +292,16 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                 {/* Keep MessageStatusIndicator outside the message card */}
                 <div className="text-xs text-gray-500 flex items-center gap-1.5">
                     <MessageStatusIndicator
-                        isOwner={viewMsg.isOwner}
-                        unread={(viewMsg as any).unread}
-                        msgStatus={viewMsg.status}
+                        isOwner={message.isOwner}
+                        unread={(message as any).unread}
+                        msgStatus={message.status}
                         isRead={isRead}
                         readTime={readTime}
                         t={t}
                         onRetry={
-                            viewMsg.isOwner
+                            message.isOwner
                                 ? () => {
-                                    const rid = String((viewMsg as any)?.roomId ?? "");
+                                    const rid = String((message as any)?.roomId ?? "");
                                     if (rid) {
                                         try {
                                             resend?.flushActive(rid);
@@ -885,7 +885,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                         }`}
                     >
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className="flex-1">{viewMsg.content}</span>
+                            <span className="flex-1">{message.content}</span>
                             <span
                                 className="text-xs min-w-fit"
                                 style={{color: isIncoming ? "gray" : "rgba(255, 255, 255, 0.7)"}}

@@ -1,6 +1,5 @@
 import {v4 as uuidv4} from 'uuid';
-import {emitChatNewMessage} from "@/modules/chat/events";
-import {ChatStatus, LocalUserId} from "108jobs-client";
+import {LocalUserId} from "108jobs-client";
 import {WsMessageSender} from "@/modules/chat/types";
 
 export type Structured = Record<string, unknown>;
@@ -29,29 +28,6 @@ export const serializeStructured = (obj: Structured): string => {
     }
 };
 
-export const dispatchPreview = (detail: {
-    roomId: string;
-    id: string;
-    senderId: LocalUserId;
-    content: string;
-    createdAt?: string;
-    status: ChatStatus
-}) => {
-    try {
-        const createdAt = detail.createdAt || new Date().toISOString();
-        emitChatNewMessage({
-            roomId: detail.roomId,
-            senderId: detail.senderId,
-            id: detail.id,
-            content: detail.content,
-            createdAt,
-            status: detail.status
-        });
-    } catch {
-        // no-op if window/custom event not available
-    }
-};
-
 export const sendStructured = async (
     sendMessage: WsMessageSender,
     roomId: string,
@@ -71,16 +47,14 @@ export const sendStructured = async (
         ? serializeStructured({...payload, fileUrl: opts.attach.url, fileName: opts.attach.name})
         : content;
 
-    // fire preview for optimistic updates in lists
-    dispatchPreview({
-        roomId,
-        id,
-        senderId,
-        content: opts.previewText || content,
-        createdAt: new Date().toISOString(),
-        status: "sending"
-    });
-
+    // No optimistic-preview dispatch here: in the live app, the `sendMessage`
+    // callback passed in resolves to `useChatRoom().actions.sendMessage`,
+    // which itself calls `sendChatMessage` (`events/sendEvents.ts`) and
+    // already adds the optimistic entry via `store.addSending`. This
+    // function used to also fire a `dispatchPreview` -> `emitChatNewMessage`
+    // CustomEvent for the same purpose, but nothing ever listened for it
+    // (see chatEvents.ts's removed `CHAT_EVENT.MESSAGE`), so it was dead
+    // weight.
     const secure = typeof opts.secure === 'boolean' ? opts.secure : false;
     await sendMessage({senderId: senderId, message, secure, id, assetId: opts.assetId});
     return id;

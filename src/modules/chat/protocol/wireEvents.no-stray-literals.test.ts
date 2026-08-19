@@ -45,11 +45,11 @@ describe("no stray legacy wire-string literals remain outside wireEvents.ts", ()
   // silent dead connection rather than a loud error: it connects, it
   // exchanges frames, and it matches nothing.
   //
-  // events/chatEvents.ts is exempt. Its CHAT_EVENT registry holds in-browser
-  // DOM CustomEvent names that happen to spell `chat:message` and
-  // `chat:typing` -- an unrelated concern that predates the wire protocol
-  // and is not sent anywhere. Now that the wire no longer uses those
-  // strings, that file is the only place they legitimately appear, which
+  // events/chatEvents.ts is exempt. Its CHAT_EVENT registry holds
+  // `chat:typing`, an in-browser DOM CustomEvent name that happens to spell
+  // like a wire string -- an unrelated concern that predates the wire
+  // protocol and is not sent anywhere. Now that the wire no longer uses that
+  // spelling, this file is the only place it legitimately appears, which
   // makes the two registries harder to confuse than they used to be.
   const wireFiles = files.filter(
     (f) => !f.endsWith(join("events", "chatEvents.ts"))
@@ -60,7 +60,6 @@ describe("no stray legacy wire-string literals remain outside wireEvents.ts", ()
     "phx_leave",
     "phx_reply",
     "phx_error",
-    "chat:message",
     "chat:typing",
     "chat:update",
     "chat:activeRooms",
@@ -78,4 +77,24 @@ describe("no stray legacy wire-string literals remain outside wireEvents.ts", ()
       expect(offenders).toEqual([]);
     }
   );
+
+  // `chat:message` used to have the same chatEvents.ts exemption as
+  // `chat:typing` above -- it was CHAT_EVENT.MESSAGE, the DOM CustomEvent
+  // name for a "new message" event that was dispatched but never listened
+  // for. That dead code (CHAT_EVENT.MESSAGE, emitChatNewMessage,
+  // normalizeChatNewMessageDetail, ChatNewMessageDetail, and
+  // structured.ts's dispatchPreview) was removed in the same change that
+  // split this assertion out of the exempted list above. Unlike
+  // `chat:typing`, it has no live purpose left, so it gets a stricter check:
+  // the literal must not reappear anywhere in src/modules/chat/, including
+  // chatEvents.ts itself. Reintroducing it -- as an event name or a wire
+  // string -- should fail this test and prompt a fresh look rather than a
+  // silent revival.
+  it("'chat:message' does not appear as a string literal anywhere in src/modules/chat/, including chatEvents.ts", () => {
+    const offenders = files.filter((f) => {
+      const src = readFileSync(f, "utf8");
+      return src.includes("'chat:message'") || src.includes('"chat:message"');
+    });
+    expect(offenders).toEqual([]);
+  });
 });
