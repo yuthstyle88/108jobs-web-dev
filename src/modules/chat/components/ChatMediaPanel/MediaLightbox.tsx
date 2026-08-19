@@ -6,6 +6,7 @@ import {useTranslation} from "react-i18next";
 import {X} from "lucide-react";
 
 import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
+import {useMediaLoadRetry} from "@/modules/chat/hooks/useMediaLoadRetry";
 
 type Props = {
     item: AttachmentItem;
@@ -34,11 +35,29 @@ function getFocusable(container: HTMLElement): HTMLElement[] {
  *
  * Video is `controls` + `preload="metadata"` and never autoplays — opening a
  * viewer is not the same as asking for sound.
+ *
+ * Runs the same `useMediaLoadRetry` bounded retry as `ChatMessageBubble` and
+ * `MediaGrid`, for a reason specific to this component: both of its entry
+ * points can reach it before an attachment has actually finished loading.
+ * `MediaGrid`'s tile button stays clickable throughout its own pending/retry
+ * window (Finding: nothing here disables it while a thumbnail is still
+ * resolving), and its video tiles are a flat card that never fetches
+ * anything itself -- per its own comment, "the real video loads once, on
+ * demand, when the lightbox opens it," meaning the very first fetch for a
+ * freshly-sent video happens *here*. Worse, this component always reads
+ * `attachmentSrc(item.attachment)` (the network path) and never the
+ * sender's own local blob preview `ChatMessageBubble` uses -- so a sender
+ * opening the viewer for their own just-sent photo hits the same
+ * flush-race 404 that motivated this whole retry mechanism, on a component
+ * that, before this, had no `onError` handling at all and so would never
+ * have recovered even after the row landed.
  */
 export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackFocusRef}) => {
     const {t} = useTranslation();
     const closeRef = React.useRef<HTMLButtonElement>(null);
     const dialogRef = React.useRef<HTMLDivElement>(null);
+    const src = attachmentSrc(item.attachment);
+    const {attemptKey, failed, loaded, handleError, handleLoad} = useMediaLoadRetry(src);
 
     // Mount-only in effect, if not literally in deps: focuses the close
     // button once, and restores focus to whatever triggered the lightbox
@@ -162,21 +181,66 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackF
             </div>
 
             <div className="flex flex-1 items-center justify-center overflow-auto p-4">
-                {item.attachment.kind === "video" ? (
-                    <video
-                        src={attachmentSrc(item.attachment)}
-                        controls
-                        preload="metadata"
-                        className="max-h-full max-w-full"
+                {failed ? (
+                    // Every retry is exhausted -- same `thumbnailFailed` copy
+                    // `ChatMessageBubble` and `MediaGrid` both fall back to,
+                    // sized to have some presence in the full viewer rather
+                    // than collapsing to nothing. Dark/translucent instead of
+                    // the panel's `bg-gray-50` -- this dialog is `bg-black/90`
+                    // everywhere else, and `bg-gray-50` would read as a stray
+                    // white card floating in it.
+                    <div className="flex h-64 w-64 max-w-full items-center justify-center rounded-md bg-white/10 text-sm text-white/70 sm:h-96 sm:w-96">
+                        {t("profileChat.mediaPanel.thumbnailFailed")}
+                    </div>
+                ) : item.attachment.kind === "video" ? (
+                    // Same pending/loaded split as `ChatMessageBubble`'s video
+                    // (see that component for the full reasoning): `controls`
+                    // withheld until `loaded` so nothing invisible is
+                    // Tab-reachable while the skeleton covers it, hidden via
+                    // `opacity` rather than `display: none` so the fetch
+                    // itself still happens, and `onLoadedMetadata` rather
+                    // than `onLoad` because `<video>` never fires a generic
+                    // `load` event.
+                    <span
+                        className={`relative flex items-center justify-center ${
+                            loaded
+                                ? ""
+                                : "h-64 w-64 animate-pulse rounded-md bg-white/10 ring-1 ring-white/20 sm:h-96 sm:w-96"
+                        }`}
                     >
-                        {t("profileChat.mediaPanel.videoUnsupported")}
-                    </video>
+                        <video
+                            key={attemptKey}
+                            src={src}
+                            onError={handleError}
+                            onLoadedMetadata={handleLoad}
+                            controls={loaded}
+                            preload="metadata"
+                            className={`max-h-full max-w-full transition-opacity duration-200 ${
+                                loaded ? "opacity-100" : "absolute inset-0 h-full w-full opacity-0"
+                            }`}
+                        >
+                            {t("profileChat.mediaPanel.videoUnsupported")}
+                        </video>
+                    </span>
                 ) : (
-                    <img
-                        src={attachmentSrc(item.attachment)}
-                        alt={item.attachment.name}
-                        className="max-h-full max-w-full object-contain"
-                    />
+                    <span
+                        className={`relative flex items-center justify-center ${
+                            loaded
+                                ? ""
+                                : "h-64 w-64 animate-pulse rounded-md bg-white/10 ring-1 ring-white/20 sm:h-96 sm:w-96"
+                        }`}
+                    >
+                        <img
+                            key={attemptKey}
+                            src={src}
+                            alt={item.attachment.name}
+                            onError={handleError}
+                            onLoad={handleLoad}
+                            className={`max-h-full max-w-full object-contain transition-opacity duration-200 ${
+                                loaded ? "opacity-100" : "absolute inset-0 h-full w-full opacity-0"
+                            }`}
+                        />
+                    </span>
                 )}
             </div>
         </div>,
