@@ -26,9 +26,15 @@ type HowToHireModalProps = {
     isOpen: boolean;
     onClose: () => void;
     copy: HowToHireCopy;
+    getRestoreFocusTarget?: () => HTMLElement | null;
 };
 
-export const HowToHireModal: React.FC<HowToHireModalProps> = ({isOpen, onClose, copy}) => {
+export const HowToHireModal: React.FC<HowToHireModalProps> = ({
+    isOpen,
+    onClose,
+    copy,
+    getRestoreFocusTarget,
+}) => {
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     const dialogRef = useRef<HTMLElement>(null);
 
@@ -42,11 +48,12 @@ export const HowToHireModal: React.FC<HowToHireModalProps> = ({isOpen, onClose, 
 
         return () => {
             document.body.style.overflow = previousBodyOverflow;
-            if (previouslyFocused && document.contains(previouslyFocused)) {
-                previouslyFocused.focus();
+            const focusTarget = getRestoreFocusTarget?.() ?? previouslyFocused;
+            if (focusTarget && document.contains(focusTarget)) {
+                focusTarget.focus();
             }
         };
-    }, [isOpen]);
+    }, [getRestoreFocusTarget, isOpen]);
 
     useEffect(() => {
         if (!isOpen) return;
