@@ -132,15 +132,7 @@ export const MediaGrid: React.FC<Props> = ({items, onOpen, onJump}) => {
     }
 
     return (
-        // 2 columns, not 3: this sidebar's own content width (see
-        // JobFlowSidebar) is capped at max-w-[360px] and floors around 256px
-        // at the narrowest desktop breakpoint (md:w-64). With the panel's
-        // unified p-3/sm:p-4 padding, 3 columns landed tiles as small as
-        // ~69-72px on desktop -- postage stamps, not photos. 2 columns keeps
-        // this a grid (not a single-column list) while landing tiles in the
-        // ~106-164px band across that same width range, which reads as an
-        // actual thumbnail rather than an icon.
-        <ul className="grid grid-cols-2 gap-2 p-3 sm:gap-3 sm:p-4">
+        <ul className="grid grid-cols-3 gap-2 p-3 sm:gap-3 sm:p-4">
             {items.map((item) => (
                 <Tile
                     key={item.messageId}

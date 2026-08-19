@@ -127,7 +127,7 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                 role="tablist"
                 aria-label={t("profileChat.media")}
                 onKeyDown={onTabKeyDown}
-                className="flex border-b border-gray-200 px-3 sm:px-4"
+                className="mx-3 my-2 flex gap-1 rounded-lg bg-gray-100 p-1 sm:mx-4"
             >
                 {TABS.map((tab) => {
                     const selected = tab.id === mediaTab;
@@ -145,10 +145,10 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
                             aria-controls={`media-panel-${tab.id}-${uid}`}
                             tabIndex={selected ? 0 : -1}
                             onClick={() => setMediaTab(tab.id)}
-                            className={`mr-4 border-b-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            className={`flex-1 rounded-md py-1.5 text-center text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                 selected
-                                    ? "border-primary text-primary"
-                                    : "border-transparent text-gray-500 hover:text-gray-700"
+                                    ? "bg-white font-medium text-gray-900 shadow-sm"
+                                    : "text-gray-500 hover:text-gray-700"
                             }`}
                         >
                             {t(tab.labelKey)}

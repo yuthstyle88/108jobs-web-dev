@@ -65,12 +65,12 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
 
     return (
         <div className="flex h-full min-h-0 flex-col">
-            <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-3 sm:px-4">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200">
                 <div
                     role="tablist"
                     aria-label={t("profileChat.jobFlow")}
                     onKeyDown={onKeyDown}
-                    className="flex"
+                    className="flex flex-1"
                 >
                     {TABS.map((tab) => {
                         const selected = tab.id === sidebarTab;
@@ -88,9 +88,9 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
                                 aria-controls={`sidebar-panel-${tab.id}-${uid}`}
                                 tabIndex={selected ? 0 : -1}
                                 onClick={() => setSidebarTab(tab.id)}
-                                className={`mr-4 border-b-2 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                className={`flex-1 -mb-px border-b-2 py-3 text-center text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                     selected
-                                        ? "border-primary text-primary"
+                                        ? "border-gray-900 font-medium text-gray-900"
                                         : "border-transparent text-gray-500 hover:text-gray-700"
                                 }`}
                             >
