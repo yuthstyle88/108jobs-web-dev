@@ -514,7 +514,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 partnerName={partnerName || "User"}
                 orders={
                     <JobFlowContent
-                        setIsFlowOpen={setIsFlowOpen}
                         renderFlowContent={renderFlowContent}
                         setShowJobDetailModal={setShowJobDetailModal}
                         currentRoom={currentRoom}
@@ -528,7 +527,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     }, [
         currentRoom,
         setContent,
-        setIsFlowOpen,
         setShowJobDetailModal,
         isEmployer,
         isEmployerKnown,

@@ -2,23 +2,34 @@
 
 import React from "react";
 import {useTranslation} from "react-i18next";
+import {CircleAlert} from "lucide-react";
 
-/** Centred, quiet block used for every non-content state in the panel. */
-export const MediaNotice: React.FC<{children: React.ReactNode}> = ({children}) => (
+/**
+ * Centred, quiet block used for every non-content state in the panel. `icon`
+ * is an already-instantiated, muted glyph shown above the text -- optional so
+ * a bare `<MediaNotice>` still works, and a plain element rather than a
+ * component reference so each caller can size/color it (and mark it
+ * `aria-hidden`) however fits that state instead of this component guessing.
+ */
+export const MediaNotice: React.FC<{children: React.ReactNode; icon?: React.ReactNode}> = ({
+    children,
+    icon,
+}) => (
     <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center text-sm text-gray-500">
+        {icon}
         {children}
     </div>
 );
 
-export const MediaEmpty: React.FC<{messageKey: string}> = ({messageKey}) => {
+export const MediaEmpty: React.FC<{messageKey: string; icon?: React.ReactNode}> = ({messageKey, icon}) => {
     const {t} = useTranslation();
-    return <MediaNotice>{t(messageKey)}</MediaNotice>;
+    return <MediaNotice icon={icon}>{t(messageKey)}</MediaNotice>;
 };
 
 export const MediaError: React.FC<{onRetry: () => void}> = ({onRetry}) => {
     const {t} = useTranslation();
     return (
-        <MediaNotice>
+        <MediaNotice icon={<CircleAlert className="h-8 w-8 text-gray-300" aria-hidden="true" />}>
             <p role="alert">{t("profileChat.mediaPanel.error")}</p>
             <button
                 type="button"

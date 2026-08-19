@@ -2,7 +2,7 @@
 
 import React from "react";
 import {useTranslation} from "react-i18next";
-import {Play} from "lucide-react";
+import {ImageOff, Play} from "lucide-react";
 
 import {attachmentSrc, type AttachmentItem} from "@/modules/chat/attachments";
 import {useMediaLoadRetry} from "@/modules/chat/hooks/useMediaLoadRetry";
@@ -123,11 +123,24 @@ const Tile: React.FC<{item: AttachmentItem; onOpen: () => void; onJump: () => vo
 
 export const MediaGrid: React.FC<Props> = ({items, onOpen, onJump}) => {
     if (items.length === 0) {
-        return <MediaEmpty messageKey="profileChat.mediaPanel.emptyImageVideo" />;
+        return (
+            <MediaEmpty
+                messageKey="profileChat.mediaPanel.emptyImageVideo"
+                icon={<ImageOff className="h-8 w-8 text-gray-300" aria-hidden="true" />}
+            />
+        );
     }
 
     return (
-        <ul className="grid grid-cols-3 gap-1.5 p-2 sm:gap-2 sm:p-3">
+        // 2 columns, not 3: this sidebar's own content width (see
+        // JobFlowSidebar) is capped at max-w-[360px] and floors around 256px
+        // at the narrowest desktop breakpoint (md:w-64). With the panel's
+        // unified p-3/sm:p-4 padding, 3 columns landed tiles as small as
+        // ~69-72px on desktop -- postage stamps, not photos. 2 columns keeps
+        // this a grid (not a single-column list) while landing tiles in the
+        // ~106-164px band across that same width range, which reads as an
+        // actual thumbnail rather than an icon.
+        <ul className="grid grid-cols-2 gap-2 p-3 sm:gap-3 sm:p-4">
             {items.map((item) => (
                 <Tile
                     key={item.messageId}
