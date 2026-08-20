@@ -43,8 +43,12 @@ const nextConfig: NextConfig = {
     serverExternalPackages: ['108jobs-client'],
 
     images: {
-        // Using Next/Image without on-the-fly optimization to keep server lean
-        // Flip to `false` if you want Next's built-in Image Optimization.
+        // Not a server-leanness choice: avatars/photos come from an external
+        // CDN (cdn.108jobs.com) and from this app's own auth-gated same-origin
+        // proxies (/api/media/*, /api/rider-documents/*). Neither is allow-
+        // listed via `remotePatterns`, and the proxied ones aren't even
+        // guaranteed to return decodable image bytes -- Next's built-in
+        // optimizer can't handle either, so this is required, not optional.
         unoptimized: true,
     },
 

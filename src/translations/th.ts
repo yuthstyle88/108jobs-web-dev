@@ -4000,12 +4000,14 @@ export const th = {
             riders: {
                 // Page title & tabs
                 title: "จัดการไรเดอร์",
+                description: "จัดการไรเดอร์สำหรับ 108jobs",
                 tabUnverified: "ยังไม่ยืนยัน",
                 tabVerified: "ยืนยันแล้ว",
 
                 // Status & badges
                 statusPending: "รอการตรวจสอบ",
                 statusVerified: "ยืนยันแล้ว",
+                statusRejected: "ถูกปฏิเสธ",
 
                 // Empty states
                 emptyUnverified: "ขณะนี้ยังไม่มีไรเดอร์ที่รอการยืนยัน",
@@ -4020,11 +4022,13 @@ export const th = {
                 verifiedAt: "วันที่ยืนยัน",
 
                 // Actions & toasts
+                reviewRiderLabel: "ตรวจสอบไรเดอร์",
                 actionApprove: "อนุมัติ",
                 actionReject: "ปฏิเสธ",
                 actionApproved: "อนุมัติไรเดอร์เรียบร้อยแล้ว",
                 actionRejected: "ปฏิเสธไรเดอร์เรียบร้อยแล้ว",
                 errorOccurred: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+                fetchError: "ไม่สามารถโหลดรายชื่อไรเดอร์ได้",
 
                 // Fallbacks
                 fullName: "ชื่อ-นามสกุล",
@@ -4033,7 +4037,103 @@ export const th = {
 
                 // Optional – if you add rejection reason later
                 rejectionReason: "เหตุผลการปฏิเสธ",
-                rejectionReasonPlaceholder: "ระบุเหตุผลการปฏิเสธ (ไม่บังคับ)",
+                rejectionReasonPlaceholder: "ระบุเหตุผลในการปฏิเสธใบสมัครนี้",
+
+                // RiderReviewModal
+                reviewModal: {
+                    closeLabel: "ปิด",
+                    applicationUnavailable: "ไม่สามารถดูใบสมัครของไรเดอร์รายนี้ได้",
+                    loadError: {
+                        title: "ไม่สามารถโหลดใบสมัครของไรเดอร์รายนี้ได้",
+                        retry: "ลองใหม่",
+                        retrying: "กำลังลองใหม่…",
+                    },
+                    rejectionReasonLabel: "เหตุผลการปฏิเสธ",
+                    previousRejectionLabel: "เคยถูกปฏิเสธด้วยเหตุผล",
+                    rejectionReasonRequired: "ต้องระบุเหตุผลจึงจะปฏิเสธใบสมัครได้",
+                    fieldEmpty: "ไม่ได้ระบุ",
+                    mismatch: {
+                        title: "หมายเลขบัตรประชาชนไม่ตรงกัน",
+                        description:
+                            "บัตรประชาชนและใบขับขี่ของผู้สมัครแสดงหมายเลขบัตรประชาชนไม่ตรงกัน ค่าจากใบขับขี่ถูกอ่านโดยอัตโนมัติจากอุปกรณ์ของผู้สมัครเอง และเช่นเดียวกับค่าจากบัตรประชาชน ยังไม่ได้รับการตรวจสอบยืนยันจากแพลตฟอร์มนี้ โปรดใช้ดุลยพินิจของท่านเอง นี่ไม่ใช่ข้อสรุปจากแพลตฟอร์ม",
+                        fromCard: "จากบัตรประชาชน",
+                        fromLicence: "จากใบขับขี่ (อ่านจากอุปกรณ์ ยังไม่ได้ตรวจสอบ)",
+                    },
+                    sections: {
+                        identity: "ข้อมูลประจำตัว",
+                        licence: "ใบขับขี่",
+                        vehicle: "ยานพาหนะและการจดทะเบียน",
+                        insurance: "ประกันภัย",
+                        payment: "การชำระเงิน",
+                        emergencyContact: "ผู้ติดต่อฉุกเฉิน",
+                        consent: "ความยินยอม",
+                    },
+                    fields: {
+                        nationalIdNumber: "เลขบัตรประจำตัวประชาชน",
+                        idCardAddress: "ที่อยู่ตามบัตรประชาชน",
+                        fatherFullName: "ชื่อ-นามสกุลบิดา",
+                        motherFullName: "ชื่อ-นามสกุลมารดา",
+                        dateOfBirth: "วันเกิด",
+                        licenseNumber: "เลขที่ใบขับขี่",
+                        licenseExpiryDate: "วันหมดอายุใบขับขี่",
+                        licenseType: "ประเภทใบขับขี่",
+                        licenseIssuedOn: "วันที่ออกใบขับขี่",
+                        licenseIssuedAt: "สถานที่ออกใบขับขี่",
+                        vehicleRegistrationType: "ประเภทการจดทะเบียน",
+                        engineDisplacementCc: "ความจุกระบอกสูบ (ซีซี)",
+                        vehicleFirstRegisteredOn: "วันที่จดทะเบียนครั้งแรก",
+                        vehicleTitleHolderName: "ชื่อผู้ถือกรรมสิทธิ์",
+                        vehicleTitleHolderIdNumber: "เลขบัตรประชาชนผู้ถือกรรมสิทธิ์",
+                        vehiclePossessorName: "ชื่อผู้ครอบครอง",
+                        vehiclePossessorIdNumber: "เลขบัตรประชาชนผู้ครอบครอง",
+                        insurancePolicyNumber: "เลขที่กรมธรรม์ประกันภัย",
+                        insuranceExpiresOn: "วันหมดอายุประกันภัย",
+                        compulsoryInsurancePolicyNumber: "เลขที่กรมธรรม์ พ.ร.บ.",
+                        compulsoryInsuranceExpiresOn: "วันหมดอายุ พ.ร.บ.",
+                        bankAccountName: "ชื่อบัญชีธนาคาร",
+                        bankAccountNumber: "เลขที่บัญชีธนาคาร",
+                        bankName: "ชื่อธนาคาร",
+                        emergencyContactName: "ชื่อผู้ติดต่อ",
+                        emergencyContactRelationship: "ความสัมพันธ์",
+                        emergencyContactPhone: "เบอร์โทรผู้ติดต่อ",
+                        emergencyContactAddress: "ที่อยู่ผู้ติดต่อ",
+                        faceConsentGrantedAt: "วันที่ให้ความยินยอมสแกนใบหน้า",
+                        faceConsentVersion: "เวอร์ชันความยินยอมสแกนใบหน้า",
+                        faceConsentWithdrawnAt: "วันที่ถอนความยินยอมสแกนใบหน้า",
+                        emergencyContactConsentedAt: "วันที่ยินยอมให้ติดต่อกรณีฉุกเฉิน",
+                        criminalRecordConsentedAt: "วันที่ยินยอมตรวจประวัติอาชญากรรม",
+                        criminalDeclarationAcceptedAt: "วันที่ยอมรับคำรับรองประวัติอาชญากรรม",
+                    },
+                    documents: {
+                        title: "เอกสาร",
+                        notSubmitted: "ยังไม่ได้ส่ง",
+                        openInNewTab: "เปิดเอกสาร",
+                        openFailed: "เปิดไม่ได้",
+                        kinds: {
+                            licence: "ใบขับขี่",
+                            vehicleRegistration: "ทะเบียนรถ",
+                            insurance: "ประกันภัย",
+                            compulsoryInsurance: "พ.ร.บ.",
+                            face: "ภาพใบหน้า",
+                            bankBook: "สมุดบัญชีธนาคาร",
+                        },
+                    },
+                    review: {
+                        title: "การตรวจสอบ",
+                        reviewedBy: "ตรวจสอบโดย",
+                        notYetReviewed: "ยังไม่ได้ตรวจสอบ",
+                        criminalRecordCheck: "การตรวจประวัติอาชญากรรม",
+                        criminalRecordClear: "ไม่พบประวัติ",
+                        criminalRecordNotClear: "พบประวัติ",
+                        criminalRecordNotChecked: "ยังไม่ได้ตรวจสอบ",
+                        criminalRecordCheckedBy: "ตรวจสอบโดย",
+                        criminalRecordCheckedAt: "ตรวจสอบเมื่อ",
+                    },
+                    actions: {
+                        confirmReject: "ยืนยันการปฏิเสธ",
+                        cancelReject: "ยกเลิก",
+                    },
+                },
             },
         },
     },

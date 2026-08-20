@@ -4110,12 +4110,14 @@ export const vi = {
             riders: {
                 // Page title & tabs
                 title: "Quản lý tài xế",
+                description: "Quản lý tài xế cho 108jobs",
                 tabUnverified: "Chưa xác minh",
                 tabVerified: "Đã xác minh",
 
                 // Status & badges
                 statusPending: "Đang chờ duyệt",
                 statusVerified: "Đã xác minh",
+                statusRejected: "Đã từ chối",
 
                 // Empty states
                 emptyUnverified: "Hiện tại không có tài xế nào đang chờ xác minh",
@@ -4132,10 +4134,13 @@ export const vi = {
                 verifiedAt: "Ngày xác minh",
 
                 // Action buttons
+                reviewRiderLabel: "Xem xét tài xế",
                 actionApprove: "Phê duyệt",
                 actionReject: "Từ chối",
                 actionApproved: "Đã phê duyệt tài xế thành công",
                 actionRejected: "Đã từ chối tài xế",
+                errorOccurred: "Đã xảy ra lỗi. Vui lòng thử lại",
+                fetchError: "Không thể tải danh sách tài xế.",
 
                 // Other possible useful keys
                 fullName: "Họ và tên",
@@ -4144,7 +4149,103 @@ export const vi = {
 
                 // Optional – if you add rejection reason later
                 rejectionReason: "Lý do từ chối",
-                rejectionReasonPlaceholder: "Nhập lý do từ chối (không bắt buộc)",
+                rejectionReasonPlaceholder: "Nhập lý do từ chối đơn đăng ký này",
+
+                // RiderReviewModal
+                reviewModal: {
+                    closeLabel: "Đóng",
+                    applicationUnavailable: "Không thể xem hồ sơ đăng ký của tài xế này.",
+                    loadError: {
+                        title: "Không thể tải hồ sơ đăng ký của tài xế này.",
+                        retry: "Thử lại",
+                        retrying: "Đang thử lại…",
+                    },
+                    rejectionReasonLabel: "Lý do từ chối",
+                    previousRejectionLabel: "Trước đây đã bị từ chối với lý do",
+                    rejectionReasonRequired: "Cần nhập lý do mới có thể từ chối đơn đăng ký này.",
+                    fieldEmpty: "Chưa cung cấp",
+                    mismatch: {
+                        title: "Số định danh cá nhân không khớp",
+                        description:
+                            "Căn cước công dân và giấy phép lái xe của người đăng ký cho hai số định danh cá nhân khác nhau. Giá trị từ giấy phép lái xe được đọc tự động trên thiết bị của người đăng ký và, giống như giá trị từ căn cước, chưa được nền tảng này xác minh. Vui lòng tự đánh giá -- đây không phải là kết luận của nền tảng.",
+                        fromCard: "Theo căn cước công dân",
+                        fromLicence: "Theo giấy phép lái xe (đọc từ thiết bị, chưa xác minh)",
+                    },
+                    sections: {
+                        identity: "Thông tin định danh",
+                        licence: "Giấy phép lái xe",
+                        vehicle: "Phương tiện & đăng ký xe",
+                        insurance: "Bảo hiểm",
+                        payment: "Thanh toán",
+                        emergencyContact: "Liên hệ khẩn cấp",
+                        consent: "Sự đồng ý",
+                    },
+                    fields: {
+                        nationalIdNumber: "Số căn cước công dân",
+                        idCardAddress: "Địa chỉ theo căn cước công dân",
+                        fatherFullName: "Họ tên cha",
+                        motherFullName: "Họ tên mẹ",
+                        dateOfBirth: "Ngày sinh",
+                        licenseNumber: "Số giấy phép lái xe",
+                        licenseExpiryDate: "Ngày hết hạn giấy phép lái xe",
+                        licenseType: "Loại giấy phép lái xe",
+                        licenseIssuedOn: "Ngày cấp giấy phép lái xe",
+                        licenseIssuedAt: "Nơi cấp giấy phép lái xe",
+                        vehicleRegistrationType: "Loại đăng ký xe",
+                        engineDisplacementCc: "Dung tích động cơ (cc)",
+                        vehicleFirstRegisteredOn: "Ngày đăng ký lần đầu",
+                        vehicleTitleHolderName: "Tên chủ sở hữu",
+                        vehicleTitleHolderIdNumber: "Số CCCD chủ sở hữu",
+                        vehiclePossessorName: "Tên người chiếm hữu",
+                        vehiclePossessorIdNumber: "Số CCCD người chiếm hữu",
+                        insurancePolicyNumber: "Số hợp đồng bảo hiểm",
+                        insuranceExpiresOn: "Ngày hết hạn bảo hiểm",
+                        compulsoryInsurancePolicyNumber: "Số hợp đồng bảo hiểm bắt buộc",
+                        compulsoryInsuranceExpiresOn: "Ngày hết hạn bảo hiểm bắt buộc",
+                        bankAccountName: "Tên tài khoản ngân hàng",
+                        bankAccountNumber: "Số tài khoản ngân hàng",
+                        bankName: "Tên ngân hàng",
+                        emergencyContactName: "Tên người liên hệ",
+                        emergencyContactRelationship: "Mối quan hệ",
+                        emergencyContactPhone: "Số điện thoại người liên hệ",
+                        emergencyContactAddress: "Địa chỉ người liên hệ",
+                        faceConsentGrantedAt: "Ngày đồng ý xác thực khuôn mặt",
+                        faceConsentVersion: "Phiên bản đồng ý xác thực khuôn mặt",
+                        faceConsentWithdrawnAt: "Ngày rút lại đồng ý xác thực khuôn mặt",
+                        emergencyContactConsentedAt: "Ngày đồng ý cung cấp liên hệ khẩn cấp",
+                        criminalRecordConsentedAt: "Ngày đồng ý kiểm tra lý lịch tư pháp",
+                        criminalDeclarationAcceptedAt: "Ngày chấp nhận cam kết về lý lịch tư pháp",
+                    },
+                    documents: {
+                        title: "Tài liệu",
+                        notSubmitted: "Chưa nộp",
+                        openInNewTab: "Mở tài liệu",
+                        openFailed: "Không thể mở",
+                        kinds: {
+                            licence: "Giấy phép lái xe",
+                            vehicleRegistration: "Đăng ký xe",
+                            insurance: "Bảo hiểm",
+                            compulsoryInsurance: "Bảo hiểm bắt buộc",
+                            face: "Ảnh khuôn mặt",
+                            bankBook: "Sổ ngân hàng",
+                        },
+                    },
+                    review: {
+                        title: "Đánh giá",
+                        reviewedBy: "Người duyệt",
+                        notYetReviewed: "Chưa được duyệt",
+                        criminalRecordCheck: "Kiểm tra lý lịch tư pháp",
+                        criminalRecordClear: "Không có tiền án",
+                        criminalRecordNotClear: "Có tiền án",
+                        criminalRecordNotChecked: "Chưa kiểm tra",
+                        criminalRecordCheckedBy: "Người kiểm tra",
+                        criminalRecordCheckedAt: "Ngày kiểm tra",
+                    },
+                    actions: {
+                        confirmReject: "Xác nhận từ chối",
+                        cancelReject: "Hủy",
+                    },
+                },
             },
         },
     },

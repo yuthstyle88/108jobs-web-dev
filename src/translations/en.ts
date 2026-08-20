@@ -4086,12 +4086,14 @@ export const en = {
             riders: {
                 // Page title & tabs
                 title: "Rider Management",
+                description: "Manage riders for 108jobs",
                 tabUnverified: "Unverified",
                 tabVerified: "Verified",
 
                 // Status & badges
                 statusPending: "Pending Review",
                 statusVerified: "Verified",
+                statusRejected: "Rejected",
 
                 // Empty states
                 emptyUnverified: "No riders awaiting verification at this time",
@@ -4106,11 +4108,13 @@ export const en = {
                 verifiedAt: "Verified Date",
 
                 // Actions & toasts
+                reviewRiderLabel: "Review rider",
                 actionApprove: "Approve",
                 actionReject: "Reject",
                 actionApproved: "Rider approved successfully",
                 actionRejected: "Rider rejected",
                 errorOccurred: "An error occurred. Please try again",
+                fetchError: "Failed to load riders.",
 
                 // Fallbacks
                 fullName: "Full Name",
@@ -4119,7 +4123,103 @@ export const en = {
 
                 // Optional – if you add rejection reason later
                 rejectionReason: "Rejection Reason",
-                rejectionReasonPlaceholder: "Enter rejection reason (optional)",
+                rejectionReasonPlaceholder: "Enter the reason for rejecting this application",
+
+                // RiderReviewModal
+                reviewModal: {
+                    closeLabel: "Close",
+                    applicationUnavailable: "This rider's application isn't available to view.",
+                    loadError: {
+                        title: "Couldn't load this rider's application.",
+                        retry: "Retry",
+                        retrying: "Retrying…",
+                    },
+                    rejectionReasonLabel: "Rejection reason",
+                    previousRejectionLabel: "Previously rejected for",
+                    rejectionReasonRequired: "A reason is required to reject an application.",
+                    fieldEmpty: "Not provided",
+                    mismatch: {
+                        title: "ID number mismatch",
+                        description:
+                            "The applicant's ID card and driving licence give two different national ID numbers. The licence value was read automatically on the applicant's own device and, like the card value, has not been verified by this platform. Use your own judgement -- this is not a platform finding.",
+                        fromCard: "From ID card",
+                        fromLicence: "From driving licence (device-read, unverified)",
+                    },
+                    sections: {
+                        identity: "Identity",
+                        licence: "Licence",
+                        vehicle: "Vehicle & registration",
+                        insurance: "Insurance",
+                        payment: "Payment",
+                        emergencyContact: "Emergency contact",
+                        consent: "Consent",
+                    },
+                    fields: {
+                        nationalIdNumber: "National ID number",
+                        idCardAddress: "ID card address",
+                        fatherFullName: "Father's full name",
+                        motherFullName: "Mother's full name",
+                        dateOfBirth: "Date of birth",
+                        licenseNumber: "Licence number",
+                        licenseExpiryDate: "Licence expiry date",
+                        licenseType: "Licence type",
+                        licenseIssuedOn: "Licence issued on",
+                        licenseIssuedAt: "Licence issued at",
+                        vehicleRegistrationType: "Registration type",
+                        engineDisplacementCc: "Engine displacement (cc)",
+                        vehicleFirstRegisteredOn: "First registered on",
+                        vehicleTitleHolderName: "Title holder's name",
+                        vehicleTitleHolderIdNumber: "Title holder's ID number",
+                        vehiclePossessorName: "Possessor's name",
+                        vehiclePossessorIdNumber: "Possessor's ID number",
+                        insurancePolicyNumber: "Insurance policy number",
+                        insuranceExpiresOn: "Insurance expires on",
+                        compulsoryInsurancePolicyNumber: "Compulsory insurance policy number",
+                        compulsoryInsuranceExpiresOn: "Compulsory insurance expires on",
+                        bankAccountName: "Bank account name",
+                        bankAccountNumber: "Bank account number",
+                        bankName: "Bank name",
+                        emergencyContactName: "Contact name",
+                        emergencyContactRelationship: "Relationship",
+                        emergencyContactPhone: "Contact phone",
+                        emergencyContactAddress: "Contact address",
+                        faceConsentGrantedAt: "Face consent granted at",
+                        faceConsentVersion: "Face consent version",
+                        faceConsentWithdrawnAt: "Face consent withdrawn at",
+                        emergencyContactConsentedAt: "Emergency contact consented at",
+                        criminalRecordConsentedAt: "Criminal record check consented at",
+                        criminalDeclarationAcceptedAt: "Criminal declaration accepted at",
+                    },
+                    documents: {
+                        title: "Documents",
+                        notSubmitted: "Not submitted",
+                        openInNewTab: "Open document",
+                        openFailed: "Couldn't open",
+                        kinds: {
+                            licence: "Driving licence",
+                            vehicleRegistration: "Vehicle registration",
+                            insurance: "Insurance",
+                            compulsoryInsurance: "Compulsory insurance",
+                            face: "Face photo",
+                            bankBook: "Bank book",
+                        },
+                    },
+                    review: {
+                        title: "Review",
+                        reviewedBy: "Reviewed by",
+                        notYetReviewed: "Not yet reviewed",
+                        criminalRecordCheck: "Criminal record check",
+                        criminalRecordClear: "Clear",
+                        criminalRecordNotClear: "Not clear",
+                        criminalRecordNotChecked: "Not checked yet",
+                        criminalRecordCheckedBy: "Checked by",
+                        criminalRecordCheckedAt: "Checked at",
+                    },
+                    actions: {
+                        confirmReject: "Confirm rejection",
+                        cancelReject: "Cancel",
+                    },
+                },
             },
         },
     },
