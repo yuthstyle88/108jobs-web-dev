@@ -8,6 +8,7 @@ import {CheckCircle, Eye, Loader2, UserCheck, UserX, Motorbike, Car, Star} from 
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
+import {RiderReviewModal} from "@/modules/admin/components/Modal/RiderReviewModal";
 import {JSX, useState} from "react";
 import {Rider, RiderView, VehicleType} from "108jobs-client";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
@@ -24,11 +25,9 @@ export default function AdminRidersManagementPage() {
 
     const [viewMode, setViewMode] = useState<ViewMode>("unverified");
 
-    // Placeholder for Task 13: the review modal isn't built yet, so nothing
-    // reads `reviewingRider` and setting it is a visible no-op for now. The
-    // Eye button below already wires the setter; Task 13 adds the modal that
-    // consumes this state (and the approve/reject calls that used to live
-    // inline in the row).
+    // The rider currently open in RiderReviewModal, or null when the modal
+    // is closed. The Eye button on each row sets this; the modal itself
+    // fetches the full application for `reviewingRider.id`.
     const [reviewingRider, setReviewingRider] = useState<Rider | null>(null);
 
     const {
@@ -39,6 +38,7 @@ export default function AdminRidersManagementPage() {
         hasPreviousPage,
         loadNextPage,
         loadPreviousPage,
+        refetch,
     } = usePaginatedRiders({
         verified: viewMode === "verified",
         limit: 10,
@@ -213,6 +213,17 @@ export default function AdminRidersManagementPage() {
                             />
                         </div>
                     </>
+                )}
+
+                {reviewingRider && (
+                    <RiderReviewModal
+                        rider={reviewingRider}
+                        onClose={() => setReviewingRider(null)}
+                        onReviewed={() => {
+                            setReviewingRider(null);
+                            refetch();
+                        }}
+                    />
                 )}
             </div>
         </AdminLayout>
