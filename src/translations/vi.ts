@@ -4148,7 +4148,7 @@ export const vi = {
 
                 // Optional – if you add rejection reason later
                 rejectionReason: "Lý do từ chối",
-                rejectionReasonPlaceholder: "Nhập lý do từ chối (không bắt buộc)",
+                rejectionReasonPlaceholder: "Nhập lý do từ chối đơn đăng ký này",
 
                 // RiderReviewModal
                 reviewModal: {
@@ -4156,6 +4156,7 @@ export const vi = {
                     applicationUnavailable: "Không thể xem hồ sơ đăng ký của tài xế này.",
                     rejectionReasonLabel: "Lý do từ chối",
                     previousRejectionLabel: "Trước đây đã bị từ chối với lý do",
+                    rejectionReasonRequired: "Cần nhập lý do mới có thể từ chối đơn đăng ký này.",
                     fieldEmpty: "Chưa cung cấp",
                     mismatch: {
                         title: "Số định danh cá nhân không khớp",

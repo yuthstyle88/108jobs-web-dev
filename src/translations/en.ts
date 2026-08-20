@@ -4122,7 +4122,7 @@ export const en = {
 
                 // Optional – if you add rejection reason later
                 rejectionReason: "Rejection Reason",
-                rejectionReasonPlaceholder: "Enter rejection reason (optional)",
+                rejectionReasonPlaceholder: "Enter the reason for rejecting this application",
 
                 // RiderReviewModal
                 reviewModal: {
@@ -4130,6 +4130,7 @@ export const en = {
                     applicationUnavailable: "This rider's application isn't available to view.",
                     rejectionReasonLabel: "Rejection reason",
                     previousRejectionLabel: "Previously rejected for",
+                    rejectionReasonRequired: "A reason is required to reject an application.",
                     fieldEmpty: "Not provided",
                     mismatch: {
                         title: "ID number mismatch",

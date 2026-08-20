@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {toast} from "sonner";
 import {
@@ -40,6 +40,18 @@ interface RiderReviewModalProps {
     onClose: () => void;
     /** Called after a successful approve/reject so the page can close and refetch. */
     onReviewed: () => void;
+}
+
+// Matches the focus-trap pattern already proven in HowToHireModal (same
+// selector, same recompute-on-every-Tab approach so it stays correct as
+// content loads in) -- there is no extracted shared hook for this yet, so
+// per review guidance this stays small and local rather than pulling one
+// out or reaching for a dependency.
+const FOCUSABLE_SELECTOR =
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function getFocusable(container: HTMLElement): HTMLElement[] {
+    return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
 }
 
 type FieldKey = keyof RiderApplicationFields;
@@ -128,16 +140,60 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const {t} = useTranslation();
     const [isRejecting, setIsRejecting] = useState(false);
     const [rejectReason, setRejectReason] = useState("");
+    const trimmedReason = rejectReason.trim();
 
     const {data, isLoading} = useHttpGet("getRiderApplication", [rider.id]);
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
 
+    const dialogRef = useRef<HTMLDivElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+    // Move focus into the dialog on open, and restore it to whatever had
+    // focus before (the row's Eye button) on close. This modal shows a
+    // national ID card, a bank book and a face photograph -- worth doing
+    // properly even though the component it's patterned on, UserDetailModal,
+    // has never done this.
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
+        const previouslyFocused = document.activeElement as HTMLElement | null;
+        closeButtonRef.current?.focus();
+        return () => {
+            if (previouslyFocused && document.contains(previouslyFocused)) {
+                previouslyFocused.focus();
+            }
         };
-        window.addEventListener("keydown", handleEscape);
-        return () => window.removeEventListener("keydown", handleEscape);
+    }, []);
+
+    // Escape closes; Tab (and Shift+Tab) is trapped inside the dialog. The
+    // focusable set is recomputed on every keypress rather than cached, so
+    // it stays correct as the fetch resolves and the document tiles /
+    // approve-reject controls appear.
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+                return;
+            }
+            if (e.key !== "Tab") return;
+
+            const dialog = dialogRef.current;
+            if (!dialog) return;
+
+            const focusable = getFocusable(dialog);
+            if (focusable.length === 0) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const active = document.activeElement;
+            const outsideDialog = !active || !dialog.contains(active);
+            const shouldWrap = e.shiftKey ? outsideDialog || active === first : outsideDialog || active === last;
+
+            if (shouldWrap) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+            }
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
     }, [onClose]);
 
     // Absent for a stranger, who receives only `rider_view` -- narrowed once,
@@ -147,10 +203,15 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const status: RiderVerificationStatus = application?.decision.status ?? rider.verificationStatus;
 
     const handleDecision = async (approve: boolean) => {
+        // Reject is only reachable with a non-empty trimmedReason -- the
+        // Confirm button is disabled otherwise (see the footer below) -- so
+        // this sends it straight through rather than falling back to
+        // `undefined`. The backend's `reason` stays Option<String> (out of
+        // scope to change); it's this UI that now requires it before rejecting.
         const res = await verifyRider({
             riderId: rider.id,
             approve,
-            reason: approve ? undefined : rejectReason.trim() || undefined,
+            reason: approve ? undefined : trimmedReason,
         });
         if (isSuccess(res)) {
             toast.success(approve ? t("admin.riders.actionApproved") : t("admin.riders.actionRejected"));
@@ -166,6 +227,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
             onClick={onClose}
         >
             <div
+                ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
                 className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col text-gray-700 dark:text-gray-200"
@@ -207,6 +269,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                         </div>
                     </div>
                     <button
+                        ref={closeButtonRef}
                         onClick={onClose}
                         className="p-1 rounded-full hover:bg-muted transition-colors shrink-0"
                         aria-label={t("admin.riders.reviewModal.closeLabel")}
@@ -260,7 +323,8 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                     htmlFor="rider-reject-reason"
                                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                    {t("admin.riders.rejectionReason")}
+                                    {t("admin.riders.rejectionReason")}{" "}
+                                    <span className="text-red-500 dark:text-red-400">*</span>
                                 </label>
                                 <Textarea
                                     id="rider-reject-reason"
@@ -270,13 +334,21 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                     className="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                                     rows={3}
                                     disabled={verifying}
+                                    required
+                                    aria-required="true"
+                                    aria-describedby={trimmedReason ? undefined : "rider-reject-reason-hint"}
                                 />
+                                {!trimmedReason && (
+                                    <p id="rider-reject-reason-hint" className="text-red-500 dark:text-red-400 text-xs">
+                                        {t("admin.riders.reviewModal.rejectionReasonRequired")}
+                                    </p>
+                                )}
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         variant="destructive"
                                         className="flex-1"
                                         onClick={() => handleDecision(false)}
-                                        disabled={verifying}
+                                        disabled={verifying || !trimmedReason}
                                     >
                                         {verifying && <Loader2 className="w-4 h-4 animate-spin mr-2"/>}
                                         {t("admin.riders.reviewModal.actions.confirmReject")}

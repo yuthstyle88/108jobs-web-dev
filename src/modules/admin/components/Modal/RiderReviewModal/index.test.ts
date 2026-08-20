@@ -157,6 +157,7 @@ describe("RiderReviewModal translations", () => {
         "admin.riders.reviewModal.mismatch.title",
         "admin.riders.reviewModal.previousRejectionLabel",
         "admin.riders.reviewModal.rejectionReasonLabel",
+        "admin.riders.reviewModal.rejectionReasonRequired",
         "admin.riders.reviewModal.review.criminalRecordCheck",
         "admin.riders.reviewModal.review.criminalRecordCheckedAt",
         "admin.riders.reviewModal.review.criminalRecordCheckedBy",
@@ -373,23 +374,37 @@ describe("RiderReviewModal rendering", () => {
         expect(verifyExecute).toHaveBeenCalledWith({riderId: 42, approve: true, reason: undefined});
     });
 
-    it("reject reveals a reason field and calls adminVerifyRider with approve:false and the typed reason", () => {
-        mount(fakeResponse(fakeApplication()));
+    function openRejectPanel() {
         const rejectButton = Array.from(container.querySelectorAll("button")).find((b) =>
             b.textContent?.includes("admin.riders.actionReject"),
         ) as HTMLButtonElement;
         act(() => rejectButton.click());
+        return container.querySelector("textarea") as HTMLTextAreaElement;
+    }
 
-        const textarea = container.querySelector("textarea") as HTMLTextAreaElement;
+    function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
         const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
         act(() => {
-            setter?.call(textarea, "Blurry licence photo");
+            setter?.call(textarea, value);
             textarea.dispatchEvent(new Event("input", {bubbles: true}));
         });
+    }
 
-        const confirmButton = Array.from(container.querySelectorAll("button")).find((b) =>
+    function findConfirmRejectButton() {
+        return Array.from(container.querySelectorAll("button")).find((b) =>
             b.textContent?.includes("admin.riders.reviewModal.actions.confirmReject"),
         ) as HTMLButtonElement;
+    }
+
+    it("reject reveals a required reason field; a real reason enables Confirm and is sent trimmed", () => {
+        mount(fakeResponse(fakeApplication()));
+        const textarea = openRejectPanel();
+        expect(textarea.required).toBe(true);
+        // Leading/trailing whitespace proves trimming, not just pass-through.
+        setTextareaValue(textarea, "  Blurry licence photo  ");
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(false);
         act(() => confirmButton.click());
 
         expect(verifyExecute).toHaveBeenCalledWith({
@@ -397,6 +412,68 @@ describe("RiderReviewModal rendering", () => {
             approve: false,
             reason: "Blurry licence photo",
         });
+    });
+
+    it("keeps Confirm rejection disabled and fires no request while the reason is blank", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.rejectionReasonRequired");
+
+        act(() => confirmButton.click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+        expect(onReviewed).not.toHaveBeenCalled();
+    });
+
+    it("treats a whitespace-only reason the same as blank", () => {
+        mount(fakeResponse(fakeApplication()));
+        const textarea = openRejectPanel();
+        setTextareaValue(textarea, "   ");
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.rejectionReasonRequired");
+
+        act(() => confirmButton.click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("moves focus to the close button on open and restores it to the opener on close", () => {
+        const opener = document.createElement("button");
+        opener.textContent = "open";
+        document.body.appendChild(opener);
+        opener.focus();
+        expect(document.activeElement).toBe(opener);
+
+        mount(fakeResponse(fakeApplication()));
+        const closeButton = Array.from(container.querySelectorAll("button")).find(
+            (b) => b.getAttribute("aria-label") === "admin.riders.reviewModal.closeLabel",
+        );
+        expect(document.activeElement).toBe(closeButton);
+
+        act(() => root.unmount());
+        expect(document.activeElement).toBe(opener);
+        opener.remove();
+    });
+
+    it("wraps Tab from the last focusable element back to the first, trapping focus in the dialog", () => {
+        mount(fakeResponse(fakeApplication()));
+        const dialog = container.querySelector('[role="dialog"]') as HTMLElement;
+        const focusable = Array.from(
+            dialog.querySelectorAll<HTMLElement>('button:not([disabled]), [href], textarea:not([disabled])'),
+        );
+        const last = focusable[focusable.length - 1];
+        const first = focusable[0];
+        act(() => last.focus());
+        expect(document.activeElement).toBe(last);
+
+        const tab = new KeyboardEvent("keydown", {key: "Tab", bubbles: true, cancelable: true});
+        act(() => document.dispatchEvent(tab));
+
+        expect(tab.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(first);
     });
 });
 

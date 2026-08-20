@@ -4036,7 +4036,7 @@ export const th = {
 
                 // Optional – if you add rejection reason later
                 rejectionReason: "เหตุผลการปฏิเสธ",
-                rejectionReasonPlaceholder: "ระบุเหตุผลการปฏิเสธ (ไม่บังคับ)",
+                rejectionReasonPlaceholder: "ระบุเหตุผลในการปฏิเสธใบสมัครนี้",
 
                 // RiderReviewModal
                 reviewModal: {
@@ -4044,6 +4044,7 @@ export const th = {
                     applicationUnavailable: "ไม่สามารถดูใบสมัครของไรเดอร์รายนี้ได้",
                     rejectionReasonLabel: "เหตุผลการปฏิเสธ",
                     previousRejectionLabel: "เคยถูกปฏิเสธด้วยเหตุผล",
+                    rejectionReasonRequired: "ต้องระบุเหตุผลจึงจะปฏิเสธใบสมัครได้",
                     fieldEmpty: "ไม่ได้ระบุ",
                     mismatch: {
                         title: "หมายเลขบัตรประชาชนไม่ตรงกัน",
