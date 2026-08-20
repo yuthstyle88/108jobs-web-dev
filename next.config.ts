@@ -294,6 +294,17 @@ const nextConfig: NextConfig = {
                 // catch-all so it wins for this one prefix; every other /api/* path
                 // still falls through to the proxy below exactly as before.
                 { source: '/api/media/:path*', destination: '/api/media/:path*' },
+                // Same-origin rider-document proxy
+                // (src/app/api/rider-documents/[riderId]/[documentKind]/route.ts).
+                // Needs its own self-mapping for exactly the reason spelled out
+                // above: without it this dynamic route falls through to the
+                // catch-all and is proxied to `${apiBase}/rider-documents/...`,
+                // which the backend does not serve, so every document tile in
+                // the admin review modal 404s and the handler never runs. Its
+                // unit tests call the exported GET directly, so they pass either
+                // way -- only an HTTP request through a running server shows it.
+                // See #86.
+                { source: '/api/rider-documents/:path*', destination: '/api/rider-documents/:path*' },
                 { source: '/api/:path*', destination: `${apiBase}/:path*` },
                 { source: '/uploads/:path*', destination: 'https://cdn.108jobs.com/uploads/:path*' },
             ],
