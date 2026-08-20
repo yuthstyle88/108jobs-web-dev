@@ -142,7 +142,13 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const [rejectReason, setRejectReason] = useState("");
     const trimmedReason = rejectReason.trim();
 
-    const {data, isLoading} = useHttpGet("getRiderApplication", [rider.id]);
+    const {
+        data,
+        state: applicationState,
+        isLoading,
+        execute: retryApplicationFetch,
+        isMutating: retryingApplication,
+    } = useHttpGet("getRiderApplication", [rider.id]);
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
 
     const dialogRef = useRef<HTMLDivElement>(null);
@@ -201,6 +207,13 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const application = data?.application;
     const person = data?.rider_view?.person;
     const status: RiderVerificationStatus = application?.decision.status ?? rider.verificationStatus;
+    // A failed fetch and a genuinely absent application both leave `data`
+    // (and so `application`) null/undefined -- `state` is the only thing
+    // that tells them apart. Checked separately so the content area below
+    // can offer a retry for one and "not available" for the other, instead
+    // of showing an admin the same dead end for a transient 500 as for a
+    // rider who really has no application on file.
+    const applicationFetchFailed = isFailed(applicationState);
 
     const handleDecision = async (approve: boolean) => {
         // Reject is only reachable with a non-empty trimmedReason -- the
@@ -230,6 +243,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby="rider-review-modal-title"
                 className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col text-gray-700 dark:text-gray-200"
                 onClick={(e) => e.stopPropagation()}
             >
@@ -243,7 +257,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                             </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                            <h2 className="text-lg font-semibold truncate">
+                            <h2 id="rider-review-modal-title" className="text-lg font-semibold truncate">
                                 {person?.name || person?.displayName || t("admin.riders.unknown")}
                             </h2>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap mt-0.5">
@@ -283,6 +297,22 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                     {isLoading && !data ? (
                         <div className="flex justify-center py-16">
                             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
+                        </div>
+                    ) : applicationFetchFailed ? (
+                        <div className="flex flex-col items-center gap-3 rounded-lg bg-gray-50 dark:bg-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            <AlertTriangle className="w-6 h-6 text-destructive shrink-0"/>
+                            <p>{t("admin.riders.reviewModal.loadError.title")}</p>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => retryApplicationFetch()}
+                                disabled={retryingApplication}
+                            >
+                                {retryingApplication && <Loader2 className="w-4 h-4 animate-spin mr-2"/>}
+                                {retryingApplication
+                                    ? t("admin.riders.reviewModal.loadError.retrying")
+                                    : t("admin.riders.reviewModal.loadError.retry")}
+                            </Button>
                         </div>
                     ) : !application ? (
                         <div
@@ -518,8 +548,35 @@ function DocumentsSection({riderId, documents}: {riderId: RiderId; documents: Ri
 function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocumentKind; slot?: RiderDocumentSlot}) {
     const {t} = useTranslation();
     const [failed, setFailed] = useState(false);
+    // Set only once a background check confirms the proxy itself failed --
+    // see the effect below. Stays false otherwise, so a legitimately
+    // non-image attachment (by design, see the comment on the <img> below)
+    // keeps opening exactly as it always has.
+    const [openFailed, setOpenFailed] = useState(false);
     const src = `/api/rider-documents/${riderId}/${kind}`;
     const label = t(`admin.riders.reviewModal.documents.kinds.${kind}`);
+
+    // The <img> below already failed to decode `src` as an image -- that
+    // covers both a real HTTP failure (401/403/404/502, which this proxy
+    // returns as a JSON body) and a legitimately non-image attachment, and
+    // a plain link can't tell those apart before the browser navigates.
+    // Checked here instead, off the admin's click, so a confirmed failure
+    // can drop the link entirely rather than ever letting the browser land
+    // them on a bare page of raw `{"error":...}` JSON.
+    useEffect(() => {
+        if (!failed) return;
+        let cancelled = false;
+        fetch(src)
+            .then((res) => {
+                if (!cancelled && !res.ok) setOpenFailed(true);
+            })
+            .catch(() => {
+                if (!cancelled) setOpenFailed(true);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [failed, src]);
 
     return (
         <div
@@ -529,6 +586,11 @@ function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocum
                     <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 text-xs px-2 text-center">
                         <ImageOff className="w-6 h-6"/>
                         <span>{t("admin.riders.reviewModal.documents.notSubmitted")}</span>
+                    </div>
+                ) : failed && openFailed ? (
+                    <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 text-xs px-2 text-center">
+                        <FileText className="w-6 h-6"/>
+                        <span>{t("admin.riders.reviewModal.documents.openFailed")}</span>
                     </div>
                 ) : failed ? (
                     <a

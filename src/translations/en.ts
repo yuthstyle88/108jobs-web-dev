@@ -4114,6 +4114,7 @@ export const en = {
                 actionApproved: "Rider approved successfully",
                 actionRejected: "Rider rejected",
                 errorOccurred: "An error occurred. Please try again",
+                fetchError: "Failed to load riders.",
 
                 // Fallbacks
                 fullName: "Full Name",
@@ -4128,6 +4129,11 @@ export const en = {
                 reviewModal: {
                     closeLabel: "Close",
                     applicationUnavailable: "This rider's application isn't available to view.",
+                    loadError: {
+                        title: "Couldn't load this rider's application.",
+                        retry: "Retry",
+                        retrying: "Retrying…",
+                    },
                     rejectionReasonLabel: "Rejection reason",
                     previousRejectionLabel: "Previously rejected for",
                     rejectionReasonRequired: "A reason is required to reject an application.",
@@ -4188,6 +4194,7 @@ export const en = {
                         title: "Documents",
                         notSubmitted: "Not submitted",
                         openInNewTab: "Open document",
+                        openFailed: "Couldn't open",
                         kinds: {
                             licence: "Driving licence",
                             vehicleRegistration: "Vehicle registration",

@@ -122,7 +122,7 @@ export default function AdminRidersManagementPage() {
                                                 <Avatar className="h-11 w-11 shrink-0">
                                                     <AvatarImage src={person.avatar}/>
                                                     <AvatarFallback className="text-xs font-medium">
-                                                        {person.name[0].toUpperCase()}
+                                                        {(person.name || person.displayName || "?").charAt(0).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
 

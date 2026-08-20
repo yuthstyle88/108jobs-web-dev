@@ -4028,6 +4028,7 @@ export const th = {
                 actionApproved: "อนุมัติไรเดอร์เรียบร้อยแล้ว",
                 actionRejected: "ปฏิเสธไรเดอร์เรียบร้อยแล้ว",
                 errorOccurred: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+                fetchError: "ไม่สามารถโหลดรายชื่อไรเดอร์ได้",
 
                 // Fallbacks
                 fullName: "ชื่อ-นามสกุล",
@@ -4042,6 +4043,11 @@ export const th = {
                 reviewModal: {
                     closeLabel: "ปิด",
                     applicationUnavailable: "ไม่สามารถดูใบสมัครของไรเดอร์รายนี้ได้",
+                    loadError: {
+                        title: "ไม่สามารถโหลดใบสมัครของไรเดอร์รายนี้ได้",
+                        retry: "ลองใหม่",
+                        retrying: "กำลังลองใหม่…",
+                    },
                     rejectionReasonLabel: "เหตุผลการปฏิเสธ",
                     previousRejectionLabel: "เคยถูกปฏิเสธด้วยเหตุผล",
                     rejectionReasonRequired: "ต้องระบุเหตุผลจึงจะปฏิเสธใบสมัครได้",
@@ -4102,6 +4108,7 @@ export const th = {
                         title: "เอกสาร",
                         notSubmitted: "ยังไม่ได้ส่ง",
                         openInNewTab: "เปิดเอกสาร",
+                        openFailed: "เปิดไม่ได้",
                         kinds: {
                             licence: "ใบขับขี่",
                             vehicleRegistration: "ทะเบียนรถ",

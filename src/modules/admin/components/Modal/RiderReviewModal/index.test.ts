@@ -116,10 +116,14 @@ describe("RiderReviewModal translations", () => {
         }
     });
 
-    it("added statusRejected and errorOccurred to all 3 locales", () => {
+    it("added statusRejected, errorOccurred and fetchError to all 3 locales", () => {
         for (const tree of [en, th, viTranslation]) {
             expect(tree.translation.admin.riders.statusRejected.length).toBeGreaterThan(0);
             expect(tree.translation.admin.riders.errorOccurred.length).toBeGreaterThan(0);
+            // usePaginatedRiders.ts reads this one -- it resolved to no key
+            // in any locale until now, so a failed fetch rendered the
+            // literal string "admin.riders.fetchError" instead of a message.
+            expect(tree.translation.admin.riders.fetchError.length).toBeGreaterThan(0);
         }
     });
 
@@ -148,9 +152,13 @@ describe("RiderReviewModal translations", () => {
         "admin.riders.reviewModal.applicationUnavailable",
         "admin.riders.reviewModal.closeLabel",
         "admin.riders.reviewModal.documents.notSubmitted",
+        "admin.riders.reviewModal.documents.openFailed",
         "admin.riders.reviewModal.documents.openInNewTab",
         "admin.riders.reviewModal.documents.title",
         "admin.riders.reviewModal.fieldEmpty",
+        "admin.riders.reviewModal.loadError.retry",
+        "admin.riders.reviewModal.loadError.retrying",
+        "admin.riders.reviewModal.loadError.title",
         "admin.riders.reviewModal.mismatch.description",
         "admin.riders.reviewModal.mismatch.fromCard",
         "admin.riders.reviewModal.mismatch.fromLicence",
@@ -295,6 +303,35 @@ describe("RiderReviewModal rendering", () => {
         expect(container.textContent).not.toContain("admin.riders.actionApprove");
     });
 
+    it("shows a retry affordance -- not the absent-application copy -- when the fetch itself failed, and still hides the footer", () => {
+        const retryFetch = vi.fn();
+        mockUseHttpGet.mockReturnValue({
+            state: {state: "failed", err: {message: "boom"}},
+            data: null,
+            error: undefined,
+            isLoading: false,
+            execute: retryFetch,
+            isMutating: false,
+            pagination: undefined,
+        });
+        act(() => {
+            root.render(createElement(RiderReviewModal, {rider: fakeRider(), onClose, onReviewed}));
+        });
+
+        expect(container.textContent).toContain("admin.riders.reviewModal.loadError.title");
+        // A transient fetch failure is not the same message as a genuinely
+        // absent application, and must not be conflated with it.
+        expect(container.textContent).not.toContain("admin.riders.reviewModal.applicationUnavailable");
+        // Nothing to approve/reject without a successfully-fetched application.
+        expect(container.textContent).not.toContain("admin.riders.actionApprove");
+
+        const retryButton = Array.from(container.querySelectorAll("button")).find((b) =>
+            b.textContent?.includes("admin.riders.reviewModal.loadError.retry"),
+        ) as HTMLButtonElement;
+        act(() => retryButton.click());
+        expect(retryFetch).toHaveBeenCalledOnce();
+    });
+
     it("renders the identity-mismatch warning, labelled as device-read and unverified, only when present", () => {
         mount(
             fakeResponse(
@@ -355,6 +392,15 @@ describe("RiderReviewModal rendering", () => {
             (container.firstElementChild as HTMLElement).dispatchEvent(new MouseEvent("click", {bubbles: true}));
         });
         expect(onClose).toHaveBeenCalledOnce();
+    });
+
+    it("gives the dialog an accessible name via aria-labelledby pointing at the visible heading", () => {
+        mount(fakeResponse(fakeApplication()));
+        const dialog = container.querySelector('[role="dialog"]') as HTMLElement;
+        const labelledBy = dialog.getAttribute("aria-labelledby");
+        expect(labelledBy).toBeTruthy();
+        const heading = container.querySelector(`#${labelledBy}`);
+        expect(heading?.tagName).toBe("H2");
     });
 
     it("approve calls adminVerifyRider with approve:true and then onReviewed, never gated by a mismatch", () => {

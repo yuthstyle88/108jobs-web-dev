@@ -4140,6 +4140,7 @@ export const vi = {
                 actionApproved: "Đã phê duyệt tài xế thành công",
                 actionRejected: "Đã từ chối tài xế",
                 errorOccurred: "Đã xảy ra lỗi. Vui lòng thử lại",
+                fetchError: "Không thể tải danh sách tài xế.",
 
                 // Other possible useful keys
                 fullName: "Họ và tên",
@@ -4154,6 +4155,11 @@ export const vi = {
                 reviewModal: {
                     closeLabel: "Đóng",
                     applicationUnavailable: "Không thể xem hồ sơ đăng ký của tài xế này.",
+                    loadError: {
+                        title: "Không thể tải hồ sơ đăng ký của tài xế này.",
+                        retry: "Thử lại",
+                        retrying: "Đang thử lại…",
+                    },
                     rejectionReasonLabel: "Lý do từ chối",
                     previousRejectionLabel: "Trước đây đã bị từ chối với lý do",
                     rejectionReasonRequired: "Cần nhập lý do mới có thể từ chối đơn đăng ký này.",
@@ -4214,6 +4220,7 @@ export const vi = {
                         title: "Tài liệu",
                         notSubmitted: "Chưa nộp",
                         openInNewTab: "Mở tài liệu",
+                        openFailed: "Không thể mở",
                         kinds: {
                             licence: "Giấy phép lái xe",
                             vehicleRegistration: "Đăng ký xe",
