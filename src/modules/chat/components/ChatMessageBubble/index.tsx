@@ -12,7 +12,6 @@ import {ChatMessageAvatar} from "@/modules/chat/components/ChatMessageAvatar";
 import {dbg} from "@/modules/chat/utils";
 import {isSameOrAfter, isApproxSame} from "@/modules/chat/utils/helpers";
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
-import {usePeerOnline} from "@/modules/chat/store/presenceStore";
 import {Stars} from "@/components/RatingDisplay";
 import {useChatServices} from "@/modules/chat/contexts/ChatBridgeProvider";
 import {attachmentSrc, parseAttachment, type AttachmentItem} from "@/modules/chat/attachments";
@@ -125,10 +124,9 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     const time = toLocalTime(createdAt, i18n?.language || "th-TH");
     const isOwner = !!message.isOwner;
 
-    const peerOnline = usePeerOnline(Number(partnerId));
-
     const isRead = useMemo(() => {
-        // Only consider as "read" when the peer is currently online and the read timestamp covers this message
+        // Read state is historical: presence changes do not revoke a server
+        // timestamp that already covers this outgoing message.
         return (
             isOwner &&
             lastReadAt != null &&
