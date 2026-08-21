@@ -10,6 +10,7 @@ import {
 
 import {Match} from "@/utils/router";
 import {ErrorPageData} from "@/utils/types";
+import {madGatewayUrl, uploadToMad} from "@/services/media/madUpload";
 
 export function capitalizeFirstLetter(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -437,13 +438,13 @@ async function toBlob(src: string | File | Blob): Promise<Blob> {
  * Uploads an image and returns the URL of the uploaded image
  *
  * @param selectedImage The image to upload (File or string URL/base64)
- * @param uploadImage Function to handle the actual upload
+ * @param uploadImage Function to handle the actual upload (optional fallback)
  * @returns A Promise resolving to the URL of the uploaded image
  * @throws Error if the upload fails
  */
 export async function uploadSelectedImage(
     selectedImage: File | string,
-    uploadImage: (payload: { image: File }) => Promise<RequestState<import("108jobs-client").UploadImageResponse>>
+    uploadImage?: (payload: { image: File }) => Promise<RequestState<import("108jobs-client").UploadImageResponse>>
 ): Promise<string> {
     let file: File;
 
@@ -456,14 +457,26 @@ export async function uploadSelectedImage(
         });
     }
 
-    const result = await uploadImage({ image: file });
-
-    if (isSuccess(result)) {
-        const imageUrl = result.data?.images?.[0]?.imageUrl;
-        if (imageUrl) return imageUrl;
+    if (madGatewayUrl()) {
+        try {
+            const asset = await uploadToMad(file, "public", "image");
+            if (asset.url) return asset.url;
+        } catch (error) {
+            console.error("MAD upload failed, attempting fallback if available:", error);
+            if (!uploadImage) throw error;
+        }
     }
 
-    console.log("Upload failed response:", result);
+    if (uploadImage) {
+        const result = await uploadImage({ image: file });
+
+        if (isSuccess(result)) {
+            const imageUrl = result.data?.images?.[0]?.imageUrl;
+            if (imageUrl) return imageUrl;
+        }
+
+        console.log("Upload failed response:", result);
+    }
     return "";
 }
 

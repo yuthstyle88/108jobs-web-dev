@@ -2,6 +2,8 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
 import {madGatewayUrl, uploadToMad} from "@/services/media/madUpload";
 import {UserService} from "@/services/UserService";
+import {uploadSelectedImage} from "@/utils/helpers";
+import {REQUEST_STATE} from "@/services/HttpService";
 
 /**
  * `NEXT_PUBLIC_*` is inlined by Next at build time, but under vitest these are
@@ -463,5 +465,50 @@ describe("uploadToMad", () => {
       // the byte leg itself must never call send() once already cancelled.
       expect(calls).toHaveLength(1);
     });
+  });
+});
+
+describe("uploadSelectedImage with MAD", () => {
+  const file = new File([new Uint8Array([1, 2, 3])], "avatar.png", {
+    type: "image/png",
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    setEnv({
+      NEXT_PUBLIC_MEDIA_GATEWAY_URL: undefined,
+      NEXT_PUBLIC_MEDIA_PUBLIC_URL: undefined,
+      NEXT_PUBLIC_API_BASE_URL: undefined,
+    });
+    UserService.Instance.authInfo = undefined as never;
+  });
+
+  it("uploads via MAD when gateway URL is configured", async () => {
+    setEnv({
+      NEXT_PUBLIC_MEDIA_GATEWAY_URL: "https://mad.example.com",
+      NEXT_PUBLIC_MEDIA_PUBLIC_URL: "https://media.example.com",
+    });
+    UserService.Instance.authInfo = {auth: "jwt-abc"} as never;
+    stubFetch([SESSION, BYTES, COMPLETE]);
+
+    const url = await uploadSelectedImage(file);
+    expect(url).toBe("https://media.example.com/assets/asset-9/public-bytes");
+  });
+
+  it("falls back to uploadImage function when MAD is not configured", async () => {
+    setEnv({
+      NEXT_PUBLIC_MEDIA_GATEWAY_URL: undefined,
+    });
+
+    const fallbackUpload = vi.fn(async () => ({
+      state: REQUEST_STATE.SUCCESS,
+      data: {
+        images: [{ imageUrl: "https://legacy.example.com/files/legacy-avatar.png" }],
+      },
+    }));
+
+    const url = await uploadSelectedImage(file, fallbackUpload as never);
+    expect(fallbackUpload).toHaveBeenCalledTimes(1);
+    expect(url).toBe("https://legacy.example.com/files/legacy-avatar.png");
   });
 });
