@@ -4053,6 +4053,7 @@ export const th = {
                     rejectionReasonLabel: "เหตุผลการปฏิเสธ",
                     previousRejectionLabel: "เคยถูกปฏิเสธด้วยเหตุผล",
                     rejectionReasonRequired: "ต้องระบุเหตุผลจึงจะปฏิเสธใบสมัครได้",
+                    alreadyDecided: "ผู้ดูแลระบบรายอื่นตัดสินใบสมัครนี้ไปแล้ว กำลังโหลดข้อมูลล่าสุด…",
                     fieldEmpty: "ไม่ได้ระบุ",
                     mismatch: {
                         title: "หมายเลขบัตรประชาชนไม่ตรงกัน",
@@ -4112,6 +4113,7 @@ export const th = {
                         openInNewTab: "เปิดเอกสาร",
                         openFailed: "เปิดไม่ได้",
                         kinds: {
+                            idCard: "บัตรประชาชน",
                             licence: "ใบขับขี่",
                             vehicleRegistration: "ทะเบียนรถ",
                             insurance: "ประกันภัย",
@@ -4134,6 +4136,21 @@ export const th = {
                     actions: {
                         confirmReject: "ยืนยันการปฏิเสธ",
                         cancelReject: "ยกเลิก",
+                    },
+                    // The reject panel's issue repeater -- one row per problem.
+                    reject: {
+                        issueLabel: "ปัญหาที่ {{number}}",
+                        documentLabel: "เอกสาร",
+                        noDocumentOption: "ไม่เกี่ยวกับเอกสาร",
+                        reasonLabel: "เหตุผล",
+                        reasonPlaceholder: "อธิบายปัญหาที่พบ",
+                        removeIssueLabel: "ลบปัญหานี้",
+                        addIssue: "เพิ่มปัญหาอีกรายการ",
+                        errors: {
+                            noIssues: "กรุณาเพิ่มปัญหาอย่างน้อยหนึ่งรายการก่อนปฏิเสธ",
+                            reasonRequired: "ทุกปัญหาต้องระบุเหตุผล",
+                            duplicateDocument: "เลือกเอกสารแต่ละประเภทได้เพียงครั้งเดียว",
+                        },
                     },
                 },
             },

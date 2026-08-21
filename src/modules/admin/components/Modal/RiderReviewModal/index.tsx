@@ -15,6 +15,8 @@ import {
     ShieldCheck,
     ShieldAlert,
     ShieldQuestion,
+    Plus,
+    Trash2,
 } from "lucide-react";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
@@ -123,6 +125,7 @@ const FIELD_GROUPS: FieldGroupDef[] = [
 ];
 
 const DOCUMENT_KINDS: readonly RiderDocumentKind[] = [
+    "idCard",
     "licence",
     "vehicleRegistration",
     "insurance",
@@ -130,6 +133,25 @@ const DOCUMENT_KINDS: readonly RiderDocumentKind[] = [
     "face",
     "bankBook",
 ];
+
+/**
+ * One row of the reject panel's issue repeater. `document: null` is a real,
+ * sendable choice ("not about a document" -- see `RejectionIssueInput` on
+ * the server) and not merely an unset field, so it is always present here
+ * rather than left `undefined`.
+ */
+interface IssueRowState {
+    id: number;
+    document: RiderDocumentKind | null;
+    reason: string;
+}
+
+/**
+ * Sentinel <select> value standing in for `document: null` ("not about a
+ * document"). Never a real `RiderDocumentKind` -- every one of those seven
+ * literals is non-empty -- so the mapping back to `null` is unambiguous.
+ */
+const NO_DOCUMENT_VALUE = "";
 
 function formatFieldValue(value: string | number | null | undefined): string | null {
     if (value === null || value === undefined || value === "") return null;
@@ -139,8 +161,12 @@ function formatFieldValue(value: string | number | null | undefined): string | n
 export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalProps) {
     const {t} = useTranslation();
     const [isRejecting, setIsRejecting] = useState(false);
-    const [rejectReason, setRejectReason] = useState("");
-    const trimmedReason = rejectReason.trim();
+    const [issueRows, setIssueRows] = useState<IssueRowState[]>([]);
+    // Per-instance so a fresh modal (and every test that mounts one) starts
+    // its own id sequence -- a module-level counter would work too, but
+    // would keep climbing across every modal ever opened in the session for
+    // no benefit; these ids only need to be unique within one row list.
+    const nextIssueRowId = useRef(0);
 
     const {
         data,
@@ -150,6 +176,34 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
         isMutating: retryingApplication,
     } = useHttpGet("getRiderApplication", [rider.id]);
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
+
+    const makeIssueRow = (): IssueRowState => ({id: nextIssueRowId.current++, document: null, reason: ""});
+    const addIssueRow = () => setIssueRows((rows) => [...rows, makeIssueRow()]);
+    const updateIssueDocument = (id: number, document: RiderDocumentKind | null) =>
+        setIssueRows((rows) => rows.map((row) => (row.id === id ? {...row, document} : row)));
+    const updateIssueReason = (id: number, reason: string) =>
+        setIssueRows((rows) => rows.map((row) => (row.id === id ? {...row, reason} : row)));
+    const removeIssueRow = (id: number) => setIssueRows((rows) => rows.filter((row) => row.id !== id));
+
+    // Mirrors crud/update.rs's own validation, in the same order, so a
+    // rejection either fails fast client-side or not at all -- the server's
+    // 400s are discovered here, once, rather than by every admin who submits
+    // one.
+    const hasNoIssues = issueRows.length === 0;
+    const hasBlankReason = issueRows.some((row) => row.reason.trim() === "");
+    const documentTally = new Map<RiderDocumentKind, number>();
+    for (const row of issueRows) {
+        if (row.document) {
+            documentTally.set(row.document, (documentTally.get(row.document) ?? 0) + 1);
+        }
+    }
+    const duplicateDocuments = new Set(
+        Array.from(documentTally.entries())
+            .filter(([, count]) => count > 1)
+            .map(([document]) => document),
+    );
+    const hasDuplicateDocument = duplicateDocuments.size > 0;
+    const canConfirmReject = !hasNoIssues && !hasBlankReason && !hasDuplicateDocument;
 
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -216,21 +270,37 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const applicationFetchFailed = isFailed(applicationState);
 
     const handleDecision = async (approve: boolean) => {
-        // Reject is only reachable with a non-empty trimmedReason -- the
-        // Confirm button is disabled otherwise (see the footer below) -- so
-        // this sends it straight through rather than falling back to
-        // `undefined`. The backend's `reason` stays Option<String> (out of
-        // scope to change); it's this UI that now requires it before rejecting.
-        const res = await verifyRider({
-            riderId: rider.id,
-            approve,
-            reason: approve ? undefined : trimmedReason,
-        });
+        // Reject is only reachable once every rule mirrored above passes --
+        // Confirm is disabled otherwise (see the footer below) -- so this
+        // sends `issues` straight through. `reason`/`rejectedDocument` are
+        // the deprecated single-issue form and are never sent by this UI.
+        // Approval ignores issues entirely, matching the backend, which
+        // stores nothing for it either.
+        const res = approve
+            ? await verifyRider({riderId: rider.id, approve: true})
+            : await verifyRider({
+                  riderId: rider.id,
+                  approve: false,
+                  issues: issueRows.map(({document, reason}) => ({document, reason: reason.trim()})),
+              });
         if (isSuccess(res)) {
             toast.success(approve ? t("admin.riders.actionApproved") : t("admin.riders.actionRejected"));
             onReviewed();
         } else if (isFailed(res)) {
-            toast.error(t("admin.riders.errorOccurred"));
+            // 409: the world moved between this admin opening the modal and
+            // clicking Approve/Reject -- most realistically two admins had
+            // the same rider open and the other one decided first. Say so
+            // and pull the current state, rather than a generic failure the
+            // admin would only retry back into the same conflict.
+            const errorCode = res.err.error ?? res.err.name;
+            if (errorCode === "riderDecisionAlreadyMade") {
+                toast.error(t("admin.riders.reviewModal.alreadyDecided"));
+                setIsRejecting(false);
+                setIssueRows([]);
+                retryApplicationFetch();
+            } else {
+                toast.error(t("admin.riders.errorOccurred"));
+            }
         }
     };
 
@@ -335,7 +405,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 ))}
                             </div>
 
-                            {/* 3. The six documents. */}
+                            {/* 3. The seven documents. */}
                             <DocumentsSection riderId={rider.id} documents={application.documents}/>
 
                             {/* 4. Review detail -- admin only, absent for a stranger. */}
@@ -348,37 +418,49 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                 {application && (
                     <div className="border-t border-gray-200 dark:border-gray-700 p-6 shrink-0">
                         {isRejecting ? (
-                            <div className="space-y-3">
-                                <label
-                                    htmlFor="rider-reject-reason"
-                                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                >
-                                    {t("admin.riders.rejectionReason")}{" "}
-                                    <span className="text-red-500 dark:text-red-400">*</span>
-                                </label>
-                                <Textarea
-                                    id="rider-reject-reason"
-                                    value={rejectReason}
-                                    onChange={(e) => setRejectReason(e.target.value)}
-                                    placeholder={t("admin.riders.rejectionReasonPlaceholder")}
-                                    className="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
-                                    rows={3}
+                            <div className="space-y-4">
+                                <div className="space-y-3">
+                                    {issueRows.map((row, index) => (
+                                        <IssueRow
+                                            key={row.id}
+                                            index={index}
+                                            row={row}
+                                            documentKinds={DOCUMENT_KINDS}
+                                            isDuplicateDocument={row.document !== null && duplicateDocuments.has(row.document)}
+                                            disabled={verifying}
+                                            onDocumentChange={(document) => updateIssueDocument(row.id, document)}
+                                            onReasonChange={(reason) => updateIssueReason(row.id, reason)}
+                                            onRemove={() => removeIssueRow(row.id)}
+                                        />
+                                    ))}
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="w-full border-dashed"
+                                    onClick={addIssueRow}
                                     disabled={verifying}
-                                    required
-                                    aria-required="true"
-                                    aria-describedby={trimmedReason ? undefined : "rider-reject-reason-hint"}
-                                />
-                                {!trimmedReason && (
-                                    <p id="rider-reject-reason-hint" className="text-red-500 dark:text-red-400 text-xs">
-                                        {t("admin.riders.reviewModal.rejectionReasonRequired")}
-                                    </p>
+                                >
+                                    <Plus className="w-4 h-4"/>
+                                    {t("admin.riders.reviewModal.reject.addIssue")}
+                                </Button>
+                                {!canConfirmReject && (
+                                    <ul className="space-y-0.5 pl-4 text-xs text-red-500 dark:text-red-400 list-disc">
+                                        {hasNoIssues && <li>{t("admin.riders.reviewModal.reject.errors.noIssues")}</li>}
+                                        {hasBlankReason && (
+                                            <li>{t("admin.riders.reviewModal.reject.errors.reasonRequired")}</li>
+                                        )}
+                                        {hasDuplicateDocument && (
+                                            <li>{t("admin.riders.reviewModal.reject.errors.duplicateDocument")}</li>
+                                        )}
+                                    </ul>
                                 )}
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         variant="destructive"
                                         className="flex-1"
                                         onClick={() => handleDecision(false)}
-                                        disabled={verifying || !trimmedReason}
+                                        disabled={verifying || !canConfirmReject}
                                     >
                                         {verifying && <Loader2 className="w-4 h-4 animate-spin mr-2"/>}
                                         {t("admin.riders.reviewModal.actions.confirmReject")}
@@ -388,7 +470,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                         className="flex-1"
                                         onClick={() => {
                                             setIsRejecting(false);
-                                            setRejectReason("");
+                                            setIssueRows([]);
                                         }}
                                         disabled={verifying}
                                     >
@@ -413,7 +495,10 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 <Button
                                     variant="outline"
                                     className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
-                                    onClick={() => setIsRejecting(true)}
+                                    onClick={() => {
+                                        setIsRejecting(true);
+                                        setIssueRows([makeIssueRow()]);
+                                    }}
                                     disabled={verifying}
                                 >
                                     {t("admin.riders.actionReject")}
@@ -630,6 +715,108 @@ function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocum
                         {new Date(slot.uploadedAt).toLocaleDateString()}
                     </p>
                 )}
+            </div>
+        </div>
+    );
+}
+
+function IssueRow({
+    index,
+    row,
+    documentKinds,
+    isDuplicateDocument,
+    disabled,
+    onDocumentChange,
+    onReasonChange,
+    onRemove,
+}: {
+    index: number;
+    row: IssueRowState;
+    documentKinds: readonly RiderDocumentKind[];
+    isDuplicateDocument: boolean;
+    disabled: boolean;
+    onDocumentChange: (document: RiderDocumentKind | null) => void;
+    onReasonChange: (reason: string) => void;
+    onRemove: () => void;
+}) {
+    const {t} = useTranslation();
+    const reasonMissing = row.reason.trim() === "";
+    const documentFieldId = `rider-reject-document-${row.id}`;
+    const reasonFieldId = `rider-reject-reason-${row.id}`;
+
+    return (
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    {t("admin.riders.reviewModal.reject.issueLabel", {number: index + 1})}
+                </span>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
+                    onClick={onRemove}
+                    disabled={disabled}
+                    aria-label={t("admin.riders.reviewModal.reject.removeIssueLabel")}
+                >
+                    <Trash2 className="w-4 h-4"/>
+                </Button>
+            </div>
+            <div>
+                <label
+                    htmlFor={documentFieldId}
+                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                    {t("admin.riders.reviewModal.reject.documentLabel")}
+                </label>
+                <select
+                    id={documentFieldId}
+                    value={row.document ?? NO_DOCUMENT_VALUE}
+                    onChange={(e) =>
+                        onDocumentChange(
+                            e.target.value === NO_DOCUMENT_VALUE ? null : (e.target.value as RiderDocumentKind),
+                        )
+                    }
+                    disabled={disabled}
+                    aria-invalid={isDuplicateDocument}
+                    className={cn(
+                        "flex h-10 w-full rounded-md border bg-white px-3 text-sm outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-gray-100",
+                        isDuplicateDocument ? "border-red-400 dark:border-red-700" : "border-input dark:border-gray-700",
+                    )}
+                >
+                    <option value={NO_DOCUMENT_VALUE}>{t("admin.riders.reviewModal.reject.noDocumentOption")}</option>
+                    {documentKinds.map((kind) => (
+                        <option key={kind} value={kind}>
+                            {t(`admin.riders.reviewModal.documents.kinds.${kind}`)}
+                        </option>
+                    ))}
+                </select>
+                {isDuplicateDocument && (
+                    <p className="text-red-500 dark:text-red-400 text-xs mt-1">
+                        {t("admin.riders.reviewModal.reject.errors.duplicateDocument")}
+                    </p>
+                )}
+            </div>
+            <div>
+                <label
+                    htmlFor={reasonFieldId}
+                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                    {t("admin.riders.reviewModal.reject.reasonLabel")}{" "}
+                    <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <Textarea
+                    id={reasonFieldId}
+                    value={row.reason}
+                    onChange={(e) => onReasonChange(e.target.value)}
+                    placeholder={t("admin.riders.reviewModal.reject.reasonPlaceholder")}
+                    className="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                    rows={2}
+                    disabled={disabled}
+                    required
+                    aria-required="true"
+                    aria-invalid={reasonMissing}
+                />
             </div>
         </div>
     );

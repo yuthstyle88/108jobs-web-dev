@@ -4165,6 +4165,7 @@ export const vi = {
                     rejectionReasonLabel: "Lý do từ chối",
                     previousRejectionLabel: "Trước đây đã bị từ chối với lý do",
                     rejectionReasonRequired: "Cần nhập lý do mới có thể từ chối đơn đăng ký này.",
+                    alreadyDecided: "Một quản trị viên khác đã đưa ra quyết định cho đơn đăng ký này. Đang tải dữ liệu mới nhất…",
                     fieldEmpty: "Chưa cung cấp",
                     mismatch: {
                         title: "Số định danh cá nhân không khớp",
@@ -4224,6 +4225,7 @@ export const vi = {
                         openInNewTab: "Mở tài liệu",
                         openFailed: "Không thể mở",
                         kinds: {
+                            idCard: "Căn cước công dân",
                             licence: "Giấy phép lái xe",
                             vehicleRegistration: "Đăng ký xe",
                             insurance: "Bảo hiểm",
@@ -4246,6 +4248,21 @@ export const vi = {
                     actions: {
                         confirmReject: "Xác nhận từ chối",
                         cancelReject: "Hủy",
+                    },
+                    // The reject panel's issue repeater -- one row per problem.
+                    reject: {
+                        issueLabel: "Vấn đề {{number}}",
+                        documentLabel: "Tài liệu",
+                        noDocumentOption: "Không liên quan đến tài liệu",
+                        reasonLabel: "Lý do",
+                        reasonPlaceholder: "Mô tả vấn đề gặp phải",
+                        removeIssueLabel: "Xóa vấn đề này",
+                        addIssue: "Thêm vấn đề khác",
+                        errors: {
+                            noIssues: "Vui lòng thêm ít nhất một vấn đề trước khi từ chối.",
+                            reasonRequired: "Mỗi vấn đề đều cần có lý do.",
+                            duplicateDocument: "Mỗi tài liệu chỉ được chọn một lần.",
+                        },
                     },
                 },
             },

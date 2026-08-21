@@ -4139,6 +4139,7 @@ export const en = {
                     rejectionReasonLabel: "Rejection reason",
                     previousRejectionLabel: "Previously rejected for",
                     rejectionReasonRequired: "A reason is required to reject an application.",
+                    alreadyDecided: "Someone else already decided this application. Refreshing…",
                     fieldEmpty: "Not provided",
                     mismatch: {
                         title: "ID number mismatch",
@@ -4198,6 +4199,7 @@ export const en = {
                         openInNewTab: "Open document",
                         openFailed: "Couldn't open",
                         kinds: {
+                            idCard: "ID card",
                             licence: "Driving licence",
                             vehicleRegistration: "Vehicle registration",
                             insurance: "Insurance",
@@ -4220,6 +4222,21 @@ export const en = {
                     actions: {
                         confirmReject: "Confirm rejection",
                         cancelReject: "Cancel",
+                    },
+                    // The reject panel's issue repeater -- one row per problem.
+                    reject: {
+                        issueLabel: "Issue {{number}}",
+                        documentLabel: "Document",
+                        noDocumentOption: "Not about a document",
+                        reasonLabel: "Reason",
+                        reasonPlaceholder: "Describe what's wrong",
+                        removeIssueLabel: "Remove this issue",
+                        addIssue: "Add another issue",
+                        errors: {
+                            noIssues: "Add at least one issue before rejecting.",
+                            reasonRequired: "Every issue needs a reason.",
+                            duplicateDocument: "Each document can only be chosen once.",
+                        },
                     },
                 },
             },
