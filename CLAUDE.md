@@ -12,10 +12,10 @@ Before writing a fix, search — **including closed issues**, because a closed o
 record that this was already resolved:
 
 ```
-gh issue list -R 108-Plaza/108jobs-web --state all --search "<symptom keywords>"
+gh issue list --state all --search "<symptom keywords>"
 ```
 
-This repo is mirrored as `yuthstyle88/108jobs-web-dev` — search **both** issue lists.
+Most repos here exist twice — `108-Plaza/<name>` and a `yuthstyle88/<name>-dev` mirror — so search **both** issue lists.
 
 If there is none, open one **in the repo where the PR will merge** (`Fixes #N` only
 auto-closes an issue in the same repo, and trunk is often the mirror, not the org copy).
