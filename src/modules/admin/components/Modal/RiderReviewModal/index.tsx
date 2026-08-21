@@ -15,8 +15,6 @@ import {
     ShieldCheck,
     ShieldAlert,
     ShieldQuestion,
-    Plus,
-    Trash2,
 } from "lucide-react";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
@@ -145,23 +143,19 @@ const DOCUMENT_KIND_RECORD = {
 const DOCUMENT_KINDS: readonly RiderDocumentKind[] = Object.keys(DOCUMENT_KIND_RECORD) as RiderDocumentKind[];
 
 /**
- * One row of the reject panel's issue repeater. `document: null` is a real,
- * sendable choice ("not about a document" -- see `RejectionIssueInput` on
- * the server) and not merely an unset field, so it is always present here
- * rather than left `undefined`.
+ * Which documents the admin has marked as not passing, and why. A key is
+ * present exactly when that document's tile is ticked, so the tick and its
+ * reason are one fact rather than two that can drift: untick and the reason
+ * goes with it, and there is no way to hold a reason for a document nobody
+ * marked.
+ *
+ * Replaces the add-a-row-and-pick-a-document repeater this panel shipped
+ * with (#93). The admin was made to remember which of seven documents they
+ * had already named, and the same document could be named twice -- both
+ * gone by construction now that the reason lives under the document it is
+ * about (owner's ruling, 2026-08-21).
  */
-interface IssueRowState {
-    id: number;
-    document: RiderDocumentKind | null;
-    reason: string;
-}
-
-/**
- * Sentinel <select> value standing in for `document: null` ("not about a
- * document"). Never a real `RiderDocumentKind` -- every one of those seven
- * literals is non-empty -- so the mapping back to `null` is unambiguous.
- */
-const NO_DOCUMENT_VALUE = "";
+type DocumentIssues = Partial<Record<RiderDocumentKind, string>>;
 
 function formatFieldValue(value: string | number | null | undefined): string | null {
     if (value === null || value === undefined || value === "") return null;
@@ -170,20 +164,17 @@ function formatFieldValue(value: string | number | null | undefined): string | n
 
 export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalProps) {
     const {t} = useTranslation();
+    // The confirmation step, not the marking step: the admin marks documents
+    // as they read them, up in the tile grid, and this is only the read-back
+    // of what they are about to send.
     const [isRejecting, setIsRejecting] = useState(false);
-    const [issueRows, setIssueRows] = useState<IssueRowState[]>([]);
-    // True once the admin has touched the reject panel in some way (typed a
-    // reason, picked a document, added or removed a row). Confirm stays
-    // disabled from the very first paint either way -- this only gates the
-    // red error-summary list below, so the panel explains *why* once there
-    // is something to explain, instead of grading a form the admin has not
-    // seen yet (F7).
-    const [issuesTouched, setIssuesTouched] = useState(false);
-    // Per-instance so a fresh modal (and every test that mounts one) starts
-    // its own id sequence -- a module-level counter would work too, but
-    // would keep climbing across every modal ever opened in the session for
-    // no benefit; these ids only need to be unique within one row list.
-    const nextIssueRowId = useRef(0);
+    const [documentIssues, setDocumentIssues] = useState<DocumentIssues>({});
+    // `null` when the admin has raised no non-document problem at all, and a
+    // string once they have -- including `""`, which is a raised-but-not-yet-
+    // explained one and blocks Confirm. Collapsing the two into `""` would
+    // make "I have nothing to add" and "I have something to add and haven't
+    // said what" the same state.
+    const [otherIssueReason, setOtherIssueReason] = useState<string | null>(null);
 
     const {
         data,
@@ -194,43 +185,53 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     } = useHttpGet("getRiderApplication", [rider.id]);
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
 
-    const makeIssueRow = (): IssueRowState => ({id: nextIssueRowId.current++, document: null, reason: ""});
-    const addIssueRow = () => {
-        setIssuesTouched(true);
-        setIssueRows((rows) => [...rows, makeIssueRow()]);
-    };
-    const updateIssueDocument = (id: number, document: RiderDocumentKind | null) => {
-        setIssuesTouched(true);
-        setIssueRows((rows) => rows.map((row) => (row.id === id ? {...row, document} : row)));
-    };
-    const updateIssueReason = (id: number, reason: string) => {
-        setIssuesTouched(true);
-        setIssueRows((rows) => rows.map((row) => (row.id === id ? {...row, reason} : row)));
-    };
-    const removeIssueRow = (id: number) => {
-        setIssuesTouched(true);
-        setIssueRows((rows) => rows.filter((row) => row.id !== id));
+    const clearIssues = () => {
+        setDocumentIssues({});
+        setOtherIssueReason(null);
     };
 
-    // Mirrors crud/update.rs's own validation, in the same order, so a
-    // rejection either fails fast client-side or not at all -- the server's
-    // 400s are discovered here, once, rather than by every admin who submits
-    // one.
-    const hasNoIssues = issueRows.length === 0;
-    const hasBlankReason = issueRows.some((row) => row.reason.trim() === "");
-    const documentTally = new Map<RiderDocumentKind, number>();
-    for (const row of issueRows) {
-        if (row.document) {
-            documentTally.set(row.document, (documentTally.get(row.document) ?? 0) + 1);
-        }
-    }
-    const duplicateDocuments = new Set(
-        Array.from(documentTally.entries())
-            .filter(([, count]) => count > 1)
-            .map(([document]) => document),
-    );
-    const hasDuplicateDocument = duplicateDocuments.size > 0;
-    const canConfirmReject = !hasNoIssues && !hasBlankReason && !hasDuplicateDocument;
+    const toggleDocumentIssue = (kind: RiderDocumentKind) => {
+        setDocumentIssues((current) => {
+            if (!(kind in current)) return {...current, [kind]: ""};
+            // Unticking discards the reason with it, deliberately: a reason
+            // for a document the admin has decided is fine has nowhere to go,
+            // and keeping it would let a stale sentence reappear if they
+            // ticked the same tile again later. Written as copy-then-delete
+            // rather than a rest-destructure, whose discarded binding this
+            // project's no-unused-vars has no underscore exemption for.
+            const remaining = {...current};
+            delete remaining[kind];
+            return remaining;
+        });
+    };
+
+    const setDocumentIssueReason = (kind: RiderDocumentKind, reason: string) => {
+        // Guarded on the tick rather than writing blind: a reason can only
+        // exist for a marked document, which is what makes `documentIssues`
+        // a single source of truth for both facts.
+        setDocumentIssues((current) => (kind in current ? {...current, [kind]: reason} : current));
+    };
+
+    const toggleOtherIssue = () => setOtherIssueReason((reason) => (reason === null ? "" : null));
+
+    // Built in DOCUMENT_KINDS order rather than the order the admin happened
+    // to tick them in, so what the rider is told reads in the same order as
+    // the tiles above -- and the non-document problem comes last, after the
+    // documents it isn't about.
+    const pendingIssues: RiderRejectionIssue[] = [
+        ...DOCUMENT_KINDS.filter((kind) => kind in documentIssues).map((kind) => ({
+            document: kind,
+            reason: documentIssues[kind] ?? "",
+        })),
+        ...(otherIssueReason === null ? [] : [{document: null, reason: otherIssueReason}]),
+    ];
+
+    // Mirrors crud/update.rs's own validation, so a rejection either fails
+    // fast client-side or not at all. Its third rule -- no document named
+    // twice -- has no check here because a tick per tile cannot express it.
+    const hasNoIssues = pendingIssues.length === 0;
+    const hasBlankReason = pendingIssues.some((issue) => issue.reason.trim() === "");
+    const canConfirmReject = !hasNoIssues && !hasBlankReason;
 
     const dialogRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -308,7 +309,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
             : await verifyRider({
                   riderId: rider.id,
                   approve: false,
-                  issues: issueRows.map(({document, reason}) => ({document, reason: reason.trim()})),
+                  issues: pendingIssues.map(({document, reason}) => ({document, reason: reason.trim()})),
               });
         if (isSuccess(res)) {
             toast.success(approve ? t("admin.riders.actionApproved") : t("admin.riders.actionRejected"));
@@ -323,7 +324,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
             if (errorCode === "riderDecisionAlreadyMade") {
                 toast.error(t("admin.riders.reviewModal.alreadyDecided"));
                 setIsRejecting(false);
-                setIssueRows([]);
+                clearIssues();
                 retryApplicationFetch();
             } else {
                 toast.error(t("admin.riders.errorOccurred"));
@@ -430,8 +431,38 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 ))}
                             </div>
 
-                            {/* 3. The seven documents. */}
-                            <DocumentsSection riderId={rider.id} documents={application.documents}/>
+                            {/* 3. The seven documents -- and, while the
+                                application is still Pending, the place where
+                                each one is marked as not passing. The reason
+                                sits under the document it is about, so an
+                                admin never has to hold "which of the seven
+                                was blurry" in their head while scrolling to
+                                a separate panel to type it (owner's ruling,
+                                2026-08-21). */}
+                            <DocumentsSection
+                                riderId={rider.id}
+                                documents={application.documents}
+                                reviewable={status === "Pending"}
+                                issues={documentIssues}
+                                disabled={verifying}
+                                onToggleIssue={toggleDocumentIssue}
+                                onIssueReasonChange={setDocumentIssueReason}
+                            />
+
+                            {/* 3b. The one problem that is about no document:
+                                "the vehicle is older than the policy allows",
+                                "the bank account is in someone else's name".
+                                Kept as a single box rather than a repeater --
+                                it is the exception, and `document: null` is a
+                                real value on the wire, not an unset field. */}
+                            {status === "Pending" && (
+                                <OtherIssueSection
+                                    reason={otherIssueReason}
+                                    disabled={verifying}
+                                    onToggle={toggleOtherIssue}
+                                    onReasonChange={setOtherIssueReason}
+                                />
+                            )}
 
                             {/* 4. Review detail -- admin only, absent for a stranger. */}
                             {application.review && <ReviewSection review={application.review}/>}
@@ -451,42 +482,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                     <div className="border-t border-gray-200 dark:border-gray-700 p-6 shrink-0">
                         {isRejecting ? (
                             <div className="space-y-4">
-                                <div className="space-y-3">
-                                    {issueRows.map((row, index) => (
-                                        <IssueRow
-                                            key={row.id}
-                                            index={index}
-                                            row={row}
-                                            documentKinds={DOCUMENT_KINDS}
-                                            isDuplicateDocument={row.document !== null && duplicateDocuments.has(row.document)}
-                                            disabled={verifying}
-                                            onDocumentChange={(document) => updateIssueDocument(row.id, document)}
-                                            onReasonChange={(reason) => updateIssueReason(row.id, reason)}
-                                            onRemove={() => removeIssueRow(row.id)}
-                                        />
-                                    ))}
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="w-full border-dashed"
-                                    onClick={addIssueRow}
-                                    disabled={verifying}
-                                >
-                                    <Plus className="w-4 h-4"/>
-                                    {t("admin.riders.reviewModal.reject.addIssue")}
-                                </Button>
-                                {!canConfirmReject && issuesTouched && (
-                                    <ul className="space-y-0.5 pl-4 text-xs text-red-500 dark:text-red-400 list-disc">
-                                        {hasNoIssues && <li>{t("admin.riders.reviewModal.reject.errors.noIssues")}</li>}
-                                        {hasBlankReason && (
-                                            <li>{t("admin.riders.reviewModal.reject.errors.reasonRequired")}</li>
-                                        )}
-                                        {hasDuplicateDocument && (
-                                            <li>{t("admin.riders.reviewModal.reject.errors.duplicateDocument")}</li>
-                                        )}
-                                    </ul>
-                                )}
+                                <RejectSummary issues={pendingIssues}/>
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         variant="destructive"
@@ -497,13 +493,13 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                         {verifying && <Loader2 className="w-4 h-4 animate-spin mr-2"/>}
                                         {t("admin.riders.reviewModal.actions.confirmReject")}
                                     </Button>
+                                    {/* Back to marking, keeping every tick and
+                                        every sentence typed so far -- this is
+                                        "let me look again", not "start over". */}
                                     <Button
                                         variant="outline"
                                         className="flex-1"
-                                        onClick={() => {
-                                            setIsRejecting(false);
-                                            setIssueRows([]);
-                                        }}
+                                        onClick={() => setIsRejecting(false)}
                                         disabled={verifying}
                                     >
                                         {t("admin.riders.reviewModal.actions.cancelReject")}
@@ -511,31 +507,50 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <Button
-                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                    onClick={() => handleDecision(true)}
-                                    disabled={verifying}
-                                >
-                                    {verifying ? (
-                                        <Loader2 className="w-4 h-4 animate-spin mr-2"/>
-                                    ) : (
-                                        <CheckCircle className="w-4 h-4 mr-2"/>
-                                    )}
-                                    {t("admin.riders.actionApprove")}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
-                                    onClick={() => {
-                                        setIsRejecting(true);
-                                        setIssueRows([makeIssueRow()]);
-                                        setIssuesTouched(false);
-                                    }}
-                                    disabled={verifying}
-                                >
-                                    {t("admin.riders.actionReject")}
-                                </Button>
+                            <div className="space-y-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <Button
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        onClick={() => handleDecision(true)}
+                                        disabled={verifying}
+                                    >
+                                        {verifying ? (
+                                            <Loader2 className="w-4 h-4 animate-spin mr-2"/>
+                                        ) : (
+                                            <CheckCircle className="w-4 h-4 mr-2"/>
+                                        )}
+                                        {t("admin.riders.actionApprove")}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                                        onClick={() => setIsRejecting(true)}
+                                        disabled={verifying || !canConfirmReject}
+                                    >
+                                        {hasNoIssues
+                                            ? t("admin.riders.actionReject")
+                                            : t("admin.riders.reviewModal.reject.rejectWithCount", {
+                                                  count: pendingIssues.length,
+                                              })}
+                                    </Button>
+                                </div>
+                                {/* Why Reject is disabled, said before the
+                                    admin clicks it. The empty case is an
+                                    instruction and stays grey -- nothing is
+                                    wrong yet, they simply have not marked
+                                    anything. A marked document with no reason
+                                    IS wrong, and is red. */}
+                                {hasNoIssues ? (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                        {t("admin.riders.reviewModal.reject.hint")}
+                                    </p>
+                                ) : (
+                                    hasBlankReason && (
+                                        <p className="text-xs text-red-500 dark:text-red-400">
+                                            {t("admin.riders.reviewModal.reject.errors.reasonRequired")}
+                                        </p>
+                                    )
+                                )}
                             </div>
                         )}
                     </div>
@@ -689,20 +704,46 @@ function MismatchWarning({mismatch}: {mismatch: IdentityMismatch}) {
     );
 }
 
-function DocumentsSection({riderId, documents}: {riderId: RiderId; documents: RiderDocumentSlot[]}) {
+function DocumentsSection({
+    riderId,
+    documents,
+    reviewable,
+    issues,
+    disabled,
+    onToggleIssue,
+    onIssueReasonChange,
+}: {
+    riderId: RiderId;
+    documents: RiderDocumentSlot[];
+    /** Marking is offered only while the application can still be decided. */
+    reviewable: boolean;
+    issues: DocumentIssues;
+    disabled: boolean;
+    onToggleIssue: (kind: RiderDocumentKind) => void;
+    onIssueReasonChange: (kind: RiderDocumentKind, reason: string) => void;
+}) {
     const {t} = useTranslation();
     return (
         <div>
             <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
                 {t("admin.riders.reviewModal.documents.title")}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {/* Two per row on a phone, three on a desktop -- unchanged, but a
+                marked tile now grows a reason box, so the row heights stop
+                matching. `items-start` keeps each tile at its own height
+                instead of stretching its neighbours to the tallest one. */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 items-start">
                 {DOCUMENT_KINDS.map((kind) => (
                     <DocumentTile
                         key={kind}
                         riderId={riderId}
                         kind={kind}
                         slot={documents.find((d) => d.kind === kind)}
+                        reviewable={reviewable}
+                        issueReason={issues[kind]}
+                        disabled={disabled}
+                        onToggleIssue={() => onToggleIssue(kind)}
+                        onReasonChange={(reason) => onIssueReasonChange(kind, reason)}
                     />
                 ))}
             </div>
@@ -710,7 +751,26 @@ function DocumentsSection({riderId, documents}: {riderId: RiderId; documents: Ri
     );
 }
 
-function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocumentKind; slot?: RiderDocumentSlot}) {
+function DocumentTile({
+    riderId,
+    kind,
+    slot,
+    reviewable,
+    issueReason,
+    disabled,
+    onToggleIssue,
+    onReasonChange,
+}: {
+    riderId: RiderId;
+    kind: RiderDocumentKind;
+    slot?: RiderDocumentSlot;
+    reviewable: boolean;
+    /** `undefined` when this document is not marked at all. */
+    issueReason?: string;
+    disabled: boolean;
+    onToggleIssue: () => void;
+    onReasonChange: (reason: string) => void;
+}) {
     const {t} = useTranslation();
     const [failed, setFailed] = useState(false);
     // Set only once a background check confirms the proxy itself failed --
@@ -720,6 +780,11 @@ function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocum
     const [openFailed, setOpenFailed] = useState(false);
     const src = `/api/rider-documents/${riderId}/${kind}`;
     const label = t(`admin.riders.reviewModal.documents.kinds.${kind}`);
+    // Keyed by document kind, not by a counter: there is exactly one tile per
+    // kind, and only one modal open at a time, so these stay unique without
+    // any id bookkeeping to get wrong.
+    const markFieldId = `rider-document-failed-${kind}`;
+    const reasonFieldId = `rider-document-reason-${kind}`;
 
     // The <img> below already failed to decode `src` as an image -- that
     // covers both a real HTTP failure (401/403/404/502, which this proxy
@@ -743,9 +808,16 @@ function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocum
         };
     }, [failed, src]);
 
+    const marked = issueReason !== undefined;
+
     return (
         <div
-            className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800 flex flex-col">
+            className={cn(
+                "rounded-xl border overflow-hidden flex flex-col",
+                marked
+                    ? "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/20"
+                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800",
+            )}>
             <div className="aspect-square flex items-center justify-center bg-gray-100 dark:bg-gray-900/40">
                 {!slot ? (
                     <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 text-xs px-2 text-center">
@@ -796,108 +868,138 @@ function DocumentTile({riderId, kind, slot}: {riderId: RiderId; kind: RiderDocum
                     </p>
                 )}
             </div>
+            {/* The tick and its reason, under the document they are about --
+                offered even for a document that was never submitted, since
+                "you have not sent this" is exactly the kind of problem a
+                rejection needs to be able to name. */}
+            {reviewable && (
+                <div className="border-t border-gray-200 dark:border-gray-700 p-2 space-y-2">
+                    <label
+                        htmlFor={markFieldId}
+                        className="flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 cursor-pointer"
+                    >
+                        <input
+                            id={markFieldId}
+                            type="checkbox"
+                            checked={marked}
+                            onChange={onToggleIssue}
+                            disabled={disabled}
+                            // The visible word is just "Doesn't pass", seven
+                            // times over; on its own it tells a screen-reader
+                            // user nothing about which document they are on.
+                            aria-label={t("admin.riders.reviewModal.reject.markFailedLabel", {document: label})}
+                            className="h-4 w-4 rounded border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
+                        />
+                        {t("admin.riders.reviewModal.reject.markFailed")}
+                    </label>
+                    {marked && (
+                        <Textarea
+                            id={reasonFieldId}
+                            value={issueReason}
+                            onChange={(e) => onReasonChange(e.target.value)}
+                            placeholder={t("admin.riders.reviewModal.reject.reasonPlaceholder")}
+                            aria-label={t("admin.riders.reviewModal.reject.reasonForDocument", {document: label})}
+                            className="bg-white text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                            rows={2}
+                            disabled={disabled}
+                            required
+                            aria-required="true"
+                            aria-invalid={issueReason.trim() === ""}
+                        />
+                    )}
+                </div>
+            )}
         </div>
     );
 }
 
-function IssueRow({
-    index,
-    row,
-    documentKinds,
-    isDuplicateDocument,
+/**
+ * The one problem that is about no document at all. A single box, not a
+ * repeater: two unrelated non-document problems in one rejection has never
+ * been asked for, and `document: null` is one row on the wire either way.
+ */
+function OtherIssueSection({
+    reason,
     disabled,
-    onDocumentChange,
+    onToggle,
     onReasonChange,
-    onRemove,
 }: {
-    index: number;
-    row: IssueRowState;
-    documentKinds: readonly RiderDocumentKind[];
-    isDuplicateDocument: boolean;
+    /** `null` when the admin has not raised one. */
+    reason: string | null;
     disabled: boolean;
-    onDocumentChange: (document: RiderDocumentKind | null) => void;
+    onToggle: () => void;
     onReasonChange: (reason: string) => void;
-    onRemove: () => void;
 }) {
     const {t} = useTranslation();
-    const reasonMissing = row.reason.trim() === "";
-    const documentFieldId = `rider-reject-document-${row.id}`;
-    const reasonFieldId = `rider-reject-reason-${row.id}`;
+    const raised = reason !== null;
 
     return (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                    {t("admin.riders.reviewModal.reject.issueLabel", {number: index + 1})}
-                </span>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
-                    onClick={onRemove}
+        <div
+            className={cn(
+                "rounded-xl border p-3 space-y-2",
+                raised
+                    ? "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/20"
+                    : "border-gray-200 dark:border-gray-700",
+            )}
+        >
+            <label
+                htmlFor="rider-reject-other"
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+            >
+                <input
+                    id="rider-reject-other"
+                    type="checkbox"
+                    checked={raised}
+                    onChange={onToggle}
                     disabled={disabled}
-                    aria-label={t("admin.riders.reviewModal.reject.removeIssueLabel")}
-                >
-                    <Trash2 className="w-4 h-4"/>
-                </Button>
-            </div>
-            <div>
-                <label
-                    htmlFor={documentFieldId}
-                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                    {t("admin.riders.reviewModal.reject.documentLabel")}
-                </label>
-                <select
-                    id={documentFieldId}
-                    value={row.document ?? NO_DOCUMENT_VALUE}
-                    onChange={(e) =>
-                        onDocumentChange(
-                            e.target.value === NO_DOCUMENT_VALUE ? null : (e.target.value as RiderDocumentKind),
-                        )
-                    }
-                    disabled={disabled}
-                    aria-invalid={isDuplicateDocument}
-                    className={cn(
-                        "flex h-10 w-full rounded-md border bg-white px-3 text-sm outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800 dark:text-gray-100",
-                        isDuplicateDocument ? "border-red-400 dark:border-red-700" : "border-input dark:border-gray-700",
-                    )}
-                >
-                    <option value={NO_DOCUMENT_VALUE}>{t("admin.riders.reviewModal.reject.noDocumentOption")}</option>
-                    {documentKinds.map((kind) => (
-                        <option key={kind} value={kind}>
-                            {t(`admin.riders.reviewModal.documents.kinds.${kind}`)}
-                        </option>
-                    ))}
-                </select>
-                {isDuplicateDocument && (
-                    <p className="text-red-500 dark:text-red-400 text-xs mt-1">
-                        {t("admin.riders.reviewModal.reject.errors.duplicateDocument")}
-                    </p>
-                )}
-            </div>
-            <div>
-                <label
-                    htmlFor={reasonFieldId}
-                    className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                    {t("admin.riders.reviewModal.reject.reasonLabel")}{" "}
-                    <span className="text-red-500 dark:text-red-400">*</span>
-                </label>
+                    className="h-4 w-4 rounded border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
+                />
+                {t("admin.riders.reviewModal.reject.otherIssueMark")}
+            </label>
+            {raised && (
                 <Textarea
-                    id={reasonFieldId}
-                    value={row.reason}
+                    id="rider-reject-other-reason"
+                    value={reason}
                     onChange={(e) => onReasonChange(e.target.value)}
-                    placeholder={t("admin.riders.reviewModal.reject.reasonPlaceholder")}
-                    className="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                    placeholder={t("admin.riders.reviewModal.reject.otherIssuePlaceholder")}
+                    aria-label={t("admin.riders.reviewModal.reject.otherIssueReasonLabel")}
+                    className="bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
                     rows={2}
                     disabled={disabled}
                     required
                     aria-required="true"
-                    aria-invalid={reasonMissing}
+                    aria-invalid={reason.trim() === ""}
                 />
-            </div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * The read-back before the rejection is sent: every problem named, in the
+ * order the rider will receive them. Reached only when `canConfirmReject`
+ * holds, so no reason here is ever blank.
+ */
+function RejectSummary({issues}: {issues: RiderRejectionIssue[]}) {
+    const {t} = useTranslation();
+    return (
+        <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+                {t("admin.riders.reviewModal.reject.summaryTitle")}
+            </p>
+            <ul className="space-y-1 pl-4 text-sm list-disc text-gray-700 dark:text-gray-200">
+                {issues.map((issue) => (
+                    <li key={issue.document ?? "no-document"}>
+                        <span className="font-medium">
+                            {issue.document
+                                ? t(`admin.riders.reviewModal.documents.kinds.${issue.document}`)
+                                : t("admin.riders.reviewModal.reject.otherIssueTitle")}
+                        </span>
+                        {" — "}
+                        <span className="break-words">{issue.reason.trim()}</span>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }

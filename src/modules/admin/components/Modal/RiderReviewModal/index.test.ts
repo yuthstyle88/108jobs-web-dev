@@ -170,16 +170,18 @@ describe("RiderReviewModal translations", () => {
         "admin.riders.reviewModal.mismatch.fromLicence",
         "admin.riders.reviewModal.mismatch.title",
         "admin.riders.reviewModal.previousRejectionLabel",
-        "admin.riders.reviewModal.reject.addIssue",
-        "admin.riders.reviewModal.reject.documentLabel",
-        "admin.riders.reviewModal.reject.errors.duplicateDocument",
-        "admin.riders.reviewModal.reject.errors.noIssues",
         "admin.riders.reviewModal.reject.errors.reasonRequired",
-        "admin.riders.reviewModal.reject.issueLabel",
-        "admin.riders.reviewModal.reject.noDocumentOption",
-        "admin.riders.reviewModal.reject.reasonLabel",
+        "admin.riders.reviewModal.reject.hint",
+        "admin.riders.reviewModal.reject.markFailed",
+        "admin.riders.reviewModal.reject.markFailedLabel",
+        "admin.riders.reviewModal.reject.otherIssueMark",
+        "admin.riders.reviewModal.reject.otherIssuePlaceholder",
+        "admin.riders.reviewModal.reject.otherIssueReasonLabel",
+        "admin.riders.reviewModal.reject.otherIssueTitle",
+        "admin.riders.reviewModal.reject.reasonForDocument",
         "admin.riders.reviewModal.reject.reasonPlaceholder",
-        "admin.riders.reviewModal.reject.removeIssueLabel",
+        "admin.riders.reviewModal.reject.rejectWithCount",
+        "admin.riders.reviewModal.reject.summaryTitle",
         "admin.riders.reviewModal.rejectionReasonLabel",
         "admin.riders.reviewModal.review.criminalRecordCheck",
         "admin.riders.reviewModal.review.criminalRecordCheckedAt",
@@ -559,22 +561,40 @@ describe("RiderReviewModal rendering", () => {
         expect(container.textContent).not.toContain("admin.riders.actionReject");
     });
 
-    function openRejectPanel() {
-        const rejectButton = Array.from(container.querySelectorAll("button")).find((b) =>
-            b.textContent?.includes("admin.riders.actionReject"),
+    // The footer's Reject button, which changes its own label once anything
+    // is marked ("Reject" -> "Reject (2)"), so it is matched on either.
+    function findRejectButton() {
+        return Array.from(container.querySelectorAll("button")).find(
+            (b) =>
+                b.textContent?.includes("admin.riders.actionReject") ||
+                b.textContent?.includes("admin.riders.reviewModal.reject.rejectWithCount"),
         ) as HTMLButtonElement;
-        act(() => rejectButton.click());
     }
 
-    // The repeater can hold any number of rows, so callers index into these
-    // rather than a single querySelector -- and read them fresh every call,
-    // since add/remove changes which DOM nodes exist.
-    function issueTextareas() {
-        return Array.from(container.querySelectorAll("textarea")) as HTMLTextAreaElement[];
+    function openRejectPanel() {
+        act(() => findRejectButton().click());
     }
 
-    function issueSelects() {
-        return Array.from(container.querySelectorAll("select")) as HTMLSelectElement[];
+    // Marking happens up in the tile grid now, one checkbox per document
+    // kind -- queried by the id the tile derives from its own kind, which is
+    // what makes "the reason went to the document it was typed under"
+    // assertable at all.
+    function markDocument(kind: string) {
+        const checkbox = container.querySelector(`#rider-document-failed-${kind}`) as HTMLInputElement;
+        act(() => checkbox.click());
+    }
+
+    function documentReasonBox(kind: string) {
+        return container.querySelector(`#rider-document-reason-${kind}`) as HTMLTextAreaElement | null;
+    }
+
+    function markOtherIssue() {
+        const checkbox = container.querySelector("#rider-reject-other") as HTMLInputElement;
+        act(() => checkbox.click());
+    }
+
+    function otherReasonBox() {
+        return container.querySelector("#rider-reject-other-reason") as HTMLTextAreaElement | null;
     }
 
     function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
@@ -585,132 +605,57 @@ describe("RiderReviewModal rendering", () => {
         });
     }
 
-    // React listens for "change" on a <select> (unlike text inputs, where it
-    // listens for "input") -- mirrors setTextareaValue's native-setter trick
-    // for the element React actually wires a listener to.
-    function setSelectValue(select: HTMLSelectElement, value: string) {
-        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
-        act(() => {
-            setter?.call(select, value);
-            select.dispatchEvent(new Event("change", {bubbles: true}));
-        });
-    }
-
     function findConfirmRejectButton() {
         return Array.from(container.querySelectorAll("button")).find((b) =>
             b.textContent?.includes("admin.riders.reviewModal.actions.confirmReject"),
         ) as HTMLButtonElement;
     }
 
-    function findAddIssueButton() {
-        return Array.from(container.querySelectorAll("button")).find((b) =>
-            b.textContent?.includes("admin.riders.reviewModal.reject.addIssue"),
-        ) as HTMLButtonElement;
-    }
-
-    it("reject opens with one row; a real reason enables Confirm and is sent trimmed, with an explicit document: null when none was chosen", () => {
+    it("a reason box appears under the document that was marked, and under no other", () => {
         mount(fakeResponse(fakeApplication()));
-        openRejectPanel();
-        expect(issueTextareas()).toHaveLength(1);
-        const textarea = issueTextareas()[0];
-        expect(textarea.required).toBe(true);
+        // Every kind offers a tick, including one the rider never submitted:
+        // "you have not sent this" is a rejection reason like any other.
+        expect(container.querySelectorAll('input[type="checkbox"][id^="rider-document-failed-"]')).toHaveLength(7);
+        expect(documentReasonBox("licence")).toBeNull();
+
+        markDocument("licence");
+
+        expect(documentReasonBox("licence")).not.toBeNull();
+        expect(documentReasonBox("licence")?.required).toBe(true);
+        expect(documentReasonBox("face")).toBeNull();
+        expect(documentReasonBox("idCard")).toBeNull();
+    });
+
+    it("a document's reason is sent against that document, trimmed", () => {
+        mount(fakeResponse(fakeApplication()));
+        markDocument("licence");
         // Leading/trailing whitespace proves trimming, not just pass-through.
-        setTextareaValue(textarea, "  Blurry licence photo  ");
+        setTextareaValue(documentReasonBox("licence")!, "  Blurry licence photo  ");
 
+        openRejectPanel();
         const confirmButton = findConfirmRejectButton();
         expect(confirmButton.disabled).toBe(false);
         act(() => confirmButton.click());
 
-        // The row's document select was never touched, so this also proves
-        // the payload carries a real `document` key set to `null` rather
-        // than an omitted one: `toHaveBeenCalledWith`'s deep-equal ignores
-        // an `undefined` property but NOT `null` (verified separately --
-        // `expect({}).toEqual({a: null})` fails in this project's vitest),
-        // so `{document: null, ...}` here would not match a payload whose
-        // issue was `{reason: "..."}` with `document` left out entirely.
         expect(verifyExecute).toHaveBeenCalledWith({
             riderId: 42,
             approve: false,
-            issues: [{document: null, reason: "Blurry licence photo"}],
+            issues: [{document: "licence", reason: "Blurry licence photo"}],
         });
     });
 
-    it("a row explicitly set back to 'not about a document' sends document: null, not an omitted key", () => {
+    it("two marked documents send two issues in tile order, whatever order the admin ticked them in", () => {
         mount(fakeResponse(fakeApplication()));
-        openRejectPanel();
-        setSelectValue(issueSelects()[0], "licence");
-        setSelectValue(issueSelects()[0], ""); // back to "not about a document"
-        setTextareaValue(issueTextareas()[0], "The vehicle is older than the policy allows");
+        // Marked last-tile-first on purpose: insertion order would send
+        // these the other way round, and both orders look identical in the
+        // UI. `face` is the sixth tile, `licence` the second.
+        markDocument("face");
+        setTextareaValue(documentReasonBox("face")!, "Face photo too dark");
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
 
+        openRejectPanel();
         act(() => findConfirmRejectButton().click());
-
-        expect(verifyExecute).toHaveBeenCalledWith({
-            riderId: 42,
-            approve: false,
-            issues: [{document: null, reason: "The vehicle is older than the policy allows"}],
-        });
-    });
-
-    it("opens the reject panel with Confirm disabled but no error shown yet, since nothing has been touched", () => {
-        mount(fakeResponse(fakeApplication()));
-        openRejectPanel();
-
-        const confirmButton = findConfirmRejectButton();
-        expect(confirmButton.disabled).toBe(true);
-        // Disabled from the first paint (there is genuinely nothing to
-        // reject yet), but the red explanation waits for interaction -- a
-        // form should not scold before the admin has typed anything (F7).
-        expect(container.textContent).not.toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
-
-        act(() => confirmButton.click());
-        expect(verifyExecute).not.toHaveBeenCalled();
-        expect(onReviewed).not.toHaveBeenCalled();
-    });
-
-    it("shows the reason-required error once the admin has typed something and the field is still blank", () => {
-        mount(fakeResponse(fakeApplication()));
-        openRejectPanel();
-        const textarea = issueTextareas()[0];
-        setTextareaValue(textarea, "x");
-        setTextareaValue(textarea, "");
-
-        const confirmButton = findConfirmRejectButton();
-        expect(confirmButton.disabled).toBe(true);
-        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
-
-        act(() => confirmButton.click());
-        expect(verifyExecute).not.toHaveBeenCalled();
-    });
-
-    it("treats a whitespace-only reason the same as blank", () => {
-        mount(fakeResponse(fakeApplication()));
-        openRejectPanel();
-        setTextareaValue(issueTextareas()[0], "   ");
-
-        const confirmButton = findConfirmRejectButton();
-        expect(confirmButton.disabled).toBe(true);
-        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
-
-        act(() => confirmButton.click());
-        expect(verifyExecute).not.toHaveBeenCalled();
-    });
-
-    it("two rows submit two issues, in the order shown -- the case a repeater that silently truncates to its first row would still pass every single-issue test above", () => {
-        mount(fakeResponse(fakeApplication()));
-        openRejectPanel();
-
-        setSelectValue(issueSelects()[0], "licence");
-        setTextareaValue(issueTextareas()[0], "Blurry licence photo");
-
-        act(() => findAddIssueButton().click());
-        expect(issueTextareas()).toHaveLength(2);
-
-        setSelectValue(issueSelects()[1], "face");
-        setTextareaValue(issueTextareas()[1], "Face photo too dark");
-
-        const confirmButton = findConfirmRejectButton();
-        expect(confirmButton.disabled).toBe(false);
-        act(() => confirmButton.click());
 
         expect(verifyExecute).toHaveBeenCalledWith({
             riderId: 42,
@@ -722,40 +667,115 @@ describe("RiderReviewModal rendering", () => {
         });
     });
 
-    it("the same document chosen twice keeps Confirm disabled", () => {
+    it("the non-document problem sends an explicit document: null, and comes after the documents", () => {
         mount(fakeResponse(fakeApplication()));
+        markOtherIssue();
+        setTextareaValue(otherReasonBox()!, "The vehicle is older than the policy allows");
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
+
         openRejectPanel();
-        setSelectValue(issueSelects()[0], "licence");
-        setTextareaValue(issueTextareas()[0], "Blurry");
+        act(() => findConfirmRejectButton().click());
 
-        act(() => findAddIssueButton().click());
-        setSelectValue(issueSelects()[1], "licence");
-        setTextareaValue(issueTextareas()[1], "Also blurry, from a different angle");
+        // `document: null` is a real key, not an omitted one:
+        // `toHaveBeenCalledWith`'s deep-equal ignores an `undefined`
+        // property but NOT `null` (verified separately -- `expect({})
+        // .toEqual({a: null})` fails in this project's vitest), so this
+        // would not match a payload whose issue left `document` out.
+        expect(verifyExecute).toHaveBeenCalledWith({
+            riderId: 42,
+            approve: false,
+            issues: [
+                {document: "licence", reason: "Blurry licence photo"},
+                {document: null, reason: "The vehicle is older than the policy allows"},
+            ],
+        });
+    });
 
-        const confirmButton = findConfirmRejectButton();
-        expect(confirmButton.disabled).toBe(true);
-        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.duplicateDocument");
+    it("unticking a document takes its reason with it, and leaves nothing to reject", () => {
+        mount(fakeResponse(fakeApplication()));
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
 
-        act(() => confirmButton.click());
+        markDocument("licence"); // untick
+        expect(documentReasonBox("licence")).toBeNull();
+
+        markDocument("licence"); // and back again
+        expect(documentReasonBox("licence")?.value).toBe("");
+        expect(findRejectButton().disabled).toBe(true);
+    });
+
+    it("with nothing marked, Reject is disabled and says what to do rather than showing an error", () => {
+        mount(fakeResponse(fakeApplication()));
+
+        expect(findRejectButton().disabled).toBe(true);
+        // An untouched form is not a wrong one: the instruction is offered,
+        // the red error is not (F7).
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.hint");
+        expect(container.textContent).not.toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
+
+        act(() => findRejectButton().click());
+        expect(container.textContent).not.toContain("admin.riders.reviewModal.actions.confirmReject");
         expect(verifyExecute).not.toHaveBeenCalled();
     });
 
-    it("removing the only row keeps Confirm disabled and explains why", () => {
+    it("a marked document with a blank reason keeps Reject disabled and says why", () => {
         mount(fakeResponse(fakeApplication()));
+        markDocument("licence");
+
+        expect(findRejectButton().disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
+
+        // Whitespace is not a reason either.
+        setTextareaValue(documentReasonBox("licence")!, "   ");
+        expect(findRejectButton().disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
+
+        act(() => findRejectButton().click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("a raised non-document problem with no text blocks the rejection the same way a marked document does", () => {
+        mount(fakeResponse(fakeApplication()));
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
+        expect(findRejectButton().disabled).toBe(false);
+
+        // Ticking "there's another problem" and saying nothing must not ride
+        // in on the valid document issue -- `""` and "not raised at all" are
+        // deliberately different states.
+        markOtherIssue();
+        expect(findRejectButton().disabled).toBe(true);
+    });
+
+    it("the confirmation step reads back every problem before it is sent", () => {
+        mount(fakeResponse(fakeApplication()));
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
+        markDocument("face");
+        setTextareaValue(documentReasonBox("face")!, "Face photo too dark");
+
         openRejectPanel();
 
-        const removeButton = Array.from(container.querySelectorAll("button")).find(
-            (b) => b.getAttribute("aria-label") === "admin.riders.reviewModal.reject.removeIssueLabel",
-        ) as HTMLButtonElement;
-        act(() => removeButton.click());
-
-        expect(issueTextareas()).toHaveLength(0);
-        const confirmButton = findConfirmRejectButton();
-        expect(confirmButton.disabled).toBe(true);
-        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.noIssues");
-
-        act(() => confirmButton.click());
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.summaryTitle");
+        expect(container.textContent).toContain("Blurry licence photo");
+        expect(container.textContent).toContain("Face photo too dark");
         expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("cancelling the confirmation keeps every mark, so a second look costs no retyping", () => {
+        mount(fakeResponse(fakeApplication()));
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
+        openRejectPanel();
+
+        const cancelButton = Array.from(container.querySelectorAll("button")).find((b) =>
+            b.textContent?.includes("admin.riders.reviewModal.actions.cancelReject"),
+        ) as HTMLButtonElement;
+        act(() => cancelButton.click());
+
+        expect(documentReasonBox("licence")?.value).toBe("Blurry licence photo");
+        expect(findRejectButton().disabled).toBe(false);
     });
 
     it("a mocked 409 surfaces the already-decided message and refetches, instead of a generic failure", async () => {
@@ -791,8 +811,9 @@ describe("RiderReviewModal rendering", () => {
             state: "failed",
             err: new ApiRequestError("riderDecisionAlreadyMade"),
         });
+        markDocument("licence");
+        setTextareaValue(documentReasonBox("licence")!, "Blurry licence photo");
         openRejectPanel();
-        setTextareaValue(issueTextareas()[0], "Blurry licence photo");
 
         // handleDecision awaits verifyRider() before acting on the result;
         // flush that pending microtask (and any it schedules in turn) before
@@ -805,8 +826,10 @@ describe("RiderReviewModal rendering", () => {
         expect(mockToastError).toHaveBeenCalledWith("admin.riders.reviewModal.alreadyDecided");
         expect(refetch).toHaveBeenCalledOnce();
         expect(onReviewed).not.toHaveBeenCalled();
-        // The stale panel is cleared rather than left open under the refetch.
+        // Every mark is cleared rather than left standing under the refetch:
+        // they described an application state that no longer exists.
         expect(container.querySelector("textarea")).toBeNull();
+        expect((container.querySelector("#rider-document-failed-licence") as HTMLInputElement).checked).toBe(false);
     });
 
     it("moves focus to the close button on open and restores it to the opener on close", () => {

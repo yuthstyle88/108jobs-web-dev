@@ -4218,19 +4218,23 @@ export const en = {
                         confirmReject: "Confirm rejection",
                         cancelReject: "Cancel",
                     },
-                    // The reject panel's issue repeater -- one row per problem.
+                    // Rejecting: a tick and a reason under each document,
+                    // one box for a problem that is about no document, and
+                    // a read-back before it is sent.
                     reject: {
-                        issueLabel: "Issue {{number}}",
-                        documentLabel: "Document",
-                        noDocumentOption: "Not about a document",
-                        reasonLabel: "Reason",
+                        markFailed: "Doesn't pass",
+                        markFailedLabel: "Mark {{document}} as not passing",
+                        reasonForDocument: "Why {{document}} doesn't pass",
                         reasonPlaceholder: "Describe what's wrong",
-                        removeIssueLabel: "Remove this issue",
-                        addIssue: "Add another issue",
+                        otherIssueTitle: "Not about a document",
+                        otherIssueMark: "There's a problem that isn't about any document",
+                        otherIssueReasonLabel: "What is the problem?",
+                        otherIssuePlaceholder: "e.g. the vehicle is older than the policy allows",
+                        hint: "Tick \"Doesn't pass\" on each document with a problem, and say why.",
+                        rejectWithCount: "Reject ({{count}})",
+                        summaryTitle: "What the rider will be told",
                         errors: {
-                            noIssues: "Add at least one issue before rejecting.",
-                            reasonRequired: "Every issue needs a reason.",
-                            duplicateDocument: "Each document can only be chosen once.",
+                            reasonRequired: "Every document you marked needs a reason.",
                         },
                     },
                 },
