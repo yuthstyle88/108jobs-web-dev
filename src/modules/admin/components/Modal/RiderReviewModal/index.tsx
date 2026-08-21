@@ -30,6 +30,7 @@ import {
     Rider,
     RiderId,
     RiderApplicationFields,
+    RiderDecision,
     RiderDocumentKind,
     RiderDocumentSlot,
     RiderReviewDetail,
@@ -334,13 +335,8 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 <span>{t("admin.riders.id")}: {rider.id}</span>
                                 <StatusBadge status={status}/>
                             </div>
-                            {application?.decision.status === "Rejected" && application.decision.rejectionReason && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    <span className="font-medium">
-                                        {t("admin.riders.reviewModal.rejectionReasonLabel")}:
-                                    </span>{" "}
-                                    {application.decision.rejectionReason}
-                                </p>
+                            {application?.decision.status === "Rejected" && (
+                                <RejectionIssuesBanner decision={application.decision}/>
                             )}
                             {application?.decision.previousReview && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -535,6 +531,43 @@ function StatusBadge({status}: {status: RiderVerificationStatus}) {
             <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin"/>
             {t("admin.riders.statusPending")}
         </Badge>
+    );
+}
+
+/**
+ * Every problem this rejection named, not just the first. `rejectionReason`
+ * is `issues[0]`'s reason, kept on the wire only so a shipped mobile client
+ * that never learned about `issues` keeps working -- rendering it here
+ * instead of the full list is exactly the one-problem-at-a-time habit the
+ * issues-list change exists to remove (#91). `issues` is typed as always
+ * present, but this still falls back to `rejectionReason` when it is
+ * empty/absent, so an older backend that has not shipped it yet still shows
+ * something rather than a blank banner.
+ */
+function RejectionIssuesBanner({decision}: {decision: RiderDecision}) {
+    const {t} = useTranslation();
+    if (decision.issues && decision.issues.length > 0) {
+        return (
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span className="font-medium">{t("admin.riders.reviewModal.rejectionReasonLabel")}:</span>
+                <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                    {decision.issues.map((issue, index) => (
+                        <li key={index}>
+                            {issue.document
+                                ? `${t(`admin.riders.reviewModal.documents.kinds.${issue.document}`)} — ${issue.reason}`
+                                : issue.reason}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
+    if (!decision.rejectionReason) return null;
+    return (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <span className="font-medium">{t("admin.riders.reviewModal.rejectionReasonLabel")}:</span>{" "}
+            {decision.rejectionReason}
+        </p>
     );
 }
 

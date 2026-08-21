@@ -365,6 +365,49 @@ describe("RiderReviewModal rendering", () => {
         expect(container.textContent).not.toContain("admin.riders.reviewModal.mismatch.title");
     });
 
+    // #91: the header banner on an already-rejected application read only
+    // `rejectionReason` -- `issues[0]`'s reason, derived server-side and kept
+    // only for a shipped client that never learned about `issues` -- instead
+    // of the full list. `rejectionReason` here deliberately equals
+    // `issues[0].reason`, exactly as a real server derives it, so the only
+    // thing that can distinguish "renders issues" from "renders
+    // rejectionReason" is whether the SECOND issue shows up anywhere. A test
+    // that only checked the first reason would pass unchanged against the
+    // old code -- see the two-rows test above this one in spirit.
+    it("shows every issue's own reason on an already-rejected application, not just the first", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Rejected",
+                        rejectionReason: "ID card photo is blurry",
+                        issues: [
+                            {document: "idCard", reason: "ID card photo is blurry"},
+                            {document: "face", reason: "Face photo too dark"},
+                        ],
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("ID card photo is blurry");
+        expect(container.textContent).toContain("Face photo too dark");
+    });
+
+    it("falls back to the derived rejectionReason when issues is empty, so an older backend still renders something", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Rejected",
+                        rejectionReason: "Blurry licence photo",
+                        issues: [],
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("Blurry licence photo");
+    });
+
     it("renders every field group and never asserts past a null field", () => {
         mount(fakeResponse(fakeApplication({fields: {nationalIdNumber: "1234567890123"}})));
         expect(container.textContent).toContain("admin.riders.reviewModal.sections.identity");
