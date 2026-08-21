@@ -408,6 +408,54 @@ describe("RiderReviewModal rendering", () => {
         expect(container.textContent).toContain("Blurry licence photo");
     });
 
+    // #92: the identical defect as #91, one banner over. After a resubmission
+    // puts the application back to Pending, the previous-rejection banner
+    // read only `previousReview.reason` instead of `previousReview.issues`.
+    // Same proof shape as the #91 test above: `reason` is deliberately set
+    // equal to `issues[0]`'s reason, exactly as the server derives it, so
+    // only actually rendering the second issue can pass this. `status` is
+    // "Pending" (a real resubmission) rather than "Rejected", so this
+    // exercises the previousReview banner alone, not #91's sibling.
+    it("shows every issue from the previous rejection, not just the first, after a resubmission", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Pending",
+                        issues: [],
+                        previousReview: {
+                            reason: "ID card photo is blurry",
+                            issues: [
+                                {document: "idCard", reason: "ID card photo is blurry"},
+                                {document: "face", reason: "Face photo too dark"},
+                            ],
+                        },
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("ID card photo is blurry");
+        expect(container.textContent).toContain("Face photo too dark");
+    });
+
+    it("falls back to the previous review's derived reason when its issues is empty", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Pending",
+                        issues: [],
+                        previousReview: {
+                            reason: "Blurry licence photo",
+                            issues: [],
+                        },
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("Blurry licence photo");
+    });
+
     it("renders every field group and never asserts past a null field", () => {
         mount(fakeResponse(fakeApplication({fields: {nationalIdNumber: "1234567890123"}})));
         expect(container.textContent).toContain("admin.riders.reviewModal.sections.identity");

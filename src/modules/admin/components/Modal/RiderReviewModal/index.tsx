@@ -30,9 +30,9 @@ import {
     Rider,
     RiderId,
     RiderApplicationFields,
-    RiderDecision,
     RiderDocumentKind,
     RiderDocumentSlot,
+    RiderRejectionIssue,
     RiderReviewDetail,
     RiderVerificationStatus,
     IdentityMismatch,
@@ -336,15 +336,18 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 <StatusBadge status={status}/>
                             </div>
                             {application?.decision.status === "Rejected" && (
-                                <RejectionIssuesBanner decision={application.decision}/>
+                                <RejectionIssuesBanner
+                                    labelKey="admin.riders.reviewModal.rejectionReasonLabel"
+                                    issues={application.decision.issues}
+                                    fallbackReason={application.decision.rejectionReason}
+                                />
                             )}
                             {application?.decision.previousReview && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    <span className="font-medium">
-                                        {t("admin.riders.reviewModal.previousRejectionLabel")}:
-                                    </span>{" "}
-                                    {application.decision.previousReview.reason}
-                                </p>
+                                <RejectionIssuesBanner
+                                    labelKey="admin.riders.reviewModal.previousRejectionLabel"
+                                    issues={application.decision.previousReview.issues}
+                                    fallbackReason={application.decision.previousReview.reason}
+                                />
                             )}
                         </div>
                     </div>
@@ -535,23 +538,33 @@ function StatusBadge({status}: {status: RiderVerificationStatus}) {
 }
 
 /**
- * Every problem this rejection named, not just the first. `rejectionReason`
- * is `issues[0]`'s reason, kept on the wire only so a shipped mobile client
- * that never learned about `issues` keeps working -- rendering it here
- * instead of the full list is exactly the one-problem-at-a-time habit the
- * issues-list change exists to remove (#91). `issues` is typed as always
- * present, but this still falls back to `rejectionReason` when it is
- * empty/absent, so an older backend that has not shipped it yet still shows
- * something rather than a blank banner.
+ * Every problem a rejection named, not just the first. Backs both header
+ * banners: the current decision's (`decision.issues`/`rejectionReason`, #91)
+ * and, identically, the superseded one shown after a resubmission
+ * (`decision.previousReview.issues`/`reason`, #92) -- same derivation
+ * (`issues[0]`, kept on the wire only so a shipped mobile client that never
+ * learned about `issues` keeps working), same fix, one shared component so
+ * the two can't drift back apart the way they did the first time. `issues`
+ * is typed as always present on both call sites, but this still falls back
+ * to `fallbackReason` when it is empty/absent, so an older backend that has
+ * not shipped it yet still shows something rather than a blank banner.
  */
-function RejectionIssuesBanner({decision}: {decision: RiderDecision}) {
+function RejectionIssuesBanner({
+    labelKey,
+    issues,
+    fallbackReason,
+}: {
+    labelKey: string;
+    issues: RiderRejectionIssue[] | null | undefined;
+    fallbackReason: string | null | undefined;
+}) {
     const {t} = useTranslation();
-    if (decision.issues && decision.issues.length > 0) {
+    if (issues && issues.length > 0) {
         return (
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                <span className="font-medium">{t("admin.riders.reviewModal.rejectionReasonLabel")}:</span>
+                <span className="font-medium">{t(labelKey)}:</span>
                 <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
-                    {decision.issues.map((issue, index) => (
+                    {issues.map((issue, index) => (
                         <li key={index}>
                             {issue.document
                                 ? `${t(`admin.riders.reviewModal.documents.kinds.${issue.document}`)} — ${issue.reason}`
@@ -562,11 +575,11 @@ function RejectionIssuesBanner({decision}: {decision: RiderDecision}) {
             </div>
         );
     }
-    if (!decision.rejectionReason) return null;
+    if (!fallbackReason) return null;
     return (
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            <span className="font-medium">{t("admin.riders.reviewModal.rejectionReasonLabel")}:</span>{" "}
-            {decision.rejectionReason}
+            <span className="font-medium">{t(labelKey)}:</span>{" "}
+            {fallbackReason}
         </p>
     );
 }
