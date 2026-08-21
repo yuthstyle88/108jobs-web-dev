@@ -132,6 +132,7 @@ export type {RiderApplicationFields} from "./types/RiderApplicationFields";
 export type {RiderDocumentSlot} from "./types/RiderDocumentSlot";
 export type {RiderDocumentKind} from "./types/RiderDocumentKind";
 export type {RiderDecision} from "./types/RiderDecision";
+export type {RiderRejectionIssue} from "./types/RiderRejectionIssue";
 export type {PreviousReview} from "./types/PreviousReview";
 export type {RiderReviewDetail} from "./types/RiderReviewDetail";
 export type {IdentityMismatch} from "./types/IdentityMismatch";

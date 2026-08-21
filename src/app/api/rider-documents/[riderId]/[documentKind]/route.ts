@@ -13,6 +13,7 @@ import {getApiBase} from "@/utils/env";
  * allow-list.
  */
 const DOCUMENT_KINDS = {
+    idCard: true,
     licence: true,
     vehicleRegistration: true,
     insurance: true,
@@ -30,7 +31,7 @@ const isPositiveIntegerId = (value: string): boolean => /^[1-9][0-9]*$/.test(val
  * A closed proxy: two validated values in, one hard-coded backend path out.
  *
  * `riderId` must be a positive integer; `documentKind` must be one of the
- * six known kinds. There is no code path by which a request body, a query
+ * known kinds. There is no code path by which a request body, a query
  * string or a header reaches the upstream URL, so this route cannot be
  * redirected to an arbitrary address -- unlike `forwardAuthedUpstream`
  * itself, which trusts its caller to have already done this validation.

@@ -4,6 +4,7 @@ import { GET } from "./route";
 import { JWT } from "@/utils/config";
 
 const VALID_KINDS = [
+  "idCard",
   "licence",
   "vehicleRegistration",
   "insurance",
