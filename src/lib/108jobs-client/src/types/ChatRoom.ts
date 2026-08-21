@@ -1,6 +1,6 @@
 import {ChatRoomId} from "./ChatRoomId";
 import type {PostId} from "./PostId";
-import {CommentId} from "./CommentId";
+import {ProposalId} from "./ProposalId";
 
 export type ChatRoom = {
     id: ChatRoomId;
@@ -8,5 +8,5 @@ export type ChatRoom = {
     createdAt: string;
     updatedAt?: string;
     postId?: PostId;
-    currentCommentId?: CommentId
+    currentProposalId?: ProposalId
 }

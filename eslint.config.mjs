@@ -19,6 +19,14 @@ const eslintConfig = defineConfig([
     // output and generated types aren't code this app's React Compiler
     // lint rules apply to.
     "src/lib/108jobs-client/**",
+    // Nested git worktrees. Several agents and sessions drive this repo at once
+    // and keep their checkouts under these paths, so from the repo root a bare
+    // `pnpm lint` walked three extra full copies of the app -- 2460 files and
+    // 3228 errors, none of them this checkout's code. That made the command mean
+    // something different depending on which directory you ran it from, which is
+    // exactly the kind of thing that gets mistaken for a real regression.
+    ".worktrees/**",
+    ".claude/worktrees/**",
   ]),
   {
     rules: {

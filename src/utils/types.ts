@@ -1,5 +1,5 @@
 import {
-    CommentView,
+    ProposalView,
     CategoryView,
     CreateOAuthProvider,
     GetSiteResponse, ListBankAccountsResponse,
@@ -51,14 +51,14 @@ export interface IRouteProps {
     sensitive?: boolean;
 }
 
-export enum CommentViewType {
+export enum ProposalViewType {
     Tree,
     Flat,
 }
 
 export enum DataType {
     Post,
-    Comment,
+    Proposal,
 }
 
 export enum BanType {
@@ -66,11 +66,11 @@ export enum BanType {
     Site,
 }
 
-export type CommentNodeView = CommentView;
+export type ProposalNodeView = ProposalView;
 
-export interface CommentNodeI {
-    commentView: CommentNodeView;
-    children: Array<CommentNodeI>;
+export interface ProposalNodeI {
+    proposalView: ProposalNodeView;
+    children: Array<ProposalNodeI>;
     depth: number;
 }
 

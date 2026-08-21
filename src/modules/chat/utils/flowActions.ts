@@ -1,7 +1,7 @@
 import {FlowActions, StatusKey} from '@/modules/chat/components/FreelanceChatFlow';
 import {v4 as uuidv4} from 'uuid';
 import type {LocalUser} from '108jobs-client';
-import {emitChatNewMessage, sendChatMessage} from "@/modules/chat/events";
+import {sendChatMessage} from "@/modules/chat/events";
 
 export type CreateFlowActionsDeps = {
     t: (k: string) => string | undefined;
@@ -54,7 +54,6 @@ export function createFlowActions(deps: CreateFlowActionsDeps): FlowActions {
             }
 
             const messageId = uuidv4();
-            const readable = t('profileChat.confirmAssignMsg') || 'Assignment confirmed. Waiting for freelancer to accept.';
             const payload = {type: 'employer-assigned'} as any;
 
             await sendChatMessage({roomId} as any, {
@@ -63,19 +62,6 @@ export function createFlowActions(deps: CreateFlowActionsDeps): FlowActions {
                 secure: Boolean((localUser as any)?.isMessageSecure),
                 id: messageId
             });
-
-            try {
-                const tsIso = new Date().toISOString();
-                emitChatNewMessage({
-                    roomId,
-                    senderId: localUser.id,
-                    id: messageId,
-                    content: readable,
-                    createdAt: tsIso,
-                    status: 'sending',
-                });
-            } catch {
-            }
 
             goToStatus('OrderApproved');
         },
@@ -88,7 +74,6 @@ export function createFlowActions(deps: CreateFlowActionsDeps): FlowActions {
                 return;
             }
             const messageId = uuidv4();
-            const readable = t('profileChat.startWorkMsg') || 'Freelancer started work.';
             const payload = {type: 'start-work'} as any;
 
             await sendChatMessage({roomId} as any, {
@@ -97,19 +82,6 @@ export function createFlowActions(deps: CreateFlowActionsDeps): FlowActions {
                 secure: Boolean((localUser as any)?.isMessageSecure),
                 id: messageId
             });
-
-            try {
-                const tsIso = new Date().toISOString();
-                emitChatNewMessage({
-                    roomId,
-                    senderId: localUser.id,
-                    id: messageId,
-                    content: readable,
-                    createdAt: tsIso,
-                    status: 'sending',
-                });
-            } catch {
-            }
 
             goToStatus('InProgress');
         },

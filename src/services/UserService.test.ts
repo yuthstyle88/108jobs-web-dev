@@ -23,15 +23,23 @@ describe("isAdminClaims", () => {
 import { UserService } from "./UserService";
 import { HttpService } from "./HttpService";
 import { getAuthJWTCookie, setAuthJWTCookie } from "@/utils/browser";
+import { LANGUAGE_COOKIE } from "@/constants/language";
 
 describe("UserService profile hydration", () => {
-  it("sources currentLanguage and acceptedTerms from getMyUser(), not from JWT claims", async () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/");
+    document.cookie = `${LANGUAGE_COOKIE}=; Max-Age=0; path=/`;
+  });
+
+  it.each(["en", "vi"] as const)("keeps the %s URL language over Thai cookie and profile defaults", async (lang) => {
+    window.history.replaceState({}, "", `/${lang}/login`);
+    document.cookie = `${LANGUAGE_COOKIE}=th; path=/`;
     vi.spyOn(HttpService, "client", "get").mockReturnValue({
       getMyUser: vi.fn().mockResolvedValue({
         state: "success",
         data: {
           localUserView: {
-            localUser: { interfaceLanguage: "en", acceptedTerms: true },
+            localUser: { interfaceLanguage: "th", acceptedTerms: true },
           },
         },
       }),
@@ -39,8 +47,35 @@ describe("UserService profile hydration", () => {
 
     await UserService.Instance.login("not-a-real-jwt");
 
-    expect(UserService.Instance.getLanguage).toBe("en");
+    expect(UserService.Instance.getLanguage).toBe(lang);
+    expect(document.cookie).toContain(`${LANGUAGE_COOKIE}=${lang}`);
     expect(UserService.Instance.getAcceptedTerms).toBe(true);
+  });
+});
+
+describe("UserService logout", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    window.history.replaceState({}, "", "/");
+    document.cookie = `${LANGUAGE_COOKIE}=; Max-Age=0; path=/`;
+  });
+
+  it.each(["en", "vi"] as const)("returns to login in the active %s URL language", async (lang) => {
+    vi.useFakeTimers();
+    const replace = vi.fn();
+    window.history.replaceState({}, "", `/${lang}/profile`);
+    vi.stubGlobal("location", { pathname: `/${lang}/profile`, replace });
+    document.cookie = `${LANGUAGE_COOKIE}=th; path=/`;
+    UserService.Instance.currentLanguage = "th";
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({
+      logout: vi.fn().mockResolvedValue({ state: "success" }),
+    } as any);
+
+    await UserService.Instance.logout();
+    await vi.advanceTimersByTimeAsync(150);
+
+    expect(replace).toHaveBeenCalledWith(`/${lang}/login`);
   });
 });
 

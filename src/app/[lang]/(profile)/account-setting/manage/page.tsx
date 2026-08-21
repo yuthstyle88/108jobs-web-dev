@@ -4,83 +4,44 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
-import TotpModal from "@/components/Common/Modal/TotpModal";
-
-import { REQUEST_STATE } from "@/services/HttpService";
-import { useHttpPost } from "@/hooks/api/http/useHttpPost";
-import {useUserStore} from "@/store/useUserStore";
+import { useHttpPut } from "@/hooks/api/http/useHttpPut";
+import { isFailed, isSuccess } from "@/services/HttpService";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function AccountManagePage() {
     const { t } = useTranslation();
-    const { user, setUser } = useUserStore();
-    const [totpEnabled, setTotpEnabled] = useState(() => !!user?.totp2faEnabled);
-    const [error, setError] = useState<string | null>(null);
-    const [showTotpModal, setShowTotpModal] = useState(false);
-    const [modalType, setModalType] = useState<"generate" | "remove">("generate");
-    const [secretUrl, setSecretUrl] = useState<string>();
+    const { user, updateUser } = useUserStore();
+    const [isSaving, setIsSaving] = useState(false);
 
-    const { execute: generateTotpSecret } = useHttpPost("generateTotpSecret");
-    const { execute: updateTotp } = useHttpPost("updateTotp");
+    const { execute: saveUserSettings } = useHttpPut("saveUserSettings");
 
-    const handleTotpToggle = async () => {
-        if (!totpEnabled) {
-            setModalType("generate");
-            setSecretUrl(undefined);
+    const secureChatEnabled = user?.secureChatEnabled ?? false;
 
-            const res = await generateTotpSecret({});
-            if (res.state === REQUEST_STATE.SUCCESS) {
-                setSecretUrl(res.data.totpSecretUrl);
-                setShowTotpModal(true);
-            } else {
-                toast(t("accountManage.totpUnexpectedError"), { type: "error" });
-            }
-        } else {
-            setModalType("remove");
-            setShowTotpModal(true);
-        }
-    };
+    const handleToggle = async () => {
+        if (!user || isSaving) return;
+        const next = !secureChatEnabled;
 
-    // 🔹 Submit TOTP enable/disable
-    const handleTotpSubmit = async (code: string): Promise<boolean> => {
-        const res = await updateTotp({
-            enabled: modalType === "generate",
-            totpToken: code,
-        });
+        // Optimistic: the switch should move on click, not after the
+        // round-trip. Reverted below if the save fails.
+        updateUser({ secureChatEnabled: next });
+        setIsSaving(true);
+        const res = await saveUserSettings({ secureChatEnabled: next });
+        setIsSaving(false);
 
-        if (res.state === REQUEST_STATE.SUCCESS) {
-            setTotpEnabled(modalType === "generate");
-            setShowTotpModal(false);
-            const prevUser = user ?? null;
-            // snapshot old value
-            const prev = user?.totp2faEnabled ?? true;
-
-            // optimistic update to the store so all pages reflect immediately
-            if (prevUser) {
-                setUser({ ...prevUser, totp2faEnabled: !prev });
-            }
-
-            return true;
-        } else {
-            setError(t("accountManage.totpIncorrectCode"));
-            return false;
+        if (isSuccess(res)) {
+            toast.success(
+                next
+                    ? t("accountManage.secureChat.enabled")
+                    : t("accountManage.secureChat.disabled"),
+            );
+        } else if (isFailed(res)) {
+            updateUser({ secureChatEnabled: !next });
+            toast.error(t("accountManage.secureChat.saveError"));
         }
     };
 
     return (
         <div>
-            {/* TOTP modal */}
-            <TotpModal
-                show={showTotpModal}
-                onClose={() => {
-                    setShowTotpModal(false);
-                    setError("");
-                }}
-                onSubmit={handleTotpSubmit}
-                error={error}
-                type={modalType}
-                secretUrl={modalType === "generate" ? secretUrl : undefined}
-            />
-
             <div className="bg-white rounded-2xl shadow-md border border-border-primary p-6 space-y-8">
                 {/* Header */}
                 <div>
@@ -92,44 +53,47 @@ export default function AccountManagePage() {
                     </p>
                 </div>
 
-                {/* TOTP 2FA Section */}
+                {/* Secure Chat */}
                 <div className="border rounded-xl p-4 flex flex-col gap-3">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-800">
-                                {t("accountManage.totpTitle")}
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                                {t("accountManage.totpDescription")}
-                            </p>
-                        </div>
+                    <h3 className="text-sm font-semibold text-gray-800">
+                        {t("accountManage.secureChat.title")}
+                    </h3>
+
+                    <div className="flex justify-between items-center gap-4">
+                        <label htmlFor="secure-chat-toggle" className="flex flex-col cursor-pointer">
+                            <span className="text-sm font-medium text-gray-800">
+                                {t("accountManage.secureChat.toggleLabel")}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                                {t("accountManage.secureChat.toggleHint")}
+                            </span>
+                        </label>
                         <label className="inline-flex items-center cursor-pointer">
                             <input
+                                id="secure-chat-toggle"
                                 type="checkbox"
                                 className="sr-only peer"
-                                checked={totpEnabled}
-                                onChange={handleTotpToggle}
+                                checked={secureChatEnabled}
+                                disabled={!user || isSaving}
+                                onChange={handleToggle}
                             />
-                            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-colors duration-200 relative">
-                <span
-                    className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
-                        totpEnabled ? "translate-x-5" : ""
-                    }`}
-                ></span>
+                            <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-green-500 peer-disabled:opacity-50 transition-colors duration-200 relative">
+                                <span
+                                    className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
+                                        secureChatEnabled ? "translate-x-5" : ""
+                                    }`}
+                                />
                             </div>
                         </label>
                     </div>
+
+                    {/* What this does and does not protect against. The second
+                        paragraph is deliberate: the platform holds the key. */}
                     <p className="text-xs text-gray-500">
-                        {t("accountManage.totpStatus")}:{" "}
-                        <span
-                            className={`font-medium ${
-                                totpEnabled ? "text-green-600" : "text-red-500"
-                            }`}
-                        >
-              {totpEnabled
-                  ? t("accountManage.totpEnabled")
-                  : t("accountManage.totpDisabled")}
-            </span>
+                        {t("accountManage.secureChat.bodyInTransit")}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                        {t("accountManage.secureChat.bodyNotE2e")}
                     </p>
                 </div>
             </div>

@@ -17,6 +17,8 @@ interface CategoryFormData {
 interface CategoryModalProps {
     isOpen: boolean;
     isAddingNew: boolean;
+    /** Name of the parent a new subcategory will be created under, if any. */
+    parentName?: string | null;
     form: CategoryFormData;
     setForm: React.Dispatch<React.SetStateAction<CategoryFormData>>;
     iconMode: "url" | "upload";
@@ -34,6 +36,7 @@ interface CategoryModalProps {
 export function CategoryModal({
                                   isOpen,
                                   isAddingNew,
+                                  parentName,
                                   form,
                                   setForm,
                                   iconMode,
@@ -54,9 +57,18 @@ export function CategoryModal({
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     {isAddingNew ? t("admin.category.modal.addTitle") : t("admin.category.modal.editTitle")}
                 </h3>
+
+                {isAddingNew && (
+                    <p className="mb-6 text-sm text-gray-500">
+                        {parentName
+                            ? t("admin.category.modal.parentHint", {name: parentName})
+                            : t("admin.category.modal.rootHint")}
+                    </p>
+                )}
+                {!isAddingNew && <div className="mb-6"/>}
 
                 <div className="space-y-8">
                     {/* Name */}
@@ -70,6 +82,21 @@ export function CategoryModal({
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                             placeholder={t("admin.category.modal.namePlaceholder")}
+                        />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label htmlFor="category-description" className="block text-sm font-medium text-gray-700 mb-2">
+                            {t("admin.category.modal.descriptionLabel")}
+                        </label>
+                        <input
+                            id="category-description"
+                            type="text"
+                            value={form.description || ""}
+                            onChange={(e) => setForm({ ...form, description: e.target.value })}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                            placeholder={t("admin.category.modal.descriptionPlaceholder")}
                         />
                     </div>
 

@@ -13,7 +13,7 @@ export type CategorySortType =
   | "Old"
   | "NameAsc"
   | "NameDesc"
-  | "Comments"
+  | "Proposals"
   | "Posts"
   | "Subscribers"
   | "SubscribersLocal";

@@ -9,7 +9,7 @@ import {
     Plus,
     Minus,
     LayoutDashboard,
-    Handbag, CreditCard, ChartColumnStacked, Image as ImageIcon, Motorbike
+    Handbag, CreditCard, ChartColumnStacked, Image as ImageIcon, Motorbike, Settings
 } from "lucide-react";
 
 import {
@@ -37,6 +37,7 @@ const navigationItems = [
     {key: "manageCategory", url: "/admin/manage-category", icon: ChartColumnStacked},
     {key: "managePicture", url: "/admin/manage-picture", icon: ImageIcon},
     {key: "manageRiders", url: "/admin/manage-riders", icon: Motorbike},
+    {key: "siteSettings", url: "/admin/site-settings", icon: Settings},
 ];
 
 export function AdminSidebar() {

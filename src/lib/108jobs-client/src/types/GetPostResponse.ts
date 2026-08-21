@@ -7,7 +7,12 @@ import type {PostView} from "./PostView";
  */
 export type GetPostResponse = {
   postView: PostView;
-  categoryView: CategoryView;
+  /**
+   * Optional for delivery posts (which rely on post_kind for distinction).
+   * Matches `pub category_view: Option<CategoryView>` in api-108jobs
+   * crates/db/src/source/post_view/api.rs.
+   */
+  categoryView?: CategoryView;
   /**
    * A list of cross-posts, or other times / categories this link has been posted to.
    */

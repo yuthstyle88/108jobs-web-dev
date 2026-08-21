@@ -5,7 +5,7 @@
  */
 export type SearchType =
   | "All"
-  | "Comments"
+  | "Proposals"
   | "Posts"
   | "Categories"
   | "Users";

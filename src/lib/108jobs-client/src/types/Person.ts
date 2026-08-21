@@ -51,7 +51,7 @@ export type Person = {
     botAccount: boolean;
     instanceId: InstanceId;
     postCount: number;
-    commentCount: number;
+    proposalCount: number;
 
     /** === Extra business fields === */
     averageResponseTime: string | null;

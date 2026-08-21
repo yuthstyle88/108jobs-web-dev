@@ -4,21 +4,28 @@ import Image, {StaticImageData} from "next/image";
 import type {ChatMessage, LocalUserId} from "108jobs-client";
 import {MessageImage} from "@/constants/images";
 import {useTranslation} from "react-i18next";
-import {useChatStore} from "@/modules/chat/store/chatStore";
-import React, {useMemo, useEffect} from "react";
+import React, {useMemo, useEffect, useState, useCallback} from "react";
+import {Maximize2} from "lucide-react";
 import {toLocalTime} from "@/utils/date";
 import MessageStatusIndicator from "@/modules/chat/components/MessageStatusIndicator";
+import {ChatMessageAvatar} from "@/modules/chat/components/ChatMessageAvatar";
 import {dbg} from "@/modules/chat/utils";
 import {isSameOrAfter, isApproxSame} from "@/modules/chat/utils/helpers";
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
-import {usePeerOnline} from "@/modules/chat/store/presenceStore";
 import {Stars} from "@/components/RatingDisplay";
 import {useChatServices} from "@/modules/chat/contexts/ChatBridgeProvider";
+import {attachmentSrc, parseAttachment, type AttachmentItem} from "@/modules/chat/attachments";
+import {MediaLightbox} from "@/modules/chat/components/ChatMediaPanel/MediaLightbox";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
+import {useLocalAttachmentPreviewStore} from "@/modules/chat/store/localAttachmentPreviewStore";
+import {useMediaLoadRetry} from "@/modules/chat/hooks/useMediaLoadRetry";
 
 interface ChatMessageItemProps {
     message: ChatMessage;
     partnerAvatar?: string | StaticImageData;
     partnerId: LocalUserId;
+    /** Briefly ringed after the user jumped here from search or media. */
+    isHighlighted?: boolean;
 }
 
 interface ProposedQuoteMessage {
@@ -50,23 +57,60 @@ interface ProposedQuoteMessage {
     comment?: string;
 }
 
+/**
+ * The small pill-shaped "Open" link shown under an attachment. Shared
+ * between the generic file card and the image/video card so the two markup
+ * copies cannot drift, the same way `attachmentSrc` keeps their url the
+ * same. Module-scoped (not nested in `ChatMessageItem`) so it is not
+ * recreated -- and its DOM remounted -- on every parent render.
+ */
+const AttachmentOpenLink: React.FC<{href: string; isIncoming: boolean}> = ({href, isIncoming}) => {
+    const {t} = useTranslation();
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-md transition-colors ${
+                isIncoming
+                    ? "bg-gray-900 hover:bg-black text-white"
+                    : "bg-primary hover:bg-[#063a68] text-white"
+            }`}
+        >
+            <svg
+                className="w-4 h-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+            >
+                <path
+                    d="M12.293 2.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414L9.414 16H5v-4.414l8.293-8.293z"
+                />
+            </svg>
+            <span>{t("global.open")}</span>
+        </a>
+    );
+};
+
 const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                                              message,
                                                              partnerAvatar,
-                                                             partnerId
+                                                             partnerId,
+                                                             isHighlighted = false
                                                          }) => {
     const {t, i18n} = useTranslation();
     const {resend} = useChatServices();
-    const liveMessage = useChatStore((s) => {
-        const mid = message?.id;
-        if (!mid) return undefined;
-        return (
-            s.listMessages || []).find((m: any) => String(m.id) === String(mid)
-        );
-    });
-    const viewMsg = liveMessage || message;
-    const createdAt = (viewMsg as any)?.createdAt as any;
-    const roomIdStr = String((viewMsg as any)?.roomId ?? "");
+    // `message` is already sourced from the store's `messagesByRoom` by the
+    // caller (see ChatRoomView). A `liveMessage` re-lookup used to live here,
+    // reading `useChatStore((s) => s.listMessages)` -- but no real
+    // message-adding code path (addMessage/addSending/upsertMessage) ever
+    // populates `listMessages`, so that lookup always returned `undefined`
+    // and silently fell through to `message` anyway. Same class of bug as
+    // `selectFailedMessagesForResend` in ChatBridgeProvider.tsx: routed
+    // around by reading `message` directly instead of trying to repopulate
+    // the dead field.
+    const createdAt = (message as any)?.createdAt as any;
+    const roomIdStr = String((message as any)?.roomId ?? "");
     const selectPeerLastReadAt = useMemo(
         () => (s: any) => s?.getPeerLastReadAt?.(roomIdStr, partnerId) ?? null,
         [roomIdStr, partnerId]
@@ -75,15 +119,14 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     useEffect(() => {
         dbg('lastReadAt', lastReadAt);
     }, [lastReadAt]);
-    const isIncoming = !viewMsg.isOwner;
+    const isIncoming = !message.isOwner;
 
     const time = toLocalTime(createdAt, i18n?.language || "th-TH");
-    const isOwner = !!viewMsg.isOwner;
-
-    const peerOnline = usePeerOnline(Number(partnerId));
+    const isOwner = !!message.isOwner;
 
     const isRead = useMemo(() => {
-        // Only consider as "read" when the peer is currently online and the read timestamp covers this message
+        // Read state is historical: presence changes do not revoke a server
+        // timestamp that already covers this outgoing message.
         return (
             isOwner &&
             lastReadAt != null &&
@@ -106,7 +149,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     }, [isLastRead, lastReadAt, i18n?.language]);
 
     const parsed = useMemo<ProposedQuoteMessage | null>(() => {
-        const c = viewMsg?.content;
+        const c = message?.content;
         if (c && c.trim().startsWith("{")) {
             try {
                 return JSON.parse(c) as ProposedQuoteMessage;
@@ -115,7 +158,7 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
             }
         }
         return null;
-    }, [viewMsg?.content]);
+    }, [message?.content]);
 
     const isEmployerStarted = parsed && parsed.type === "employer-started";
     const isProposedQuote = parsed && parsed.type === "proposed-quote" && parsed.quote;
@@ -128,37 +171,133 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
     const isFileMsg = parsed && parsed.type === "file";
     const isReviewSubmitted = parsed && parsed.type === "review-submitted" && parsed.rating;
 
+    // The generic `parsed` memo above still serves the workflow cards; this is
+    // the one place a file envelope is read, and it is the same reader the
+    // media panel uses, so the two cannot drift.
+    const attachment = useMemo(
+        () => (isFileMsg ? parseAttachment(message?.content) : null),
+        [isFileMsg, message.content],
+    );
+
+    // Same derivation the Media panel uses (`attachmentSrc`) -- a same-origin
+    // `/api/media/{assetId}` when the envelope carries one, else the stored
+    // (backend) url unchanged. Computed once here rather than at each of the
+    // several places below that read it.
+    const attachmentUrl = useMemo(
+        () => (attachment ? attachmentSrc(attachment) : undefined),
+        [attachment],
+    );
+
+    // Only ever non-empty for a message *this tab* uploaded: `useFileUpload`
+    // registers a local object URL keyed by the same MAD assetId the
+    // envelope carries, right after upload, so the sender can see their own
+    // just-sent image/video instantly -- no network request at all -- while
+    // the server-side persistence race `mediaRetryPolicy.ts` works around is
+    // still running. `isOwner` is redundant with that in practice (a
+    // recipient's tab can never hold this file's bytes) but keeps the
+    // intent explicit. Reads `undefined` once the store releases the entry
+    // (a bounded time after registration), which is what hands rendering
+    // back to `attachmentUrl` below.
+    const localPreviewUrl = useLocalAttachmentPreviewStore((s) =>
+        isOwner && attachment ? s.byAssetId[attachment.assetId ?? ""] : undefined,
+    );
+    const usingLocalPreview = localPreviewUrl != null;
+    const displayUrl = localPreviewUrl ?? attachmentUrl;
+
+    // Bounded retry for the image/video below -- see `mediaRetryPolicy.ts`
+    // for why a just-sent attachment's first load can 404 for both the
+    // sender and the recipient. Tracks `attachmentUrl` (the network path)
+    // specifically, not `displayUrl`: a blob URL either resolves or it does
+    // not, and there is nothing about it that improves by retrying the same
+    // string. One hook instance covers both kinds below: the image and
+    // video branches are mutually exclusive, so only one of them ever
+    // actually mounts an element that can call `handleMediaError`.
+    const {
+        attemptKey: mediaAttemptKey,
+        failed: mediaLoadFailed,
+        loaded: mediaLoaded,
+        handleError: handleMediaError,
+        handleLoad: handleMediaLoad,
+    } = useMediaLoadRetry(attachmentUrl ?? "");
+
+    const handleMediaElementError = useCallback(() => {
+        if (usingLocalPreview) {
+            // The local blob itself failed -- release it so the next render
+            // falls back to `attachmentUrl` and its own retry above, rather
+            // than staying stuck on a blob that cannot succeed if reloaded
+            // as-is (unlike a 404, there is no server-side race for a blob
+            // URL to win by waiting).
+            if (attachment?.assetId) {
+                useLocalAttachmentPreviewStore.getState().release(attachment.assetId);
+            }
+            return;
+        }
+        handleMediaError();
+    }, [usingLocalPreview, attachment, handleMediaError]);
+
+    // `submit-delivery` carries the same url/assetId shape as a plain file
+    // attachment (see `useWorkflowActions.submitDelivery`) but this bubble
+    // reads it off the loosely-typed `parsed` object below rather than
+    // through `parseAttachment`, since that workflow card's copy predates the
+    // attachment module. Same same-origin derivation regardless.
+    const deliveryUrl = useMemo(() => {
+        const url = (parsed as any)?.url;
+        if (typeof url !== "string" || !url) return undefined;
+        return attachmentSrc({url, assetId: (parsed as any)?.assetId});
+    }, [parsed]);
+
+    const requestJump = useChatPanelStore((s) => s.requestJump);
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+    // What `MediaLightbox` needs to render this message's attachment full
+    // size. It is the same shape `collectAttachments` builds for the Media
+    // panel, assembled here instead of there because this bubble is the one
+    // place that already has both `attachment` and the rest of the message.
+    const lightboxItem = useMemo<AttachmentItem | null>(
+        () =>
+            attachment
+                ? {
+                    messageId: String(message.id),
+                    senderId: Number(message.senderId) || 0,
+                    createdAt,
+                    isOwner,
+                    attachment,
+                }
+                : null,
+        [attachment, message.id, message.senderId, createdAt, isOwner],
+    );
+
     return (
         <div
             data-testid="chat-message"
-            data-status={viewMsg.status}
-            className={`flex ${isIncoming ? "justify-start" : "justify-end"}`}
+            data-status={message.status}
+            className={`flex w-full py-0.5 ${isIncoming ? "justify-start" : "justify-end"} ${
+                isHighlighted
+                    // A static ring rather than a keyframe pulse, so this needs
+                    // no prefers-reduced-motion special case.
+                    ? "rounded-xl ring-2 ring-amber-400 ring-offset-2 ring-offset-white"
+                    : ""
+            }`}
         >
             {isIncoming && (
-                <Image
-                    src={partnerAvatar || MessageImage.chatAvt}
-                    alt="avatar"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full mr-3 self-end"
-                />
+                <ChatMessageAvatar src={partnerAvatar || MessageImage.chatAvt}/>
             )}
             <div
-                className={`flex flex-col gap-1.5 ${isIncoming ? "items-start" : "items-end"} max-w-[90%]`}
+                className={`flex min-w-0 max-w-[88%] flex-col gap-1.5 sm:max-w-[72%] ${isIncoming ? "items-start" : "items-end"}`}
             >
                 {/* Keep MessageStatusIndicator outside the message card */}
                 <div className="text-xs text-gray-500 flex items-center gap-1.5">
                     <MessageStatusIndicator
-                        isOwner={viewMsg.isOwner}
-                        unread={(viewMsg as any).unread}
-                        msgStatus={viewMsg.status}
+                        isOwner={message.isOwner}
+                        unread={(message as any).unread}
+                        msgStatus={message.status}
                         isRead={isRead}
                         readTime={readTime}
                         t={t}
                         onRetry={
-                            viewMsg.isOwner
+                            message.isOwner
                                 ? () => {
-                                    const rid = String((viewMsg as any)?.roomId ?? "");
+                                    const rid = String((message as any)?.roomId ?? "");
                                     if (rid) {
                                         try {
                                             resend?.flushActive(rid);
@@ -530,10 +669,10 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                 <div className="mt-1 text-xs text-primary break-words">
                                     {(parsed as any)?.name || (parsed as any)?.url || ""}
                                 </div>
-                                {(parsed as any)?.url && (
+                                {deliveryUrl && (
                                     <div className="mt-2">
                                         <a
-                                            href={(parsed as any).url}
+                                            href={deliveryUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-md transition-colors ${
@@ -591,6 +730,115 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                             </div>
                         </div>
                     </div>
+                ) : isFileMsg && attachment && (attachment.kind === "image" || attachment.kind === "video") ? (
+                    // Messenger-style bare media: no card chrome, no filename,
+                    // no type badge, no "Open" button -- just the picture (or
+                    // clip) with its caption and the timestamp underneath.
+                    // Everything else in this file wraps its content in a
+                    // padded, backgrounded card (see the `isFileMsg` branch
+                    // below for the non-media case, which still needs that
+                    // chrome); a photo does not, the same way it doesn't in
+                    // Messenger itself. `MessageStatusIndicator` already sits
+                    // above every bubble type (rendered once, outside this
+                    // ternary entirely -- see the top of this component), so
+                    // it needs no special handling here; the timestamp below
+                    // is the one piece of message state that used to live
+                    // inside the now-removed filename row and would otherwise
+                    // disappear.
+                    <>
+                        {mediaLoadFailed ? (
+                            // Same "preview unavailable" placeholder the
+                            // non-media branch and the Media grid use, just
+                            // rounded to match this bubble's own corners
+                            // rather than the card's.
+                            <div className="flex h-40 w-full max-w-full items-center justify-center rounded-2xl bg-gray-100 ring-1 ring-black/5 text-xs text-gray-500 sm:max-w-[320px]">
+                                {t("profileChat.mediaPanel.thumbnailFailed")}
+                            </div>
+                        ) : attachment.kind === "image" ? (
+                            // The whole photo is the click target -- a real
+                            // `<button>` so Enter/Space open the lightbox
+                            // exactly like a click, and its `aria-label` keeps
+                            // the filename available to assistive tech even
+                            // though it's no longer printed on screen.
+                            <button
+                                type="button"
+                                onClick={() => setIsLightboxOpen(true)}
+                                aria-label={attachment.name}
+                                className="block self-start overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <span
+                                    className={`relative block ${
+                                        mediaLoaded
+                                            ? ""
+                                            : "h-40 w-full animate-pulse rounded-2xl bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
+                                    }`}
+                                >
+                                    <img
+                                        key={mediaAttemptKey}
+                                        src={displayUrl}
+                                        alt={attachment.name}
+                                        onError={handleMediaElementError}
+                                        onLoad={handleMediaLoad}
+                                        className={`block max-w-full sm:max-w-[320px] max-h-80 rounded-2xl object-contain bg-gray-50 transition-opacity duration-200 ${
+                                            mediaLoaded
+                                                ? "w-auto h-auto opacity-100"
+                                                : "absolute inset-0 h-full w-full opacity-0"
+                                        }`}
+                                    />
+                                </span>
+                            </button>
+                        ) : (
+                            // Video keeps its own native `controls` for inline
+                            // playback (never autoplays, `preload="metadata"`
+                            // -- unchanged) -- that rules out wrapping it in a
+                            // `<button>` the way the image is (a `<video
+                            // controls>` is interactive content and invalid
+                            // inside `<button>`, and it would fight the
+                            // control bar for clicks). Instead a small,
+                            // always-present expand button sits over the
+                            // top-right corner, clear of the controls strip
+                            // at the bottom, and opens the exact same
+                            // lightbox. Same `bg-black/60`/`focus:ring-white`
+                            // treatment `MediaGrid`'s jump button and
+                            // `MediaLightbox`'s close button already use for
+                            // an overlay control on top of media.
+                            <span
+                                className={`relative block ${
+                                    mediaLoaded
+                                        ? ""
+                                        : "h-40 w-full animate-pulse rounded-2xl bg-gray-100 ring-1 ring-black/5 sm:max-w-[320px]"
+                                }`}
+                            >
+                                <video
+                                    key={mediaAttemptKey}
+                                    src={displayUrl}
+                                    onError={handleMediaElementError}
+                                    onLoadedMetadata={handleMediaLoad}
+                                    controls={mediaLoaded}
+                                    preload="metadata"
+                                    className={`w-full max-w-full sm:max-w-[320px] max-h-80 rounded-2xl bg-black transition-opacity duration-200 ${
+                                        mediaLoaded ? "opacity-100" : "absolute inset-0 h-full opacity-0"
+                                    }`}
+                                >
+                                    {t("profileChat.mediaPanel.videoUnsupported")}
+                                </video>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsLightboxOpen(true)}
+                                    aria-label={attachment.name}
+                                    className="absolute right-2 top-2 z-10 inline-flex items-center justify-center rounded-full bg-black/60 p-1.5 text-white transition-colors hover:bg-black/80 focus:outline-none focus:ring-2 focus:ring-white"
+                                >
+                                    <Maximize2 className="h-4 w-4" aria-hidden="true" />
+                                </button>
+                            </span>
+                        )}
+                        {attachment.caption && (
+                            <div className="max-w-[90vw] text-xs text-gray-700 whitespace-pre-line break-words sm:max-w-[320px]">
+                                {String(attachment.caption)}
+                            </div>
+                        )}
+                        <div className="text-xs text-gray-500">{time}</div>
+                    </>
                 ) : isFileMsg ? (
                     <div
                         className={`max-w-[90vw] sm:max-w-md w-full rounded-xl shadow-sm ring-1 overflow-hidden ${
@@ -598,26 +846,15 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                         }`}
                     >
                         <div className={`px-4 py-3 ${isIncoming ? "bg-gray-50" : "bg-blue-100"}`}>
-                            <div className="flex items-start gap-3 flex-wrap">
-                                {String((parsed as any)?.mime || "").startsWith("image/") &&
-                                (parsed as any)?.url ? (
-                                    <a
-                                        href={(parsed as any).url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block flex-shrink-0"
-                                    >
-                                        <img
-                                            src={(parsed as any).url}
-                                            alt={(parsed as any)?.name || "image"}
-                                            className="w-16 h-16 object-cover rounded-md ring-1 ring-black/5"
-                                        />
-                                    </a>
-                                ) : (
+                            {!attachment ? (
+                                // `isFileMsg` is true (the envelope's `type` is "file") but
+                                // `parseAttachment` could not find a usable `url` -- an
+                                // older or malformed message. Nothing to link to or preview,
+                                // so say that plainly instead of leaving a blank card or
+                                // throwing on a null dereference below.
+                                <div className="flex items-center gap-3">
                                     <div
-                                        className={`w-12 h-12 rounded-md flex items-center justify-center ${
-                                            isIncoming ? "bg-white" : "bg-white"
-                                        } ring-1 ring-black/5 text-gray-600`}
+                                        className="w-12 h-12 rounded-md flex items-center justify-center bg-white ring-1 ring-black/5 text-gray-400 flex-shrink-0"
                                         aria-hidden
                                     >
                                         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -626,81 +863,91 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                                             />
                                         </svg>
                                     </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <a
-                                            href={(parsed as any).url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]"
-                                        >
-                                            {(parsed as any)?.name || (parsed as any)?.url || "file"}
-                                        </a>
-                                        {(parsed as any)?.mime && (
-                                            <span
-                                                className="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700 ring-1 ring-black/5"
-                                            >
-                        {String((parsed as any).mime).split("/").pop()}
-                      </span>
-                                        )}
+                                    <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+                                        <span className="text-sm text-gray-500">
+                                            {t("profileChat.mediaPanel.thumbnailFailed")}
+                                        </span>
                                         <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
                                     </div>
-                                    {(parsed as any)?.caption && (
-                                        <div
-                                            className="mt-1 text-xs text-gray-700 whitespace-pre-line break-words"
-                                        >
-                                            {String((parsed as any).caption)}
-                                        </div>
-                                    )}
-                                    {(parsed as any)?.url && (
-                                        <div className="mt-2">
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-3 flex-wrap">
+                                    <div
+                                        className="w-12 h-12 rounded-md flex items-center justify-center bg-white ring-1 ring-black/5 text-gray-600"
+                                        aria-hidden
+                                    >
+                                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                                            <path
+                                                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM8 18h8v2H8v-2zm0-4h8v2H8v-2zm6-7v5h5"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <a
-                                                href={(parsed as any).url}
+                                                href={attachmentUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className={`inline-flex items-center gap-2 text-xs font-medium px-2.5 py-1.5 rounded-md transition-colors ${
-                                                    isIncoming
-                                                        ? "bg-gray-900 hover:bg-black text-white"
-                                                        : "bg-primary hover:bg-[#063a68] text-white"
-                                                }`}
+                                                className="text-sm font-medium text-gray-900 truncate max-w-[220px] sm:max-w-[280px]"
                                             >
-                                                <svg
-                                                    className="w-4 h-4"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path
-                                                        d="M12.293 2.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414L9.414 16H5v-4.414l8.293-8.293z"
-                                                    />
-                                                </svg>
-                                                <span>{t("global.open")}</span>
+                                                {attachment.name}
                                             </a>
+                                            {attachment.mime && (
+                                                <span
+                                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white text-gray-700 ring-1 ring-black/5"
+                                                >
+                                                    {String(attachment.mime).split("/").pop()}
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-gray-500 ml-auto min-w-fit">{time}</span>
                                         </div>
-                                    )}
+                                        {attachment.caption && (
+                                            <div
+                                                className="mt-1 text-xs text-gray-700 whitespace-pre-line break-words"
+                                            >
+                                                {String(attachment.caption)}
+                                            </div>
+                                        )}
+                                        {attachmentUrl && (
+                                            <div className="mt-2">
+                                                <AttachmentOpenLink href={attachmentUrl} isIncoming={isIncoming} />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 ) : (
                     <div
-                        className={`max-w-[80vw] sm:max-w-xs px-3 py-2 rounded-2xl text-[15px] leading-relaxed font-sans break-words whitespace-pre-line shadow-sm ${
+                        className={`min-w-0 max-w-full rounded-2xl px-3.5 py-2.5 font-sans text-sm leading-6 shadow-sm sm:px-4 sm:text-[15px] ${
                             isIncoming
-                                ? "bg-[#E5E5E5] text-gray-800 rounded-bl-sm ring-1 ring-gray-200"
-                                : "bg-primary text-white rounded-br-sm"
+                                ? "rounded-bl-sm border border-slate-200 bg-white text-slate-800"
+                                : "rounded-br-sm bg-primary text-white"
                         }`}
                     >
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="flex-1">{viewMsg.content}</span>
-                            <span
-                                className="text-xs min-w-fit"
-                                style={{color: isIncoming ? "gray" : "rgba(255, 255, 255, 0.7)"}}
-                            >
-                                {time}
-                            </span>
+                        <div className="min-w-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                            {message.content}
+                        </div>
+                        <div
+                            className={`mt-1 text-right text-[11px] leading-4 ${
+                                isIncoming ? "text-slate-500" : "text-white/70"
+                            }`}
+                        >
+                            {time}
                         </div>
                     </div>
+                )}
+
+                {isLightboxOpen && lightboxItem && (
+                    <MediaLightbox
+                        item={lightboxItem}
+                        onClose={() => setIsLightboxOpen(false)}
+                        onJump={(messageId) => {
+                            setIsLightboxOpen(false);
+                            requestJump(messageId);
+                        }}
+                    />
                 )}
             </div>
         </div>

@@ -9,7 +9,7 @@ export type PostSortType =
   | "New"
   | "Old"
   | "Top"
-  | "MostComments"
-  | "NewComments"
+  | "MostProposals"
+  | "NewProposals"
   | "Controversial"
   | "Scaled";

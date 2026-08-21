@@ -29,12 +29,6 @@ const DashboardPage = () => {
         RequireApplication: t("dashboard.siteInfo.registrationMode.requireApplication"),
     };
 
-    const captchaDifficultyLabels: Record<string, string> = {
-        easy: t("dashboard.siteInfo.captchaDifficulty.easy"),
-        medium: t("dashboard.siteInfo.captchaDifficulty.medium"),
-        hard: t("dashboard.siteInfo.captchaDifficulty.hard"),
-    };
-
     const handleRetry = async () => {
         setRetrying(true);
         const res = await callHttp("getSite");
@@ -131,15 +125,6 @@ const DashboardPage = () => {
                             {localSite?.requireEmailVerification
                                 ? t("dashboard.siteInfo.required")
                                 : t("dashboard.siteInfo.optional")}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4"/>
-                            <span className="font-medium">{t("dashboard.siteInfo.captcha")}:</span>{" "}
-                            {localSite?.captchaEnabled
-                                ? t("dashboard.siteInfo.enabled", {
-                                    difficulty: captchaDifficultyLabels[localSite.captchaDifficulty ?? "easy"] ?? (localSite.captchaDifficulty ?? "easy"),
-                                })
-                                : t("dashboard.siteInfo.disabled")}
                         </div>
                     </CardContent>
                 </Card>

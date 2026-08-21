@@ -3,7 +3,7 @@
 import {ProfileImage} from "@/constants/images";
 import {Pagination} from "@/components/Pagination";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
-import type {CommentView} from "108jobs-client";
+import type {ProposalView} from "108jobs-client";
 import Image from "next/image";
 import React, {useState} from "react";
 import {useParams, useRouter} from "next/navigation";
@@ -28,7 +28,7 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
     const [startingChatFor, setStartingChatFor] = useState<number | null>(null);
     const {upsertRoom} = useRoomsStore();
-    const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getComments", {
+    const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getProposals", {
         pageCursor: currentCursor,
         ...(postId ? {postId} : {}),
     });
@@ -43,7 +43,7 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
         setCurrentCursor(pageCursor || undefined);
     };
 
-    const handleStartChat = async (cv: CommentView) => {
+    const handleStartChat = async (cv: ProposalView) => {
         const partnerPersonId = (cv as any)?.creator?.id as number | undefined;
         const currentUserId = currentUser?.id;
         if (!partnerPersonId || !currentUserId) return;
@@ -92,7 +92,7 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
             {/* Proposals List */}
             {proposals?.proposals && proposals.proposals.length > 0 && (
                 <div className="space-y-6">
-                    {proposals.proposals.map((cv: CommentView) => (
+                    {proposals.proposals.map((cv: ProposalView) => (
                         <div
                             key={cv.proposal.id}
                             className="bg-white border border-border-secondary rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"

@@ -50,14 +50,6 @@ export type PlatformConfig = {
    * The max actor name length.
    */
   actorNameMaxLength: number;
-  /**
-   * Whether captcha is enabled.
-   */
-  captchaEnabled: boolean;
-  /**
-   * The captcha difficulty.
-   */
-  captchaDifficulty: string;
   publishedAt: string;
   updatedAt?: string;
   registrationMode: RegistrationMode;
