@@ -80,7 +80,9 @@ describe("AdminRidersManagementPage", () => {
         vi.clearAllMocks();
     });
 
-    function mount(riders: RiderView[]) {
+    type HookState = ReturnType<typeof usePaginatedRiders> & {currentPage?: number};
+
+    function mount(riders: RiderView[], overrides: Partial<HookState> = {}) {
         mockUsePaginatedRiders.mockReturnValue({
             riders,
             isLoading: false,
@@ -90,6 +92,8 @@ describe("AdminRidersManagementPage", () => {
             loadNextPage: vi.fn(),
             loadPreviousPage: vi.fn(),
             refetch: vi.fn(),
+            currentPage: 1,
+            ...overrides,
         });
 
         act(() => {
@@ -170,5 +174,54 @@ describe("AdminRidersManagementPage", () => {
         act(() => findButton("admin.riders.tabRejected").click());
         expect(container.textContent).toContain("admin.riders.emptyRejected");
         expect(container.textContent).not.toContain("admin.riders.emptyVerified");
+    });
+
+    it("keeps Previous available when a later page is empty, so the admin is never trapped", () => {
+        const loadPreviousPage = vi.fn();
+        mount([], {
+            currentPage: 2,
+            hasPreviousPage: true,
+            loadPreviousPage,
+        });
+
+        const previous = findButton("profileCoins.previousButton");
+        expect(previous).toBeTruthy();
+        expect(container.textContent).toContain("admin.riders.pageLabel");
+
+        act(() => previous.click());
+        expect(loadPreviousPage).toHaveBeenCalledOnce();
+    });
+
+    it("shows a visible review action instead of an unlabeled eye-only control", () => {
+        mount([fakeRiderView("Somchai Test")]);
+
+        expect(findButton("admin.riders.reviewRiderLabel")).toBeTruthy();
+    });
+
+    it("renders without animation or transition utility classes", () => {
+        mount([fakeRiderView("Somchai Test")]);
+
+        const motionClasses = Array.from(container.querySelectorAll<HTMLElement>("[class]"))
+            .flatMap((element) => (element.getAttribute("class") ?? "").split(/\s+/))
+            .filter((className) =>
+                className !== "transition-none"
+                && (
+                    className.startsWith("animate-")
+                    || className.startsWith("transition")
+                    || className.startsWith("duration-")
+                ),
+            );
+
+        expect(motionClasses).toEqual([]);
+    });
+
+    it("stays in the existing light admin palette without dark-theme overrides", () => {
+        mount([fakeRiderView("Somchai Test")]);
+
+        const darkThemeClasses = Array.from(container.querySelectorAll<HTMLElement>("[class]"))
+            .flatMap((element) => (element.getAttribute("class") ?? "").split(/\s+/))
+            .filter((className) => className.startsWith("dark:"));
+
+        expect(darkThemeClasses).toEqual([]);
     });
 });

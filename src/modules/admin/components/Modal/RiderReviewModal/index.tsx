@@ -342,11 +342,11 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="rider-review-modal-title"
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col text-gray-700 dark:text-gray-200"
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col text-gray-700"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                <div className="flex items-start justify-between gap-4 p-6 border-b border-gray-200 shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <Avatar className="h-11 w-11 shrink-0">
                             <AvatarImage src={person?.avatar}/>
@@ -381,7 +381,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                     <button
                         ref={closeButtonRef}
                         onClick={onClose}
-                        className="p-1 rounded-full hover:bg-muted transition-colors shrink-0"
+                        className="p-1 rounded-full hover:bg-muted transition-none shrink-0"
                         aria-label={t("admin.riders.reviewModal.closeLabel")}
                     >
                         <X className="w-5 h-5 text-muted-foreground"/>
@@ -392,10 +392,10 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {isLoading && !data ? (
                         <div className="flex justify-center py-16">
-                            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
+                            <Loader2 className="w-8 h-8 text-muted-foreground"/>
                         </div>
                     ) : applicationFetchFailed ? (
-                        <div className="flex flex-col items-center gap-3 rounded-lg bg-gray-50 dark:bg-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+                        <div className="flex flex-col items-center gap-3 rounded-lg bg-gray-50 p-6 text-sm text-gray-500 text-center">
                             <AlertTriangle className="w-6 h-6 text-destructive shrink-0"/>
                             <p>{t("admin.riders.reviewModal.loadError.title")}</p>
                             <Button
@@ -403,8 +403,9 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                 size="sm"
                                 onClick={() => retryApplicationFetch()}
                                 disabled={retryingApplication}
+                                className="transition-none"
                             >
-                                {retryingApplication && <Loader2 className="w-4 h-4 animate-spin mr-2"/>}
+                                {retryingApplication && <Loader2 className="w-4 h-4 mr-2"/>}
                                 {retryingApplication
                                     ? t("admin.riders.reviewModal.loadError.retrying")
                                     : t("admin.riders.reviewModal.loadError.retry")}
@@ -412,7 +413,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                         </div>
                     ) : !application ? (
                         <div
-                            className="flex items-center gap-3 rounded-lg bg-gray-50 dark:bg-gray-800 p-6 text-sm text-gray-500 dark:text-gray-400">
+                            className="flex items-center gap-3 rounded-lg bg-gray-50 p-6 text-sm text-gray-500">
                             <FileText className="w-5 h-5 shrink-0"/>
                             {t("admin.riders.reviewModal.applicationUnavailable")}
                         </div>
@@ -479,18 +480,18 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                     (the two new tabs Task 9 added) showed live controls
                     whose only possible outcome was the 409 below (see F1). */}
                 {application && status === "Pending" && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 p-6 shrink-0">
+                    <div className="border-t border-gray-200 p-6 shrink-0">
                         {isRejecting ? (
                             <div className="space-y-4">
                                 <RejectSummary issues={pendingIssues}/>
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         variant="destructive"
-                                        className="flex-1"
+                                        className="flex-1 transition-none"
                                         onClick={() => handleDecision(false)}
                                         disabled={verifying || !canConfirmReject}
                                     >
-                                        {verifying && <Loader2 className="w-4 h-4 animate-spin mr-2"/>}
+                                        {verifying && <Loader2 className="w-4 h-4 mr-2"/>}
                                         {t("admin.riders.reviewModal.actions.confirmReject")}
                                     </Button>
                                     {/* Back to marking, keeping every tick and
@@ -498,7 +499,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                         "let me look again", not "start over". */}
                                     <Button
                                         variant="outline"
-                                        className="flex-1"
+                                        className="flex-1 transition-none"
                                         onClick={() => setIsRejecting(false)}
                                         disabled={verifying}
                                     >
@@ -510,12 +511,12 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                             <div className="space-y-3">
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
-                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white transition-none"
                                         onClick={() => handleDecision(true)}
                                         disabled={verifying}
                                     >
                                         {verifying ? (
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2"/>
+                                            <Loader2 className="w-4 h-4 mr-2"/>
                                         ) : (
                                             <CheckCircle className="w-4 h-4 mr-2"/>
                                         )}
@@ -523,7 +524,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                     </Button>
                                     <Button
                                         variant="outline"
-                                        className="flex-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                                        className="flex-1 border-red-300 text-red-600 hover:bg-red-50 transition-none"
                                         onClick={() => setIsRejecting(true)}
                                         disabled={verifying || !canConfirmReject}
                                     >
@@ -541,12 +542,12 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                     anything. A marked document with no reason
                                     IS wrong, and is red. */}
                                 {hasNoIssues ? (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="text-xs text-gray-500">
                                         {t("admin.riders.reviewModal.reject.hint")}
                                     </p>
                                 ) : (
                                     hasBlankReason && (
-                                        <p className="text-xs text-red-500 dark:text-red-400">
+                                        <p className="text-xs text-red-500">
                                             {t("admin.riders.reviewModal.reject.errors.reasonRequired")}
                                         </p>
                                     )
@@ -564,7 +565,7 @@ function StatusBadge({status}: {status: RiderVerificationStatus}) {
     const {t} = useTranslation();
     if (status === "Verified") {
         return (
-            <Badge className="text-xs px-2.5 py-0.5">
+            <Badge className="text-xs px-2.5 py-0.5 transition-none">
                 <CheckCircle className="w-3.5 h-3.5 mr-1"/>
                 {t("admin.riders.statusVerified")}
             </Badge>
@@ -572,15 +573,15 @@ function StatusBadge({status}: {status: RiderVerificationStatus}) {
     }
     if (status === "Rejected") {
         return (
-            <Badge variant="destructive" className="text-xs px-2.5 py-0.5">
+            <Badge variant="destructive" className="text-xs px-2.5 py-0.5 transition-none">
                 <XCircle className="w-3.5 h-3.5 mr-1"/>
                 {t("admin.riders.statusRejected")}
             </Badge>
         );
     }
     return (
-        <Badge variant="secondary" className="text-xs px-2.5 py-0.5">
-            <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin"/>
+        <Badge variant="secondary" className="text-xs px-2.5 py-0.5 transition-none">
+            <Loader2 className="w-3.5 h-3.5 mr-1"/>
             {t("admin.riders.statusPending")}
         </Badge>
     );
@@ -610,7 +611,7 @@ function RejectionIssuesBanner({
     const {t} = useTranslation();
     if (issues && issues.length > 0) {
         return (
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-xs text-gray-500 mt-1">
                 <span className="font-medium">{t(labelKey)}:</span>
                 <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
                     {issues.map((issue, index) => (
@@ -626,7 +627,7 @@ function RejectionIssuesBanner({
     }
     if (!fallbackReason) return null;
     return (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
             <span className="font-medium">{t(labelKey)}:</span>{" "}
             {fallbackReason}
         </p>
@@ -637,11 +638,11 @@ function FieldRow({label, value}: {label: string; value: string | null}) {
     const {t} = useTranslation();
     return (
         <div className="min-w-0">
-            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</p>
+            <p className="text-xs font-medium text-gray-500">{label}</p>
             <p
                 className={cn(
                     "text-sm break-words",
-                    value ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-600 italic"
+                    value ? "text-gray-900" : "text-gray-400 italic"
                 )}
             >
                 {value ?? t("admin.riders.reviewModal.fieldEmpty")}
@@ -654,7 +655,7 @@ function FieldGroupSection({group, fields}: {group: FieldGroupDef; fields: Rider
     const {t} = useTranslation();
     return (
         <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
                 {t(group.titleKey)}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -674,30 +675,30 @@ function MismatchWarning({mismatch}: {mismatch: IdentityMismatch}) {
     const {t} = useTranslation();
     return (
         <div
-            className="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 space-y-3">
+            className="rounded-xl border border-amber-300 bg-amber-50 p-4 space-y-3">
             <div className="flex items-start gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"/>
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"/>
                 <div className="space-y-1">
-                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                    <p className="text-sm font-semibold text-amber-800">
                         {t("admin.riders.reviewModal.mismatch.title")}
                     </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                    <p className="text-sm text-amber-700">
                         {t("admin.riders.reviewModal.mismatch.description")}
                     </p>
                 </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-7">
                 <div>
-                    <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                    <p className="text-xs font-medium text-amber-700">
                         {t("admin.riders.reviewModal.mismatch.fromCard")}
                     </p>
-                    <p className="text-sm font-mono text-amber-900 dark:text-amber-200">{mismatch.fromCard}</p>
+                    <p className="text-sm font-mono text-amber-900">{mismatch.fromCard}</p>
                 </div>
                 <div>
-                    <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                    <p className="text-xs font-medium text-amber-700">
                         {t("admin.riders.reviewModal.mismatch.fromLicence")}
                     </p>
-                    <p className="text-sm font-mono text-amber-900 dark:text-amber-200">{mismatch.fromLicence}</p>
+                    <p className="text-sm font-mono text-amber-900">{mismatch.fromLicence}</p>
                 </div>
             </div>
         </div>
@@ -725,7 +726,7 @@ function DocumentsSection({
     const {t} = useTranslation();
     return (
         <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
                 {t("admin.riders.reviewModal.documents.title")}
             </h3>
             {/* Two per row on a phone, three on a desktop -- unchanged, but a
@@ -815,17 +816,17 @@ function DocumentTile({
             className={cn(
                 "rounded-xl border overflow-hidden flex flex-col",
                 marked
-                    ? "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/20"
-                    : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800",
+                    ? "border-red-400 bg-red-50"
+                    : "border-gray-200 bg-gray-50",
             )}>
-            <div className="aspect-square flex items-center justify-center bg-gray-100 dark:bg-gray-900/40">
+            <div className="aspect-square flex items-center justify-center bg-gray-100">
                 {!slot ? (
-                    <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 text-xs px-2 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400 text-xs px-2 text-center">
                         <ImageOff className="w-6 h-6"/>
                         <span>{t("admin.riders.reviewModal.documents.notSubmitted")}</span>
                     </div>
                 ) : failed && openFailed ? (
-                    <div className="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 text-xs px-2 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400 text-xs px-2 text-center">
                         <FileText className="w-6 h-6"/>
                         <span>{t("admin.riders.reviewModal.documents.openFailed")}</span>
                     </div>
@@ -834,7 +835,7 @@ function DocumentTile({
                         href={src}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-col items-center gap-2 text-gray-500 dark:text-gray-400 text-xs px-2 text-center hover:text-primary"
+                        className="flex flex-col items-center gap-2 text-gray-500 text-xs px-2 text-center hover:text-primary transition-none"
                     >
                         <FileText className="w-6 h-6"/>
                         <span className="flex items-center gap-1">
@@ -863,7 +864,7 @@ function DocumentTile({
             <div className="p-2 text-center">
                 <p className="text-xs font-medium truncate">{label}</p>
                 {slot?.uploadedAt && (
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                    <p className="text-[11px] text-gray-400">
                         {new Date(slot.uploadedAt).toLocaleDateString()}
                     </p>
                 )}
@@ -873,10 +874,10 @@ function DocumentTile({
                 "you have not sent this" is exactly the kind of problem a
                 rejection needs to be able to name. */}
             {reviewable && (
-                <div className="border-t border-gray-200 dark:border-gray-700 p-2 space-y-2">
+                <div className="border-t border-gray-200 p-2 space-y-2">
                     <label
                         htmlFor={markFieldId}
-                        className="flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 cursor-pointer"
+                        className="flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 cursor-pointer"
                     >
                         <input
                             id={markFieldId}
@@ -888,7 +889,7 @@ function DocumentTile({
                             // times over; on its own it tells a screen-reader
                             // user nothing about which document they are on.
                             aria-label={t("admin.riders.reviewModal.reject.markFailedLabel", {document: label})}
-                            className="h-4 w-4 rounded border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
+                            className="h-4 w-4 rounded border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                         />
                         {t("admin.riders.reviewModal.reject.markFailed")}
                     </label>
@@ -899,7 +900,7 @@ function DocumentTile({
                             onChange={(e) => onReasonChange(e.target.value)}
                             placeholder={t("admin.riders.reviewModal.reject.reasonPlaceholder")}
                             aria-label={t("admin.riders.reviewModal.reject.reasonForDocument", {document: label})}
-                            className="bg-white text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                            className="bg-white text-xs transition-none"
                             rows={2}
                             disabled={disabled}
                             required
@@ -938,13 +939,13 @@ function OtherIssueSection({
             className={cn(
                 "rounded-xl border p-3 space-y-2",
                 raised
-                    ? "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-950/20"
-                    : "border-gray-200 dark:border-gray-700",
+                    ? "border-red-400 bg-red-50"
+                    : "border-gray-200",
             )}
         >
             <label
                 htmlFor="rider-reject-other"
-                className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer"
             >
                 <input
                     id="rider-reject-other"
@@ -952,7 +953,7 @@ function OtherIssueSection({
                     checked={raised}
                     onChange={onToggle}
                     disabled={disabled}
-                    className="h-4 w-4 rounded border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600"
+                    className="h-4 w-4 rounded border-gray-300 text-red-600 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 {t("admin.riders.reviewModal.reject.otherIssueMark")}
             </label>
@@ -963,7 +964,7 @@ function OtherIssueSection({
                     onChange={(e) => onReasonChange(e.target.value)}
                     placeholder={t("admin.riders.reviewModal.reject.otherIssuePlaceholder")}
                     aria-label={t("admin.riders.reviewModal.reject.otherIssueReasonLabel")}
-                    className="bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100"
+                    className="bg-white transition-none"
                     rows={2}
                     disabled={disabled}
                     required
@@ -983,11 +984,11 @@ function OtherIssueSection({
 function RejectSummary({issues}: {issues: RiderRejectionIssue[]}) {
     const {t} = useTranslation();
     return (
-        <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/20 p-3 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
                 {t("admin.riders.reviewModal.reject.summaryTitle")}
             </p>
-            <ul className="space-y-1 pl-4 text-sm list-disc text-gray-700 dark:text-gray-200">
+            <ul className="space-y-1 pl-4 text-sm list-disc text-gray-700">
                 {issues.map((issue) => (
                     <li key={issue.document ?? "no-document"}>
                         <span className="font-medium">
@@ -1008,7 +1009,7 @@ function CriminalRecordRow({checkedAt, isClear}: {checkedAt?: string | null; isC
     const {t} = useTranslation();
     if (!checkedAt) {
         return (
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
                 <ShieldQuestion className="w-4 h-4 shrink-0"/>
                 {t("admin.riders.reviewModal.review.criminalRecordNotChecked")}
             </div>
@@ -1016,14 +1017,14 @@ function CriminalRecordRow({checkedAt, isClear}: {checkedAt?: string | null; isC
     }
     if (isClear) {
         return (
-            <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400">
+            <div className="flex items-center gap-2 text-sm text-emerald-700">
                 <ShieldCheck className="w-4 h-4 shrink-0"/>
                 {t("admin.riders.reviewModal.review.criminalRecordClear")}
             </div>
         );
     }
     return (
-        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
+        <div className="flex items-center gap-2 text-sm text-red-700">
             <ShieldAlert className="w-4 h-4 shrink-0"/>
             {t("admin.riders.reviewModal.review.criminalRecordNotClear")}
         </div>
@@ -1034,7 +1035,7 @@ function ReviewSection({review}: {review: RiderReviewDetail}) {
     const {t} = useTranslation();
     return (
         <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
                 {t("admin.riders.reviewModal.review.title")}
             </h3>
             <div className="space-y-4">
@@ -1047,7 +1048,7 @@ function ReviewSection({review}: {review: RiderReviewDetail}) {
                     }
                 />
                 <div>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    <p className="text-xs font-medium text-gray-500 mb-1">
                         {t("admin.riders.reviewModal.review.criminalRecordCheck")}
                     </p>
                     <CriminalRecordRow checkedAt={review.criminalRecordCheckedAt} isClear={review.criminalRecordIsClear}/>

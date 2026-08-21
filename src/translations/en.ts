@@ -4086,7 +4086,11 @@ export const en = {
             riders: {
                 // Page title & tabs
                 title: "Rider Management",
-                description: "Manage riders for 108jobs",
+                description: "Review rider applications and monitor verification status.",
+                queueLabel: "Rider review queue",
+                pageLabel: "Page {{page}}",
+                loading: "Loading riders…",
+                retry: "Try again",
                 tabPending: "Pending",
                 tabApproved: "Approved",
                 tabRejected: "Rejected",
