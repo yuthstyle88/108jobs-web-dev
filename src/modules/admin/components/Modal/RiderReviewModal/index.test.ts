@@ -313,6 +313,25 @@ describe("RiderReviewModal rendering", () => {
         });
     }
 
+    it("keeps the review dialog in the static light admin style", () => {
+        mount(fakeResponse(fakeApplication()));
+
+        const utilityClasses = Array.from(container.querySelectorAll<HTMLElement>("[class]"))
+            .flatMap((element) => (element.getAttribute("class") ?? "").split(/\s+/));
+
+        expect(utilityClasses.filter((className) => className.startsWith("dark:"))).toEqual([]);
+        expect(
+            utilityClasses.filter((className) =>
+                className !== "transition-none"
+                && (
+                    className.startsWith("animate-")
+                    || className.startsWith("transition")
+                    || className.startsWith("duration-")
+                ),
+            ),
+        ).toEqual([]);
+    });
+
     it("shows the unavailable state when the response carries no application", () => {
         mount(fakeResponse(undefined));
         expect(container.textContent).toContain("admin.riders.reviewModal.applicationUnavailable");

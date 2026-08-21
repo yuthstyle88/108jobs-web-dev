@@ -4110,7 +4110,11 @@ export const vi = {
             riders: {
                 // Page title & tabs
                 title: "Quản lý tài xế",
-                description: "Quản lý tài xế cho 108jobs",
+                description: "Xét duyệt hồ sơ tài xế và theo dõi trạng thái xác minh.",
+                queueLabel: "Hàng đợi xét duyệt tài xế",
+                pageLabel: "Trang {{page}}",
+                loading: "Đang tải danh sách tài xế…",
+                retry: "Thử lại",
                 tabPending: "Chờ duyệt",
                 tabApproved: "Đã phê duyệt",
                 tabRejected: "Đã từ chối",

@@ -60,7 +60,11 @@ describe("usePaginatedRiders", () => {
         // test only cares what usePaginatedRiders asks for, not about
         // round-tripping realistic response data.
         mockUseHttpGet.mockReturnValue({
-            data: {riders: [], nextPage: "cursor-page-2"},
+            data: {
+                riders: [],
+                nextPage: "cursor-page-2",
+                prevPage: "cursor-page-1-start",
+            },
             isMutating: false,
             state: {state: "success"},
             execute: vi.fn(),
@@ -125,5 +129,35 @@ describe("usePaginatedRiders", () => {
             limit: 10,
             status: "Rejected",
         });
+    });
+
+    it("replays the saved forward cursor when Previous is pressed, instead of reversing from the wrong boundary", () => {
+        mount("Pending");
+
+        act(() => {
+            latestHook!.loadNextPage();
+        });
+        expect(lastRequestArgs()).toEqual({
+            pageCursor: "cursor-page-2",
+            pageBack: false,
+            limit: 10,
+            status: "Pending",
+        });
+
+        act(() => {
+            latestHook!.loadPreviousPage();
+        });
+        expect(lastRequestArgs()).toEqual({
+            pageCursor: undefined,
+            pageBack: false,
+            limit: 10,
+            status: "Pending",
+        });
+    });
+
+    it("does not offer Next when the API returns an empty short page with a cursor", () => {
+        mount("Pending");
+
+        expect(latestHook!.hasNextPage).toBe(false);
     });
 });
