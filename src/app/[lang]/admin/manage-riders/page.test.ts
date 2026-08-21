@@ -57,9 +57,9 @@ function fakeRider(overrides: Partial<Rider> = {}): Rider {
 // Only `name`/`displayName`/`avatar` are read by this page's row; the rest
 // of Person is a large, unrelated profile shape this test has no stake in
 // (same cast-through-unknown as RiderReviewModal/index.test.ts's fakeResponse).
-function fakeRiderView(name: string, displayName?: string): RiderView {
+function fakeRiderView(name: string, displayName?: string, riderOverrides: Partial<Rider> = {}): RiderView {
     return {
-        rider: fakeRider(),
+        rider: fakeRider(riderOverrides),
         person: {name, displayName, avatar: undefined} as unknown as RiderView["person"],
     };
 }
@@ -116,5 +116,59 @@ describe("AdminRidersManagementPage", () => {
         expect(container.textContent).toContain("Somchai Test");
         // Avatar-initial fallback.
         expect(container.textContent).toContain("S");
+    });
+
+    function findButton(labelKey: string) {
+        return Array.from(container.querySelectorAll("button")).find((b) =>
+            b.textContent?.includes(labelKey),
+        ) as HTMLButtonElement;
+    }
+
+    // Task 9's whole point: three states, three tabs, three wire values --
+    // and the label is not the wire value. "Approved" is the tab's English
+    // text; "Verified" is what usePaginatedRiders (and so the request) must
+    // receive. Nothing asserted this before; a tab wired to the wrong status
+    // would still compile, still render, and still pass every other test in
+    // this file (F2).
+    it("sends each tab's own wire value to usePaginatedRiders -- the Approved tab must send \"Verified\", not its own label", () => {
+        mount([]);
+        expect(mockUsePaginatedRiders).toHaveBeenLastCalledWith({status: "Pending", limit: 10});
+
+        act(() => findButton("admin.riders.tabApproved").click());
+        expect(mockUsePaginatedRiders).toHaveBeenLastCalledWith({status: "Verified", limit: 10});
+
+        act(() => findButton("admin.riders.tabRejected").click());
+        expect(mockUsePaginatedRiders).toHaveBeenLastCalledWith({status: "Rejected", limit: 10});
+
+        act(() => findButton("admin.riders.tabPending").click());
+        expect(mockUsePaginatedRiders).toHaveBeenLastCalledWith({status: "Pending", limit: 10});
+    });
+
+    // The exact bug Task 9's own review caught by reading, not by a test: a
+    // two-way ternary on the row Badge would render "Verified" for both an
+    // approved and a rejected rider. Three riders, three distinct ids (the
+    // list key is `rider.id`), one of each status.
+    it("renders the row Badge as three distinct states, not a Verified/not-Verified boolean", () => {
+        mount([
+            fakeRiderView("Pending Rider", undefined, {id: 1, verificationStatus: "Pending"}),
+            fakeRiderView("Verified Rider", undefined, {id: 2, verificationStatus: "Verified"}),
+            fakeRiderView("Rejected Rider", undefined, {id: 3, verificationStatus: "Rejected"}),
+        ]);
+        expect(container.textContent).toContain("admin.riders.statusPending");
+        expect(container.textContent).toContain("admin.riders.statusVerified");
+        expect(container.textContent).toContain("admin.riders.statusRejected");
+    });
+
+    it("selects the empty-state copy that matches the active tab, not one fixed message", () => {
+        mount([]);
+        expect(container.textContent).toContain("admin.riders.emptyPending");
+
+        act(() => findButton("admin.riders.tabApproved").click());
+        expect(container.textContent).toContain("admin.riders.emptyVerified");
+        expect(container.textContent).not.toContain("admin.riders.emptyPending");
+
+        act(() => findButton("admin.riders.tabRejected").click());
+        expect(container.textContent).toContain("admin.riders.emptyRejected");
+        expect(container.textContent).not.toContain("admin.riders.emptyVerified");
     });
 });
