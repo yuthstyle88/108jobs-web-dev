@@ -4132,19 +4132,23 @@ export const th = {
                         confirmReject: "ยืนยันการปฏิเสธ",
                         cancelReject: "ยกเลิก",
                     },
-                    // The reject panel's issue repeater -- one row per problem.
+                    // Rejecting: a tick and a reason under each document,
+                    // one box for a problem that is about no document, and
+                    // a read-back before it is sent.
                     reject: {
-                        issueLabel: "ปัญหาที่ {{number}}",
-                        documentLabel: "เอกสาร",
-                        noDocumentOption: "ไม่เกี่ยวกับเอกสาร",
-                        reasonLabel: "เหตุผล",
+                        markFailed: "ไม่ผ่าน",
+                        markFailedLabel: "ทำเครื่องหมายว่า{{document}}ไม่ผ่าน",
+                        reasonForDocument: "เหตุผลที่{{document}}ไม่ผ่าน",
                         reasonPlaceholder: "อธิบายปัญหาที่พบ",
-                        removeIssueLabel: "ลบปัญหานี้",
-                        addIssue: "เพิ่มปัญหาอีกรายการ",
+                        otherIssueTitle: "ไม่เกี่ยวกับเอกสาร",
+                        otherIssueMark: "มีปัญหาอื่นที่ไม่ได้อยู่ที่เอกสารใบใด",
+                        otherIssueReasonLabel: "ปัญหาคืออะไร",
+                        otherIssuePlaceholder: "เช่น รถเก่ากว่าเกณฑ์ที่รับได้",
+                        hint: "ติ๊ก \"ไม่ผ่าน\" ที่เอกสารที่มีปัญหา แล้วระบุเหตุผล",
+                        rejectWithCount: "ปฏิเสธ ({{count}})",
+                        summaryTitle: "สิ่งที่จะแจ้งกลับผู้สมัคร",
                         errors: {
-                            noIssues: "กรุณาเพิ่มปัญหาอย่างน้อยหนึ่งรายการก่อนปฏิเสธ",
-                            reasonRequired: "ทุกปัญหาต้องระบุเหตุผล",
-                            duplicateDocument: "เลือกเอกสารแต่ละประเภทได้เพียงครั้งเดียว",
+                            reasonRequired: "เอกสารที่ติ๊กไว้ทุกใบต้องระบุเหตุผล",
                         },
                     },
                 },
