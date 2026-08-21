@@ -67,6 +67,18 @@ export const usePaginatedRiders = ({
         setIsLoading(isRidersLoading);
     }, [isRidersLoading]);
 
+    // A tab switch changes `status`, which alone forces useHttpGet's SWR key
+    // to refetch -- but `currentCursor`/`cursorHistory`/`isGoingBack` are
+    // local state, untouched by that key change, so without this the new
+    // tab's first fetch still carries whatever cursor was live for the
+    // previous tab. Past the end of the new tab's own results, that comes
+    // back empty. Pre-existing with the old two-tab toggle; three tabs make
+    // it materially easier to hit. See #90.
+    useEffect(() => {
+        setCurrentCursor(undefined);
+        setCursorHistory([]);
+        setIsGoingBack(false);
+    }, [status]);
 
     return {
         riders,
