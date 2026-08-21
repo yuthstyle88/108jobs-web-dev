@@ -16,6 +16,7 @@ import {createRoot, type Root} from "react-dom/client";
 import {renderToStaticMarkup} from "react-dom/server";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {GetRiderResponse, Rider, RiderApplicationView} from "108jobs-client";
+import {ApiRequestError} from "108jobs-client";
 import {en} from "@/translations/en";
 import {th} from "@/translations/th";
 import {vi as viTranslation} from "@/translations/vi";
@@ -536,6 +537,28 @@ describe("RiderReviewModal rendering", () => {
         expect(verifyExecute).toHaveBeenCalledWith({riderId: 42, approve: true, reason: undefined});
     });
 
+    // F1: opening an already-decided rider from the new Approved/Rejected
+    // tabs must not offer controls whose only possible outcome is the 409
+    // below. The status read-back (StatusBadge always; RejectionIssuesBanner
+    // for Rejected) stays -- only the live buttons and the reject panel go.
+    it("hides the approve/reject footer once the application is already Verified, showing only the read-back", () => {
+        mount(fakeResponse(fakeApplication({decision: {status: "Verified", issues: []}})));
+        expect(container.textContent).not.toContain("admin.riders.actionApprove");
+        expect(container.textContent).not.toContain("admin.riders.actionReject");
+    });
+
+    it("hides the approve/reject footer for a Rejected application too, not only Verified", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {status: "Rejected", rejectionReason: "Blurry licence photo", issues: []},
+                }),
+            ),
+        );
+        expect(container.textContent).not.toContain("admin.riders.actionApprove");
+        expect(container.textContent).not.toContain("admin.riders.actionReject");
+    });
+
     function openRejectPanel() {
         const rejectButton = Array.from(container.querySelectorAll("button")).find((b) =>
             b.textContent?.includes("admin.riders.actionReject"),
@@ -628,9 +651,28 @@ describe("RiderReviewModal rendering", () => {
         });
     });
 
-    it("keeps Confirm rejection disabled and fires no request while the reason is blank", () => {
+    it("opens the reject panel with Confirm disabled but no error shown yet, since nothing has been touched", () => {
         mount(fakeResponse(fakeApplication()));
         openRejectPanel();
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(true);
+        // Disabled from the first paint (there is genuinely nothing to
+        // reject yet), but the red explanation waits for interaction -- a
+        // form should not scold before the admin has typed anything (F7).
+        expect(container.textContent).not.toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
+
+        act(() => confirmButton.click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+        expect(onReviewed).not.toHaveBeenCalled();
+    });
+
+    it("shows the reason-required error once the admin has typed something and the field is still blank", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+        const textarea = issueTextareas()[0];
+        setTextareaValue(textarea, "x");
+        setTextareaValue(textarea, "");
 
         const confirmButton = findConfirmRejectButton();
         expect(confirmButton.disabled).toBe(true);
@@ -638,7 +680,6 @@ describe("RiderReviewModal rendering", () => {
 
         act(() => confirmButton.click());
         expect(verifyExecute).not.toHaveBeenCalled();
-        expect(onReviewed).not.toHaveBeenCalled();
     });
 
     it("treats a whitespace-only reason the same as blank", () => {
@@ -737,9 +778,18 @@ describe("RiderReviewModal rendering", () => {
         // which has no `err` field -- same cast reasoning as
         // mockUseHttpGet/mockUseHttpPost/mockToastError up top, applied
         // locally since verifyExecute itself is declared per-describe-block.
+        //
+        // err is a real ApiRequestError, not a plain {error: ...} literal.
+        // That is the shape the client actually throws
+        // (src/lib/108jobs-client/src/http.ts:1895's `new ApiRequestError(
+        // json.error ?? ..., json.message)`, whose constructor sets
+        // `this.name` -- there is no `.error` property on the thrown
+        // object). A plain-object mock with an `.error` key would exercise
+        // `res.err.error ?? res.err.name`'s left side, which production
+        // never takes (F3).
         (verifyExecute as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
             state: "failed",
-            err: {error: "riderDecisionAlreadyMade"},
+            err: new ApiRequestError("riderDecisionAlreadyMade"),
         });
         openRejectPanel();
         setTextareaValue(issueTextareas()[0], "Blurry licence photo");

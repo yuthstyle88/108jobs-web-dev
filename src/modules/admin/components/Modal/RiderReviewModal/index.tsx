@@ -125,15 +125,24 @@ const FIELD_GROUPS: FieldGroupDef[] = [
     },
 ];
 
-const DOCUMENT_KINDS: readonly RiderDocumentKind[] = [
-    "idCard",
-    "licence",
-    "vehicleRegistration",
-    "insurance",
-    "compulsoryInsurance",
-    "face",
-    "bankBook",
-];
+// Guarded the same way
+// src/app/api/rider-documents/[riderId]/[documentKind]/route.ts:15-23 guards
+// its own copy of this same union: `satisfies Record<RiderDocumentKind,
+// true>` makes an eighth kind added to the union without a matching key here
+// a compile error at this object, rather than a kind that silently drops out
+// of the tile grid and the reject-panel <select> the way a hand-maintained
+// array would let it (F4).
+const DOCUMENT_KIND_RECORD = {
+    idCard: true,
+    licence: true,
+    vehicleRegistration: true,
+    insurance: true,
+    compulsoryInsurance: true,
+    face: true,
+    bankBook: true,
+} satisfies Record<RiderDocumentKind, true>;
+
+const DOCUMENT_KINDS: readonly RiderDocumentKind[] = Object.keys(DOCUMENT_KIND_RECORD) as RiderDocumentKind[];
 
 /**
  * One row of the reject panel's issue repeater. `document: null` is a real,
@@ -163,6 +172,13 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const {t} = useTranslation();
     const [isRejecting, setIsRejecting] = useState(false);
     const [issueRows, setIssueRows] = useState<IssueRowState[]>([]);
+    // True once the admin has touched the reject panel in some way (typed a
+    // reason, picked a document, added or removed a row). Confirm stays
+    // disabled from the very first paint either way -- this only gates the
+    // red error-summary list below, so the panel explains *why* once there
+    // is something to explain, instead of grading a form the admin has not
+    // seen yet (F7).
+    const [issuesTouched, setIssuesTouched] = useState(false);
     // Per-instance so a fresh modal (and every test that mounts one) starts
     // its own id sequence -- a module-level counter would work too, but
     // would keep climbing across every modal ever opened in the session for
@@ -179,12 +195,22 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
     const {execute: verifyRider, isMutating: verifying} = useHttpPost("adminVerifyRider");
 
     const makeIssueRow = (): IssueRowState => ({id: nextIssueRowId.current++, document: null, reason: ""});
-    const addIssueRow = () => setIssueRows((rows) => [...rows, makeIssueRow()]);
-    const updateIssueDocument = (id: number, document: RiderDocumentKind | null) =>
+    const addIssueRow = () => {
+        setIssuesTouched(true);
+        setIssueRows((rows) => [...rows, makeIssueRow()]);
+    };
+    const updateIssueDocument = (id: number, document: RiderDocumentKind | null) => {
+        setIssuesTouched(true);
         setIssueRows((rows) => rows.map((row) => (row.id === id ? {...row, document} : row)));
-    const updateIssueReason = (id: number, reason: string) =>
+    };
+    const updateIssueReason = (id: number, reason: string) => {
+        setIssuesTouched(true);
         setIssueRows((rows) => rows.map((row) => (row.id === id ? {...row, reason} : row)));
-    const removeIssueRow = (id: number) => setIssueRows((rows) => rows.filter((row) => row.id !== id));
+    };
+    const removeIssueRow = (id: number) => {
+        setIssuesTouched(true);
+        setIssueRows((rows) => rows.filter((row) => row.id !== id));
+    };
 
     // Mirrors crud/update.rs's own validation, in the same order, so a
     // rejection either fails fast client-side or not at all -- the server's
@@ -413,8 +439,15 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                     )}
                 </div>
 
-                {/* 5. Approve / Reject-with-reason */}
-                {application && (
+                {/* 5. Approve / Reject-with-reason -- only while still
+                    Pending. Re-deciding a settled application is
+                    deliberately not this UI's job: revoking an approval
+                    needs its own reason, audit trail and handling for work
+                    already in progress, so it isn't folded into "reject".
+                    Without this gate, opening an Approved or Rejected rider
+                    (the two new tabs Task 9 added) showed live controls
+                    whose only possible outcome was the 409 below (see F1). */}
+                {application && status === "Pending" && (
                     <div className="border-t border-gray-200 dark:border-gray-700 p-6 shrink-0">
                         {isRejecting ? (
                             <div className="space-y-4">
@@ -443,7 +476,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                     <Plus className="w-4 h-4"/>
                                     {t("admin.riders.reviewModal.reject.addIssue")}
                                 </Button>
-                                {!canConfirmReject && (
+                                {!canConfirmReject && issuesTouched && (
                                     <ul className="space-y-0.5 pl-4 text-xs text-red-500 dark:text-red-400 list-disc">
                                         {hasNoIssues && <li>{t("admin.riders.reviewModal.reject.errors.noIssues")}</li>}
                                         {hasBlankReason && (
@@ -497,6 +530,7 @@ export function RiderReviewModal({rider, onClose, onReviewed}: RiderReviewModalP
                                     onClick={() => {
                                         setIsRejecting(true);
                                         setIssueRows([makeIssueRow()]);
+                                        setIssuesTouched(false);
                                     }}
                                     disabled={verifying}
                                 >
