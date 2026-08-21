@@ -115,6 +115,11 @@ export async function sendChatMessage(deps: SendMessageDeps, data: MessagePayloa
     const p = createMessage(message, (deps as any).roomId, data.senderId, data.secure, data.id);
     if (!p) return;
     p.status = 'sending' as any;
+    // Beside the content, never inside it: the server persists this into
+    // chat_message.asset_id, which is the only thing mapping the asset back
+    // to a room for media_proxy's membership check, and it cannot read the
+    // ciphertext this message is about to become.
+    if (data.assetId) p.assetId = data.assetId;
     try {
         store?.addSending?.(p);
     } catch {

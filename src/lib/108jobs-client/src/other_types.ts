@@ -5,7 +5,7 @@ import {DeleteImageParams} from "./types/DeleteImageParams";
 import {GetBankAccounts} from "./types/GetBankAccounts";
 import {GetBillingByRoomQuery} from "./types/GetBillingByRoomQuery";
 import {GetCategory} from "./types/GetCategory";
-import {GetComments} from "./types/GetComments";
+import {GetProposals} from "./types/GetProposals";
 import {GetPersonDetails} from "./types/GetPersonDetails";
 import {GetPost} from "./types/GetPost";
 import {GetPosts} from "./types/GetPosts";
@@ -49,7 +49,7 @@ export interface GetPostsI extends GetPosts {
 export interface GetSiteMetadataI extends GetSiteMetadata {
 }
 
-export interface GetCommentsI extends GetComments {
+export interface GetProposalsI extends GetProposals {
 }
 
 export interface GetPersonDetailsI extends GetPersonDetails {

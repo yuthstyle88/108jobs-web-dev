@@ -2,8 +2,12 @@
 import type {CategoryId} from "./CategoryId";
 
 /**
- * Delete your own category.
+ * Delete or restore a category.
  */
 export type DeleteCategory = {
   categoryId: CategoryId;
+  /**
+   * `true` deletes, `false` restores.
+   */
+  deleted: boolean;
 };

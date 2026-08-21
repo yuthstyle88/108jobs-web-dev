@@ -3,7 +3,6 @@ import {v4 as uuidv4} from 'uuid';
 import {StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
 import {LocalUserId} from "108jobs-client";
 import React from "react";
-import {emitChatNewMessage} from "@/modules/chat/events";
 
 interface ReviewDeliveryModalProps {
     showReviewDeliveryModal: boolean;
@@ -11,7 +10,6 @@ interface ReviewDeliveryModalProps {
     goToStatus: (status: StatusKey) => void;
     sendMessage: (message: { message: string; senderId: number; secure: boolean; id: string }) => void;
     requestRevisionAction: () => Promise<boolean>;
-    roomId: string;
     localUser?: { id: LocalUserId };
 }
 
@@ -21,7 +19,6 @@ export const ReviewDeliveryModal: React.FC<ReviewDeliveryModalProps> = ({
                                                                             goToStatus,
                                                                             sendMessage,
                                                                             requestRevisionAction,
-                                                                            roomId,
                                                                             localUser,
                                                                         }) => {
     const { t } = useTranslation();
@@ -50,21 +47,6 @@ export const ReviewDeliveryModal: React.FC<ReviewDeliveryModalProps> = ({
                                 secure: Boolean((localUser as any)?.isMessageSecure),
                                 id: uuidv4(),
                             });
-                            try {
-                                const content = t("profileChat.deliveryAccepted") || "Delivery accepted. Proceed to payment.";
-                                const tsIso = new Date().toISOString();
-                                const detail =  {
-                                    roomId,
-                                        content,
-                                        id: uuidv4(),
-                                        senderId: Number(localUser?.id) || 0,
-                                        status: "sending" as const,
-                                        createdAt: tsIso,
-                                };
-                                emitChatNewMessage(detail);
-                            } catch {
-                                // Handle error silently
-                            }
                         }}
                     >
                         {t("profileChat.acceptAndRelease") || "Accept & Release Payment"}

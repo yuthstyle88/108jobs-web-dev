@@ -24,6 +24,7 @@
 
 import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
+import {useParams} from "next/navigation";
 import {v4 as uuidv4} from "uuid";
 import {ProfileImage} from "@/constants/images";
 import type {
@@ -37,6 +38,8 @@ import type {
 import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
 import ChatRoomMessages from "../ChatRoomMessages";
+import ChatSearchPanel from "@/modules/chat/components/ChatSearchPanel";
+import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 import {useRoomsStore} from '@/modules/chat/store/roomsStore';
 import FreelanceChatFlow, {FlowActions, StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
 import {createFlowActions} from "@/modules/chat/utils/flowActions";
@@ -45,13 +48,14 @@ import {useWorkflowStepper} from "@/hooks/utils/useWorkflowMachine";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {apiToUiStatus, useStateMachineStore} from "@/modules/chat/store/stateMachineStore";
 import {Trash2} from "lucide-react";
-import {JobDetailModal} from "@/modules/chat/components/Modal/JobDetailModal";
 import {ReviewDeliveryModal} from "@/modules/chat/components/Modal/ReviewDeliveryModal";
 import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
+import ChatSidebarTabs from "@/modules/chat/components/ChatSidebarTabs";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
-import {emitChatNewMessage} from "@/modules/chat/events";
+import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
+import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
 import {useChatRoom} from '@/modules/chat/hooks/useChatRoom';
 import {useChatHistory} from '@/modules/chat/hooks/useChatHistory';
 import {useChatStore} from "@/modules/chat/store/chatStore";
@@ -89,6 +93,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                                        localUser
                                                    }) => {
     const {t} = useTranslation();
+    const params = useParams<{lang?: string}>();
+    const lang = params?.lang || "th";
     const {person, userInfo} = useUserStore();
     const {wasUnread, clearWasUnread, getRoom} = useRoomsStore();
     const roomData = getRoom(roomId);
@@ -110,19 +116,19 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const [showReviewDeliveryModal, setShowReviewDeliveryModal] = useState<boolean>(false);
     const [showSubmitReviewModal, setShowSubmitReviewModal] = useState<boolean>(false);
     const [showQuotationModal, setShowQuotationModal] = useState<boolean>(false);
-    const [showJobDetailModal, setShowJobDetailModal] = useState<boolean>(false);
     const [hasStarted, setHasStarted] = useState<boolean>(false);
     // Flow sidebar is now managed globally via JobFlowSidebarProvider
     const {isOpen: isFlowOpen, setOpen: setIsFlowOpen, setContent} = useJobFlowSidebar();
     const [currentRoom, setCurrentRoom] = useState<ChatRoomView>(roomData as ChatRoomView);
     const {getByRoom} = useChatStore();
     const messages = getByRoom(roomId);
+    const isSearchOpen = useChatPanelStore((s) => s.isSearchOpen);
+    const openSearch = useChatPanelStore((s) => s.openSearch);
+    const closeSearch = useChatPanelStore((s) => s.closeSearch);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const [scrollParentEl, setScrollParentEl] = useState<HTMLElement | null>(null);
-    const roomPostId = post?.id;
-    const roomProposalId = currentRoom.room.currentCommentId;
+    const roomPostId = post?.id ?? currentRoom.room.postId;
+    const roomProposalId = currentRoom.room.currentProposalId;
     const postCreatorId = post?.creatorId;
     const isEmployer = postCreatorId != null && person?.id != null ? String(postCreatorId) === String(person?.id) : undefined;
     const lastClientUpdateRef = useRef<{ status: StatusKey | null; timestamp: number }>({status: null, timestamp: 0});
@@ -150,18 +156,34 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const {execute: submitReviewApi} = useHttpPost("submitUserReview");
 
     const inputContainerRef = useRef<HTMLDivElement>(null);
-    useCallback((el: HTMLDivElement | null) => {
-        scrollContainerRef.current = el;
-        if (el) setScrollParentEl(el);
-    }, []);
 
     const {
         selectedFile,
         setSelectedFile,
         isDeletingFile,
         handleFileUpload,
-        handleRemoveSelectedFile
+        handleRemoveSelectedFile,
+        isUploading,
+        uploadProgress,
+        attachmentPreview,
     } = useFileUpload({setError, t: (k: string) => t(k)});
+    // Rounded once here rather than at each of the progress indicator's two
+    // render sites (thumbnail overlay, file-chip bar) below, so they can
+    // never disagree by a rounding edge case. Null while indeterminate --
+    // see `useFileUpload`'s own doc comment on `uploadProgress` for when.
+    const uploadPercent = uploadProgress != null ? Math.round(uploadProgress * 100) : null;
+    // Belt-and-suspenders for the composer thumbnail's own <img>/<video>:
+    // unlike ChatMessageBubble's local preview (handleMediaElementError),
+    // this element has no server-backed URL to fall back to while a file is
+    // still only picked/uploading, so a failed blob load (e.g. a
+    // misconfigured `img-src`/`media-src` CSP -- `'self'` does not cover
+    // `blob:`) must degrade to the same file chip a non-media attachment
+    // gets rather than rendering nothing. Compared against the preview's own
+    // url (not a plain boolean) so a new pick -- which always carries a
+    // fresh `URL.createObjectURL` value -- automatically stops treating
+    // itself as failed without needing a separate reset effect.
+    const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
+    const thumbLoadFailed = attachmentPreview !== null && attachmentPreview.url === failedPreviewUrl;
     const upsertHistory = useChatStore(s => s.upsertHistory);
     const markRoomReadInStore = useRoomsStore(s => s.markRoomRead);
 
@@ -173,7 +195,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // `receivedSet` prevents double-inserting messages when pages overlap.
     const {
         state: {hasMore, isFetching},
-        actions: {fetchHistory},
+        actions: {fetchHistory, loadOlderUntilDone},
     } = useChatHistory({
         roomId,
         pageSize: 40,
@@ -184,6 +206,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         },
         upsertHistory,
     });
+    useHistoryBackfill({roomId, loadOlderUntilDone});
+
+    // Close search when the room changes so it does not carry a stale query
+    // across conversations.
+    useEffect(() => () => closeSearch(), [roomId, closeSearch]);
+
     const {
         actions: {sendMessage, sendTyping, sendRoomUpdate, sendReadReceipt},
         state: {isPartnerTyping},
@@ -343,23 +371,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 revieweeId: form.revieweeId,
                 workflowId: form.workflowId,
                 rating: form.rating,
-                comment: form.comment,
+                proposal: form.proposal,
             });
             if (response.state === REQUEST_STATE.SUCCESS) {
-                const tsIso = new Date().toISOString();
                 const messageId = uuidv4();
-                const content = t('profileChat.reviewSubmitted') || 'Review submitted successfully.';
-                const detail = {
-                    roomId,
-                    id: messageId,
-                    senderId: Number(localUser.id),
-                    content,
-                    createdAt: tsIso,
-                    status: 'sending' as const,
-                };
-                emitChatNewMessage(detail);
                 await sendMessage({
-                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.comment}),
+                    message: JSON.stringify({type: 'review-submitted', rating: form.rating, comment: form.proposal}),
                     senderId: Number(localUser.id),
                     secure: Boolean((localUser as any)?.isMessageSecure),
                     id: messageId,
@@ -373,7 +390,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             setError(t('profileChat.submitReviewError') || 'Failed to submit review. Please try again.');
             return false;
         }
-    }, [submitReviewApi, roomId, localUser.id, sendMessage, setError, t, emitChatNewMessage]);
+    }, [submitReviewApi, localUser.id, sendMessage, setError, t]);
 
     /**
      * Handle message submit from ChatInput.
@@ -385,42 +402,30 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             if (!message && !selectedFile) return;
 
             const contentToSend = selectedFile
-                ? JSON.stringify({
-                    type: "file",
+                ? buildAttachmentEnvelope({
                     url: selectedFile.fileUrl,
                     name: selectedFile.fileName,
                     mime: selectedFile.fileType,
                     caption: message || undefined,
+                    assetId: selectedFile.assetId,
                 })
                 : message;
 
             isSubmittingRef.current = true;
             const messageId = uuidv4();
 
-            const preview = selectedFile
-                ? (message || `[File] ${selectedFile.fileName}`)
-                : message;
-
-            emitChatNewMessage({
-                roomId,
-                id: messageId,
-                senderId: Number(localUser.id),
-                content: preview,
-                createdAt: new Date().toISOString(),
-                status: 'sending',
-            });
-
             await sendMessage({
                 message: contentToSend,
                 senderId: Number(localUser.id),
                 secure: Boolean((localUser as any)?.isMessageSecure),
-                id: messageId
+                id: messageId,
+                assetId: selectedFile?.assetId,
             });
 
             setSelectedFile(null);
             isSubmittingRef.current = false;
         },
-        [sendMessage, roomId, selectedFile, localUser, emitChatNewMessage, setSelectedFile]
+        [sendMessage, selectedFile, localUser, setSelectedFile]
     );
     const flowActions: FlowActions = createFlowActions({
         t,
@@ -438,30 +443,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         approveWork: async () => await approveWorkWrapped(),
     });
 
-    // Load older history when user scrolls above halfway from the bottom.
+    // ChatRoomMessages owns the actual Virtuoso scroller and asks for one
+    // page when its top edge is reached. The pager coalesces duplicate calls.
     const handleOnTopReached = useCallback(() => {
         if (!hasMore || isFetching) return;
-        const rootEl = scrollContainerRef.current ?? scrollParentEl;
-
-        // Always fetch when ChatRoomMessages reports top reached; preserve position if we can
-        if (!rootEl) {
-            fetchHistory().catch(() => {
-            });
-            return;
-        }
-
-        const oldHeight = rootEl.scrollHeight;
-        fetchHistory()
-            .then(() => {
-                // Use requestAnimationFrame to ensure DOM is updated
-                requestAnimationFrame(() => {
-                    const newHeight = rootEl.scrollHeight;
-                    rootEl.scrollTop += newHeight - oldHeight; // preserve visual position
-                });
-            })
-            .catch(() => {
-            });
-    }, [hasMore, isFetching, scrollParentEl, fetchHistory]);
+        void fetchHistory();
+    }, [hasMore, isFetching, fetchHistory]);
 
     const renderFlowContent = () => (
         <>
@@ -495,14 +482,19 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // Provide JobFlowContent to the global sidebar
+    // Provide the workflow-only Orders tab and the Media tab to the global sidebar.
     useLayoutEffect(() => {
         setContent(
-            <JobFlowContent
-                setIsFlowOpen={setIsFlowOpen}
-                renderFlowContent={renderFlowContent}
-                setShowJobDetailModal={setShowJobDetailModal}
-                currentRoom={currentRoom}
+            <ChatSidebarTabs
+                roomId={roomId}
+                partnerName={partnerName || "User"}
+                orders={
+                    <JobFlowContent
+                        renderFlowContent={renderFlowContent}
+                        jobId={roomPostId}
+                        lang={lang}
+                    />
+                }
             />
         );
 
@@ -511,8 +503,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     }, [
         currentRoom,
         setContent,
-        setIsFlowOpen,
-        setShowJobDetailModal,
         isEmployer,
         isEmployerKnown,
         hasStarted,
@@ -522,6 +512,10 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         availableBalance,
         latestQuoteAmount,
         currentStatus,
+        roomId,
+        partnerName,
+        roomPostId,
+        lang,
     ]);
 
     return (
@@ -536,37 +530,133 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         onToggleFlow={() => setIsFlowOpen(!isFlowOpen)}
                         isFlowOpen={isFlowOpen}
                         partnerId={partnerId}
+                        onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
+                        isSearchOpen={isSearchOpen}
                     />
-                    <ChatRoomMessages
-                        messages={messages}
-                        partnerAvatar={partnerAvatar || ProfileImage.avatar}
-                        customScrollParent={scrollParentEl}
-                        onTopReached={handleOnTopReached}
-                        hasMore={hasMore}
-                        isFetching={isFetching}
-                        partnerId={partnerId}
-                    />
+                    <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
+                        {isSearchOpen && (
+                            <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
+                        )}
+                        <ChatRoomMessages
+                            key={roomId}
+                            messages={messages}
+                            partnerAvatar={partnerAvatar || ProfileImage.avatar}
+                            onTopReached={handleOnTopReached}
+                            hasMore={hasMore}
+                            isFetching={isFetching}
+                            partnerId={partnerId}
+                        />
+                    </div>
                     <div ref={inputContainerRef} className="border-t px-3 py-2 sm:px-4 sm:py-3 bg-white">
                         <div className="flex items-center gap-2">
                             <div className="flex-1">
                                 {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-                                {selectedFile && (
+                                {attachmentPreview && (
                                     <div
-                                        className="mb-2 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <span aria-hidden className="text-blue-600">📎</span>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-sm font-medium text-blue-900 truncate">
-                                                    {selectedFile.fileName}
-                                                </p>
+                                        className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                                        {attachmentPreview.kind === "file" || thumbLoadFailed ? (
+                                            <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
+                                        ) : (
+                                            <div
+                                                className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/5 ring-1 ring-black/5">
+                                                {attachmentPreview.kind === "image" ? (
+                                                    <img
+                                                        src={attachmentPreview.url}
+                                                        alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                        className="h-full w-full object-cover"
+                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
+                                                    />
+                                                ) : (
+                                                    // No `controls`: this is a static pick-time preview, not a
+                                                    // player, and it must never autoplay -- omitting `autoPlay`
+                                                    // (rather than setting it false) is what guarantees that.
+                                                    <video
+                                                        src={attachmentPreview.url}
+                                                        muted
+                                                        playsInline
+                                                        preload="metadata"
+                                                        aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                        className="h-full w-full object-cover"
+                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
+                                                    />
+                                                )}
+                                                {isUploading && (
+                                                    uploadPercent != null ? (
+                                                        <div
+                                                            role="progressbar"
+                                                            aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                            aria-valuemin={0}
+                                                            aria-valuemax={100}
+                                                            aria-valuenow={uploadPercent}
+                                                            aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                        >
+                                                            <span aria-hidden className="text-xs font-semibold text-white">
+                                                                {uploadPercent}%
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            role="status"
+                                                            aria-live="polite"
+                                                            aria-busy="true"
+                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                        >
+                                                            <span
+                                                                aria-hidden
+                                                                className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                                            />
+                                                            <span className="sr-only">
+                                                                {t("profileChat.uploadingLabel") || "Uploading"}
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                )}
                                             </div>
+                                        )}
+
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-blue-900 truncate">
+                                                {attachmentPreview.name}
+                                            </p>
+                                            {isUploading && (attachmentPreview.kind === "file" || thumbLoadFailed) && (
+                                                uploadPercent != null ? (
+                                                    <div
+                                                        role="progressbar"
+                                                        aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                        aria-valuemin={0}
+                                                        aria-valuemax={100}
+                                                        aria-valuenow={uploadPercent}
+                                                        aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
+                                                    >
+                                                        <div
+                                                            className="h-full rounded-full bg-blue-500 transition-[width]"
+                                                            style={{width: `${uploadPercent}%`}}
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <div
+                                                        role="status"
+                                                        aria-live="polite"
+                                                        aria-busy="true"
+                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
+                                                    >
+                                                        <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-400"/>
+                                                        <span className="sr-only">
+                                                            {t("profileChat.uploadingLabel") || "Uploading"}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            )}
                                         </div>
+
                                         <button
                                             type="button"
                                             onClick={handleRemoveSelectedFile}
                                             disabled={isDeletingFile}
-                                            className={`ml-2 p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
-                                            aria-label="Remove attached file"
+                                            className={`ml-2 shrink-0 self-start p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
+                                            aria-label={t("profileChat.removeAttachment") || "Remove attachment"}
                                         >
                                             <Trash2 className={`h-4 w-4 ${isDeletingFile ? 'animate-spin' : ''}`}/>
                                         </button>
@@ -575,6 +665,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                 <ChatInput
                                     onSubmit={onSubmit}
                                     disabledHint=""
+                                    hasAttachment={!!selectedFile}
+                                    isUploading={isUploading}
                                     onFileUpload={(ev: any) => handleFileUpload(ev as any)}
                                     onTyping={(v) => {
                                         try {
@@ -598,7 +690,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     goToStatus={goToStatus}
                     sendMessage={sendMessage}
                     requestRevisionAction={requestRevision}
-                    roomId={roomId}
                     localUser={localUser}
                 />
             )}
@@ -610,14 +701,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     revieweeId={partnerPersonId}
                     workflowId={currentRoom.workflow?.id}
                     submitReview={submitReview}
-                />
-            )}
-            {/* Job detail modal (post/room metadata) */}
-            {showJobDetailModal && (
-                <JobDetailModal
-                    showJobDetailModal={showJobDetailModal}
-                    setShowJobDetailModal={setShowJobDetailModal}
-                    post={post}
                 />
             )}
             {/* Quotation modal (propose/approve quotation for current job) */}

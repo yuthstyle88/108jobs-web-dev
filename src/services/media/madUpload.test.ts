@@ -17,9 +17,21 @@ function setEnv(values: Record<string, string | undefined>) {
   }
 }
 
-/** Records every request the three-step handshake makes. */
-function stubFetch(responses: Array<{status: number; body?: unknown}>) {
-  const calls: Array<{url: string; method: string; body: unknown; auth?: string}> = [];
+type RecordedCall = {
+  url: string;
+  method: string;
+  body: unknown;
+  auth?: string;
+  contentType?: string;
+};
+
+/** Records every `fetch` call MAD's handshake makes -- today that is the
+ *  session-open and complete legs; the byte PUT moved to `XMLHttpRequest` (see
+ *  `installFakeXhr` below) because `fetch` cannot report upload progress. */
+function stubFetch(
+  responses: Array<{status: number; body?: unknown}>,
+): RecordedCall[] {
+  const calls: RecordedCall[] = [];
   let index = 0;
   const fetchStub = vi.fn(async (url: unknown, init: RequestInit = {}) => {
     const headers = (init.headers ?? {}) as Record<string, string>;
@@ -28,6 +40,7 @@ function stubFetch(responses: Array<{status: number; body?: unknown}>) {
       method: init.method ?? "GET",
       body: init.body,
       auth: headers.Authorization,
+      contentType: headers["content-type"],
     });
     const next = responses[index] ?? {status: 200, body: {}};
     index += 1;
@@ -41,8 +54,103 @@ function stubFetch(responses: Array<{status: number; body?: unknown}>) {
   return calls;
 }
 
+/** A minimal stand-in for the one `XMLHttpRequest` surface `uploadToMad`'s
+ *  byte-PUT leg actually touches: `open`/`setRequestHeader`/`send`/`abort`,
+ *  `upload.onprogress`, and the `onload`/`onerror`/`onabort` handlers. */
+class FakeXhr {
+  method = "";
+  url = "";
+  headers: Record<string, string> = {};
+  body: unknown;
+  status = 0;
+  upload: {
+    onprogress:
+      | ((event: {lengthComputable: boolean; loaded: number; total: number}) => void)
+      | null;
+  } = {onprogress: null};
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  onabort: (() => void) | null = null;
+
+  private readonly onSend: (xhr: FakeXhr) => void;
+  private readonly autoRespond: number | null;
+
+  constructor(onSend: (xhr: FakeXhr) => void, autoRespond: number | null) {
+    this.onSend = onSend;
+    this.autoRespond = autoRespond;
+  }
+
+  open(method: string, url: string) {
+    this.method = method;
+    this.url = url;
+  }
+
+  setRequestHeader(name: string, value: string) {
+    this.headers[name] = value;
+  }
+
+  send(body: unknown) {
+    this.body = body;
+    this.onSend(this);
+    // Most tests only care about the request this leg made (URL, headers,
+    // body) or the final resolved asset -- not the XHR event choreography --
+    // so resolving synchronously here keeps them a plain `await
+    // uploadToMad(...)` with no manual event-firing. Tests that exercise
+    // progress, failure, or abort pass `autoRespond: null` and drive the
+    // instance by hand instead.
+    if (this.autoRespond !== null) {
+      this.status = this.autoRespond;
+      this.onload?.();
+    }
+  }
+
+  abort() {
+    this.onabort?.();
+  }
+}
+
+/**
+ * Installs a fake `XMLHttpRequest` global and records the byte-PUT leg into
+ * the same `calls` ledger `stubFetch` writes to, so ordering/auth assertions
+ * cover all three legs of the handshake despite them running over two
+ * different transports.
+ *
+ * `autoRespond` (default `204`) is the status the instance resolves itself
+ * with as soon as `send()` is called; pass `null` to take manual control via
+ * the returned `instances` array (`xhr.upload.onprogress?.(...)`,
+ * `xhr.status = …; xhr.onload?.()`, `xhr.onerror?.()`, `xhr.abort()`).
+ */
+function installFakeXhr(
+  calls: RecordedCall[],
+  {autoRespond = 204}: {autoRespond?: number | null} = {},
+): FakeXhr[] {
+  const instances: FakeXhr[] = [];
+  class RecordingXhr extends FakeXhr {
+    constructor() {
+      super((sent) => {
+        calls.push({
+          url: sent.url,
+          method: sent.method,
+          body: sent.body,
+          auth: sent.headers.Authorization,
+          contentType: sent.headers["content-type"],
+        });
+      }, autoRespond);
+      instances.push(this);
+    }
+  }
+  vi.stubGlobal("XMLHttpRequest", RecordingXhr as unknown as typeof XMLHttpRequest);
+  return instances;
+}
+
+/** One full macrotask turn, guaranteed to run after every microtask queued so
+ *  far -- long enough for `uploadToMad`'s session-open `fetch` (which never
+ *  touches a real timer or socket in these tests) to resolve and the code to
+ *  reach the byte-PUT leg, without hand-counting how many microtask hops the
+ *  `fetch`/`.json()` stubs need to get there. */
+const flushToXhr = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
 const SESSION = {status: 200, body: {sessionId: "sess-1"}};
-const BYTES = {status: 204};
 const COMPLETE = {
   status: 200,
   body: {assetId: "asset-9", contentType: "image/png"},
@@ -93,7 +201,8 @@ describe("uploadToMad", () => {
   });
 
   it("runs MAD's three calls, in order", async () => {
-    const calls = stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     await uploadToMad(file, "private");
 
@@ -104,8 +213,24 @@ describe("uploadToMad", () => {
     ]);
   });
 
+  it("sends the byte PUT with the same URL, method, and content-type MAD expects", async () => {
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
+
+    await uploadToMad(file, "private");
+
+    const bytesCall = calls[1];
+    expect(bytesCall).toMatchObject({
+      method: "PUT",
+      url: "https://mad.example.com/uploads/sess-1/bytes",
+      contentType: "image/png",
+      auth: "Bearer jwt-abc",
+    });
+  });
+
   it("declares length and content type up front", async () => {
-    const calls = stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     await uploadToMad(file, "private");
 
@@ -120,7 +245,8 @@ describe("uploadToMad", () => {
   });
 
   it("sends the given kind instead of the image default", async () => {
-    const calls = stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     await uploadToMad(file, "private", "file");
 
@@ -129,8 +255,9 @@ describe("uploadToMad", () => {
     });
   });
 
-  it("sends the session bearer on every leg", async () => {
-    const calls = stubFetch([SESSION, BYTES, COMPLETE]);
+  it("sends the session bearer on every leg, including the XHR one", async () => {
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     await uploadToMad(file, "private");
 
@@ -142,7 +269,8 @@ describe("uploadToMad", () => {
   });
 
   it("reads a public asset straight from MAD", async () => {
-    stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     const asset = await uploadToMad(file, "public");
 
@@ -152,7 +280,8 @@ describe("uploadToMad", () => {
   });
 
   it("reads a private asset through 108jobs, never MAD directly", async () => {
-    stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     const asset = await uploadToMad(file, "private");
 
@@ -162,7 +291,8 @@ describe("uploadToMad", () => {
   });
 
   it("carries the asset id as the handle, not a filename", async () => {
-    stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     const asset = await uploadToMad(file, "private");
 
@@ -175,7 +305,8 @@ describe("uploadToMad", () => {
 
   it("refuses without a session instead of letting MAD 401", async () => {
     UserService.Instance.authInfo = undefined as never;
-    const calls = stubFetch([SESSION, BYTES, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     await expect(uploadToMad(file, "private")).rejects.toThrow(
       /without a signed-in session/,
@@ -184,11 +315,153 @@ describe("uploadToMad", () => {
   });
 
   it("stops at the first failing leg rather than completing a broken session", async () => {
-    const calls = stubFetch([SESSION, {status: 413}, COMPLETE]);
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls, {autoRespond: 413});
 
     await expect(uploadToMad(file, "private")).rejects.toThrow(/413/);
-    // Two calls made, and crucially not the third: completing a session whose
-    // bytes were rejected would mint an asset with nothing behind it.
+    // Session-open and the byte PUT both fired, and crucially not complete:
+    // completing a session whose bytes were rejected would mint an asset
+    // with nothing behind it.
     expect(calls).toHaveLength(2);
+  });
+
+  it("keeps the user's filename alongside the storage handle", async () => {
+    // MAD stores no filename at all, so if this call drops it the name is
+    // gone for good and the recipient sees a UUID.
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
+
+    const asset = await uploadToMad(file, "private");
+
+    expect(asset).toMatchObject({
+      assetId: "asset-9",
+      originalFilename: file.name,
+      filename: "asset-9",
+    });
+  });
+
+  it("still reports an asset id when MAD omits the content type", async () => {
+    const calls = stubFetch([SESSION, {status: 200, body: {assetId: "asset-9"}}]);
+    installFakeXhr(calls);
+
+    const asset = await uploadToMad(file, "private");
+
+    expect(asset.assetId).toBe("asset-9");
+    expect(asset.mimeType).toBe(file.type);
+  });
+
+  describe("upload progress", () => {
+    it("reports fractional progress via onProgress as bytes are sent", async () => {
+      const calls = stubFetch([SESSION, COMPLETE]);
+      const instances = installFakeXhr(calls, {autoRespond: null});
+      const onProgress = vi.fn();
+
+      const promise = uploadToMad(file, "private", "image", {onProgress});
+      await flushToXhr();
+
+      const xhr = instances[0];
+      xhr.upload.onprogress?.({loaded: 2, total: 5, lengthComputable: true});
+      xhr.upload.onprogress?.({loaded: 5, total: 5, lengthComputable: true});
+      xhr.status = 204;
+      xhr.onload?.();
+
+      await promise;
+
+      expect(onProgress.mock.calls).toEqual([[0.4], [1]]);
+    });
+
+    it("does not call onProgress when the browser cannot compute the length", async () => {
+      const calls = stubFetch([SESSION, COMPLETE]);
+      const instances = installFakeXhr(calls, {autoRespond: null});
+      const onProgress = vi.fn();
+
+      const promise = uploadToMad(file, "private", "image", {onProgress});
+      await flushToXhr();
+
+      const xhr = instances[0];
+      // lengthComputable: false must never produce NaN or a fabricated
+      // percentage -- the honest thing is to report nothing at all.
+      xhr.upload.onprogress?.({loaded: 2, total: 0, lengthComputable: false});
+      xhr.status = 204;
+      xhr.onload?.();
+
+      await promise;
+
+      expect(onProgress).not.toHaveBeenCalled();
+    });
+
+    it("works without a progress callback at all, for callers that never pass one", async () => {
+      // useResumeForm calls uploadToMad with no fourth argument -- this must
+      // stay a plain, un-broken upload.
+      const calls = stubFetch([SESSION, COMPLETE]);
+      const instances = installFakeXhr(calls, {autoRespond: null});
+
+      const promise = uploadToMad(file, "private");
+      await flushToXhr();
+
+      const xhr = instances[0];
+      expect(() =>
+        xhr.upload.onprogress?.({loaded: 2, total: 5, lengthComputable: true}),
+      ).not.toThrow();
+      xhr.status = 204;
+      xhr.onload?.();
+
+      await expect(promise).resolves.toMatchObject({assetId: "asset-9"});
+    });
+  });
+
+  describe("network errors and cancellation", () => {
+    it("rejects with the same message shape on a network error as on a bad status", async () => {
+      const calls = stubFetch([SESSION, COMPLETE]);
+      const instances = installFakeXhr(calls, {autoRespond: null});
+
+      const promise = uploadToMad(file, "private");
+      await flushToXhr();
+
+      // No HTTP response at all -- offline, DNS failure, CORS rejection.
+      // `xhr.status` stays 0, so this lands on the same message template as
+      // a non-2xx response, generalised to status 0 instead of a
+      // differently-worded error a caller would need a second check for.
+      instances[0].onerror?.();
+
+      await expect(promise).rejects.toThrow(/MAD byte upload failed: 0/);
+      // Complete must never fire for a session whose bytes never landed.
+      expect(calls).toHaveLength(2);
+    });
+
+    it("rejects with an AbortError, not a generic failure, when the caller cancels", async () => {
+      const calls = stubFetch([SESSION, COMPLETE]);
+      const instances = installFakeXhr(calls, {autoRespond: null});
+      const controller = new AbortController();
+
+      const promise = uploadToMad(file, "private", "image", {
+        signal: controller.signal,
+      });
+      await flushToXhr();
+
+      controller.abort();
+
+      await expect(promise).rejects.toMatchObject({name: "AbortError"});
+      // The real XHR was told to abort, and complete never fires for a
+      // cancelled upload.
+      expect(instances[0].onabort).not.toBeNull();
+      expect(calls).toHaveLength(2);
+    });
+
+    it("aborts before opening a connection when the signal is already aborted", async () => {
+      const calls = stubFetch([SESSION, COMPLETE]);
+      installFakeXhr(calls, {autoRespond: null});
+      const controller = new AbortController();
+      controller.abort();
+
+      const promise = uploadToMad(file, "private", "image", {
+        signal: controller.signal,
+      });
+
+      await expect(promise).rejects.toMatchObject({name: "AbortError"});
+      // Session-open still fires (only the byte PUT is signal-aware), but
+      // the byte leg itself must never call send() once already cancelled.
+      expect(calls).toHaveLength(1);
+    });
   });
 });

@@ -11,7 +11,9 @@ import type {
 } from '108jobs-client';
 import type {WsMessageSender} from '@/modules/chat/types';
 import type {StatusKey} from '@/modules/chat/components/FreelanceChatFlow';
+import type {UploadedFile} from '@/modules/chat/hooks/useFileUpload';
 import {sendStructuredMessage} from '@/modules/chat/utils/structured';
+import {attachmentEnvelopeFields} from '@/modules/chat/attachments';
 import {SendEventDeps} from "@/modules/chat/events";
 
 // Helper to extract meaningful error messages from wrapped HttpService responses
@@ -32,7 +34,7 @@ export type UseWorkflowActionsDeps = {
     roomData: ChatRoomView;
     localUser: LocalUser;
     roomId: string;
-    selectedFile: { fileUrl: string; fileType: string; fileName: string } | null;
+    selectedFile: UploadedFile;
     setError: (msg: string | null) => void;
     t: (key: string) => string | undefined;
     sendMessage: WsMessageSender;
@@ -158,7 +160,7 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
             const form: CreateInvoiceForm = {
                 employerId: data.partnerId,
                 postId: data.postId,
-                commentId: data.proposalId,
+                proposalId: data.proposalId,
                 seqNumber: 1,
                 amount: data.amount,
                 proposal: data.proposal,
@@ -299,15 +301,17 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
                 return false;
             }
 
-            const payload: any = {
+            const payload = attachmentEnvelopeFields({
                 type: 'submit-delivery',
                 url: selectedFile.fileUrl,
                 name: selectedFile.fileName,
-                mime: selectedFile.fileType
-            };
+                mime: selectedFile.fileType,
+                assetId: selectedFile.assetId,
+            });
             const preview = `[Delivery] ${selectedFile.fileName}`;
             await sendStructuredMessage(sendMessage, roomId, payload, localUser.id, {
                 previewText: preview,
+                assetId: selectedFile.assetId,
             });
             setSelectedFile(null);
             goToStatusAndBroadcast('PendingEmployerReview');

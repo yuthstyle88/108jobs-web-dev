@@ -43,8 +43,12 @@ const nextConfig: NextConfig = {
     serverExternalPackages: ['108jobs-client'],
 
     images: {
-        // Using Next/Image without on-the-fly optimization to keep server lean
-        // Flip to `false` if you want Next's built-in Image Optimization.
+        // Not a server-leanness choice: avatars/photos come from an external
+        // CDN (cdn.108jobs.com) and from this app's own auth-gated same-origin
+        // proxies (/api/media/*, /api/rider-documents/*). Neither is allow-
+        // listed via `remotePatterns`, and the proxied ones aren't even
+        // guaranteed to return decodable image bytes -- Next's built-in
+        // optimizer can't handle either, so this is required, not optional.
         unoptimized: true,
     },
 
@@ -154,6 +158,30 @@ const nextConfig: NextConfig = {
                 return '';
             }
         })();
+        // uploadToMad (madUpload.ts) runs MAD's three-call upload handshake
+        // (open session / PUT bytes / complete) as plain fetch()es straight from
+        // the browser to the media gateway -- same cross-origin exception as
+        // apiOrigin/identityOrigin above, and easy to miss because without it the
+        // failure looks identical to a network-layer problem: the browser blocks
+        // the connection before it ever reaches the wire, so no request appears in
+        // the gateway's logs, and the error surfaced to JS is the generic
+        // `TypeError: Failed to fetch` either way. NEXT_PUBLIC_MEDIA_PUBLIC_URL is
+        // usually the same host as the gateway but is allowed to differ (e.g. a
+        // CDN in front of it), so both are added.
+        const mediaGatewayOrigin = (() => {
+            try {
+                return new URL(process.env.NEXT_PUBLIC_MEDIA_GATEWAY_URL ?? '').origin;
+            } catch {
+                return '';
+            }
+        })();
+        const mediaPublicOrigin = (() => {
+            try {
+                return new URL(process.env.NEXT_PUBLIC_MEDIA_PUBLIC_URL ?? '').origin;
+            } catch {
+                return '';
+            }
+        })();
         // Next.js dev mode (Fast Refresh / React's dev-only debugging) uses
         // eval() to reconstruct call stacks -- blocked without 'unsafe-eval',
         // which breaks every page in dev (confirmed: React itself states it
@@ -165,9 +193,32 @@ const nextConfig: NextConfig = {
             "default-src 'self'",
             scriptSrc,
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: https://cdn.108jobs.com",
+            // `blob:` is required alongside `data:` here, not covered by it or
+            // by `'self'` -- CSP treats `blob:`/`filesystem:` as their own
+            // scheme sources that must be listed explicitly (this is why
+            // `data:` above is already spelled out rather than assumed under
+            // `'self'`; `blob:` needs the exact same treatment and was
+            // missing). Two independent features create
+            // `URL.createObjectURL(file)` previews of a locally-picked/just-
+            // uploaded file and hand them straight to an <img>/<video> src:
+            // the composer's own pick-time thumbnail (useFileUpload.ts
+            // `attachmentPreview`) and the chat bubble's just-sent-message
+            // preview (localAttachmentPreviewStore.ts). Without `blob:` here,
+            // the browser silently blocks both -- the bubble's is masked
+            // because ChatMessageBubble's `handleMediaElementError` catches
+            // the failed load and falls back to the real (slower,
+            // retry-hardened) `/api/media/{assetId}` URL, but the composer's
+            // preview has no such fallback, so it never renders at all.
+            "img-src 'self' data: blob: https://cdn.108jobs.com",
+            // `<video>`/`<audio>` sources fall back to `default-src` when
+            // `media-src` is unset, which -- like `img-src` before this
+            // change -- does not cover `blob:` either. Spelled out
+            // separately (rather than widening `default-src`) so this stays
+            // as narrow as the `img-src` fix above and does not loosen any
+            // other fallback category still relying on `default-src 'self'`.
+            "media-src 'self' blob:",
             "font-src 'self' data:",
-            `connect-src ${["'self'", apiOrigin, apiWsOrigin, identityOrigin].filter(Boolean).join(' ')}`,
+            `connect-src ${[...new Set(["'self'", apiOrigin, apiWsOrigin, identityOrigin, mediaGatewayOrigin, mediaPublicOrigin].filter(Boolean))].join(' ')}`,
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
@@ -213,7 +264,14 @@ const nextConfig: NextConfig = {
         }
         const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108jobs.com';
         return {
-            // Ensure these filesystem routes win before any proxying
+            // Ensure these filesystem routes win before any proxying. This only
+            // works for *non-dynamic* routes -- Next resolves static files and
+            // non-dynamic pages right after `beforeFiles`, before `afterFiles` is
+            // even consulted, so a self-mapping here is enough to keep them out of
+            // the catch-all below. A dynamic route (e.g. `[assetId]`) is not
+            // resolved at that point regardless of what's declared here -- see the
+            // `afterFiles` entry for `/api/media/*` below, which needs the other
+            // mechanism.
             beforeFiles: [
                 { source: '/session', destination: '/api/session' },
                 { source: '/:lang(th|en|vi)/session', destination: '/api/session' },
@@ -223,6 +281,30 @@ const nextConfig: NextConfig = {
             ],
             // Proxy other API routes and static uploads
             afterFiles: [
+                // Same-origin media proxy (src/app/api/media/[assetId]/route.ts).
+                // `[assetId]` makes this a *dynamic* route, so the `beforeFiles`
+                // self-mapping trick above does not apply to it -- Next only
+                // re-checks dynamic routes against a rewrite's result when the
+                // match happens in `afterFiles` (confirmed empirically: with this
+                // rule in `beforeFiles` instead, every /api/media/* request fell
+                // through to the catch-all below and was proxied straight to
+                // `${apiBase}/media/:path*`, a path the backend doesn't even serve,
+                // and the route handler that reads the caller's own cookie and
+                // forwards it as a bearer never ran at all). Ordered before the
+                // catch-all so it wins for this one prefix; every other /api/* path
+                // still falls through to the proxy below exactly as before.
+                { source: '/api/media/:path*', destination: '/api/media/:path*' },
+                // Same-origin rider-document proxy
+                // (src/app/api/rider-documents/[riderId]/[documentKind]/route.ts).
+                // Needs its own self-mapping for exactly the reason spelled out
+                // above: without it this dynamic route falls through to the
+                // catch-all and is proxied to `${apiBase}/rider-documents/...`,
+                // which the backend does not serve, so every document tile in
+                // the admin review modal 404s and the handler never runs. Its
+                // unit tests call the exported GET directly, so they pass either
+                // way -- only an HTTP request through a running server shows it.
+                // See #86.
+                { source: '/api/rider-documents/:path*', destination: '/api/rider-documents/:path*' },
                 { source: '/api/:path*', destination: `${apiBase}/:path*` },
                 { source: '/uploads/:path*', destination: 'https://cdn.108jobs.com/uploads/:path*' },
             ],

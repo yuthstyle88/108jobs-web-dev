@@ -54,9 +54,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ reviewView }) => {
                             )}
                         </span>
                     </div>
-                    {review.comment && (
+                    {review.proposal && (
                         <p className="text-sm text-gray-800 italic bg-gray-100 p-3 rounded-xl leading-relaxed shadow-inner">
-                            {review.comment}
+                            {review.proposal}
                         </p>
                     )}
                 </section>

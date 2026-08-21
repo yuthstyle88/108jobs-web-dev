@@ -3,7 +3,8 @@
 import React from "react";
 import AvatarBadge from "@/components/AvatarBadge";
 import { LocalUserId } from "108jobs-client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { usePeerOnline } from "@/modules/chat/store/presenceStore";
 import { useRouter, useParams } from "next/navigation";
 
@@ -14,6 +15,8 @@ interface ChatHeaderProps {
     typingText?: string;
     onToggleFlow?: () => void;
     isFlowOpen?: boolean;
+    onToggleSearch?: () => void;
+    isSearchOpen?: boolean;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -23,7 +26,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                                                    partnerId,
                                                    onToggleFlow,
                                                    isFlowOpen,
+                                                   onToggleSearch,
+                                                   isSearchOpen,
                                                }) => {
+    const {t} = useTranslation();
     const online = usePeerOnline(Number(partnerId) ?? 0);
     const router = useRouter();
     const params = useParams();
@@ -63,6 +69,17 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={onToggleSearch}
+                    aria-label={t("profileChat.roomSearch.open")}
+                    aria-expanded={Boolean(isSearchOpen)}
+                    className={`rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        isSearchOpen ? "bg-gray-100 text-primary" : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                >
+                    <Search className="h-5 w-5" />
+                </button>
                 {/* Show Flow Button — only visible on mobile */}
                 <button
                     onClick={onToggleFlow}

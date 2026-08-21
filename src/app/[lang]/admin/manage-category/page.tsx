@@ -2,7 +2,7 @@
 
 import React, {useState, useMemo, useEffect} from "react";
 import {buildCategoriesTree} from "@/utils/helpers";
-import {CategoryNodeView} from "108jobs-client";
+import {CategoryNodeView, Tag} from "108jobs-client";
 import {toast} from "sonner";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
@@ -17,6 +17,9 @@ import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
 import {isFailed, isSuccess} from "@/services/HttpService";
 import {CategoryRow} from "@/modules/admin/components/CategoryRow";
 import {CategoryModal} from "@/modules/admin/components/Modal/CategoryModal";
+import {DeleteCategoryModal} from "@/modules/admin/components/Modal/DeleteCategoryModal";
+import {TagModal} from "@/modules/admin/components/Modal/TagModal";
+import {DeleteTagModal} from "@/modules/admin/components/Modal/DeleteTagModal";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 
 interface CategoryFormData {
@@ -25,6 +28,16 @@ interface CategoryFormData {
     banner?: string;
     description?: string;
     parent_id?: number | null;
+}
+
+/** Depth-first lookup by id; the page only ever holds the tree, not a flat list. */
+function findNodeById(nodes: CategoryNodeView[], id: number): CategoryNodeView | null {
+    for (const node of nodes) {
+        if (node.category.id === id) return node;
+        const found = findNodeById(node.children || [], id);
+        if (found) return found;
+    }
+    return null;
 }
 
 export default function AdminCategoriesPage() {
@@ -45,6 +58,17 @@ export default function AdminCategoriesPage() {
     const [uploadedBanner, setUploadedBanner] = useState<string | null>(null);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
+    const [deletingCategory, setDeletingCategory] = useState<CategoryNodeView | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Tags: `addTagCategoryId` set => the add-tag modal is open for that
+    // category; `editingTag` set => the same modal is open in rename mode.
+    // The two are mutually exclusive (closeTagModal clears both).
+    const [addTagCategoryId, setAddTagCategoryId] = useState<number | null>(null);
+    const [editingTag, setEditingTag] = useState<Tag | null>(null);
+    const [tagNameInput, setTagNameInput] = useState("");
+    const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
+    const [isDeletingTag, setIsDeletingTag] = useState(false);
 
     // Lightbox
     const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -57,14 +81,36 @@ export default function AdminCategoriesPage() {
     const {execute: editCategory} = useHttpPut("editCategory");
     const {execute: deleteCategory} = useHttpDelete("deleteCategory");
 
+    const {execute: createCategoryTag} = useHttpPost("createCategoryTag");
+    const {execute: updateCategoryTag} = useHttpPut("updateCategoryTag");
+    const {execute: deleteCategoryTag} = useHttpDelete("deleteCategoryTag");
+
     const {execute: uploadIcon} = useHttpPost("uploadCategoryIcon");
     const {execute: uploadBanner} = useHttpPost("uploadCategoryBanner");
 
     const tree = useMemo<CategoryNodeView[]>(() => {
-        if (categories) {
-            return buildCategoriesTree(categories) || [];
-        }
-        return [];
+        if (!categories) return [];
+        // The list endpoint returns soft-deleted categories to admins (they
+        // bypass the hide filter every other caller gets), so without this a
+        // just-deleted category stays on screen behind its own success toast.
+        const prune = (nodes: CategoryNodeView[]): CategoryNodeView[] =>
+            nodes
+                .filter((node) => !node.category.deleted)
+                .map((node) => ({...node, children: prune(node.children || [])}));
+        return prune(buildCategoriesTree(categories) || []);
+    }, [categories]);
+
+    // `categories.categories` (the raw list response, distinct from the
+    // `tree` built above) is honestly typed as CategoryView[] and already
+    // carries each category's tags -- no extra request needed. Keyed by
+    // category id so CategoryRow can look up a node's tags without needing
+    // its own (differently-typed) CategoryNodeView to carry postTags too.
+    const tagsByCategory = useMemo(() => {
+        const map = new Map<number, Tag[]>();
+        (categories?.categories ?? []).forEach((c) => {
+            map.set(c.category.id, c.postTags);
+        });
+        return map;
     }, [categories]);
 
     const openImageLightbox = (src: string, alt: string) => {
@@ -146,21 +192,40 @@ export default function AdminCategoriesPage() {
 
         // --- NEW CATEGORY ---
         if (isAddingNew) {
-            // CreateCategory has no parent-relationship field (hierarchy is
-            // derived server-side from `path`) and requires `title`, which
-            // this form doesn't collect separately from `name` -- mirror it
-            // until subcategory creation gets a real form/product design.
+            // `title` isn't collected separately from `name` by this form, so
+            // it mirrors it. The backend derives the ltree path from `name`
+            // plus the parent's path.
             const res = await createCategory({
                 name: form.name,
                 title: form.name,
+                parentId: parentIdForNew ?? undefined,
                 description: form.description,
-                icon: iconUrl,
-                banner: bannerUrl,
+                // On the upload tab `iconUrl` still holds the FileReader's
+                // base64 data: URL from the preview -- only a real URL from
+                // the URL tab belongs in the create payload. The empty-string
+                // fallback has to become `undefined`: the field deserializes
+                // as a URL server-side, and `""` fails at the extractor with
+                // a 400 that never reaches the CORS layer, so the browser
+                // reports an opaque network error instead.
+                icon: iconMode === "url" && iconUrl ? iconUrl : undefined,
+                banner: bannerMode === "url" && bannerUrl ? bannerUrl : undefined,
             });
 
             if (isSuccess(res)) {
+                // Images can only be uploaded against an existing id, so any
+                // pending files are sent once the category exists.
+                const newId = res.data?.categoryView?.category?.id;
+                if (newId !== undefined) {
+                    if (iconMode === "upload" && iconFile) {
+                        await uploadIcon({id: newId}, {image: iconFile});
+                    }
+                    if (bannerMode === "upload" && bannerFile) {
+                        await uploadBanner({id: newId}, {image: bannerFile});
+                    }
+                }
                 toast.success(t("admin.category.created"));
                 closeModal();
+                await refetch();
             } else if (isFailed(res)) {
                 toast.error(t("admin.category.createError"));
             }
@@ -170,8 +235,11 @@ export default function AdminCategoriesPage() {
         if (editingCategory) {
             const res = await editCategory({
                 categoryId: editingCategory.category.id,
+                name: form.name,
                 title: form.name,
                 description: form.description,
+                icon: iconUrl || undefined,
+                banner: bannerUrl || undefined,
             });
 
             if (isFailed(res)) {
@@ -182,6 +250,96 @@ export default function AdminCategoriesPage() {
 
         closeModal();
         await refetch();
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deletingCategory) return;
+        setIsDeleting(true);
+        const res = await deleteCategory({
+            categoryId: deletingCategory.category.id,
+            deleted: true,
+        });
+        setIsDeleting(false);
+
+        if (isSuccess(res)) {
+            toast.success(t("admin.category.deleted"));
+            setDeletingCategory(null);
+            await refetch();
+        } else if (isFailed(res)) {
+            // The backend refuses to delete a category that still has live
+            // subcategories rather than orphaning them. Leave the dialog open
+            // so the message sits next to the category it refers to.
+            toast.error(
+                res.err?.error === "categoryHasChildren"
+                    ? t("admin.category.deleteHasChildren")
+                    : t("admin.category.deleteError"),
+            );
+        }
+    };
+
+    const openAddTagModal = (categoryId: number) => {
+        setEditingTag(null);
+        setAddTagCategoryId(categoryId);
+        setTagNameInput("");
+    };
+
+    const openEditTagModal = (tag: Tag) => {
+        setAddTagCategoryId(null);
+        setEditingTag(tag);
+        setTagNameInput(tag.displayName);
+    };
+
+    const closeTagModal = () => {
+        setAddTagCategoryId(null);
+        setEditingTag(null);
+        setTagNameInput("");
+    };
+
+    const handleSaveTag = async () => {
+        const displayName = tagNameInput.trim();
+        if (!displayName) {
+            toast.error(t("admin.category.tags.nameRequired"));
+            return;
+        }
+
+        if (editingTag) {
+            const res = await updateCategoryTag({tagId: editingTag.id, displayName});
+            if (isFailed(res)) {
+                toast.error(t("admin.category.tags.saveError"));
+                return;
+            }
+            // Mirrors editCategory: no success toast on rename, matching
+            // this page's existing edit-category behavior exactly.
+            closeTagModal();
+            await refetch();
+            return;
+        }
+
+        if (addTagCategoryId !== null) {
+            const res = await createCategoryTag({categoryId: addTagCategoryId, displayName});
+            if (isSuccess(res)) {
+                toast.success(t("admin.category.tags.created"));
+                closeTagModal();
+                await refetch();
+            } else if (isFailed(res)) {
+                toast.error(t("admin.category.tags.createError"));
+            }
+        }
+    };
+
+    const handleConfirmDeleteTag = async () => {
+        if (!deletingTag) return;
+        setIsDeletingTag(true);
+        const res = await deleteCategoryTag({tagId: deletingTag.id});
+        setIsDeletingTag(false);
+
+        if (isSuccess(res)) {
+            toast.success(t("admin.category.tags.deleted"));
+            setDeletingTag(null);
+            await refetch();
+        } else if (isFailed(res)) {
+            toast.error(t("admin.category.tags.deleteError"));
+        }
     };
 
     const closeModal = () => {
@@ -218,6 +376,7 @@ export default function AdminCategoriesPage() {
     };
 
     const isModalOpen = isAddingNew || !!editingCategory;
+    const isTagModalOpen = addTagCategoryId !== null || !!editingTag;
 
     return (
         <AdminLayout>
@@ -230,7 +389,7 @@ export default function AdminCategoriesPage() {
                             <p className="text-gray-600">{t("admin.category.subtitle")}</p>
                         </div>
                         <button
-                            onClick={() => toast(t("admin.category.addRootComingSoon"))}
+                            onClick={() => openAddModal(null)}
                             className="inline-flex items-center bg-primary text-white py-3 px-6
                    rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all"
                         >
@@ -280,10 +439,14 @@ export default function AdminCategoriesPage() {
                                             key={root.category.id}
                                             node={root}
                                             depth={0}
+                                            tagsByCategory={tagsByCategory}
                                             onEdit={openEditModal}
-                                            onDelete={(id) => deleteCategory({categoryId: id})}
+                                            onDelete={(id) => setDeletingCategory(findNodeById(tree, id))}
                                             onAddChild={openAddModal}
                                             onImageClick={openImageLightbox}
+                                            onAddTag={openAddTagModal}
+                                            onEditTag={openEditTagModal}
+                                            onDeleteTag={setDeletingTag}
                                         />
                                     ))}
                                     </tbody>
@@ -298,6 +461,11 @@ export default function AdminCategoriesPage() {
                 <CategoryModal
                     isOpen={isModalOpen}
                     isAddingNew={isAddingNew}
+                    parentName={
+                        parentIdForNew !== null
+                            ? findNodeById(tree, parentIdForNew)?.category.title ?? null
+                            : null
+                    }
                     form={form}
                     setForm={setForm}
                     iconMode={iconMode}
@@ -311,6 +479,32 @@ export default function AdminCategoriesPage() {
                     onImageUpload={handleImageUpload}
                     onSave={handleSave}
                     onClose={closeModal}
+                />
+
+                <DeleteCategoryModal
+                    isOpen={!!deletingCategory}
+                    categoryName={deletingCategory?.category.title ?? ""}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={() => setDeletingCategory(null)}
+                    isLoading={isDeleting}
+                />
+
+                {/* Add/Rename Tag Modal */}
+                <TagModal
+                    isOpen={isTagModalOpen}
+                    isAddingNew={addTagCategoryId !== null}
+                    name={tagNameInput}
+                    setName={setTagNameInput}
+                    onSave={handleSaveTag}
+                    onClose={closeTagModal}
+                />
+
+                <DeleteTagModal
+                    isOpen={!!deletingTag}
+                    tagName={deletingTag?.displayName ?? ""}
+                    onConfirm={handleConfirmDeleteTag}
+                    onCancel={() => setDeletingTag(null)}
+                    isLoading={isDeletingTag}
                 />
 
                 {/* Lightbox */}
