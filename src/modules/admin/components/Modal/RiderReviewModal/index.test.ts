@@ -233,7 +233,7 @@ function fakeApplication(overrides: Partial<RiderApplicationView> = {}): RiderAp
     return {
         fields: {},
         documents: [],
-        decision: {status: "Pending"},
+        decision: {status: "Pending", issues: []},
         ...overrides,
     };
 }

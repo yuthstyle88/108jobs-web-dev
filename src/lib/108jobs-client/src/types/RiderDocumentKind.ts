@@ -1,4 +1,5 @@
 export type RiderDocumentKind =
+    | "idCard"
     | "licence"
     | "vehicleRegistration"
     | "insurance"
