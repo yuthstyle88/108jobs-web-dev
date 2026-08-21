@@ -5,13 +5,13 @@ import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
 import {Card} from "@/components/ui/Card";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
-import {CheckCircle, Eye, Loader2, UserCheck, UserX, Motorbike, Car, Star} from "lucide-react";
+import {CheckCircle, Clock, Eye, Loader2, UserCheck, UserX, XCircle, Motorbike, Car, Star} from "lucide-react";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {RiderReviewModal} from "@/modules/admin/components/Modal/RiderReviewModal";
 import {JSX, useState} from "react";
-import {Rider, RiderView, VehicleType} from "108jobs-client";
+import {Rider, RiderVerificationStatus, RiderView, VehicleType} from "108jobs-client";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 
 const vehicleIconMap: Record<VehicleType, JSX.Element> = {
@@ -19,12 +19,12 @@ const vehicleIconMap: Record<VehicleType, JSX.Element> = {
     Car: <Car className="w-4 h-4"/>,
 };
 
-type ViewMode = "unverified" | "verified";
+type ViewMode = RiderVerificationStatus;
 
 export default function AdminRidersManagementPage() {
     const {t} = useTranslation();
 
-    const [viewMode, setViewMode] = useState<ViewMode>("unverified");
+    const [viewMode, setViewMode] = useState<ViewMode>("Pending");
     // The rider currently open in RiderReviewModal, or null when the modal
     // is closed. The Eye button on each row sets this; the modal itself
     // fetches the full application for `reviewingRider.id`.
@@ -40,13 +40,13 @@ export default function AdminRidersManagementPage() {
         loadPreviousPage,
         refetch,
     } = usePaginatedRiders({
-        verified: viewMode === "verified",
+        status: viewMode,
         limit: 10,
     });
 
     const handleTabChange = (mode: ViewMode) => {
         setViewMode(mode);
-        // The hook will automatically refetch with new `verified` param
+        // The hook will automatically refetch with the new `status` param
     };
 
     return (
@@ -59,18 +59,25 @@ export default function AdminRidersManagementPage() {
                     </div>
                     <div className="flex gap-2">
                         <Button
-                            variant={viewMode === "unverified" ? "default" : "outline"}
-                            onClick={() => handleTabChange("unverified")}
+                            variant={viewMode === "Pending" ? "default" : "outline"}
+                            onClick={() => handleTabChange("Pending")}
                         >
-                            <UserX className="w-4 h-4 mr-2"/>
-                            {t("admin.riders.tabUnverified")}
+                            <Clock className="w-4 h-4 mr-2"/>
+                            {t("admin.riders.tabPending")}
                         </Button>
                         <Button
-                            variant={viewMode === "verified" ? "default" : "outline"}
-                            onClick={() => handleTabChange("verified")}
+                            variant={viewMode === "Verified" ? "default" : "outline"}
+                            onClick={() => handleTabChange("Verified")}
                         >
                             <UserCheck className="w-4 h-4 mr-2"/>
-                            {t("admin.riders.tabVerified")}
+                            {t("admin.riders.tabApproved")}
+                        </Button>
+                        <Button
+                            variant={viewMode === "Rejected" ? "default" : "outline"}
+                            onClick={() => handleTabChange("Rejected")}
+                        >
+                            <UserX className="w-4 h-4 mr-2"/>
+                            {t("admin.riders.tabRejected")}
                         </Button>
                     </div>
                 </header>
@@ -96,9 +103,11 @@ export default function AdminRidersManagementPage() {
                     <Card className="border-dashed p-12 text-center">
                         <UserX className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40"/>
                         <p className="text-sm text-muted-foreground">
-                            {viewMode === "unverified"
-                                ? t("admin.riders.emptyUnverified")
-                                : t("admin.riders.emptyVerified")}
+                            {viewMode === "Pending"
+                                ? t("admin.riders.emptyPending")
+                                : viewMode === "Verified"
+                                    ? t("admin.riders.emptyVerified")
+                                    : t("admin.riders.emptyRejected")}
                         </p>
                     </Card>
                 )}
@@ -109,7 +118,6 @@ export default function AdminRidersManagementPage() {
                         <div className="space-y-4">
                             {riders.map((item: RiderView) => {
                                 const {rider, person} = item;
-                                const isUnverified = viewMode === "unverified";
 
                                 return (
                                     <Card
@@ -132,19 +140,30 @@ export default function AdminRidersManagementPage() {
                                                             {person.name || person.displayName || t("admin.riders.unknown")}
                                                         </h3>
                                                         <Badge
-                                                            variant={isUnverified ? "secondary" : "default"}
+                                                            variant={
+                                                                rider.verificationStatus === "Verified"
+                                                                    ? "default"
+                                                                    : rider.verificationStatus === "Rejected"
+                                                                        ? "destructive"
+                                                                        : "secondary"
+                                                            }
                                                             className="text-xs sm:text-sm px-3 py-1"
                                                         >
-                                                            {isUnverified ? (
+                                                            {rider.verificationStatus === "Verified" ? (
+                                                                <>
+                                                                    <CheckCircle className="w-3.5 h-3.5 mr-1"/>
+                                                                    {t("admin.riders.statusVerified")}
+                                                                </>
+                                                            ) : rider.verificationStatus === "Rejected" ? (
+                                                                <>
+                                                                    <XCircle className="w-3.5 h-3.5 mr-1"/>
+                                                                    {t("admin.riders.statusRejected")}
+                                                                </>
+                                                            ) : (
                                                                 <>
                                                                     <Loader2
                                                                         className="w-3.5 h-3.5 mr-1 animate-spin"/>
                                                                     {t("admin.riders.statusPending")}
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <CheckCircle className="w-3.5 h-3.5 mr-1"/>
-                                                                    {t("admin.riders.statusVerified")}
                                                                 </>
                                                             )}
                                                         </Badge>

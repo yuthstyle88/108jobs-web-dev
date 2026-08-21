@@ -4111,8 +4111,9 @@ export const vi = {
                 // Page title & tabs
                 title: "Quản lý tài xế",
                 description: "Quản lý tài xế cho 108jobs",
-                tabUnverified: "Chưa xác minh",
-                tabVerified: "Đã xác minh",
+                tabPending: "Chờ duyệt",
+                tabApproved: "Đã phê duyệt",
+                tabRejected: "Đã từ chối",
 
                 // Status & badges
                 statusPending: "Đang chờ duyệt",
@@ -4120,8 +4121,9 @@ export const vi = {
                 statusRejected: "Đã từ chối",
 
                 // Empty states
-                emptyUnverified: "Hiện tại không có tài xế nào đang chờ xác minh",
+                emptyPending: "Hiện tại không có tài xế nào đang chờ xác minh",
                 emptyVerified: "Chưa có tài xế nào được xác minh",
+                emptyRejected: "Chưa có tài xế nào bị từ chối",
 
                 // Labels
                 email: "Email",
@@ -4147,10 +4149,6 @@ export const vi = {
                 username: "Tên đăng nhập",
                 unknown: "Không xác định",
 
-                // Optional – if you add rejection reason later
-                rejectionReason: "Lý do từ chối",
-                rejectionReasonPlaceholder: "Nhập lý do từ chối đơn đăng ký này",
-
                 // RiderReviewModal
                 reviewModal: {
                     closeLabel: "Đóng",
@@ -4162,7 +4160,7 @@ export const vi = {
                     },
                     rejectionReasonLabel: "Lý do từ chối",
                     previousRejectionLabel: "Trước đây đã bị từ chối với lý do",
-                    rejectionReasonRequired: "Cần nhập lý do mới có thể từ chối đơn đăng ký này.",
+                    alreadyDecided: "Một quản trị viên khác đã đưa ra quyết định cho đơn đăng ký này. Đang tải dữ liệu mới nhất…",
                     fieldEmpty: "Chưa cung cấp",
                     mismatch: {
                         title: "Số định danh cá nhân không khớp",
@@ -4222,6 +4220,7 @@ export const vi = {
                         openInNewTab: "Mở tài liệu",
                         openFailed: "Không thể mở",
                         kinds: {
+                            idCard: "Căn cước công dân",
                             licence: "Giấy phép lái xe",
                             vehicleRegistration: "Đăng ký xe",
                             insurance: "Bảo hiểm",
@@ -4244,6 +4243,21 @@ export const vi = {
                     actions: {
                         confirmReject: "Xác nhận từ chối",
                         cancelReject: "Hủy",
+                    },
+                    // The reject panel's issue repeater -- one row per problem.
+                    reject: {
+                        issueLabel: "Vấn đề {{number}}",
+                        documentLabel: "Tài liệu",
+                        noDocumentOption: "Không liên quan đến tài liệu",
+                        reasonLabel: "Lý do",
+                        reasonPlaceholder: "Mô tả vấn đề gặp phải",
+                        removeIssueLabel: "Xóa vấn đề này",
+                        addIssue: "Thêm vấn đề khác",
+                        errors: {
+                            noIssues: "Vui lòng thêm ít nhất một vấn đề trước khi từ chối.",
+                            reasonRequired: "Mỗi vấn đề đều cần có lý do.",
+                            duplicateDocument: "Mỗi tài liệu chỉ được chọn một lần.",
+                        },
                     },
                 },
             },

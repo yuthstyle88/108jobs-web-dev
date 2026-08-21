@@ -16,6 +16,7 @@ import {createRoot, type Root} from "react-dom/client";
 import {renderToStaticMarkup} from "react-dom/server";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {GetRiderResponse, Rider, RiderApplicationView} from "108jobs-client";
+import {ApiRequestError} from "108jobs-client";
 import {en} from "@/translations/en";
 import {th} from "@/translations/th";
 import {vi as viTranslation} from "@/translations/vi";
@@ -28,6 +29,7 @@ vi.mock("react-i18next", () => ({
     useTranslation: () => ({t: (key: string) => key}),
 }));
 
+import {toast} from "sonner";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {RiderReviewModal} from "@/modules/admin/components/Modal/RiderReviewModal";
@@ -39,6 +41,10 @@ import {RiderReviewModal} from "@/modules/admin/components/Modal/RiderReviewModa
 // them with, without spelling `any` anywhere in this file.
 const mockUseHttpGet = useHttpGet as unknown as ReturnType<typeof vi.fn>;
 const mockUseHttpPost = useHttpPost as unknown as ReturnType<typeof vi.fn>;
+// Same reasoning as the two casts above -- `toast.error` is the mocked
+// `vi.fn()` from the factory at runtime, typed here as the real sonner
+// export's function signature unless cast.
+const mockToastError = toast.error as unknown as ReturnType<typeof vi.fn>;
 
 const RIDER_APPLICATION_FIELD_KEYS = [
     "nationalIdNumber",
@@ -78,6 +84,7 @@ const RIDER_APPLICATION_FIELD_KEYS = [
 ] as const;
 
 const RIDER_DOCUMENT_KINDS = [
+    "idCard",
     "licence",
     "vehicleRegistration",
     "insurance",
@@ -98,7 +105,7 @@ describe("RiderReviewModal translations", () => {
         expect(keys).toEqual([...RIDER_APPLICATION_FIELD_KEYS].sort());
     });
 
-    it("has all 6 RiderDocumentKind keys, and only those, under documents.kinds", () => {
+    it("has all 7 RiderDocumentKind keys, and only those, under documents.kinds", () => {
         const keys = Object.keys(en.translation.admin.riders.reviewModal.documents.kinds).sort();
         expect(keys).toEqual([...RIDER_DOCUMENT_KINDS].sort());
     });
@@ -141,14 +148,13 @@ describe("RiderReviewModal translations", () => {
         "admin.riders.actionRejected",
         "admin.riders.errorOccurred",
         "admin.riders.id",
-        "admin.riders.rejectionReason",
-        "admin.riders.rejectionReasonPlaceholder",
         "admin.riders.statusPending",
         "admin.riders.statusRejected",
         "admin.riders.statusVerified",
         "admin.riders.unknown",
         "admin.riders.reviewModal.actions.cancelReject",
         "admin.riders.reviewModal.actions.confirmReject",
+        "admin.riders.reviewModal.alreadyDecided",
         "admin.riders.reviewModal.applicationUnavailable",
         "admin.riders.reviewModal.closeLabel",
         "admin.riders.reviewModal.documents.notSubmitted",
@@ -164,8 +170,17 @@ describe("RiderReviewModal translations", () => {
         "admin.riders.reviewModal.mismatch.fromLicence",
         "admin.riders.reviewModal.mismatch.title",
         "admin.riders.reviewModal.previousRejectionLabel",
+        "admin.riders.reviewModal.reject.addIssue",
+        "admin.riders.reviewModal.reject.documentLabel",
+        "admin.riders.reviewModal.reject.errors.duplicateDocument",
+        "admin.riders.reviewModal.reject.errors.noIssues",
+        "admin.riders.reviewModal.reject.errors.reasonRequired",
+        "admin.riders.reviewModal.reject.issueLabel",
+        "admin.riders.reviewModal.reject.noDocumentOption",
+        "admin.riders.reviewModal.reject.reasonLabel",
+        "admin.riders.reviewModal.reject.reasonPlaceholder",
+        "admin.riders.reviewModal.reject.removeIssueLabel",
         "admin.riders.reviewModal.rejectionReasonLabel",
-        "admin.riders.reviewModal.rejectionReasonRequired",
         "admin.riders.reviewModal.review.criminalRecordCheck",
         "admin.riders.reviewModal.review.criminalRecordCheckedAt",
         "admin.riders.reviewModal.review.criminalRecordCheckedBy",
@@ -351,6 +366,97 @@ describe("RiderReviewModal rendering", () => {
         expect(container.textContent).not.toContain("admin.riders.reviewModal.mismatch.title");
     });
 
+    // #91: the header banner on an already-rejected application read only
+    // `rejectionReason` -- `issues[0]`'s reason, derived server-side and kept
+    // only for a shipped client that never learned about `issues` -- instead
+    // of the full list. `rejectionReason` here deliberately equals
+    // `issues[0].reason`, exactly as a real server derives it, so the only
+    // thing that can distinguish "renders issues" from "renders
+    // rejectionReason" is whether the SECOND issue shows up anywhere. A test
+    // that only checked the first reason would pass unchanged against the
+    // old code -- see the two-rows test above this one in spirit.
+    it("shows every issue's own reason on an already-rejected application, not just the first", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Rejected",
+                        rejectionReason: "ID card photo is blurry",
+                        issues: [
+                            {document: "idCard", reason: "ID card photo is blurry"},
+                            {document: "face", reason: "Face photo too dark"},
+                        ],
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("ID card photo is blurry");
+        expect(container.textContent).toContain("Face photo too dark");
+    });
+
+    it("falls back to the derived rejectionReason when issues is empty, so an older backend still renders something", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Rejected",
+                        rejectionReason: "Blurry licence photo",
+                        issues: [],
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("Blurry licence photo");
+    });
+
+    // #92: the identical defect as #91, one banner over. After a resubmission
+    // puts the application back to Pending, the previous-rejection banner
+    // read only `previousReview.reason` instead of `previousReview.issues`.
+    // Same proof shape as the #91 test above: `reason` is deliberately set
+    // equal to `issues[0]`'s reason, exactly as the server derives it, so
+    // only actually rendering the second issue can pass this. `status` is
+    // "Pending" (a real resubmission) rather than "Rejected", so this
+    // exercises the previousReview banner alone, not #91's sibling.
+    it("shows every issue from the previous rejection, not just the first, after a resubmission", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Pending",
+                        issues: [],
+                        previousReview: {
+                            reason: "ID card photo is blurry",
+                            issues: [
+                                {document: "idCard", reason: "ID card photo is blurry"},
+                                {document: "face", reason: "Face photo too dark"},
+                            ],
+                        },
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("ID card photo is blurry");
+        expect(container.textContent).toContain("Face photo too dark");
+    });
+
+    it("falls back to the previous review's derived reason when its issues is empty", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {
+                        status: "Pending",
+                        issues: [],
+                        previousReview: {
+                            reason: "Blurry licence photo",
+                            issues: [],
+                        },
+                    },
+                }),
+            ),
+        );
+        expect(container.textContent).toContain("Blurry licence photo");
+    });
+
     it("renders every field group and never asserts past a null field", () => {
         mount(fakeResponse(fakeApplication({fields: {nationalIdNumber: "1234567890123"}})));
         expect(container.textContent).toContain("admin.riders.reviewModal.sections.identity");
@@ -370,6 +476,17 @@ describe("RiderReviewModal rendering", () => {
         const img = container.querySelector("img");
         expect(img?.getAttribute("src")).toBe("/api/rider-documents/42/face");
         expect(container.textContent).toContain("admin.riders.reviewModal.documents.notSubmitted");
+    });
+
+    it("renders idCard as its own tile, proxied the same way as the other six", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({documents: [{kind: "idCard", uploadedAt: "2026-01-01T00:00:00Z"}]}),
+            ),
+        );
+        const img = container.querySelector("img");
+        expect(img?.getAttribute("src")).toBe("/api/rider-documents/42/idCard");
+        expect(img?.getAttribute("alt")).toBe("admin.riders.reviewModal.documents.kinds.idCard");
     });
 
     it("closes on Escape", () => {
@@ -420,12 +537,44 @@ describe("RiderReviewModal rendering", () => {
         expect(verifyExecute).toHaveBeenCalledWith({riderId: 42, approve: true, reason: undefined});
     });
 
+    // F1: opening an already-decided rider from the new Approved/Rejected
+    // tabs must not offer controls whose only possible outcome is the 409
+    // below. The status read-back (StatusBadge always; RejectionIssuesBanner
+    // for Rejected) stays -- only the live buttons and the reject panel go.
+    it("hides the approve/reject footer once the application is already Verified, showing only the read-back", () => {
+        mount(fakeResponse(fakeApplication({decision: {status: "Verified", issues: []}})));
+        expect(container.textContent).not.toContain("admin.riders.actionApprove");
+        expect(container.textContent).not.toContain("admin.riders.actionReject");
+    });
+
+    it("hides the approve/reject footer for a Rejected application too, not only Verified", () => {
+        mount(
+            fakeResponse(
+                fakeApplication({
+                    decision: {status: "Rejected", rejectionReason: "Blurry licence photo", issues: []},
+                }),
+            ),
+        );
+        expect(container.textContent).not.toContain("admin.riders.actionApprove");
+        expect(container.textContent).not.toContain("admin.riders.actionReject");
+    });
+
     function openRejectPanel() {
         const rejectButton = Array.from(container.querySelectorAll("button")).find((b) =>
             b.textContent?.includes("admin.riders.actionReject"),
         ) as HTMLButtonElement;
         act(() => rejectButton.click());
-        return container.querySelector("textarea") as HTMLTextAreaElement;
+    }
+
+    // The repeater can hold any number of rows, so callers index into these
+    // rather than a single querySelector -- and read them fresh every call,
+    // since add/remove changes which DOM nodes exist.
+    function issueTextareas() {
+        return Array.from(container.querySelectorAll("textarea")) as HTMLTextAreaElement[];
+    }
+
+    function issueSelects() {
+        return Array.from(container.querySelectorAll("select")) as HTMLSelectElement[];
     }
 
     function setTextareaValue(textarea: HTMLTextAreaElement, value: string) {
@@ -436,15 +585,34 @@ describe("RiderReviewModal rendering", () => {
         });
     }
 
+    // React listens for "change" on a <select> (unlike text inputs, where it
+    // listens for "input") -- mirrors setTextareaValue's native-setter trick
+    // for the element React actually wires a listener to.
+    function setSelectValue(select: HTMLSelectElement, value: string) {
+        const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")?.set;
+        act(() => {
+            setter?.call(select, value);
+            select.dispatchEvent(new Event("change", {bubbles: true}));
+        });
+    }
+
     function findConfirmRejectButton() {
         return Array.from(container.querySelectorAll("button")).find((b) =>
             b.textContent?.includes("admin.riders.reviewModal.actions.confirmReject"),
         ) as HTMLButtonElement;
     }
 
-    it("reject reveals a required reason field; a real reason enables Confirm and is sent trimmed", () => {
+    function findAddIssueButton() {
+        return Array.from(container.querySelectorAll("button")).find((b) =>
+            b.textContent?.includes("admin.riders.reviewModal.reject.addIssue"),
+        ) as HTMLButtonElement;
+    }
+
+    it("reject opens with one row; a real reason enables Confirm and is sent trimmed, with an explicit document: null when none was chosen", () => {
         mount(fakeResponse(fakeApplication()));
-        const textarea = openRejectPanel();
+        openRejectPanel();
+        expect(issueTextareas()).toHaveLength(1);
+        const textarea = issueTextareas()[0];
         expect(textarea.required).toBe(true);
         // Leading/trailing whitespace proves trimming, not just pass-through.
         setTextareaValue(textarea, "  Blurry licence photo  ");
@@ -453,37 +621,192 @@ describe("RiderReviewModal rendering", () => {
         expect(confirmButton.disabled).toBe(false);
         act(() => confirmButton.click());
 
+        // The row's document select was never touched, so this also proves
+        // the payload carries a real `document` key set to `null` rather
+        // than an omitted one: `toHaveBeenCalledWith`'s deep-equal ignores
+        // an `undefined` property but NOT `null` (verified separately --
+        // `expect({}).toEqual({a: null})` fails in this project's vitest),
+        // so `{document: null, ...}` here would not match a payload whose
+        // issue was `{reason: "..."}` with `document` left out entirely.
         expect(verifyExecute).toHaveBeenCalledWith({
             riderId: 42,
             approve: false,
-            reason: "Blurry licence photo",
+            issues: [{document: null, reason: "Blurry licence photo"}],
         });
     });
 
-    it("keeps Confirm rejection disabled and fires no request while the reason is blank", () => {
+    it("a row explicitly set back to 'not about a document' sends document: null, not an omitted key", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+        setSelectValue(issueSelects()[0], "licence");
+        setSelectValue(issueSelects()[0], ""); // back to "not about a document"
+        setTextareaValue(issueTextareas()[0], "The vehicle is older than the policy allows");
+
+        act(() => findConfirmRejectButton().click());
+
+        expect(verifyExecute).toHaveBeenCalledWith({
+            riderId: 42,
+            approve: false,
+            issues: [{document: null, reason: "The vehicle is older than the policy allows"}],
+        });
+    });
+
+    it("opens the reject panel with Confirm disabled but no error shown yet, since nothing has been touched", () => {
         mount(fakeResponse(fakeApplication()));
         openRejectPanel();
 
         const confirmButton = findConfirmRejectButton();
         expect(confirmButton.disabled).toBe(true);
-        expect(container.textContent).toContain("admin.riders.reviewModal.rejectionReasonRequired");
+        // Disabled from the first paint (there is genuinely nothing to
+        // reject yet), but the red explanation waits for interaction -- a
+        // form should not scold before the admin has typed anything (F7).
+        expect(container.textContent).not.toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
 
         act(() => confirmButton.click());
         expect(verifyExecute).not.toHaveBeenCalled();
         expect(onReviewed).not.toHaveBeenCalled();
     });
 
-    it("treats a whitespace-only reason the same as blank", () => {
+    it("shows the reason-required error once the admin has typed something and the field is still blank", () => {
         mount(fakeResponse(fakeApplication()));
-        const textarea = openRejectPanel();
-        setTextareaValue(textarea, "   ");
+        openRejectPanel();
+        const textarea = issueTextareas()[0];
+        setTextareaValue(textarea, "x");
+        setTextareaValue(textarea, "");
 
         const confirmButton = findConfirmRejectButton();
         expect(confirmButton.disabled).toBe(true);
-        expect(container.textContent).toContain("admin.riders.reviewModal.rejectionReasonRequired");
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
 
         act(() => confirmButton.click());
         expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("treats a whitespace-only reason the same as blank", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+        setTextareaValue(issueTextareas()[0], "   ");
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.reasonRequired");
+
+        act(() => confirmButton.click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("two rows submit two issues, in the order shown -- the case a repeater that silently truncates to its first row would still pass every single-issue test above", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+
+        setSelectValue(issueSelects()[0], "licence");
+        setTextareaValue(issueTextareas()[0], "Blurry licence photo");
+
+        act(() => findAddIssueButton().click());
+        expect(issueTextareas()).toHaveLength(2);
+
+        setSelectValue(issueSelects()[1], "face");
+        setTextareaValue(issueTextareas()[1], "Face photo too dark");
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(false);
+        act(() => confirmButton.click());
+
+        expect(verifyExecute).toHaveBeenCalledWith({
+            riderId: 42,
+            approve: false,
+            issues: [
+                {document: "licence", reason: "Blurry licence photo"},
+                {document: "face", reason: "Face photo too dark"},
+            ],
+        });
+    });
+
+    it("the same document chosen twice keeps Confirm disabled", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+        setSelectValue(issueSelects()[0], "licence");
+        setTextareaValue(issueTextareas()[0], "Blurry");
+
+        act(() => findAddIssueButton().click());
+        setSelectValue(issueSelects()[1], "licence");
+        setTextareaValue(issueTextareas()[1], "Also blurry, from a different angle");
+
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.duplicateDocument");
+
+        act(() => confirmButton.click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("removing the only row keeps Confirm disabled and explains why", () => {
+        mount(fakeResponse(fakeApplication()));
+        openRejectPanel();
+
+        const removeButton = Array.from(container.querySelectorAll("button")).find(
+            (b) => b.getAttribute("aria-label") === "admin.riders.reviewModal.reject.removeIssueLabel",
+        ) as HTMLButtonElement;
+        act(() => removeButton.click());
+
+        expect(issueTextareas()).toHaveLength(0);
+        const confirmButton = findConfirmRejectButton();
+        expect(confirmButton.disabled).toBe(true);
+        expect(container.textContent).toContain("admin.riders.reviewModal.reject.errors.noIssues");
+
+        act(() => confirmButton.click());
+        expect(verifyExecute).not.toHaveBeenCalled();
+    });
+
+    it("a mocked 409 surfaces the already-decided message and refetches, instead of a generic failure", async () => {
+        const refetch = vi.fn();
+        mockUseHttpGet.mockReturnValue({
+            state: {state: "success", data: fakeResponse(fakeApplication())},
+            data: fakeResponse(fakeApplication()),
+            error: undefined,
+            isLoading: false,
+            execute: refetch,
+            isMutating: false,
+            pagination: undefined,
+        });
+        act(() => {
+            root.render(createElement(RiderReviewModal, {rider: fakeRider(), onClose, onReviewed}));
+        });
+
+        // verifyExecute's inferred type comes from its default `async () =>
+        // ({state: "success", data: {ok: true}})` implementation above,
+        // which has no `err` field -- same cast reasoning as
+        // mockUseHttpGet/mockUseHttpPost/mockToastError up top, applied
+        // locally since verifyExecute itself is declared per-describe-block.
+        //
+        // err is a real ApiRequestError, not a plain {error: ...} literal.
+        // That is the shape the client actually throws
+        // (src/lib/108jobs-client/src/http.ts:1895's `new ApiRequestError(
+        // json.error ?? ..., json.message)`, whose constructor sets
+        // `this.name` -- there is no `.error` property on the thrown
+        // object). A plain-object mock with an `.error` key would exercise
+        // `res.err.error ?? res.err.name`'s left side, which production
+        // never takes (F3).
+        (verifyExecute as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+            state: "failed",
+            err: new ApiRequestError("riderDecisionAlreadyMade"),
+        });
+        openRejectPanel();
+        setTextareaValue(issueTextareas()[0], "Blurry licence photo");
+
+        // handleDecision awaits verifyRider() before acting on the result;
+        // flush that pending microtask (and any it schedules in turn) before
+        // asserting on what happens after it resolves.
+        await act(async () => {
+            findConfirmRejectButton().click();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+
+        expect(mockToastError).toHaveBeenCalledWith("admin.riders.reviewModal.alreadyDecided");
+        expect(refetch).toHaveBeenCalledOnce();
+        expect(onReviewed).not.toHaveBeenCalled();
+        // The stale panel is cleared rather than left open under the refetch.
+        expect(container.querySelector("textarea")).toBeNull();
     });
 
     it("moves focus to the close button on open and restores it to the opener on close", () => {
