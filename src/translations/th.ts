@@ -4000,7 +4000,11 @@ export const th = {
             riders: {
                 // Page title & tabs
                 title: "จัดการไรเดอร์",
-                description: "จัดการไรเดอร์สำหรับ 108jobs",
+                description: "ตรวจสอบใบสมัครไรเดอร์และติดตามสถานะการยืนยัน",
+                queueLabel: "คิวตรวจสอบไรเดอร์",
+                pageLabel: "หน้า {{page}}",
+                loading: "กำลังโหลดรายชื่อไรเดอร์…",
+                retry: "ลองใหม่",
                 tabPending: "รอตรวจสอบ",
                 tabApproved: "อนุมัติแล้ว",
                 tabRejected: "ถูกปฏิเสธ",
