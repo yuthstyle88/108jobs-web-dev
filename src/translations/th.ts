@@ -4001,8 +4001,9 @@ export const th = {
                 // Page title & tabs
                 title: "จัดการไรเดอร์",
                 description: "จัดการไรเดอร์สำหรับ 108jobs",
-                tabUnverified: "ยังไม่ยืนยัน",
-                tabVerified: "ยืนยันแล้ว",
+                tabPending: "รอตรวจสอบ",
+                tabApproved: "อนุมัติแล้ว",
+                tabRejected: "ถูกปฏิเสธ",
 
                 // Status & badges
                 statusPending: "รอการตรวจสอบ",
@@ -4010,8 +4011,9 @@ export const th = {
                 statusRejected: "ถูกปฏิเสธ",
 
                 // Empty states
-                emptyUnverified: "ขณะนี้ยังไม่มีไรเดอร์ที่รอการยืนยัน",
+                emptyPending: "ขณะนี้ยังไม่มีไรเดอร์ที่รอการยืนยัน",
                 emptyVerified: "ยังไม่มีไรเดอร์ที่ได้รับการยืนยัน",
+                emptyRejected: "ยังไม่มีไรเดอร์ที่ถูกปฏิเสธ",
 
                 // Field labels
                 email: "อีเมล",

@@ -4087,8 +4087,9 @@ export const en = {
                 // Page title & tabs
                 title: "Rider Management",
                 description: "Manage riders for 108jobs",
-                tabUnverified: "Unverified",
-                tabVerified: "Verified",
+                tabPending: "Pending",
+                tabApproved: "Approved",
+                tabRejected: "Rejected",
 
                 // Status & badges
                 statusPending: "Pending Review",
@@ -4096,8 +4097,9 @@ export const en = {
                 statusRejected: "Rejected",
 
                 // Empty states
-                emptyUnverified: "No riders awaiting verification at this time",
+                emptyPending: "No riders awaiting verification at this time",
                 emptyVerified: "No verified riders yet",
+                emptyRejected: "No rejected riders yet",
 
                 // Field labels
                 email: "Email",

@@ -4111,8 +4111,9 @@ export const vi = {
                 // Page title & tabs
                 title: "Quản lý tài xế",
                 description: "Quản lý tài xế cho 108jobs",
-                tabUnverified: "Chưa xác minh",
-                tabVerified: "Đã xác minh",
+                tabPending: "Chờ duyệt",
+                tabApproved: "Đã phê duyệt",
+                tabRejected: "Đã từ chối",
 
                 // Status & badges
                 statusPending: "Đang chờ duyệt",
@@ -4120,8 +4121,9 @@ export const vi = {
                 statusRejected: "Đã từ chối",
 
                 // Empty states
-                emptyUnverified: "Hiện tại không có tài xế nào đang chờ xác minh",
+                emptyPending: "Hiện tại không có tài xế nào đang chờ xác minh",
                 emptyVerified: "Chưa có tài xế nào được xác minh",
+                emptyRejected: "Chưa có tài xế nào bị từ chối",
 
                 // Labels
                 email: "Email",

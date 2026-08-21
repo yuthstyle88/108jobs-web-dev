@@ -4,15 +4,15 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {REQUEST_STATE} from "@/services/HttpService"; // assuming you have this
-import {PaginationCursor} from "108jobs-client";
+import {PaginationCursor, RiderVerificationStatus} from "108jobs-client";
 
 interface UsePaginatedRidersProps {
-    verified?: boolean;
+    status?: RiderVerificationStatus;
     limit?: number;
 }
 
 export const usePaginatedRiders = ({
-                                       verified = false,
+                                       status = "Pending",
                                        limit = 10,
                                    }: UsePaginatedRidersProps = {}) => {
     const {t} = useTranslation();
@@ -31,7 +31,7 @@ export const usePaginatedRiders = ({
         pageCursor: currentCursor,
         pageBack: isGoingBack,
         limit,
-        verified,
+        status,
     });
 
     const riders = useMemo(() => paginationData?.riders ?? [], [paginationData?.riders]);
