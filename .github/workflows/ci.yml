@@ -1,53 +1,99 @@
-name: CI (manual only)
+name: CI
 
-# This repo is a downstream mirror of 108-Plaza/108jobs-web. Code arrives here
-# only after it has already merged there, and the org repo runs this same suite
-# -- lint, typecheck, vitest, Playwright -- as a required gate on every PR. So
-# every automatic run here re-tested a commit that was green before it arrived:
-# duplicated work whose verdict nobody reads, and a second red X to explain
-# whenever the two fleets disagree about something unrelated to the code.
-#
-# It was close to free while this repo was public, because GitHub-hosted
-# minutes are unmetered on public repos. The repo is going private, and the
-# jobs below run on `ubuntu-latest`, so from that moment every bridge push
-# would start billing the personal account for a re-test of already-merged
-# code. Hence: no `push`, no `pull_request`.
-#
-# `workflow_dispatch` stays. The suite is worth keeping runnable by hand for
-# the case this mirror ever diverges from upstream and someone needs to know
-# whether this side stands on its own. A manual click is a deliberate decision
-# to spend the minutes, which is the difference that matters.
-#
-# The runner labels stay `ubuntu-latest` on purpose. Upstream pins
-# `[self-hosted, Linux, X64]` and enforces it with a job that fails on any
-# `ubuntu-*` label, precisely so a sync from this mirror cannot quietly move
-# the org's builds onto billed hosted runners. That guard is about which
-# workflow governs the ORG repo; here there is no self-hosted pool to reach,
-# and a manual run needs a runner that actually exists. This file is not
-# synced upstream (see the `bridge:` commit that established that), so the
-# labels cannot travel.
 on:
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch: {}
 
+# Keyed on the source BRANCH rather than `github.ref`. On a pull_request
+# `github.ref` is `refs/pull/N/merge`, on a push it is `refs/heads/<branch>`, so
+# the old key put the same branch in different groups depending on the trigger.
+# `github.head_ref` is set only on pull_request events and holds the branch
+# name; `github.ref_name` is the branch name everywhere else.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  # Never cancel a run on main. That run is the record of whether the default
+  # branch is green, and cancelling it on a rapid second merge leaves a commit
+  # with no verdict -- precisely the "red check nobody trusts" problem this
+  # workflow's other comments are about, in a different costume. PR runs are
+  # superseded freely.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  lint-typecheck-test:
-    name: Lint, typecheck, unit tests
-    runs-on: ubuntu-latest
+  # ---------------------------------------------------------------------------
+  # The fleet runs on self-hosted runners only. This job is the enforcement:
+  # a GitHub-hosted label reintroduced by a copy-paste (or by a sync from the
+  # personal mirror, which pins its own pool) fails CI instead of quietly
+  # billing hosted minutes on a private repo. Same guard as api-108jobs.
+  # ---------------------------------------------------------------------------
+  runners:
+    name: self-hosted only
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - uses: actions/checkout@v4
 
+      - name: No GitHub-hosted runners
+        run: |
+          set -euo pipefail
+          if grep -rnE '^[[:space:]]*runs-on:.*(ubuntu|windows|macos)-' .github/workflows/; then
+            echo "::error::CI in this repo runs on self-hosted runners only." \
+                 "Use 'runs-on: [self-hosted, Linux, X64]'."
+            exit 1
+          fi
+          echo "every workflow pins a self-hosted runner"
+
+  lint-typecheck-test:
+    name: Lint, typecheck, unit tests
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      - uses: actions/checkout@v4
+
+      # Keep the package store off the throwaway directory below and on a
+      # stable path, so isolating the installer does not also mean
+      # re-downloading every dependency on every job. The store is
+      # content-addressed and built for concurrent use by many projects at
+      # once, so sharing it between jobs is safe in a way that sharing the
+      # installer directory is not.
+      - name: Point pnpm at a shared store
+        run: echo "npm_config_store_dir=$HOME/.pnpm-store" >> "$GITHUB_ENV"
+
+      # No `version:` here on purpose. The input is optional, and when it is
+      # omitted the action reads the version out of the `packageManager` field
+      # of `package_json_file` (which defaults to the root package.json) -- so
+      # package.json is the one place the root pnpm version is written. A pin
+      # repeated here and in the e2e job below is a pin that will eventually
+      # disagree with package.json, and the failure mode of that disagreement
+      # is a lockfile silently discarded as "not compatible" rather than a
+      # clean error. Same reason the sub-package steps below take their version
+      # from their own package.json.
       - uses: pnpm/action-setup@v4
         with:
-          version: 8.15.4
+          # `dest` defaults to `~/setup-pnpm`, and this box runs several runner
+          # processes under one $HOME — so two jobs of the same workflow install
+          # pnpm into the very same directory at the very same moment. The
+          # action wipes `dest` before writing it, which is exactly as bad as it
+          # sounds. Observed three times on 2026-08-07, three different faces of
+          # one race: `ENOTEMPTY: rmdir '/home/yuth/setup-pnpm'`, `ENOENT:
+          # process.cwd failed ... the current working directory was likely
+          # removed`, and a `copyfile` from a store path that had just been
+          # deleted underneath it.
+          #
+          # Every one of them passed on a re-run with no code change, which is
+          # the real damage: it teaches everyone to re-run a red check
+          # reflexively, and one day that will wave through a true failure.
+          # `RUNNER_TEMP` is per-job and wiped between jobs, so the two can no
+          # longer see each other's directory at all.
+          dest: ${{ runner.temp }}/setup-pnpm
 
+      # No `cache: pnpm` — actions/cache is a tax on a self-hosted runner, not
+      # a saving: the store already persists on the box between runs, so the
+      # cache step only adds an upload/download of it to GitHub, and its restore
+      # has been observed to hang outright on this fleet (see pos108-admin's
+      # ci.yml, which dropped it for the same reason).
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       # src/lib/108jobs-client is a standalone package (own package.json/
       # pnpm-lock.yaml/node_modules, not a pnpm workspace member) that the
@@ -64,15 +110,21 @@ jobs:
       # this package) -- that build error is now avoided at the source by
       # excluding test files from the package's build tsconfig, so nothing
       # here needs vitest.
-      # This sub-package pins its OWN pnpm version (10.13.1, vs. the root's
-      # 8.15.4) via its package.json's packageManager field -- its lockfile
-      # (lockfileVersion '9.0') is unreadable by the job-wide pnpm 8.15.4
-      # from pnpm/action-setup above, which silently discards it as "not
-      # compatible" and then fails as if no lockfile existed at all. Invoke
-      # its own pinned version via corepack instead of the job's pnpm on PATH.
+      # This sub-package pins its OWN pnpm version (pnpm 10, vs. the root's
+      # pnpm 8) via its package.json's packageManager field -- its lockfile
+      # (lockfileVersion '9.0') is unreadable by the job-wide pnpm from
+      # pnpm/action-setup above, which silently discards it as "not
+      # compatible" and then fails as if no lockfile existed at all. So it
+      # must NOT use the job's pnpm on PATH.
+      #
+      # Bare `corepack pnpm` (no @version) resolves packageManager from the
+      # nearest package.json, which `working-directory` makes the sub-package's
+      # own -- so the version lives only in that file. Spelling it out here
+      # instead would put the same number in three steps across two jobs, each
+      # free to drift from the package.json that actually governs the lockfile.
       - name: Install 108jobs-client sub-package dependencies
         working-directory: src/lib/108jobs-client
-        run: corepack pnpm@10.13.1 install --frozen-lockfile
+        run: corepack pnpm install --frozen-lockfile
 
       # The sub-package owns a vitest suite (src/http.test.ts) asserting the
       # generated client's identity-platform method surface. The root vitest
@@ -81,7 +133,7 @@ jobs:
       # pinned pnpm/vitest (installed by the step above).
       - name: Test 108jobs-client sub-package
         working-directory: src/lib/108jobs-client
-        run: corepack pnpm@10.13.1 run test
+        run: corepack pnpm run test
 
       - run: pnpm install --frozen-lockfile
 
@@ -96,47 +148,87 @@ jobs:
 
   e2e:
     name: Playwright E2E
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
+    # getIdentityBase() refuses to guess: with NEXT_PUBLIC_IDENTITY_BASE_URL
+    # unset it returns "", and IdentityOtpService gives back
+    # `identityNotConfigured` WITHOUT making a request -- so the page.route()
+    # mocks in tests/utils/otp.ts never fire and register.spec.ts /
+    # login.spec.ts / protected-redirect.spec.ts all fail at "the phone number
+    # never appears after Send code" rather than at anything they are testing.
+    # The value below is never actually dialed (every call to it is
+    # intercepted), so it only has to be well-formed.
     env:
-      # IdentityOtpService.ts/IdentityPasskeyService.ts refuse to even attempt
-      # a fetch when this is unset (see IdentityOtpService.ts's own comment:
-      # guessing is worse than refusing) -- register.spec.ts/login.spec.ts/
-      # protected-redirect.spec.ts never reach their page.route() mocks
-      # without it, and fail at "phone number never appears after Send code"
-      # instead of a clear "not configured" message. The value is never
-      # actually dialed: every request to it is intercepted by page.route()
-      # in tests/utils/otp.ts, so it only needs to be well-formed, not real.
       NEXT_PUBLIC_IDENTITY_BASE_URL: http://localhost:19999
+      # The suite now builds before it runs (see playwright.config.ts), and
+      # next.config.ts refuses to build for production without this rather than
+      # silently rewriting to the staging backend. Nothing dials it: every
+      # browser-side call is intercepted by page.route, and the SSR fetches these
+      # specs trigger are already expected to fail.
+      API_INTERNAL_URL: http://localhost:19998
     steps:
       - uses: actions/checkout@v4
 
+      # See the lint job for both of these.
+      - name: Point pnpm at a shared store
+        run: echo "npm_config_store_dir=$HOME/.pnpm-store" >> "$GITHUB_ENV"
+
+      # No `version:` — read from package.json's packageManager. See the lint job.
       - uses: pnpm/action-setup@v4
         with:
-          version: 8.15.4
+          dest: ${{ runner.temp }}/setup-pnpm
 
+      # No `cache: pnpm` — see the lint job.
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       # See the equivalent step in the lint-typecheck-test job -- same reason,
       # and likewise a real gate (no continue-on-error).
       - name: Install 108jobs-client sub-package dependencies
         working-directory: src/lib/108jobs-client
-        run: corepack pnpm@10.13.1 install --frozen-lockfile
+        run: corepack pnpm install --frozen-lockfile
 
       - run: pnpm install --frozen-lockfile
 
-      # playwright.config.ts's webServer boots its own `npm run dev` instance
-      # (port 3001) and tests/utils/{auth,otp}.ts mock the backend/Identity
-      # APIs via page.route -- no separately-running backend, Identity
-      # instance, or real secrets are needed (see this job's `env:` above for
-      # why NEXT_PUBLIC_IDENTITY_BASE_URL still has to be set to something).
+      # No `--with-deps`: that runs apt-get on the runner, which needs sudo and
+      # mutates a machine shared with every other repo in the fleet. The system
+      # libraries are installed on the box already -- pos108-admin's e2e job
+      # runs Playwright here with the same bare `install chromium`.
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
+      # playwright.config.ts defaults the webServer to port 3001, and on this
+      # runner 3001 is permanently taken: something owned by another user holds
+      # 127.0.0.1:3001, so the bind fails with EADDRINUSE. Killing it is not an
+      # option and not even diagnosable from here -- an unprivileged `lsof`/
+      # `fuser` cannot see another user's socket, so a "free the port" step
+      # reports the port idle and the bind fails two seconds later anyway.
+      #
+      # So do not compete for a fixed port. Ask the kernel for a free one and
+      # hand it to Playwright. This also removes the collision between two runs
+      # on different refs landing on the same box -- `concurrency:` above only
+      # cancels runs on the SAME ref, so it never protected against that.
+      - name: Pick a free port for the dev server
+        run: |
+          set -euo pipefail
+          port=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
+          echo "E2E_PORT=$port" >> "$GITHUB_ENV"
+          echo "dev server will listen on $port"
+
+      # playwright.config.ts's webServer boots its own `npm run dev` instance on
+      # $E2E_PORT and tests/utils/auth.ts mocks the backend API via page.route
+      # -- no separately-running backend or secrets are needed.
       - name: E2E tests
         run: npx playwright test
+
+      # Playwright shuts its webServer down itself on a normal exit, but a
+      # cancelled job is killed mid-suite and would otherwise leave a `next dev`
+      # running on this persistent box forever -- one orphan per cancelled run.
+      - name: Stop the dev server
+        if: ${{ always() }}
+        run: |
+          (command -v fuser >/dev/null 2>&1 && fuser -k "${E2E_PORT}/tcp") || true
+          (command -v lsof  >/dev/null 2>&1 && lsof -ti "tcp:${E2E_PORT}" | xargs -r kill -9) || true
 
       - name: Upload Playwright report
         if: failure()

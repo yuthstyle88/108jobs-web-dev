@@ -459,7 +459,7 @@ const JobBoard = () => {
                                                                 {job.tags.length > 0 && (
                                                                     <div
                                                                         className="mt-1.5 flex flex-wrap gap-1.5 whitespace-normal max-w-[220px]">
-                                                                        {job.tags.map((tag) => (
+                                                                        {job.tags.map((tag: { id?: string | number; displayName?: string }) => (
                                                                             <Badge
                                                                                 key={tag.id}
                                                                                 variant="outline"
@@ -506,12 +506,12 @@ const JobBoard = () => {
                                         .map((job) => {
                                             const jobTypeLabel = getJobTypeLabel(job.post.jobType, t);
 
-                                            const badgeColor = {
+                                            const badgeColor: string = {
                                                 [JobType.FullTime]: "bg-emerald-100 text-emerald-800",
                                                 [JobType.PartTime]: "bg-blue-100 text-blue-800",
                                                 [JobType.Contract]: "bg-purple-100 text-purple-800",
                                                 [JobType.Freelance]: "bg-amber-100 text-amber-800",
-                                            }[job.post.jobType] || "bg-gray-100 text-gray-800";
+                                            }[job.post.jobType as string] || "bg-gray-100 text-gray-800";
 
                                             return (
                                                 <div
@@ -547,7 +547,7 @@ const JobBoard = () => {
                                                                 </h3>
                                                                 {job.tags.length > 0 && (
                                                                     <div className="mt-2 flex flex-wrap gap-1.5 pr-20">
-                                                                        {job.tags.map((tag) => (
+                                                                        {job.tags.map((tag: { id?: string | number; displayName?: string }) => (
                                                                             <Badge
                                                                                 key={tag.id}
                                                                                 variant="outline"

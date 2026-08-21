@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
 import {Card} from "@/components/ui/Card";
@@ -24,7 +25,6 @@ export default function AdminRidersManagementPage() {
     const {t} = useTranslation();
 
     const [viewMode, setViewMode] = useState<ViewMode>("Pending");
-
     // The rider currently open in RiderReviewModal, or null when the modal
     // is closed. The Eye button on each row sets this; the modal itself
     // fetches the full application for `reviewingRider.id`.
