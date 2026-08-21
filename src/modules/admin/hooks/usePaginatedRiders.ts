@@ -4,15 +4,15 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {REQUEST_STATE} from "@/services/HttpService"; // assuming you have this
-import {PaginationCursor} from "108jobs-client";
+import {PaginationCursor, RiderVerificationStatus} from "108jobs-client";
 
 interface UsePaginatedRidersProps {
-    verified?: boolean;
+    status?: RiderVerificationStatus;
     limit?: number;
 }
 
 export const usePaginatedRiders = ({
-                                       verified = false,
+                                       status = "Pending",
                                        limit = 10,
                                    }: UsePaginatedRidersProps = {}) => {
     const {t} = useTranslation();
@@ -31,7 +31,7 @@ export const usePaginatedRiders = ({
         pageCursor: currentCursor,
         pageBack: isGoingBack,
         limit,
-        verified,
+        status,
     });
 
     const riders = useMemo(() => paginationData?.riders ?? [], [paginationData?.riders]);
@@ -67,6 +67,18 @@ export const usePaginatedRiders = ({
         setIsLoading(isRidersLoading);
     }, [isRidersLoading]);
 
+    // A tab switch changes `status`, which alone forces useHttpGet's SWR key
+    // to refetch -- but `currentCursor`/`cursorHistory`/`isGoingBack` are
+    // local state, untouched by that key change, so without this the new
+    // tab's first fetch still carries whatever cursor was live for the
+    // previous tab. Past the end of the new tab's own results, that comes
+    // back empty. Pre-existing with the old two-tab toggle; three tabs make
+    // it materially easier to hit. See #90.
+    useEffect(() => {
+        setCurrentCursor(undefined);
+        setCursorHistory([]);
+        setIsGoingBack(false);
+    }, [status]);
 
     return {
         riders,

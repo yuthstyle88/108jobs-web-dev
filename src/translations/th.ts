@@ -4001,8 +4001,9 @@ export const th = {
                 // Page title & tabs
                 title: "จัดการไรเดอร์",
                 description: "จัดการไรเดอร์สำหรับ 108jobs",
-                tabUnverified: "ยังไม่ยืนยัน",
-                tabVerified: "ยืนยันแล้ว",
+                tabPending: "รอตรวจสอบ",
+                tabApproved: "อนุมัติแล้ว",
+                tabRejected: "ถูกปฏิเสธ",
 
                 // Status & badges
                 statusPending: "รอการตรวจสอบ",
@@ -4010,8 +4011,9 @@ export const th = {
                 statusRejected: "ถูกปฏิเสธ",
 
                 // Empty states
-                emptyUnverified: "ขณะนี้ยังไม่มีไรเดอร์ที่รอการยืนยัน",
+                emptyPending: "ขณะนี้ยังไม่มีไรเดอร์ที่รอการยืนยัน",
                 emptyVerified: "ยังไม่มีไรเดอร์ที่ได้รับการยืนยัน",
+                emptyRejected: "ยังไม่มีไรเดอร์ที่ถูกปฏิเสธ",
 
                 // Field labels
                 email: "อีเมล",
@@ -4035,10 +4037,6 @@ export const th = {
                 username: "ชื่อผู้ใช้",
                 unknown: "ไม่ทราบ",
 
-                // Optional – if you add rejection reason later
-                rejectionReason: "เหตุผลการปฏิเสธ",
-                rejectionReasonPlaceholder: "ระบุเหตุผลในการปฏิเสธใบสมัครนี้",
-
                 // RiderReviewModal
                 reviewModal: {
                     closeLabel: "ปิด",
@@ -4050,7 +4048,7 @@ export const th = {
                     },
                     rejectionReasonLabel: "เหตุผลการปฏิเสธ",
                     previousRejectionLabel: "เคยถูกปฏิเสธด้วยเหตุผล",
-                    rejectionReasonRequired: "ต้องระบุเหตุผลจึงจะปฏิเสธใบสมัครได้",
+                    alreadyDecided: "ผู้ดูแลระบบรายอื่นตัดสินใบสมัครนี้ไปแล้ว กำลังโหลดข้อมูลล่าสุด…",
                     fieldEmpty: "ไม่ได้ระบุ",
                     mismatch: {
                         title: "หมายเลขบัตรประชาชนไม่ตรงกัน",
@@ -4110,6 +4108,7 @@ export const th = {
                         openInNewTab: "เปิดเอกสาร",
                         openFailed: "เปิดไม่ได้",
                         kinds: {
+                            idCard: "บัตรประชาชน",
                             licence: "ใบขับขี่",
                             vehicleRegistration: "ทะเบียนรถ",
                             insurance: "ประกันภัย",
@@ -4132,6 +4131,25 @@ export const th = {
                     actions: {
                         confirmReject: "ยืนยันการปฏิเสธ",
                         cancelReject: "ยกเลิก",
+                    },
+                    // Rejecting: a tick and a reason under each document,
+                    // one box for a problem that is about no document, and
+                    // a read-back before it is sent.
+                    reject: {
+                        markFailed: "ไม่ผ่าน",
+                        markFailedLabel: "ทำเครื่องหมายว่า{{document}}ไม่ผ่าน",
+                        reasonForDocument: "เหตุผลที่{{document}}ไม่ผ่าน",
+                        reasonPlaceholder: "อธิบายปัญหาที่พบ",
+                        otherIssueTitle: "ไม่เกี่ยวกับเอกสาร",
+                        otherIssueMark: "มีปัญหาอื่นที่ไม่ได้อยู่ที่เอกสารใบใด",
+                        otherIssueReasonLabel: "ปัญหาคืออะไร",
+                        otherIssuePlaceholder: "เช่น รถเก่ากว่าเกณฑ์ที่รับได้",
+                        hint: "ติ๊ก \"ไม่ผ่าน\" ที่เอกสารที่มีปัญหา แล้วระบุเหตุผล",
+                        rejectWithCount: "ปฏิเสธ ({{count}})",
+                        summaryTitle: "สิ่งที่จะแจ้งกลับผู้สมัคร",
+                        errors: {
+                            reasonRequired: "เอกสารที่ติ๊กไว้ทุกใบต้องระบุเหตุผล",
+                        },
                     },
                 },
             },

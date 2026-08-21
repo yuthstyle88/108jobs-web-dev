@@ -4087,8 +4087,9 @@ export const en = {
                 // Page title & tabs
                 title: "Rider Management",
                 description: "Manage riders for 108jobs",
-                tabUnverified: "Unverified",
-                tabVerified: "Verified",
+                tabPending: "Pending",
+                tabApproved: "Approved",
+                tabRejected: "Rejected",
 
                 // Status & badges
                 statusPending: "Pending Review",
@@ -4096,8 +4097,9 @@ export const en = {
                 statusRejected: "Rejected",
 
                 // Empty states
-                emptyUnverified: "No riders awaiting verification at this time",
+                emptyPending: "No riders awaiting verification at this time",
                 emptyVerified: "No verified riders yet",
+                emptyRejected: "No rejected riders yet",
 
                 // Field labels
                 email: "Email",
@@ -4121,10 +4123,6 @@ export const en = {
                 username: "Username",
                 unknown: "Unknown",
 
-                // Optional – if you add rejection reason later
-                rejectionReason: "Rejection Reason",
-                rejectionReasonPlaceholder: "Enter the reason for rejecting this application",
-
                 // RiderReviewModal
                 reviewModal: {
                     closeLabel: "Close",
@@ -4136,7 +4134,7 @@ export const en = {
                     },
                     rejectionReasonLabel: "Rejection reason",
                     previousRejectionLabel: "Previously rejected for",
-                    rejectionReasonRequired: "A reason is required to reject an application.",
+                    alreadyDecided: "Someone else already decided this application. Refreshing…",
                     fieldEmpty: "Not provided",
                     mismatch: {
                         title: "ID number mismatch",
@@ -4196,6 +4194,7 @@ export const en = {
                         openInNewTab: "Open document",
                         openFailed: "Couldn't open",
                         kinds: {
+                            idCard: "ID card",
                             licence: "Driving licence",
                             vehicleRegistration: "Vehicle registration",
                             insurance: "Insurance",
@@ -4218,6 +4217,25 @@ export const en = {
                     actions: {
                         confirmReject: "Confirm rejection",
                         cancelReject: "Cancel",
+                    },
+                    // Rejecting: a tick and a reason under each document,
+                    // one box for a problem that is about no document, and
+                    // a read-back before it is sent.
+                    reject: {
+                        markFailed: "Doesn't pass",
+                        markFailedLabel: "Mark {{document}} as not passing",
+                        reasonForDocument: "Why {{document}} doesn't pass",
+                        reasonPlaceholder: "Describe what's wrong",
+                        otherIssueTitle: "Not about a document",
+                        otherIssueMark: "There's a problem that isn't about any document",
+                        otherIssueReasonLabel: "What is the problem?",
+                        otherIssuePlaceholder: "e.g. the vehicle is older than the policy allows",
+                        hint: "Tick \"Doesn't pass\" on each document with a problem, and say why.",
+                        rejectWithCount: "Reject ({{count}})",
+                        summaryTitle: "What the rider will be told",
+                        errors: {
+                            reasonRequired: "Every document you marked needs a reason.",
+                        },
                     },
                 },
             },

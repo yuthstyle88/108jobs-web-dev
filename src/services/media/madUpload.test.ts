@@ -489,10 +489,24 @@ describe("uploadSelectedImage with MAD", () => {
       NEXT_PUBLIC_MEDIA_PUBLIC_URL: "https://media.example.com",
     });
     UserService.Instance.authInfo = {auth: "jwt-abc"} as never;
-    stubFetch([SESSION, BYTES, COMPLETE]);
+    // Two fetch responses, not three: the byte PUT in the middle of MAD's
+    // handshake runs over XMLHttpRequest, not fetch (madUpload.ts's
+    // `uploadBytesWithProgress` -- fetch has no request-side progress
+    // events), so it needs the fake XHR rather than a third stubbed
+    // response. Same pairing as every other MAD test in this file.
+    const calls = stubFetch([SESSION, COMPLETE]);
+    installFakeXhr(calls);
 
     const url = await uploadSelectedImage(file);
     expect(url).toBe("https://media.example.com/assets/asset-9/public-bytes");
+    // The public URL above can only be built from a completed asset, so
+    // this also pins that all three legs ran rather than that the fallback
+    // path quietly produced something that happened to match.
+    expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+      "POST https://mad.example.com/uploads",
+      "PUT https://mad.example.com/uploads/sess-1/bytes",
+      "POST https://mad.example.com/uploads/complete",
+    ]);
   });
 
   it("falls back to uploadImage function when MAD is not configured", async () => {
