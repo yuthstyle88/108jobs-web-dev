@@ -4037,10 +4037,6 @@ export const th = {
                 username: "ชื่อผู้ใช้",
                 unknown: "ไม่ทราบ",
 
-                // Optional – if you add rejection reason later
-                rejectionReason: "เหตุผลการปฏิเสธ",
-                rejectionReasonPlaceholder: "ระบุเหตุผลในการปฏิเสธใบสมัครนี้",
-
                 // RiderReviewModal
                 reviewModal: {
                     closeLabel: "ปิด",
@@ -4052,7 +4048,6 @@ export const th = {
                     },
                     rejectionReasonLabel: "เหตุผลการปฏิเสธ",
                     previousRejectionLabel: "เคยถูกปฏิเสธด้วยเหตุผล",
-                    rejectionReasonRequired: "ต้องระบุเหตุผลจึงจะปฏิเสธใบสมัครได้",
                     alreadyDecided: "ผู้ดูแลระบบรายอื่นตัดสินใบสมัครนี้ไปแล้ว กำลังโหลดข้อมูลล่าสุด…",
                     fieldEmpty: "ไม่ได้ระบุ",
                     mismatch: {

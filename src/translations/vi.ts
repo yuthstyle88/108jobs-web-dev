@@ -4149,10 +4149,6 @@ export const vi = {
                 username: "Tên đăng nhập",
                 unknown: "Không xác định",
 
-                // Optional – if you add rejection reason later
-                rejectionReason: "Lý do từ chối",
-                rejectionReasonPlaceholder: "Nhập lý do từ chối đơn đăng ký này",
-
                 // RiderReviewModal
                 reviewModal: {
                     closeLabel: "Đóng",
@@ -4164,7 +4160,6 @@ export const vi = {
                     },
                     rejectionReasonLabel: "Lý do từ chối",
                     previousRejectionLabel: "Trước đây đã bị từ chối với lý do",
-                    rejectionReasonRequired: "Cần nhập lý do mới có thể từ chối đơn đăng ký này.",
                     alreadyDecided: "Một quản trị viên khác đã đưa ra quyết định cho đơn đăng ký này. Đang tải dữ liệu mới nhất…",
                     fieldEmpty: "Chưa cung cấp",
                     mismatch: {

@@ -4123,10 +4123,6 @@ export const en = {
                 username: "Username",
                 unknown: "Unknown",
 
-                // Optional – if you add rejection reason later
-                rejectionReason: "Rejection Reason",
-                rejectionReasonPlaceholder: "Enter the reason for rejecting this application",
-
                 // RiderReviewModal
                 reviewModal: {
                     closeLabel: "Close",
@@ -4138,7 +4134,6 @@ export const en = {
                     },
                     rejectionReasonLabel: "Rejection reason",
                     previousRejectionLabel: "Previously rejected for",
-                    rejectionReasonRequired: "A reason is required to reject an application.",
                     alreadyDecided: "Someone else already decided this application. Refreshing…",
                     fieldEmpty: "Not provided",
                     mismatch: {
