@@ -54,7 +54,7 @@ const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch
                 </section>
                 <section className="flex items-center gap-4 w-full sm:w-auto mt-4 sm:mt-0 justify-end">
                     {!isLoggedIn && (
-                        <Link prefetch={false} href="/job-board" className="text-white text-sm hover:text-gray-200">
+                        <Link prefetch={false} href={`/${lang}/job-board`} className="text-white text-sm hover:text-gray-200">
                             {t("global.labelJobBoardCenter")}
                         </Link>
                     )}
@@ -62,7 +62,7 @@ const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch
                     {/* Admin Dashboard Button */}
                     {userInfo?.localUserView.localUser.admin && (
                         <Link
-                            href="/admin/dashboard"
+                            href={`/${lang}/admin/dashboard`}
                             className="bg-amber-500 text-white text-sm px-3 py-1 rounded hover:bg-amber-200"
                         >
                             {t("global.labelAdminDashboard") || "Admin Dashboard"}
@@ -70,10 +70,10 @@ const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch
                     )}
                     {!isLoggedIn && (
                         <>
-                            <Link prefetch={false} href="/login" className="text-white text-sm hover:text-gray-200">
+                            <Link prefetch={false} href={`/${lang}/login`} className="text-white text-sm hover:text-gray-200">
                                 {t("global.labelSignInButton")}
                             </Link>
-                            <Link prefetch={false} href="/register" className="text-white text-sm hover:text-gray-200">
+                            <Link prefetch={false} href={`/${lang}/register`} className="text-white text-sm hover:text-gray-200">
                                 {t("global.labelSignUpButton")}
                             </Link>
                         </>

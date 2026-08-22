@@ -1,6 +1,9 @@
+"use client";
 import React from "react";
 import Link from "next/link";
 import {LucideIcon, Plus} from "lucide-react";
+import {useLanguage} from "@/contexts/LanguageContext";
+import {withLocalePrefix} from "@/utils/localeHref";
 
 interface EmptyStateProps {
     icon: LucideIcon;
@@ -12,10 +15,11 @@ interface EmptyStateProps {
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({icon: Icon, message, addLabel, href}) => {
+    const {lang} = useLanguage();
     if (href && addLabel) {
         return (
             <Link
-                href={href}
+                href={withLocalePrefix(href, lang)}
                 prefetch={false}
                 className="flex items-center gap-3 rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500 hover:border-primary hover:text-primary transition-colors"
             >

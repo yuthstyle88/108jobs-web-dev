@@ -193,9 +193,9 @@ export const PostForm: React.FC<PostFormProps> = ({
     }, [watchedCategoryId, setValue]);
 
     const handleCreateSuccess = useCallback(async () => {
-            router.replace("/job-board");
+            router.replace(`/${i18n.language}/job-board`);
         },
-        [router]);
+        [router, i18n.language]);
 
     const onSubmit = useCallback(
         async (data: z.infer<typeof jobSchema>) => {

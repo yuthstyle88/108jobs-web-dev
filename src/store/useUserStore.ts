@@ -35,7 +35,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     set((state) => ({ userInfo: state.userInfo ? { ...state.userInfo, ...updatedData } : null })),
   clearUser: () => set({ user: null }),
   clearPerson: () => set({ person: null }),
-  resetStore: () => set({ user: null, person: null, online: false }),
+  resetStore: () => set({ user: null, person: null, userInfo: null, online: false }),
   setOnline: (status) => set({ online: status }),
   getOnline: () => get().online,
 }));

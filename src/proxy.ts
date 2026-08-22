@@ -45,13 +45,6 @@ export async function proxy(req: NextRequest) {
         return resp;
     };
 
-    console.log({
-        pathname,
-        pathLngCurrent,
-        cookieLng,
-        effectiveLng,
-        cookieTargetLng
-    });
     // --- protect dynamic routes ---
     const pathNoLang = stripLocalePrefix(pathname);
     const isProtected = PROTECTED_PATHS.some((p) => pathNoLang.startsWith(p));

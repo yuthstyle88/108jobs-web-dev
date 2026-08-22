@@ -4,15 +4,26 @@ import {callHttp, EMPTY_REQUEST, Payload, REQUEST_STATE, RequestState, WrappedAp
 import {UserService} from "@/services";
 import {useGlobalLoader} from "@/hooks/ui/GlobalLoaderContext";
 
+const PUBLIC_GET_METHODS = new Set([
+  "search",
+  "getPost",
+  "getPostTags",
+  "listCategories",
+  "getSite",
+  "listBanks",
+  "listUserReviews",
+  "visitProfile",
+]);
+
 export function useHttpGet<K extends keyof WrappedApi108Jobs>(
   // ชื่อ request method
   method: K,
   // พารามิเตอร์ที่อาจเป็น args (อาร์เรย์) หรือตัวเลือกเพิ่มเติม (option object)
   argsOrOptions?:
     | Parameters<WrappedApi108Jobs[K]>
-    | (Parameters<WrappedApi108Jobs[K]>[0] & SWRConfiguration<RequestState<Payload<K>>, Error>),
+    | (Parameters<WrappedApi108Jobs[K]>[0] & SWRConfiguration<RequestState<Payload<K>>, Error> & { showGlobalLoader?: boolean; isPublic?: boolean }),
   // SWR options
-  maybeOptions?: SWRConfiguration<RequestState<Payload<K>>, Error>,
+  maybeOptions?: SWRConfiguration<RequestState<Payload<K>>, Error> & { showGlobalLoader?: boolean; isPublic?: boolean },
 ) {
   const { setLoading } = useGlobalLoader(); // ใช้สำหรับ Global Loader
   const { setError } = useGlobalError(); // ใช้สำหรับ Global Error
@@ -28,13 +39,15 @@ export function useHttpGet<K extends keyof WrappedApi108Jobs>(
   // กำหนดค่าตัวเลือกสำหรับ SWR
   const options = args && Array.isArray(argsOrOptions)
     ? maybeOptions
-    : (argsOrOptions as SWRConfiguration<RequestState<Payload<K>>, Error> | undefined);
+    : (argsOrOptions as (SWRConfiguration<RequestState<Payload<K>>, Error> & { showGlobalLoader?: boolean; isPublic?: boolean }) | undefined);
 
   /* ---------- key / fetcher ---------- */
   const key = [method, ...(args ?? [])] as const;
 
+  const showGlobal = Boolean(options?.showGlobalLoader);
+
   const fetcher = async () => {
-    setLoading(true); // แสดง Loader
+    if (showGlobal) setLoading(true); // แสดง Global Loader เฉพาะเมื่อระบุชัดเจน
     setError(null); // ล้างข้อผิดพลาดเก่าก่อนเริ่มการดึงข้อมูลใหม่
     try {
       const typedArgs = (args ?? []) as Parameters<WrappedApi108Jobs[K]>;
@@ -52,20 +65,26 @@ export function useHttpGet<K extends keyof WrappedApi108Jobs>(
         err: err instanceof Error ? err : new Error("Error occurred"),
       } as RequestState<Payload<K>>;
     } finally {
-      setLoading(false); // ปิด Loader เสมอ
+      if (showGlobal) setLoading(false); // ปิด Global Loader
     }
   };
 
   /* ---------- swr ---------- */
-    const swr = useSWR<RequestState<Payload<K>>, Error>(
-        UserService.Instance?.authInfo?.auth ? key : null, // Only fetch if token exists
-        fetcher,
-        {
-            keepPreviousData: true,
-            revalidateOnFocus: false,
-            ...options,
-        }
-    );
+  const isAllowedToFetch = Boolean(
+    UserService.Instance?.authInfo?.auth ||
+    PUBLIC_GET_METHODS.has(method as string) ||
+    options?.isPublic
+  );
+
+  const swr = useSWR<RequestState<Payload<K>>, Error>(
+    isAllowedToFetch ? key : null,
+    fetcher,
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+      ...options,
+    }
+  );
 
   /* ---------- mapping ---------- */
   const state = swr.data ?? EMPTY_REQUEST;

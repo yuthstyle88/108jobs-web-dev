@@ -16,7 +16,12 @@ import {UserEventsProvider} from "@/modules/chat/contexts/UserEventsContext";
 import {GlobalLoaderProvider} from "@/hooks/ui/GlobalLoaderContext";
 import {TooltipProvider} from "@/components/ui/Tooltip";
 import {I18NextService} from "@/services";
-import {Metadata} from "next";
+import {Metadata, Viewport} from "next";
+
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+};
 
 const kanit = Kanit({
     subsets: ["latin", "vietnamese", "thai"],
@@ -58,16 +63,8 @@ export default async function RootLayout({
     const initialLang = lang || langCookie || userLang;
     return (
         <html lang={lang} suppressHydrationWarning>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1"/>
-            <link rel="preconnect" href="https://fonts.googleapis.com"/>
-            <link rel="dns-prefetch" href="https://fonts.googleapis.com"/>
-            <FontAwesomeConfig/>
-            <title>
-                {process.env.NEXT_PUBLIC_SITE_NAME}
-            </title>
-        </head>
         <body suppressHydrationWarning className={`${kanit.className} antialiased bg-white`}>
+        <FontAwesomeConfig/>
         <LanguageProvider initialLang={initialLang!}>
             <GlobalLoaderProvider>
                 <GlobalErrorProvider>

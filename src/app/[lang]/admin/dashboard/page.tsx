@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {StatsCard} from "@/components/ui/StatsCard";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/Card";
-import {Users, MessageSquare, Globe, Activity, Shield, CheckCircle, AlertTriangle, Settings} from "lucide-react";
+import {Users, MessageSquare, FileText, Globe, Activity, Shield, CheckCircle, AlertTriangle, Settings} from "lucide-react";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
@@ -73,7 +73,7 @@ const DashboardPage = () => {
         {
             title: t("dashboard.stats.totalProposals"),
             value: localSite?.proposals?.toLocaleString() ?? "0",
-            icon: MessageSquare,
+            icon: FileText,
             description: t("dashboard.stats.descriptionProposals"),
         },
     ];
@@ -130,7 +130,7 @@ const DashboardPage = () => {
                 </Card>
 
                 {/* Stats Grid */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {stats.map((stat, index) => (
                         <StatsCard key={index} {...stat} />
                     ))}

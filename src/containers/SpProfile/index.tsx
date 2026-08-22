@@ -64,7 +64,7 @@ const SpProfile = () => {
                 </div>
             </section>
             <section>
-                <Link prefetch={false} href="/coin">
+                <Link prefetch={false} href={`/${currentLang}/coin`}>
                     <div
                         style={{height: "52px", borderRadius: "12px 12px 0 0"}}
                         className="flex flex-row justify-between items-center gap-2 px-4 profile-gradient "
@@ -89,7 +89,7 @@ const SpProfile = () => {
             {/* Assume profile is an employer and check if freelancerType exists to determine if profile is a freelancer */}
             {localUser?.acceptedTerms && (
                 <section className="grid grid-cols-4 px-3 mt-6 gap-y-6 gap-x-3">
-                    <Link prefetch={false} href="/job-board/jobs">
+                    <Link prefetch={false} href={`/${currentLang}/job-board/jobs`}>
                         <div
                             className="flex flex-col items-center text-center gap-2 text-[0.75rem] text-text-secondary font-sans">
                             <FontAwesomeIcon

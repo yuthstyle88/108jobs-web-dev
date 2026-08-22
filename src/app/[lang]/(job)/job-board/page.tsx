@@ -158,9 +158,9 @@ const JobBoard = () => {
 
     const handleJobClick = useCallback(
         (jobId: number) => {
-            router.push(`/job-board/${jobId}`);
+            router.push(`/${i18n.language}/job-board/${jobId}`);
         },
-        [router]
+        [router, i18n.language]
     );
 
     const clearFilters = useCallback(() => {

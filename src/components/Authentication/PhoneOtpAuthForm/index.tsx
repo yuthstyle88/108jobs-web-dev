@@ -57,7 +57,7 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/";
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
 
     const [step, setStep] = useState<Step>("phone");
     const [apiError, setApiError] = useState<string | null>(null);
@@ -267,7 +267,7 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
 
                     {mode === "login" && (
                         <div className="text-sm text-primary mt-4">
-                            <button type="button" onClick={() => router.push("/register")} className="hover:underline">
+                            <button type="button" onClick={() => router.push(`/${i18n.language}/register`)} className="hover:underline">
                                 {t("authen.linkCreateAccount")}
                             </button>
                         </div>

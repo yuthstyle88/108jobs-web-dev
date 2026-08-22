@@ -15,7 +15,7 @@ interface ChatNoWorkButtonProps {
 }
 
 const ChatNoWorkButton: React.FC<ChatNoWorkButtonProps> = ({profile, currentUserId}) => {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const router = useRouter();
     const {upsertRoom} = useRoomsStore();
     const {execute: createChatRoom} = useHttpPost("createChatRoom");
@@ -31,11 +31,11 @@ const ChatNoWorkButton: React.FC<ChatNoWorkButtonProps> = ({profile, currentUser
             } catch (e) {
                 // If room already exists or API fails, proceed to navigate anyway
             }
-            router.push(`/chat/message/${roomId}?t=${Date.now()}`);
+            router.push(`/${i18n.language}/chat/message/${roomId}?t=${Date.now()}`);
         } catch (err) {
             try {
                 const fallbackId = dmRoomId(currentUserId, profile.id, undefined);
-                router.push(`/chat/message/${fallbackId}?t=${Date.now()}`);
+                router.push(`/${i18n.language}/chat/message/${fallbackId}?t=${Date.now()}`);
             } catch {
             }
         }

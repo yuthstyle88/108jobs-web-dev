@@ -34,7 +34,7 @@ export const WorkflowActionPanel: React.FC<WorkflowActionPanelProps> = ({
                                                                             availableBalance,
                                                                             requiredAmount,
                                                                         }) => {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const canApprove =
         availableBalance >= requiredAmount; // default allow when numbers are not provided
 
@@ -63,7 +63,7 @@ export const WorkflowActionPanel: React.FC<WorkflowActionPanelProps> = ({
                             <div className="font-medium">{t("profileChat.insufficientBalanceTitle")}</div>
                             <div className="mt-1">
                                 {t("profileChat.insufficientBalanceWarning")}{" "}
-                                <Link href="/coin" className="underline font-medium">
+                                <Link href={`/${i18n.language}/coin`} className="underline font-medium">
                                     {t("profileChat.topUpNow")}
                                 </Link>
                             </div>

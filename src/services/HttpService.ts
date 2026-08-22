@@ -82,6 +82,7 @@ class WrappedApiClient {
   /** Tracks in-flight GET requests to prevent duplicate concurrent fetches */
   inFlight: Map<string, Promise<any>> = new Map();
   cacheTTL: number = 60000; // Cache TTL in milliseconds (1 minute)
+  maxCacheSize: number = 100; // Maximum cache entries to prevent memory growth
   [prop: string]: any;
 
   constructor(client: Api108Jobs) {
@@ -140,6 +141,10 @@ class WrappedApiClient {
                 && process.env.NODE_ENV === 'production'
                 && ownsInFlightEntry
               ) {
+                if (this.cache.size >= this.maxCacheSize) {
+                  const oldestKey = this.cache.keys().next().value;
+                  if (oldestKey) this.cache.delete(oldestKey);
+                }
                 this.cache.set(cacheKey,
                   {
                     data: res,
@@ -277,9 +282,10 @@ export class HttpService {
 
       // Replace the method with a timeout-aware version
       (this.#client as any)[methodName] = async(...args: any[]) => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
         // Create a timeout promise
         const timeoutPromise = new Promise<RequestState<any>>((_, reject) => {
-          setTimeout(() => {
+          timer = setTimeout(() => {
               reject(new Error(`Request timeout after ${timeout}ms`));
             },
             timeout);
@@ -296,6 +302,8 @@ export class HttpService {
             state: REQUEST_STATE.FAILED,
             err: error as Error
           };
+        } finally {
+          if (timer) clearTimeout(timer);
         }
       };
     }

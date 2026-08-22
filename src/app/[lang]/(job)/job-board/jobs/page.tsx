@@ -129,7 +129,7 @@ const MyJobs = () => {
                                                 key={job.post.id}
                                                 className="group cursor-pointer transition-all duration-300 hover:bg-blue-50/60 hover:shadow-md hover:-translate-y-0.5"
                                                 style={{transitionDelay: `${index * 50}ms`}}
-                                                onClick={() => router.push(`/job-board/${job.post.id}`)}
+                                                onClick={() => router.push(`/${i18n.language}/job-board/${job.post.id}`)}
                                             >
                                                 <td className="px-6 py-6 w-full max-w-0">
                                                     <div className="flex items-center space-x-4">
@@ -218,7 +218,7 @@ const MyJobs = () => {
                                 jobPosts.map((job: any) => (
                                     <div
                                         key={job.post.id}
-                                        onClick={() => router.push(`/job-board/${job.post.id}`)}
+                                        onClick={() => router.push(`/${i18n.language}/job-board/${job.post.id}`)}
                                         className="relative bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden cursor-pointer transform transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl group"
                                     >
                                         <div className="absolute top-4 right-4 z-20">

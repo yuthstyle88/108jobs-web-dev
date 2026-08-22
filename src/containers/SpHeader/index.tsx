@@ -66,7 +66,7 @@ const SpHeader = ({
                     <div className="flex items-center gap-1 sm:gap-2">
                         <Link
                             prefetch={false}
-                            href="/"
+                            href={`/${lang}`}
                             className={`flex items-center justify-center p-2 text-white cursor-pointer min-w-[44px] ${
                                 pathname === `/${lang}` ? "bg-[#063a68]" : ""
                             }`}
@@ -110,7 +110,7 @@ const SpHeader = ({
                         ) : (
                             <Link
                                 prefetch={false}
-                                href="/login"
+                                href={`/${lang}/login`}
                                 className="flex items-center justify-center p-2 text-white cursor-pointer min-w-[44px]"
                                 aria-label="Login"
                             >

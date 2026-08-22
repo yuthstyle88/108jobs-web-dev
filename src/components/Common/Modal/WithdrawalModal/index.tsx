@@ -30,7 +30,7 @@ const WithdrawalModal = ({
                              setWithdrawReason,
                              onSubmit,
                          }: Props) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const router = useRouter();
 
     // Filter only verified banks for selection, but keep default selection logic
@@ -72,7 +72,7 @@ const WithdrawalModal = ({
     };
 
     const handleAddBank = () => {
-        router.push("/account-setting/bank-account");
+        router.push(`/${i18n.language}/account-setting/bank-account`);
         onClose();
     };
 

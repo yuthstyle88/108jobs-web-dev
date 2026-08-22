@@ -273,7 +273,7 @@ const AdminJobBoard = () => {
                             <p className="text-gray-600">{t("admin.jobBoardSubtitle")}</p>
                         </div>
                         <Link
-                            href="/job-board/create-job"
+                            href={`/${i18n.language}/job-board/create-job`}
                             className="inline-flex items-center bg-primary text-white py-3 px-6 rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all"
                         >
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,7 +438,7 @@ const AdminJobBoard = () => {
                                                 <td className="px-6 py-4 text-sm font-medium">
                                                     <div className="flex items-center gap-2">
                                                         <button
-                                                            onClick={() => router.push(`/job-board/${job.post.id}`)}
+                                                            onClick={() => router.push(`/${i18n.language}/job-board/${job.post.id}`)}
                                                             className="text-blue-600 hover:text-blue-800"
                                                             title={t("global.view")}
                                                         >

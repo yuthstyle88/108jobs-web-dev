@@ -10,7 +10,7 @@
  * @param incomingHeaders HTTP headers from the incoming request
  * @returns An IsoData object containing all necessary data for rendering, or null if an error occurred
  */
-import {FailedRequestState, REQUEST_STATE, RequestState, wrapClient} from "@/services/HttpService";
+import {EMPTY_REQUEST, FailedRequestState, REQUEST_STATE, RequestState, wrapClient} from "@/services/HttpService";
 import {isAuthPath} from "@/utils/app";
 import {getErrorPageData, matchPath} from "@/utils/helpers";
 import {Match} from "@/utils/router";
@@ -108,12 +108,13 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
         }
 
         // Fetch site data and profile info in parallel for better performance
-        const [trySite, tryUser, tryCategories, tryChatRooms, tryBankAccounts] = await Promise.all([
+        // Only query authenticated endpoints if a valid JWT cookie is present
+        const [trySite, tryCategories, tryUser, tryChatRooms, tryBankAccounts] = await Promise.all([
             (tempClient as any).getSite(),
-            (tempClient as any).getMyUser(),
             (tempClient as any).listCategories(),
-            (tempClient as any).listChatRooms(),
-            (tempClient as any).listUserBankAccounts()
+            jwt ? (tempClient as any).getMyUser() : Promise.resolve(EMPTY_REQUEST),
+            jwt ? (tempClient as any).listChatRooms() : Promise.resolve(EMPTY_REQUEST),
+            jwt ? (tempClient as any).listUserBankAccounts() : Promise.resolve(EMPTY_REQUEST),
         ]);
 
         // Process profile data with improved error handling
