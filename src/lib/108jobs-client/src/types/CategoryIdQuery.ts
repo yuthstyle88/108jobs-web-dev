@@ -2,9 +2,8 @@
 import type {CategoryId} from "./CategoryId";
 
 /**
- * Parameter for setting category icon or banner. Can't use POST data here as it already contains
- * the image data.
+ * Parameter for setting category icon or banner. `Query<CategoryIdQuery>` is used on the link
+ * (POST) side to keep the category id separate from the JSON `{assetId}` body; delete uses
+ * `Json<CategoryIdQuery>` with the id in the body instead.
  */
-export type CategoryIdQuery = {
-  id: CategoryId;
-};
+export type CategoryIdQuery = { id: CategoryId, };

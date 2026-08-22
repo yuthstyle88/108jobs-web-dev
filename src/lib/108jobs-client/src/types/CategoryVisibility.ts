@@ -3,9 +3,4 @@
 /**
  * Defines who can browse and interact with content in a category.
  */
-export type CategoryVisibility =
-  | "Public"
-  | "Unlisted"
-  | "LocalOnlyPublic"
-  | "LocalOnlyPrivate"
-  | "Private";
+export type CategoryVisibility = "Public" | "Unlisted" | "LocalOnlyPublic" | "LocalOnlyPrivate" | "Private";

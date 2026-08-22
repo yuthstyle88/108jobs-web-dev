@@ -3,9 +3,4 @@
 /**
  * A listing type for post and proposal list fetches.
  */
-export type ListingType =
-  | "All"
-  | "Local"
-  | "Subscribed"
-  | "ModeratorView"
-  | "Suggested";
+export type ListingType = "All" | "Local" | "Subscribed" | "ModeratorView";

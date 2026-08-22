@@ -2,9 +2,6 @@
 import type {LocalUserId} from "./LocalUserId";
 
 /**
- * Get user bank accounts.
+ * The query for a user's own bank accounts.
  */
-export type GetBankAccounts = {
-  localUserId?: LocalUserId;
-  isVerified?: boolean;
-};
+export type GetBankAccounts = { localUserId?: LocalUserId, isVerified?: boolean, };

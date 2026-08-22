@@ -4,6 +4,4 @@ import type {CategoryView} from "./CategoryView";
 /**
  * A simple category response.
  */
-export type CategoryResponse = {
-  categoryView: CategoryView;
-};
+export type CategoryResponse = { categoryView: CategoryView, };
