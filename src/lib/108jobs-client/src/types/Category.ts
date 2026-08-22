@@ -7,73 +7,40 @@ import type {InstanceId} from "./InstanceId";
 /**
  * A category.
  */
-export type Category = {
-    id: CategoryId;
-    name: string;
-    /**
-     * A longer title, that can contain other characters, and doesn't have to be unique.
-     */
-    title: string;
-    /**
-     * A sidebar for the category in markdown.
-     */
-    sidebar?: string;
-    /**
-     * Whether the category is removed by a mod.
-     */
-    removed: boolean;
-    publishedAt: string;
-    updatedAt?: string;
-    /**
-     * Whether the category has been deleted by its creator.
-     */
-    deleted: boolean;
-    /**
-     * Whether its a self-promotion category.
-     */
-    selfPromotion: boolean;
-    /**
-     * A URL for an icon.
-     */
-    icon?: DbUrl;
-    /**
-     * A URL for a banner.
-     */
-    banner?: DbUrl;
-    /**
-     * Whether posting is restricted to mods only.
-     */
-    postingRestrictedToMods: boolean;
-    instanceId?: InstanceId;
-    visibility: CategoryVisibility;
-    /**
-     * A shorter, one-line description of the site.
-     */
-    description?: string;
-    subscribers: number;
-    posts: number;
-    proposals: number;
-    /**
-     * The number of users with any activity in the last day.
-     */
-    usersActiveDay: number;
-    /**
-     * The number of users with any activity in the last week.
-     */
-    usersActiveWeek: number;
-    /**
-     * The number of users with any activity in the last month.
-     */
-    usersActiveMonth: number;
-    /**
-     * The number of users with any activity in the last year.
-     */
-    usersActiveHalfYear: number;
-    subscribersLocal: number;
-    reportCount: number;
-    unresolvedReportCount: number;
-    localRemoved: boolean;
-    path: string;
-    active: boolean;
-    isNew: boolean;
-};
+export type Category = { id: CategoryId, name: string, 
+/**
+ * A longer title, that can contain other characters, and doesn't have to be unique.
+ */
+title: string, 
+/**
+ * A sidebar for the category in markdown.
+ */
+sidebar?: string, 
+/**
+ * Whether the category is removed by a mod.
+ */
+removed: boolean, publishedAt: string, updatedAt?: string, 
+/**
+ * Whether the category has been deleted by its creator.
+ */
+deleted: boolean, 
+/**
+ * Whether its an NSFW category.
+ */
+selfPromotion: boolean, 
+/**
+ * A URL for an icon.
+ */
+icon?: DbUrl, 
+/**
+ * A URL for a banner.
+ */
+banner?: DbUrl, 
+/**
+ * Whether posting is restricted to mods only.
+ */
+postingRestrictedToMods: boolean, instanceId?: InstanceId, visibility: CategoryVisibility, 
+/**
+ * A shorter, one-line description of the site.
+ */
+description?: string, subscribers: number, posts: number, proposals: number, localRemoved: boolean, path: string, active: boolean, isNew: boolean, };

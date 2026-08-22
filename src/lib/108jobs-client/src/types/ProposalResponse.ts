@@ -2,8 +2,6 @@
 import type {ProposalView} from "./ProposalView";
 
 /**
- * A proposal response (backend field is proposalView).
+ * A proposal response.
  */
-export type ProposalResponse = {
-  proposalView: ProposalView;
-};
+export type ProposalResponse = { proposalView: ProposalView, };

@@ -3,9 +3,4 @@
 /**
  * The type of content returned from a search.
  */
-export type SearchType =
-  | "All"
-  | "Proposals"
-  | "Posts"
-  | "Categories"
-  | "Users";
+export type SearchType = "All" | "Proposals" | "Posts" | "Categories" | "Users";

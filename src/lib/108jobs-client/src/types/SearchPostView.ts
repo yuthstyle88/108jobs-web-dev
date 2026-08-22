@@ -6,12 +6,17 @@ import type {PersonActions} from "./PersonActions";
 import type {PersonBan} from "./PersonBan";
 import type {Post} from "./Post";
 import type {PostActions} from "./PostActions";
+import type {PostLogisticsView} from "./PostLogisticsView";
 import type {TagsView} from "./TagsView";
 
 /**
- * A post view.
+ * A post view with logistics for search results
  */
-export type PostView = { post: Post, creator: Person, 
+export type SearchPostView = { 
+/**
+ * Logistics data for Delivery/RideTaxi posts
+ */
+logistics?: PostLogisticsView, post: Post, creator: Person, 
 /**
  * Category is optional for delivery posts (which rely on post_kind for distinction)
  */
