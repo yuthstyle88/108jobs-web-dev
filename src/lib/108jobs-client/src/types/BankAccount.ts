@@ -3,4 +3,18 @@ import type {BankAccountId} from "./BankAccountId";
 import type {BankId} from "./BankId";
 import type {LocalUserId} from "./LocalUserId";
 
-export type BankAccount = { id: BankAccountId, localUserId: LocalUserId, bankId: BankId, accountNumber: string, accountName: string, isDefault?: boolean, isVerified: boolean, createdAt: string, updatedAt?: string, verificationImagePath?: string, };
+export type BankAccount = { id: BankAccountId, localUserId: LocalUserId, bankId: BankId, accountNumber: string, accountName: string, isDefault: boolean, isVerified: boolean, createdAt: string, updatedAt?: string, 
+/**
+ * The bank book photograph, as a media URL -- the proof `is_verified` and
+ * `admin_verify_bank_account` are supposed to be acting on.
+ *
+ * Was `verification_image_path`, which never held a real address: the create
+ * handler discarded what the caller sent and wrote a synthetic path keyed by
+ * BANK rather than by account, so two accounts at one bank claimed a single
+ * image and nothing ever wrote bytes there (108-Plaza/api-108jobs#148).
+ *
+ * Paired with `bank_book_image_uploaded_at` and guarded by
+ * `user_bank_account_book_image_pair_complete`: a URL with no time, or a
+ * time with no URL, is a half-written row.
+ */
+bankBookImageUrl?: string, bankBookImageUploadedAt?: string, };
