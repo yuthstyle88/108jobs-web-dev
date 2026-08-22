@@ -127,12 +127,19 @@ class WrappedApiClient {
           }
 
           // Perform the actual request
-          const resultPromise = (async() => {
+          const resultPromise = Promise.resolve().then(async() => {
             try {
               const res = await (this.rawClient as any)[key](...patchedArgs);
 
-              // Cache successful GET responses in production
-              if (isGetMethod && res && process.env.NODE_ENV === 'production') {
+              // An invalidated request may finish after its replacement. Only
+              // the request still registered for this key may populate cache.
+              const ownsInFlightEntry = this.inFlight.get(cacheKey) === resultPromise;
+              if (
+                isGetMethod
+                && res
+                && process.env.NODE_ENV === 'production'
+                && ownsInFlightEntry
+              ) {
                 this.cache.set(cacheKey,
                   {
                     data: res,
@@ -153,12 +160,16 @@ class WrappedApiClient {
                 err: error as Error,
               };
             } finally {
-              // Clear in-flight entry once settled
-              if (isGetMethod && cacheKey) {
+              // Do not let an invalidated request delete a newer replacement.
+              if (
+                isGetMethod
+                && cacheKey
+                && this.inFlight.get(cacheKey) === resultPromise
+              ) {
                 this.inFlight.delete(cacheKey);
               }
             }
-          })();
+          });
 
           // Mark as in-flight for GETs
           if (isGetMethod && cacheKey) {
@@ -180,6 +191,7 @@ class WrappedApiClient {
   clearCacheEntry(key: string, args: any[]): void {
     const cacheKey = `${key}:${JSON.stringify(args)}`;
     this.cache.delete(cacheKey);
+    this.inFlight.delete(cacheKey);
   }
 }
 
