@@ -8,8 +8,8 @@ import {RoomView} from "@/modules/chat/types";
 // Utility functions for store interactions
 const sortRooms = (rooms: RoomView[]) => {
     return [...rooms].sort((a, b) => {
-        const aDate = new Date(a.lastMessage?.createdAt || a.room.createdAt).getTime();
-        const bDate = new Date(b.lastMessage?.createdAt || b.room.createdAt).getTime();
+        const aDate = new Date(a.lastMessageAt || a.lastMessage?.createdAt || a.room.createdAt).getTime();
+        const bDate = new Date(b.lastMessageAt || b.lastMessage?.createdAt || b.room.createdAt).getTime();
         return bDate - aDate;
     });
 };

@@ -1,12 +1,12 @@
 'use client';
 
-import React, {createContext, useEffect, useMemo} from 'react';
+import React, {createContext, useEffect, useMemo, useRef} from 'react';
 import {useWebSocket} from '@/modules/chat/hooks/useWebSocket';
 import {useUserStore} from '@/store/useUserStore';
 import {UserService} from '@/services';
 import {useRoomsStore} from '@/modules/chat/store/roomsStore';
-import {REQUEST_STATE} from '@/services/HttpService';
-import {hydrateUnread} from '@/modules/chat/store/unreadStore';
+import {callHttp, HttpService, REQUEST_STATE} from '@/services/HttpService';
+import {hydrateUnread, useUnreadStore} from '@/modules/chat/store/unreadStore';
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {maybeHandlePresenceUpdate} from "@/modules/chat/utils";
 import {usePresenceStore} from "@/modules/chat/store/presenceStore";
@@ -19,12 +19,27 @@ interface UserEventsContextValue {
     // We can add specific event listeners or methods here if needed
 }
 
+type UserEventEnvelope = {
+    event?: string;
+    payload?: {
+        kind?: string;
+        roomId?: string | number;
+        unreadCount?: number;
+        lastMessageAt?: string;
+        senderId?: number;
+    };
+};
+
 const UserEventsContext = createContext<UserEventsContextValue | undefined>(undefined);
 
 export const UserEventsProvider: React.FC<React.PropsWithChildren> = ({children}) => {
     const {user} = useUserStore();
     const token = UserService.Instance.auth();
     const userId = user?.id;
+    const roomFetchesRef = useRef(new Map<string, Promise<void>>());
+    const requestGenerationRef = useRef(0);
+    const unreadSnapshotHydratedRef = useRef(false);
+    const liveUnreadBeforeSnapshotRef = useRef(new Set<string>());
 
     const wsOptions = useMemo(() => {
         if (!userId || !token) return null;
@@ -54,27 +69,68 @@ export const UserEventsProvider: React.FC<React.PropsWithChildren> = ({children}
         roomId: '',
         senderId: 0
     });
+    const wsIsReady = ws.isReady;
+    const addWsMessageListener = ws.addMessageListener;
 
     const value = useMemo(() => ({
         status: ws.status,
         isReady: ws.isReady,
     }), [ws.status, ws.isReady]);
 
-    const {data: snapshotRes, state: snapshotState} = useHttpGet("getUnreadSnapshot");
     const {data: presenceRes, state: presenceState} = useHttpGet("getPresenceSnapshot");
 
-    // Fetch unread snapshot once on mount if user is logged in
     useEffect(() => {
-        if (snapshotState.state === REQUEST_STATE.SUCCESS && Array.isArray(snapshotRes)) {
+        unreadSnapshotHydratedRef.current = false;
+        liveUnreadBeforeSnapshotRef.current.clear();
+        if (!userId || !token) return;
+
+        let cancelled = false;
+        HttpService.clearCacheEntry("getUnreadSnapshot");
+
+        void callHttp("getUnreadSnapshot").then((snapshotResult) => {
+            if (
+                cancelled
+                || snapshotResult.state !== REQUEST_STATE.SUCCESS
+                || !Array.isArray(snapshotResult.data)
+            ) {
+                return;
+            }
+
             const snapshot: Record<string, number> = {};
-            snapshotRes.forEach(item => {
+            snapshotResult.data.forEach((item) => {
                 if (item.roomId) {
                     snapshot[String(item.roomId)] = item.unreadCount;
                 }
             });
+
+            const currentUnread = useUnreadStore.getState().perRoom;
+            liveUnreadBeforeSnapshotRef.current.forEach((roomId) => {
+                snapshot[roomId] = currentUnread[roomId] ?? 0;
+            });
             hydrateUnread(snapshot);
-        }
-    }, [snapshotRes, snapshotState.state]);
+            unreadSnapshotHydratedRef.current = true;
+            liveUnreadBeforeSnapshotRef.current.clear();
+        }).catch((error) => {
+            console.error('[UserEvents] Failed to load unread snapshot:', error);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [token, userId]);
+
+    useEffect(() => {
+        const generation = ++requestGenerationRef.current;
+        const roomFetches = roomFetchesRef.current;
+        roomFetches.clear();
+
+        return () => {
+            if (requestGenerationRef.current === generation) {
+                requestGenerationRef.current += 1;
+            }
+            roomFetches.clear();
+        };
+    }, [userId]);
 
     // Hydrate presence store from snapshot
     useEffect(() => {
@@ -90,51 +146,96 @@ export const UserEventsProvider: React.FC<React.PropsWithChildren> = ({children}
     }, [presenceRes, presenceState.state]);
 
     useEffect(() => {
-        if (ws.isReady) {
-            return ws.addMessageListener((data: any) => {
-                console.log('[UserEvents] Received message:', data);
+        if (!wsIsReady) return;
 
-                // Handle the chatsSignal fan-out
-                if (data?.event === WS_EVENT.ChatsSignal) {
-                    const payload = data?.payload;
-                    const meId = Number(userId);
+        const generation = requestGenerationRef.current;
+        const roomFetches = roomFetchesRef.current;
+        const isCurrentRequest = () => requestGenerationRef.current === generation;
 
-                    if (payload?.kind === 'chat') {
-                        const {roomId, unreadCount, lastMessageAt, senderId} = payload;
-                        // TODO: Need handling for bump to top on multiple devices
-                        if (roomId && senderId !== undefined) {
-                            if (typeof unreadCount === 'number') {
-                                useRoomsStore.getState().setUnread(String(roomId), unreadCount);
-                            }
-                            
-                            // If we have lastMessageAt, update metadata. 
-                            // Only bump if the room is NOT active. 
-                            // (Because if it is active, it's already visible and we don't want it jumping around while reading)
-                            const store = useRoomsStore.getState();
-                            const isActive = String(store.activeRoomId) === String(roomId);
-                            
-                            if (lastMessageAt) {
-                                store.updateLastMessage(
-                                    String(roomId), 
-                                    Number(senderId ?? 0), 
-                                    lastMessageAt,
-                                    !isActive // shouldBump: true if NOT active
-                                );
-                            } else {
-                                // Fallback if no lastMessageAt, just bump if not active
-                                if (!isActive) {
-                                    store.bumpRoomToTop(String(roomId));
-                                }
-                            }
+        const handleUserEvent = async (data: unknown) => {
+            const eventData = data as UserEventEnvelope;
+            console.log('[UserEvents] Received message:', eventData);
+
+            if (eventData?.event !== WS_EVENT.ChatsSignal) return;
+
+            const payload = eventData.payload;
+            const meId = Number(userId);
+
+            if (payload?.kind === 'chat') {
+                const {roomId, unreadCount, lastMessageAt, senderId} = payload;
+                if (roomId && senderId !== undefined) {
+                    const normalizedRoomId = String(roomId);
+                    if (typeof unreadCount === 'number') {
+                        if (!unreadSnapshotHydratedRef.current) {
+                            liveUnreadBeforeSnapshotRef.current.add(normalizedRoomId);
                         }
+                        useRoomsStore.getState().setUnread(normalizedRoomId, unreadCount);
                     }
 
-                    // Handle presence signals via helper
-                    maybeHandlePresenceUpdate(data, meId);
+                    const currentStore = useRoomsStore.getState();
+                    if (!currentStore.getRoom(normalizedRoomId)) {
+                        let roomFetch = roomFetches.get(normalizedRoomId);
+                        if (!roomFetch) {
+                            const request = (async () => {
+                                const roomResult = await callHttp("getChatRoom", normalizedRoomId);
+                                if (!isCurrentRequest()) return;
+
+                                const latestStore = useRoomsStore.getState();
+                                if (
+                                    roomResult.state === REQUEST_STATE.SUCCESS
+                                    && roomResult.data?.room
+                                    && !latestStore.getRoom(normalizedRoomId)
+                                ) {
+                                    latestStore.upsertRoom({
+                                        ...roomResult.data.room,
+                                        isActive: String(latestStore.activeRoomId) === normalizedRoomId,
+                                    }, true);
+                                }
+                            })();
+                            const trackedRequest = request.finally(() => {
+                                if (roomFetches.get(normalizedRoomId) === trackedRequest) {
+                                    roomFetches.delete(normalizedRoomId);
+                                }
+                            });
+                            roomFetch = trackedRequest;
+                            roomFetches.set(normalizedRoomId, trackedRequest);
+                        }
+                        await roomFetch;
+                    }
+
+                    if (!isCurrentRequest()) return;
+
+                    // If we have lastMessageAt, update metadata.
+                    // Only bump if the room is NOT active.
+                    const store = useRoomsStore.getState();
+                    const isActive = String(store.activeRoomId) === normalizedRoomId;
+
+                    if (lastMessageAt) {
+                        store.updateLastMessage(
+                            normalizedRoomId,
+                            Number(senderId),
+                            lastMessageAt,
+                            !isActive
+                        );
+                    } else if (!isActive) {
+                        store.bumpRoomToTop(normalizedRoomId);
+                    }
                 }
+            }
+
+            await maybeHandlePresenceUpdate(eventData, meId);
+        };
+
+        const unsubscribe = addWsMessageListener((data: unknown) => {
+            void handleUserEvent(data).catch((error) => {
+                console.error('[UserEvents] Failed to process message:', error);
             });
-        }
-    }, [ws.isReady, ws.addMessageListener, userId]);
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, [wsIsReady, addWsMessageListener, userId]);
 
     return (
         <UserEventsContext.Provider value={value}>
