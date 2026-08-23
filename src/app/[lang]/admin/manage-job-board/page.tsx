@@ -47,7 +47,7 @@ interface FilterState {
 }
 
 const AdminJobBoard = () => {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();

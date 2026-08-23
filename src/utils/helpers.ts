@@ -553,16 +553,7 @@ export const formatDate = (dateString: string): string => {
     }
 };
 
-export const formatBudget = (budget: string | number | null | undefined): string => {
-    if (!budget) return "-";
-    try {
-        const amount = parseFloat(String(budget));
-        return isNaN(amount) ? "-" : amount.toLocaleString();
-    } catch (error) {
-        console.error("Error formatting budget:", error);
-        return "-";
-    }
-};
+export { formatBudget } from "@/utils/format/money";
 
 export const getJobTypeLabel = (jobType: string | null | undefined, t: (key: string) => string): string => {
     if (!jobType) return "-";

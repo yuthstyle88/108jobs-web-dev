@@ -10,52 +10,39 @@ import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {cn} from "@/lib/utils";
 import {BankAccountId, BankAccountView} from "108jobs-client";
 import {isSuccess, isFailed} from "@/services/HttpService";
 
 type ViewMode = "unverified" | "verified";
 
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
+
 export default function AdminBankVerificationList() {
     const {t} = useTranslation();
 
     const [viewMode, setViewMode] = useState<ViewMode>("unverified");
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>();
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isGoingBack, setIsGoingBack] = useState(false);
+
+    const pager = useCursorPagination();
 
     const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListBankAccounts", {
-        pageCursor: currentCursor,
-        pageBack: isGoingBack,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
         limit: 5,
         isVerified: viewMode === "verified",
     });
 
     const bankAccounts = data?.bankAccounts ?? [];
-    const hasNextPage = !!data?.nextPage;
-    const hasPreviousPage = cursorHistory.length > 0;
     const isFetchFailed = isFailed(state);
     const showLoading = isLoading || isMutating;
 
     const {execute: verify, isMutating: verifying} = useHttpPost("adminVerifyBankAccount");
 
-    const handleNextPage = () => {
-        if (data?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor ?? ""]);
-            setCurrentCursor(data.nextPage);
-            setIsGoingBack(false);
-        }
-    };
-
-    const handlePrevPage = () => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-            setIsGoingBack(true);
-        }
-    };
+    // Reset pagination when mode changes
+    useEffect(() => {
+        pager.resetPagination();
+    }, [viewMode]);
 
     const handleVerify = async (bankAccountId: BankAccountId) => {
         const res = await verify({bankAccountId});
@@ -79,12 +66,7 @@ export default function AdminBankVerificationList() {
                     {/* Mode Toggle - Responsive */}
                     <div className="flex flex-wrap justify-center gap-2">
                         <button
-                            onClick={() => {
-                                setViewMode("unverified");
-                                setCurrentCursor(undefined);
-                                setCursorHistory([]);
-                                setIsGoingBack(false);
-                            }}
+                            onClick={() => setViewMode("unverified")}
                             className={cn(
                                 "flex-1 min-w-[140px] sm:min-w-0 px-5 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all",
                                 viewMode === "unverified"
@@ -96,11 +78,7 @@ export default function AdminBankVerificationList() {
                             {t("admin.bankManagement.tabUnverified")}
                         </button>
                         <button
-                            onClick={() => {
-                                setViewMode("verified");
-                                setCurrentCursor(undefined);
-                                setCursorHistory([]);
-                            }}
+                            onClick={() => setViewMode("verified")}
                             className={cn(
                                 "flex-1 min-w-[140px] sm:min-w-0 px-5 py-3 rounded-xl font-medium flex items-center justify-center gap-2 transition-all",
                                 viewMode === "verified"
@@ -264,10 +242,10 @@ export default function AdminBankVerificationList() {
                         {/* Pagination */}
                         <div className="flex justify-center mt-8">
                             <PaginationControls
-                                hasPrevious={hasPreviousPage}
-                                hasNext={hasNextPage}
-                                onPrevious={handlePrevPage}
-                                onNext={handleNextPage}
+                                hasPrevious={pager.hasPreviousPage}
+                                hasNext={Boolean(data?.nextPage)}
+                                onPrevious={pager.handlePrevPage}
+                                onNext={() => pager.handleNextPage(data?.nextPage)}
                                 isLoading={showLoading}
                             />
                         </div>

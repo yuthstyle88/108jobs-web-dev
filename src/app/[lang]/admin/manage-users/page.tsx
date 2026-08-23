@@ -16,6 +16,8 @@ import {BanConfirmationModal} from "@/modules/admin/components/Modal/BanConfirma
 import {useTranslation} from "react-i18next";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
+
 const ManageUsers = () => {
     const {t} = useTranslation();
 
@@ -24,14 +26,12 @@ const ManageUsers = () => {
         bannedOnly: false,
     });
 
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isGoingBack, setIsGoingBack] = useState(false);
+    const pager = useCursorPagination();
 
     const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("listUsers", {
         ...filters,
-        pageCursor: currentCursor,
-        pageBack: isGoingBack,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
     });
 
     const showLoading = isLoading || isMutating;
@@ -40,8 +40,6 @@ const ManageUsers = () => {
     const {execute: executeBan, isMutating: isBanning} = useHttpPost("banPerson");
 
     const users: LocalUserView[] = data?.users ?? [];
-    const hasNextPage = !!data?.nextPage;
-    const hasPreviousPage = cursorHistory.length > 0;
 
     const [selectedUser, setSelectedUser] = useState<LocalUserView | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -51,27 +49,8 @@ const ManageUsers = () => {
 
     const handleFilterChange = (key: keyof typeof filters, value: any) => {
         setFilters((prev) => ({...prev, [key]: value}));
-        setCurrentCursor(undefined);
-        setCursorHistory([]);
-        setIsGoingBack(false);
+        pager.resetPagination();
     };
-
-    const handleNextPage = useCallback(() => {
-        if (data?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(data.nextPage);
-            setIsGoingBack(false);
-        }
-    }, [data?.nextPage, currentCursor]);
-
-    const handlePrevPage = useCallback(() => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-            setIsGoingBack(true);
-        }
-    }, [cursorHistory]);
 
     const openBanModal = (person: Person) => {
         setBanTarget(person);
@@ -151,8 +130,7 @@ const ManageUsers = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                                setCurrentCursor(undefined);
-                                setCursorHistory([]);
+                                pager.resetPagination();
                                 refetch();
                             }}
                         >
@@ -265,10 +243,10 @@ const ManageUsers = () => {
 
                 {/* Pagination */}
                 <PaginationControls
-                    hasPrevious={hasPreviousPage}
-                    hasNext={hasNextPage}
-                    onPrevious={handlePrevPage}
-                    onNext={handleNextPage}
+                    hasPrevious={pager.hasPreviousPage}
+                    hasNext={Boolean(data?.nextPage)}
+                    onPrevious={pager.handlePrevPage}
+                    onNext={() => pager.handleNextPage(data?.nextPage)}
                     isLoading={showLoading}
                 />
 

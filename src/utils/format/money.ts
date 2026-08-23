@@ -50,3 +50,13 @@ export const formatBudgetCompact = (value: number | undefined): string => {
 
     return value.toLocaleString(); // Below 1,000 → normal format
 };
+
+export const formatBudget = (budget: string | number | null | undefined): string => {
+    if (!budget) return "-";
+    try {
+        const amount = parseFloat(String(budget));
+        return isNaN(amount) ? "-" : amount.toLocaleString();
+    } catch {
+        return "-";
+    }
+};

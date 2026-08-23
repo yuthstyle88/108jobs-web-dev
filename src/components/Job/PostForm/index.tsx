@@ -72,7 +72,7 @@ export const PostForm: React.FC<PostFormProps> = ({
                                                       mode
                                                   }) => {
     const {person} = useUserStore();
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     if (mode === "edit") {
         const isOwner = postView?.creator.id === person?.id;
         if (!isOwner) {

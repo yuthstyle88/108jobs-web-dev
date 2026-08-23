@@ -21,14 +21,14 @@ import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {useDebounce} from "@/hooks/utils/useDebounce";
 import {isSuccess, isFailed} from "@/services/HttpService";
 import {format} from "date-fns";
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 
 const WithdrawCoins = () => {
     const {t} = useTranslation();
 
-    const [filters, setFilters] = useState<ListWithdrawRequestQuery>({limit: 5});
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>();
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isGoingBack, setIsGoingBack] = useState(false);
+    const [filters, setFilters] = useState<ListWithdrawRequestQuery>({limit: 10});
+    const pager = useCursorPagination();
+
     const [selectedRequest, setSelectedRequest] = useState<WithdrawRequestView | null>(null);
     const [adminNote, setAdminNote] = useState("");
     const [showFilters, setShowFilters] = useState(false);
@@ -40,35 +40,16 @@ const WithdrawCoins = () => {
 
     const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListWithdrawRequests", {
         ...debouncedFilters,
-        pageCursor: currentCursor,
-        pageBack: isGoingBack,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
     });
 
     const withdrawRequests = data?.withdrawRequests ?? [];
-    const hasNextPage = !!data?.nextPage;
-    const hasPreviousPage = cursorHistory.length > 0;
     const isFetchFailed = isFailed(state);
     const showLoading = isLoading || isMutating;
 
     const {execute: approve, isMutating: approving} = useHttpPost("adminWithdrawWallet");
     const {execute: reject, isMutating: rejecting} = useHttpPost("adminRejectWithdrawRequest");
-
-    const handleNextPage = () => {
-        if (data?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(data.nextPage);
-            setIsGoingBack(false);
-        }
-    };
-
-    const handlePrevPage = () => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-            setIsGoingBack(true);
-        }
-    };
 
     const handleApprove = async (request: WithdrawRequestView) => {
         if (!adminNote.trim()) {
@@ -129,9 +110,7 @@ const WithdrawCoins = () => {
     };
 
     const applyFilters = () => {
-        setCurrentCursor(undefined);
-        setCursorHistory([]);
-        setIsGoingBack(false);
+        pager.resetPagination();
     };
 
     const RequestSkeleton = () => (
@@ -578,10 +557,10 @@ const WithdrawCoins = () => {
                     {/* Pagination */}
                     <div className="flex justify-center">
                         <PaginationControls
-                            hasPrevious={hasPreviousPage}
-                            hasNext={hasNextPage}
-                            onPrevious={handlePrevPage}
-                            onNext={handleNextPage}
+                            hasPrevious={pager.hasPreviousPage}
+                            hasNext={Boolean(data?.nextPage)}
+                            onPrevious={pager.handlePrevPage}
+                            onNext={() => pager.handleNextPage(data?.nextPage)}
                             isLoading={showLoading}
                         />
                     </div>

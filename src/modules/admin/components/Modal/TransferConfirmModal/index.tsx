@@ -1,6 +1,7 @@
 "use client";
 import React, {useEffect, useState} from "react";
-import {ArrowRightLeft, User, Calendar, Hash, Clock, CheckCircle2} from "lucide-react";
+import Modal from "@/components/ui/Modal";
+import {ArrowRightLeft, User, Calendar, Hash, Clock, CheckCircle2, Loader2} from "lucide-react";
 import {useTranslation} from "react-i18next";
 
 interface TransferConfirmModalProps {
@@ -50,21 +51,19 @@ export const TransferConfirmModal: React.FC<TransferConfirmModalProps> = ({
         return () => clearInterval(interval);
     }, [isOpen]);
 
-    if (!isOpen || !transfer) return null;
+    if (!transfer) return null;
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex text-gray-600 items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            className="max-w-md p-6 w-full text-gray-600"
+            closeOnOutsideClick={false}
         >
-            <div
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-6 transform transition-all animate-in fade-in zoom-in-95 duration-300"
-                onClick={(e) => e.stopPropagation()}
-            >
+            <div className="space-y-6">
                 {/* Header */}
                 <div className="text-center">
-                    <div
-                        className="mx-auto w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center mb-3">
+                    <div className="mx-auto w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full flex items-center justify-center mb-3">
                         <ArrowRightLeft className="w-7 h-7 text-white"/>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">
@@ -77,42 +76,41 @@ export const TransferConfirmModal: React.FC<TransferConfirmModalProps> = ({
                 </div>
 
                 {/* Transfer Details */}
-                <div
-                    className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl p-5 space-y-4">
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-2xl p-5 space-y-4">
                     <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <User className="w-4 h-4"/>
-              User
-            </span>
+                        <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <User className="w-4 h-4"/>
+                            User
+                        </span>
                         <span className="text-base font-bold text-gray-900">{transfer.userName}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Hash className="w-4 h-4"/>
-              Payment Code
-            </span>
+                        <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <Hash className="w-4 h-4"/>
+                            Payment Code
+                        </span>
                         <code className="text-sm font-mono bg-white/70 px-2 py-1 rounded">
                             {transfer.paymentCode || "—"}
                         </code>
                     </div>
 
                     <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Calendar className="w-4 h-4"/>
-              Date
-            </span>
+                        <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <Calendar className="w-4 h-4"/>
+                            Date
+                        </span>
                         <span className="text-sm font-medium text-gray-800">{transfer.date}</span>
                     </div>
 
                     <div className="flex items-center justify-between pt-3 border-t border-emerald-200">
-            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Clock className="w-4 h-4"/>
-              Current Time
-            </span>
+                        <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <Clock className="w-4 h-4"/>
+                            Current Time
+                        </span>
                         <span className="text-sm font-mono font-bold text-gray-900 bg-white/80 px-3 py-1.5 rounded-lg">
-              {currentTime}
-            </span>
+                            {currentTime}
+                        </span>
                     </div>
                 </div>
 
@@ -142,11 +140,11 @@ export const TransferConfirmModal: React.FC<TransferConfirmModalProps> = ({
                     <button
                         onClick={onConfirm}
                         disabled={isLoading}
-                        className="inline-flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium bg-primary text-white hover:bg-[#063a68] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl font-medium bg-primary text-white hover:bg-[#063a68] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                         {isLoading ? (
                             <>
-                                <div className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin" />
                                 <span>{t("profileCoins.processing") || "Processing..."}</span>
                             </>
                         ) : (
@@ -158,6 +156,6 @@ export const TransferConfirmModal: React.FC<TransferConfirmModalProps> = ({
                     </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 };

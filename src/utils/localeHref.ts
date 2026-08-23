@@ -2,7 +2,7 @@ export const SUPPORTED = ["th", "en", "vi"] as const;
 export type Lang = typeof SUPPORTED[number];
 
 export function normalizeLang(input?: string | null): Lang {
-    const v = (input || "th").toLowerCase();
+    const v = (input ?? "").toLowerCase().split("-")[0];
     return (SUPPORTED as readonly string[]).includes(v) ? (v as Lang) : "th";
 }
 

@@ -21,26 +21,25 @@ import {useTranslation} from "react-i18next";
 import {useDebounce} from "@/hooks/utils/useDebounce";
 import {formatMinor} from "@/utils/format/money";
 
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
+
 const TopUpCoins = () => {
     const {t} = useTranslation();
     const [filters, setFilters] = useState<ListTopUpRequestQuery>({limit: 10});
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>();
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isGoingBack, setIsGoingBack] = useState(false);
+
+    const pager = useCursorPagination();
 
     const debouncedFilters = useDebounce(filters, 500);
 
     const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("adminListTopUpRequests", {
         ...debouncedFilters,
-        pageCursor: currentCursor,
-        pageBack: isGoingBack,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
     });
 
     const {execute: adminTopUpWallet, isMutating: isToppingUp} = useHttpPost("adminTopUpWallet");
 
     const topUps: TopUpRequestView[] = data?.topUpRequests ?? [];
-    const hasNextPage = !!data?.nextPage;
-    const hasPreviousPage = cursorHistory.length > 0;
     const isFetchFailed = isFailed(state);
     const showLoading = isLoading || isMutating;
 
@@ -52,28 +51,9 @@ const TopUpCoins = () => {
     };
 
     const applyFilters = () => {
-        setCurrentCursor(undefined);
-        setCursorHistory([]);
-        setIsGoingBack(false);
+        pager.resetPagination();
         refetch();
     };
-
-    const handleNextPage = () => {
-        if (data?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(data.nextPage);
-            setIsGoingBack(false);
-        }
-    };
-
-    const handlePrevPage = useCallback(() => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-            setIsGoingBack(true);
-        }
-    }, [cursorHistory]);
 
     const openTransferModal = (topUp: TopUpRequestView) => {
         setSelectedTransfer(topUp);
@@ -351,10 +331,10 @@ const TopUpCoins = () => {
                 </div>
 
                 <PaginationControls
-                    hasPrevious={hasPreviousPage}
-                    hasNext={hasNextPage}
-                    onPrevious={handlePrevPage}
-                    onNext={handleNextPage}
+                    hasPrevious={pager.hasPreviousPage}
+                    hasNext={Boolean(data?.nextPage)}
+                    onPrevious={pager.handlePrevPage}
+                    onNext={() => pager.handleNextPage(data?.nextPage)}
                     isLoading={showLoading}
                 />
 

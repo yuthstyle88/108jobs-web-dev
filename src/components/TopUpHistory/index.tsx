@@ -8,6 +8,9 @@ import {CategoryNodeView, ListTopUpRequestQuery, TopUpRequestView} from "108jobs
 import {format} from "date-fns";
 import {formatMinor} from "@/utils/format/money";
 
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
+import {PaginationControls} from "@/components/PaginationControls";
+
 const TopUpHistory = () => {
     const {t} = useTranslation();
 
@@ -19,41 +22,22 @@ const TopUpHistory = () => {
         limit: 5,
     });
 
-    // Pagination state
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+    const pager = useCursorPagination();
 
     const {data, isLoading, execute: refetch} = useHttpGet("listTopUpRequests", {
         ...filters,
-        pageCursor: currentCursor,
+        pageCursor: pager.currentCursor,
     });
-
-    const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
-    const hasNextPage = useMemo(() => !!data?.nextPage, [data?.nextPage]);
 
     const topUps: TopUpRequestView[] = data?.topUpRequests ?? [];
 
     const handleFilterChange = (key: keyof ListTopUpRequestQuery, value: any) => {
         setFilters((prev: ListTopUpRequestQuery) => ({...prev, [key]: value}));
+        pager.resetPagination();
     };
 
     const handleRefresh = () => {
         refetch();
-    };
-
-    const handleNextPage = () => {
-        if (data?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(data.nextPage);
-        }
-    };
-
-    const handlePrevPage = () => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-        }
     };
 
     // Helper: Get status badge style
@@ -242,8 +226,7 @@ const TopUpHistory = () => {
                     <div className="flex items-end">
                         <button
                             onClick={() => {
-                                setCurrentCursor(undefined);
-                                setCursorHistory([]);
+                                pager.resetPagination();
                                 refetch();
                             }}
                             className="w-full px-5 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-all shadow-sm flex items-center justify-center gap-2"
@@ -367,30 +350,13 @@ const TopUpHistory = () => {
             </div>
 
             {/* Pagination */}
-            {(hasPreviousPage || hasNextPage) && (
-                <div className="mt-6 flex justify-center gap-4">
-                    {hasPreviousPage && (
-                        <button
-                            onClick={handlePrevPage}
-                            className="py-2 px-4 rounded-lg font-medium bg-primary text-white hover:bg-[#063a68] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                            disabled={isLoading}
-                            aria-label="Go to previous page"
-                        >
-                            {t("profileCoins.previousButton")}
-                        </button>
-                    )}
-                    {hasNextPage && (
-                        <button
-                            onClick={handleNextPage}
-                            className="py-2 px-4 rounded-lg font-medium bg-primary text-white hover:bg-[#063a68] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                            disabled={isLoading}
-                            aria-label="Go to next page"
-                        >
-                            {t("profileCoins.nextButton")}
-                        </button>
-                    )}
-                </div>
-            )}
+            <PaginationControls
+                hasPrevious={pager.hasPreviousPage}
+                hasNext={Boolean(data?.nextPage)}
+                onPrevious={pager.handlePrevPage}
+                onNext={() => pager.handleNextPage(data?.nextPage)}
+                isLoading={isLoading}
+            />
         </div>
     );
 };

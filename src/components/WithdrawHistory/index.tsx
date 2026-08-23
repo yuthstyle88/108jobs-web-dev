@@ -13,6 +13,9 @@ import type {
     WithdrawStatus,
 } from "108jobs-client";
 
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
+import {PaginationControls} from "@/components/PaginationControls";
+
 const WithdrawHistory = () => {
     const {t} = useTranslation();
 
@@ -27,10 +30,7 @@ const WithdrawHistory = () => {
         limit: 5,
     });
 
-    // === Pagination ===
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isGoingBack, setIsGoingBack] = useState(false);
+    const pager = useCursorPagination();
 
     const {
         data: bankListRes,
@@ -38,12 +38,9 @@ const WithdrawHistory = () => {
     const bankList = bankListRes?.banks ?? [];
     const {data, isLoading, execute: refetch} = useHttpGet("listWithdrawRequests", {
         ...filters,
-        pageCursor: currentCursor,
-        pageBack: isGoingBack,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
     });
-
-    const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
-    const hasNextPage = useMemo(() => !!data?.nextPage, [data?.nextPage]);
 
     const withdraws: WithdrawRequestView[] = data?.withdrawRequests ?? [];
 
@@ -53,27 +50,11 @@ const WithdrawHistory = () => {
         value: ListWithdrawRequestQuery[K]
     ) => {
         setFilters((prev: ListWithdrawRequestQuery) => ({...prev, [key]: value}));
+        pager.resetPagination();
     };
 
     const handleRefresh = () => {
         refetch();
-    };
-
-    const handleNextPage = () => {
-        if (data?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(data.nextPage);
-            setIsGoingBack(false);
-        }
-    };
-
-    const handlePrevPage = () => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-            setIsGoingBack(true);
-        }
     };
 
     // === UI Helpers ===
@@ -272,9 +253,7 @@ const WithdrawHistory = () => {
                     <div className="flex items-end">
                         <button
                             onClick={() => {
-                                setCurrentCursor(undefined);
-                                setCursorHistory([]);
-                                setIsGoingBack(false);
+                                pager.resetPagination();
                                 refetch();
                             }}
                             className="w-full px-5 py-3 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-all shadow-sm flex items-center justify-center gap-2"
@@ -396,28 +375,13 @@ const WithdrawHistory = () => {
             </div>
 
             {/* Pagination */}
-            {(hasPreviousPage || hasNextPage) && (
-                <div className="mt-6 flex justify-center gap-4">
-                    {hasPreviousPage && (
-                        <button
-                            onClick={handlePrevPage}
-                            disabled={isLoading}
-                            className="py-2 px-4 rounded-lg font-medium bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors disabled:opacity-60"
-                        >
-                            {t("profileCoins.previousButton")}
-                        </button>
-                    )}
-                    {hasNextPage && (
-                        <button
-                            onClick={handleNextPage}
-                            disabled={isLoading}
-                            className="py-2 px-4 rounded-lg font-medium bg-primary text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors disabled:opacity-60"
-                        >
-                            {t("profileCoins.nextButton")}
-                        </button>
-                    )}
-                </div>
-            )}
+            <PaginationControls
+                hasPrevious={pager.hasPreviousPage}
+                hasNext={Boolean(data?.nextPage)}
+                onPrevious={pager.handlePrevPage}
+                onNext={() => pager.handleNextPage(data?.nextPage)}
+                isLoading={isLoading}
+            />
         </div>
     );
 };
