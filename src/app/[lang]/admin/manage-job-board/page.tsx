@@ -33,6 +33,7 @@ import {useHttpDelete} from "@/hooks/api/http/useHttpDelete";
 import {toast} from "sonner";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useDebounce} from "@/hooks/utils/useDebounce";
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {PaginationControls} from "@/components/PaginationControls";
 
 const ITEMS_PER_PAGE = 20;
@@ -77,10 +78,7 @@ const AdminJobBoard = () => {
         budgetMax: undefined,
         sort: undefined,
     });
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isGoingBack, setIsGoingBack] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const pager = useCursorPagination();
     const [budgetError, setBudgetError] = useState<string | null>(null);
 
     const categoriesResponse = useCategories();
@@ -95,8 +93,8 @@ const AdminJobBoard = () => {
         type: "Posts",
         q: sanitizedQuery,
         categoryId: filters.category,
-        pageCursor: currentCursor,
-        pageBack: isGoingBack,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
         budgetMin: filters.budgetMin,
         budgetMax: filters.budgetMax,
         jobType: filters.jobType,
@@ -106,12 +104,11 @@ const AdminJobBoard = () => {
 
     const {execute: deleteJob} = useHttpDelete("deletePost");
 
-    const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
-    const hasNextPage = useMemo(() => !!jobPostsPagination?.nextPage, [jobPostsPagination?.nextPage]);
     const totalJobs = useMemo(() => jobPostsPagination?.results?.length || 0, [jobPostsPagination?.results]);
 
     const handleFilterChange = useCallback(
         (key: keyof FilterState, value: unknown) => {
+            pager.resetPagination();
             let updatedFilters: FilterState;
 
             setFilters((prev) => {
@@ -145,7 +142,7 @@ const AdminJobBoard = () => {
                 router.push(`?${params.toString()}`, {scroll: false});
             });
         },
-        [router, searchParams]
+        [router, searchParams, pager]
     );
 
     const [budgetInputs, setBudgetInputs] = useState({min: "", max: ""});
@@ -168,24 +165,6 @@ const AdminJobBoard = () => {
     const handleBudgetInput = (type: "min" | "max", value: string) => {
         setBudgetInputs((prev) => ({...prev, [type]: value}));
     };
-
-
-    const handleNextPage = useCallback(() => {
-        if (jobPostsPagination?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(jobPostsPagination.nextPage);
-            setIsGoingBack(false);
-        }
-    }, [jobPostsPagination?.nextPage, currentCursor]);
-
-    const handlePrevPage = useCallback(() => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-            setIsGoingBack(true);
-        }
-    }, [cursorHistory]);
 
     const handleDelete = async (jobId: number) => {
         if (!confirm(t("admin.confirmDeleteJob"))) return;
@@ -236,9 +215,7 @@ const AdminJobBoard = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        setCurrentCursor(undefined);
-        setCursorHistory([]);
-        setIsGoingBack(false);
+        pager.resetPagination();
     }, [
         filters.category,
         filters.sort,
@@ -247,11 +224,8 @@ const AdminJobBoard = () => {
         filters.jobType,
         filters.intendedUse,
         sanitizedQuery,
+        pager,
     ]);
-
-    useEffect(() => {
-        setIsLoading(isJobsLoading);
-    }, [isJobsLoading]);
 
     if (searchState.state === REQUEST_STATE.FAILED) {
         return (
@@ -356,15 +330,15 @@ const AdminJobBoard = () => {
                         {budgetError && <p className="text-red-600 text-sm mb-4">{budgetError}</p>}
 
                         {/* Results Count */}
-                        {!isLoading && totalJobs > 0 && (
+                        {!isJobsLoading && totalJobs > 0 && (
                             <p className="text-sm text-gray-600 mb-4">
-                                {t("admin.showingJobs", {count: totalJobs, page: cursorHistory.length + 1})}
+                                {t("admin.showingJobs", {count: totalJobs, page: pager.cursorHistory.length + 1})}
                             </p>
                         )}
 
                         {/* Table */}
                         <div className="overflow-x-auto">
-                            {isLoading ? (
+                            {isJobsLoading ? (
                                 <div className="py-12 text-center">
                                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                                 </div>
@@ -487,11 +461,11 @@ const AdminJobBoard = () => {
 
                         {/* Pagination */}
                         <PaginationControls
-                            hasPrevious={hasPreviousPage}
-                            hasNext={hasNextPage}
-                            onPrevious={handlePrevPage}
-                            onNext={handleNextPage}
-                            isLoading={isLoading}
+                            hasPrevious={pager.hasPreviousPage}
+                            hasNext={!!jobPostsPagination?.nextPage}
+                            onPrevious={pager.handlePrevPage}
+                            onNext={() => pager.handleNextPage(jobPostsPagination?.nextPage)}
+                            isLoading={isJobsLoading}
                         />
                     </div>
 

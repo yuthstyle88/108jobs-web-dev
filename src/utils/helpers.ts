@@ -11,6 +11,7 @@ import {
 import {Match} from "@/utils/router";
 import {ErrorPageData} from "@/utils/types";
 import {madGatewayUrl, uploadToMad} from "@/services/media/madUpload";
+import {formatDateTime} from "@/utils/format/date";
 
 export function capitalizeFirstLetter(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -539,18 +540,7 @@ export function toCamelCaseLastSegment(path: string | undefined): string {
 }
 
 export const formatDate = (dateString: string): string => {
-    if (!dateString || dateString === "-") return "-";
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString("th-TH-u-ca-gregory", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-        });
-    } catch (error) {
-        console.error("Error formatting date:", error);
-        return "-";
-    }
+    return formatDateTime(dateString, 'date');
 };
 
 export { formatBudget } from "@/utils/format/money";

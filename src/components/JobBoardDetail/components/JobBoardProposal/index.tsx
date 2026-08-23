@@ -1,7 +1,8 @@
 "use client";
 
 import {ProfileImage} from "@/constants/images";
-import {Pagination} from "@/components/Pagination";
+import {PaginationControls} from "@/components/PaginationControls";
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import type {ProposalView} from "108jobs-client";
 import Image from "next/image";
@@ -25,11 +26,11 @@ type JobBoardProposalProps = {
 
 const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
     const {t} = useTranslation();
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
+    const pager = useCursorPagination();
     const [startingChatFor, setStartingChatFor] = useState<number | null>(null);
     const {upsertRoom} = useRoomsStore();
     const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getProposals", {
-        pageCursor: currentCursor,
+        pageCursor: pager.currentCursor,
         ...(postId ? {postId} : {}),
     });
     const {execute: createChatRoom} = useHttpPost("createChatRoom");
@@ -38,10 +39,6 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
     const params = useParams();
     const currentLang = (params?.lang as string) || 'th';
     const currentLocale = getLocale(currentLang);
-
-    const handlePageChange = (pageCursor: string | null) => {
-        setCurrentCursor(pageCursor || undefined);
-    };
 
     const handleStartChat = async (cv: ProposalView) => {
         const partnerPersonId = (cv as any)?.creator?.id as number | undefined;
@@ -171,13 +168,13 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
 
             {/* Pagination */}
             {pagination && (
-                <div className="mt-10 flex justify-center">
-                    <Pagination
-                        prevPage={pagination.prevPage}
-                        nextPage={pagination.nextPage}
-                        onPageChange={handlePageChange}
-                    />
-                </div>
+                <PaginationControls
+                    hasPrevious={pager.hasPreviousPage}
+                    hasNext={!!pagination.nextPage}
+                    onPrevious={pager.handlePrevPage}
+                    onNext={() => pager.handleNextPage(pagination.nextPage)}
+                    isLoading={isLoading}
+                />
             )}
         </main>
     );

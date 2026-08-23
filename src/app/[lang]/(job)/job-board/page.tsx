@@ -21,6 +21,7 @@ import {REQUEST_STATE} from "@/services/HttpService";
 import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {useDebounce} from "@/hooks/utils/useDebounce";
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {PaginationControls} from "@/components/PaginationControls";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -55,9 +56,7 @@ const JobBoard = () => {
         sort: undefined,
     });
 
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const pager = useCursorPagination();
     const [budgetError, setBudgetError] = useState<string | null>(null);
     const categoriesResponse = useCategories();
     const catalogData = getCategoriesAtLevel(categoriesResponse.categories ?? undefined, 3);
@@ -72,7 +71,8 @@ const JobBoard = () => {
         type: "Posts",
         q: sanitizedQuery,
         categoryId: debouncedFilters.category,
-        pageCursor: currentCursor,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
         budgetMin: debouncedFilters.budgetMin,
         budgetMax: debouncedFilters.budgetMax,
         jobType: debouncedFilters.jobType,
@@ -80,12 +80,11 @@ const JobBoard = () => {
         limit: ITEMS_PER_PAGE,
     });
 
-    const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
-    const hasNextPage = useMemo(() => !!jobPostsPagination?.nextPage, [jobPostsPagination?.nextPage]);
     const totalJobs = useMemo(() => jobPostsPagination?.results?.length || 0, [jobPostsPagination?.results]);
 
     const handleFilterChange = useCallback(
         (key: keyof FilterState, value: unknown) => {
+            pager.resetPagination();
             const newFilters: FilterState = {
                 ...filters,
                 [key]:
@@ -124,7 +123,7 @@ const JobBoard = () => {
 
             if (key === "budgetMin") setBudgetError(null);
         },
-        [router, searchParams, filters]
+        [router, searchParams, filters, pager]
     );
 
 
@@ -140,21 +139,6 @@ const JobBoard = () => {
         }, 50),
         [handleFilterChange, filters.budgetMin, t]
     );
-
-    const handleNextPage = useCallback(() => {
-        if (jobPostsPagination?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(jobPostsPagination.nextPage);
-        }
-    }, [jobPostsPagination?.nextPage, currentCursor]);
-
-    const handlePrevPage = useCallback(() => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-        }
-    }, [cursorHistory]);
 
     const handleJobClick = useCallback(
         (jobId: number) => {
@@ -189,6 +173,7 @@ const JobBoard = () => {
     );
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFilters((prev) => ({
             ...prev,
             category: searchParams.get("category")
@@ -207,13 +192,8 @@ const JobBoard = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        setCurrentCursor(undefined);
-        setCursorHistory([]);
-    }, [filters.category, filters.sort, filters.budgetMin, filters.budgetMax, filters.jobType, filters.intendedUse]);
-
-    useEffect(() => {
-        setIsLoading(isJobsLoading);
-    }, [isJobsLoading]);
+        pager.resetPagination();
+    }, [filters.category, filters.sort, filters.budgetMin, filters.budgetMax, filters.jobType, filters.intendedUse, pager]);
 
     if (searchState.state === REQUEST_STATE.FAILED) {
         return (
@@ -374,15 +354,15 @@ const JobBoard = () => {
 
                     </div>
 
-                    {!isLoading && totalJobs > 0 && (
+                    {!isJobsLoading && totalJobs > 0 && (
                         <div className="mb-4 text-sm text-gray-600">
-                            {t("admin.showingJobs", {count: totalJobs, page: cursorHistory.length + 1})}
+                            {t("admin.showingJobs", {count: totalJobs, page: pager.cursorHistory.length + 1})}
                         </div>
                     )}
 
                     {/* Replace the entire table section with this responsive block */}
                     <div className="overflow-x-auto border border-borderPrimary rounded-lg">
-                        {isLoading ? (
+                        {isJobsLoading ? (
                             <div className="py-12 text-center">
                                 <LoadingBlur text={""}/>
                             </div>
@@ -654,11 +634,11 @@ const JobBoard = () => {
                     {/* Pagination */}
                     <div className="flex justify-center mt-8">
                         <PaginationControls
-                            hasPrevious={hasPreviousPage}
-                            hasNext={hasNextPage}
-                            onPrevious={handlePrevPage}
-                            onNext={handleNextPage}
-                            isLoading={isLoading}
+                            hasPrevious={pager.hasPreviousPage}
+                            hasNext={!!jobPostsPagination?.nextPage}
+                            onPrevious={pager.handlePrevPage}
+                            onNext={() => pager.handleNextPage(jobPostsPagination?.nextPage)}
+                            isLoading={isJobsLoading}
                         />
                     </div>
 

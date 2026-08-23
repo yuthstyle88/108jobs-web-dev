@@ -13,6 +13,7 @@ import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {getJobTypeLabel} from "@/utils/helpers";
 import {JobType} from "108jobs-client";
 import {PaginationControls} from "@/components/PaginationControls";
+import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
@@ -22,15 +23,14 @@ const MyJobs = () => {
     const {t, i18n} = useTranslation();
     const router = useRouter();
 
-    const [currentCursor, setCurrentCursor] = useState<string | undefined>(undefined);
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const pager = useCursorPagination();
 
     const {
         data: response,
         isMutating: isJobsLoading,
     } = useHttpGet("listPersonCreated", {
-        pageCursor: currentCursor,
+        pageCursor: pager.currentCursor,
+        pageBack: pager.isGoingBack,
         limit: ITEMS_PER_PAGE,
     });
 
@@ -41,28 +41,6 @@ const MyJobs = () => {
     const handleConfirmDelete = async () => {
         if (selectedJob) setSelectedJob(null);
     };
-
-    const hasPreviousPage = useMemo(() => cursorHistory.length > 0, [cursorHistory]);
-    const hasNextPage = useMemo(() => !!response?.nextPage, [response?.nextPage]);
-
-    const handleNextPage = useCallback(() => {
-        if (response?.nextPage) {
-            setCursorHistory((prev) => [...prev, currentCursor || ""]);
-            setCurrentCursor(response.nextPage);
-        }
-    }, [response?.nextPage, currentCursor]);
-
-    const handlePrevPage = useCallback(() => {
-        if (cursorHistory.length > 0) {
-            const prevCursor = cursorHistory[cursorHistory.length - 1];
-            setCursorHistory((prev) => prev.slice(0, -1));
-            setCurrentCursor(prevCursor || undefined);
-        }
-    }, [cursorHistory]);
-
-    useEffect(() => {
-        setIsLoading(isJobsLoading);
-    }, [isJobsLoading]);
 
     const getStatusBadge = (isOpen: boolean) => {
         return isOpen ? (
@@ -307,11 +285,11 @@ const MyJobs = () => {
                         {/* Pagination */}
                         <div className="flex justify-center py-8">
                             <PaginationControls
-                                hasPrevious={hasPreviousPage}
-                                hasNext={hasNextPage}
-                                onPrevious={handlePrevPage}
-                                onNext={handleNextPage}
-                                isLoading={isLoading}
+                                hasPrevious={pager.hasPreviousPage}
+                                hasNext={!!response?.nextPage}
+                                onPrevious={pager.handlePrevPage}
+                                onNext={() => pager.handleNextPage(response?.nextPage)}
+                                isLoading={isJobsLoading}
                             />
                         </div>
                     </div>
