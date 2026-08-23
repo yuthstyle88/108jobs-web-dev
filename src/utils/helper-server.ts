@@ -148,13 +148,24 @@ export function parseJwtClaims(token?: string): any {
 }
 
 
+/**
+ * A token with no usable `exp` counts as EXPIRED.
+ *
+ * This used to return false ("ไม่มี exp แปลว่าไม่หมดอายุ" -- no exp means it
+ * never expires), which made a hand-written `{"roles":["jobs:admin"]}` payload
+ * a session that never ended. Nothing Identity-Platform mints is affected:
+ * `exp` is a required, non-optional field on its `AccessTokenClaims`
+ * (`crates/auth/src/contract/mod.rs`), so every real token carries one.
+ * A non-numeric `exp` is treated the same way -- unusable, therefore expired.
+ */
 export function isJwtExpired(token?: string): boolean {
     if (!token) return true;
     try {
         const payload = parseJwtClaims(token);
-        if (!payload?.exp) return false; // ไม่มี exp แปลว่าไม่หมดอายุ
+        const exp = payload?.exp;
+        if (typeof exp !== "number" || !Number.isFinite(exp)) return true;
         const now = Math.floor(Date.now() / 1000);
-        return payload.exp < now;
+        return exp < now;
     } catch {
         return true;
     }

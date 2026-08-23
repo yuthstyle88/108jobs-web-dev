@@ -4,7 +4,17 @@ import { Page } from '@playwright/test';
 // for why a plain placeholder string crashes jwt-decode.
 export function fakeJwt(): string {
   const b64url = (obj: object) => Buffer.from(JSON.stringify(obj)).toString('base64url');
-  const header = b64url({ alg: 'none', typ: 'JWT' });
+  // The header must NOT say `alg: 'none'`. That is the JWT algorithm-confusion
+  // forgery, and src/proxy.ts now rejects it outright without even reaching for
+  // the signing keys -- so a fixture that used it would be asserting that the
+  // hole this gate closes is still open. Real Identity-Platform tokens are
+  // EdDSA with a `kid`; with NEXT_PUBLIC_IDENTITY_BASE_URL pointed at a port
+  // nothing listens on (see .github/workflows/ci.yml), the JWKS fetch fails and
+  // the gate reaches its "cannot verify" verdict, which keeps ordinary
+  // protected pages reachable. That is the path these specs exercise. The
+  // /admin gate fails closed on the same verdict and is covered by the unit
+  // tests in src/proxy.test.ts, which do real Ed25519 signing.
+  const header = b64url({ alg: 'EdDSA', typ: 'JWT', kid: 'mock-key' });
   const nowSeconds = Math.floor(Date.now() / 1000);
   const payload = b64url({
     sub: 'mock-identity',
