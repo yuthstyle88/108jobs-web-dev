@@ -15,6 +15,7 @@ import type {ReactNode} from "react";
 import type {Rider, RiderView} from "108jobs-client";
 
 vi.mock("@/modules/admin/hooks/usePaginatedRiders", () => ({usePaginatedRiders: vi.fn()}));
+vi.mock("@/modules/admin/hooks/useUnresolvedRiderCount", () => ({useUnresolvedRiderCount: vi.fn()}));
 vi.mock("@/modules/admin/components/layout/AdminLayout", () => ({
     AdminLayout: ({children}: {children: ReactNode}) => children,
 }));
@@ -23,12 +24,14 @@ vi.mock("react-i18next", () => ({
 }));
 
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
+import {useUnresolvedRiderCount} from "@/modules/admin/hooks/useUnresolvedRiderCount";
 import AdminRidersManagementPage from "@/app/[lang]/admin/manage-riders/page";
 
 // usePaginatedRiders is generic-free at the call site here, so the mock
 // factory's vi.fn() is cast the same way RiderReviewModal/index.test.ts
 // casts useHttpGet/useHttpPost -- gives mockReturnValue etc. without `any`.
 const mockUsePaginatedRiders = usePaginatedRiders as unknown as ReturnType<typeof vi.fn>;
+const mockUseUnresolvedRiderCount = useUnresolvedRiderCount as unknown as ReturnType<typeof vi.fn>;
 
 function fakeRider(overrides: Partial<Rider> = {}): Rider {
     return {
@@ -82,7 +85,12 @@ describe("AdminRidersManagementPage", () => {
 
     type HookState = ReturnType<typeof usePaginatedRiders> & {currentPage?: number};
 
-    function mount(riders: RiderView[], overrides: Partial<HookState> = {}) {
+    function mount(
+        riders: RiderView[],
+        overrides: Partial<HookState> = {},
+        unresolved: number | null = null,
+    ) {
+        mockUseUnresolvedRiderCount.mockReturnValue({count: unresolved, isLoading: false});
         mockUsePaginatedRiders.mockReturnValue({
             riders,
             isLoading: false,
@@ -120,6 +128,44 @@ describe("AdminRidersManagementPage", () => {
         expect(container.textContent).toContain("Somchai Test");
         // Avatar-initial fallback.
         expect(container.textContent).toContain("S");
+    });
+
+    it("shows the unresolved count on Pending, and only there", () => {
+        mount([fakeRiderView("Somchai Test")], {}, 4);
+
+        const badge = container.querySelector("[data-testid='unresolved-rider-count']");
+        expect(badge).not.toBeNull();
+        expect(badge?.textContent).toBe("4");
+
+        // Verified and Rejected are outcomes, not a backlog. Exactly one badge
+        // on the page proves it did not leak onto the other two tabs.
+        expect(
+            container.querySelectorAll("[data-testid='unresolved-rider-count']"),
+        ).toHaveLength(1);
+
+        const pending = Array.from(container.querySelectorAll("button")).find((b) =>
+            b.textContent?.includes("admin.riders.tabPending"),
+        );
+        expect(pending?.contains(badge as Node)).toBe(true);
+    });
+
+    it("hides the badge when the queue is empty", () => {
+        // Zero is a real answer -- the queue is clear -- and a "0" chip beside
+        // Pending is visual noise claiming there is something to look at.
+        mount([fakeRiderView("Somchai Test")], {}, 0);
+        expect(
+            container.querySelector("[data-testid='unresolved-rider-count']"),
+        ).toBeNull();
+    });
+
+    it("hides the badge before the count has loaded", () => {
+        // Null, not zero: rendering "0" while the request is in flight would
+        // tell an admin their queue is clear a moment before showing that it
+        // is not.
+        mount([fakeRiderView("Somchai Test")], {}, null);
+        expect(
+            container.querySelector("[data-testid='unresolved-rider-count']"),
+        ).toBeNull();
     });
 
     function findButton(labelKey: string) {
