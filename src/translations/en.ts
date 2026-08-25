@@ -4083,6 +4083,17 @@ export const en = {
                 verifyFailed: "Failed to verify bank account",
                 fetchError: "Failed to load bank accounts. Please try again.",
             },
+            notifications: {
+                bellLabel: "Notifications",
+                bellLabelWithCount: "Notifications, {{count}} waiting for a decision",
+                panelTitle: "Waiting for a decision",
+                loading: "Loading…",
+                empty: "Nothing waiting. Every application has been decided.",
+                kindSubmitted: "New rider application",
+                kindResubmitted: "Application sent again",
+                kindUnknown: "Rider application update",
+                riderRef: "Rider #{{id}}",
+            },
             riders: {
                 // Page title & tabs
                 title: "Rider Management",

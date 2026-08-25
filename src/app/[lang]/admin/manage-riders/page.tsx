@@ -1,7 +1,8 @@
 "use client";
 
-import {JSX, useState} from "react";
+import {JSX, useCallback, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
+import {useRouter, useSearchParams} from "next/navigation";
 import {
     Car,
     CheckCircle2,
@@ -17,17 +18,19 @@ import {
     XCircle,
     type LucideIcon,
 } from "lucide-react";
-import {Rider, RiderVerificationStatus, RiderView, VehicleType} from "108jobs-client";
+import {RiderVerificationStatus, RiderView, VehicleType} from "108jobs-client";
 
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
 import {Badge} from "@/components/ui/Badge";
 import {Button} from "@/components/ui/Button";
 import {Card} from "@/components/ui/Card";
 import {cn} from "@/lib/utils";
-import {RiderReviewModal} from "@/modules/admin/components/Modal/RiderReviewModal";
+import {RiderReviewModal, type RiderReviewSubject}
+    from "@/modules/admin/components/Modal/RiderReviewModal";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 import {useUnresolvedRiderCount} from "@/modules/admin/hooks/useUnresolvedRiderCount";
+import {useAdminQueueRefresh} from "@/modules/admin/hooks/useAdminQueueRefresh";
 
 const vehicleIconMap: Record<VehicleType, JSX.Element> = {
     Motorcycle: <Motorbike className="h-4 w-4 shrink-0"/>,
@@ -66,7 +69,25 @@ const statusPresentation: Record<
 export default function AdminRidersManagementPage() {
     const {t} = useTranslation();
     const [viewMode, setViewMode] = useState<ViewMode>("Pending");
-    const [reviewingRider, setReviewingRider] = useState<Rider | null>(null);
+    // Opened by clicking a row's Review button.
+    const [manualSubject, setManualSubject] = useState<RiderReviewSubject | null>(null);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const linkedRiderId = Number(searchParams.get("rider"));
+    const hasRiderLink = Number.isInteger(linkedRiderId) && linkedRiderId > 0;
+
+
+    // Closing has to drop the query parameter too, or reopening the same
+    // notification is a no-op: the URL never changes, so the effect never re-runs.
+    // Closing a deep-linked application closes it by dropping the parameter,
+    // because the URL is what opened it. Remembering "the admin dismissed rider
+    // 14" instead would make that rider unopenable from the bell for the rest of
+    // the page's life: selecting it again pushes the same URL, which the
+    // remembered dismissal would keep on suppressing.
+    const closeReview = useCallback(() => {
+        setManualSubject(null);
+        if (hasRiderLink) router.replace("/admin/manage-riders");
+    }, [router, hasRiderLink]);
 
     const {
         riders,
@@ -86,7 +107,27 @@ export default function AdminRidersManagementPage() {
     // Independent of the tab: the queue depth is the same number whichever tab
     // is open, and refetching it when somebody switches to Verified would be a
     // request for a figure nothing on screen is showing.
-    const {count: unresolvedCount, refresh: refreshUnresolvedCount} = useUnresolvedRiderCount();
+    const {count: unresolvedCount} = useUnresolvedRiderCount();
+    const refreshQueue = useAdminQueueRefresh();
+    // Arriving from the notification bell, which knows a rider id and nothing
+    // else. Prefer the row already on screen -- it carries the real status --
+    // and fall back to the id alone, which is all the modal needs: it fetches
+    // the application and replaces this placeholder as soon as it lands. Pending
+    // is the honest placeholder, because every notification that can reach the
+    // admin queue is by definition still awaiting a decision.
+    //
+    // Derived rather than synced into state: React Compiler rejects setting
+    // state inside an effect, and deriving also closes the modal on the same
+    // render as the click instead of a frame later.
+    const linkedSubject: RiderReviewSubject | null = useMemo(() => {
+        if (!hasRiderLink) return null;
+        const onScreen = riders.find((r) => r.rider.id === linkedRiderId);
+        return onScreen ? onScreen.rider : {id: linkedRiderId, verificationStatus: "Pending"};
+    }, [hasRiderLink, linkedRiderId, riders]);
+
+    // A row click wins over the URL, so opening another application from the
+    // queue while a deep link is still in the address bar shows the one clicked.
+    const reviewingRider = manualSubject ?? linkedSubject;
 
     const emptyMessage = viewMode === "Pending"
         ? t("admin.riders.emptyPending")
@@ -285,7 +326,7 @@ export default function AdminRidersManagementPage() {
                                                     type="button"
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => setReviewingRider(rider)}
+                                                    onClick={() => setManualSubject(rider)}
                                                     aria-label={t("admin.riders.reviewRiderLabel")}
                                                     className="w-full shrink-0 transition-none lg:w-auto"
                                                 >
@@ -335,13 +376,15 @@ export default function AdminRidersManagementPage() {
                 {reviewingRider && (
                     <RiderReviewModal
                         rider={reviewingRider}
-                        onClose={() => setReviewingRider(null)}
+                        onClose={closeReview}
                         onReviewed={() => {
-                            setReviewingRider(null);
+                            closeReview();
                             refetch();
                             // The decision resolved this rider's queue notification,
-                            // so the badge is now one too high until it refetches.
-                            refreshUnresolvedCount();
+                            // so both the badge and the bell's list are stale
+                            // until they refetch -- the bell would otherwise keep
+                            // offering an application that has just been decided.
+                            refreshQueue();
                         }}
                     />
                 )}

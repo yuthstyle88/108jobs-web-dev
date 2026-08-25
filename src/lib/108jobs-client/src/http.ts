@@ -32,7 +32,7 @@ import type {
     ListPersonCreatedI,
     ListUserChatRoomsQueryI, ListUserReviewsQueryI, PeerStatusQueryI,
     SearchI,
-    UploadImage, ListRidersQueryI,
+    UploadImage, ListRidersQueryI, NotificationPageQueryI,
 } from "./other_types";
 import {VERSION} from "./other_types";
 import type {AdminListUsers} from "./types/AdminListUsers";
@@ -92,6 +92,8 @@ import type {SaveUserSettings} from "./types/SaveUserSettings";
 import type {Search} from "./types/Search";
 import type {SearchResponse} from "./types/SearchResponse";
 import type {SetDefaultBankAccount} from "./types/SetDefaultBankAccount";
+import type {NotificationListResponse} from "./types/NotificationListResponse";
+import type {NotificationPageQuery} from "./types/NotificationPageQuery";
 import type {NotificationCountResponse} from "./types/NotificationCountResponse";
 import type {SuccessResponse} from "./types/SuccessResponse";
 import type {Tag} from "./types/Tag";
@@ -1104,6 +1106,31 @@ export class Api108Jobs extends Controller {
         return this.#wrapper<ListRidersQuery, ListRidersResponse>(
             HttpType.Get,
             "/admin/riders/list",
+            form,
+            options,
+        );
+    }
+
+    /**
+     * The rider applications still waiting for an admin decision, newest first.
+     *
+     * Returns only UNRESOLVED rows, so this list and
+     * `adminUnresolvedNotificationCount` always agree: deciding an application
+     * takes it out of both. It is a work queue, not a history -- there is no
+     * endpoint that returns decided admin notifications.
+     *
+     * @summary List unresolved admin notifications
+     */
+    @Security("bearerAuth")
+    @Get("/admin/notifications")
+    @Tags("Admin", "Notifications")
+    async adminListNotifications(
+        @Queries() form: NotificationPageQueryI = {},
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<NotificationPageQuery, NotificationListResponse>(
+            HttpType.Get,
+            "/admin/notifications",
             form,
             options,
         );

@@ -14,6 +14,7 @@ import React, {useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {UserService} from "@/services";
 import {useUserStore} from "@/store/useUserStore";
+import {AdminNotificationBell} from "@/modules/admin/components/layout/AdminNotificationBell";
 
 export function AdminHeader() {
     const logout = useCallback(() => UserService.Instance.logout(), []);
@@ -32,6 +33,8 @@ export function AdminHeader() {
             </div>
 
             <div className="flex items-center gap-3">
+                <AdminNotificationBell/>
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="relative h-10 px-3 gap-2">

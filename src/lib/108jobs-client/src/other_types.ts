@@ -14,6 +14,7 @@ import {LastReadQuery} from "./types/LastReadQuery";
 import {ListCategories} from "./types/ListCategories";
 import {ListMedia} from "./types/ListMedia";
 import {ListPersonCreated} from "./types/ListPersonCreated";
+import {NotificationPageQuery} from "./types/NotificationPageQuery";
 import {ListRidersQuery} from "./types/ListRidersQuery";
 import {ListUserChatRoomsQuery} from "./types/ListUserChatRoomsQuery";
 import {ListUserReviewsQuery} from "./types/ListUserReviewsQuery";
@@ -89,4 +90,7 @@ export interface GetBankAccountsI extends GetBankAccounts {
 }
 
 export interface ListRidersQueryI extends ListRidersQuery {
+}
+
+export interface NotificationPageQueryI extends NotificationPageQuery {
 }

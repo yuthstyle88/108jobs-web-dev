@@ -3997,6 +3997,17 @@ export const th = {
                 verifyFailed: "ยืนยันบัญชีธนาคารไม่สำเร็จ",
                 fetchError: "โหลดรายการบัญชีธนาคารไม่สำเร็จ กรุณาลองใหม่",
             },
+            notifications: {
+                bellLabel: "การแจ้งเตือน",
+                bellLabelWithCount: "การแจ้งเตือน รอการพิจารณา {{count}} รายการ",
+                panelTitle: "รอการพิจารณา",
+                loading: "กำลังโหลด…",
+                empty: "ไม่มีรายการรอ ทุกใบสมัครได้รับการพิจารณาแล้ว",
+                kindSubmitted: "ใบสมัครไรเดอร์ใหม่",
+                kindResubmitted: "ส่งใบสมัครอีกครั้ง",
+                kindUnknown: "อัปเดตใบสมัครไรเดอร์",
+                riderRef: "ไรเดอร์ #{{id}}",
+            },
             riders: {
                 // Page title & tabs
                 title: "จัดการไรเดอร์",
