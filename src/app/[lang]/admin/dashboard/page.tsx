@@ -21,7 +21,7 @@ const DashboardPage = () => {
     const admins = siteRes?.admins || [];
     const version = siteRes?.version;
 
-    const siteName = localSite?.name ?? "108Jobs";
+    const siteName = localSite?.name ?? "108Heros";
 
     const registrationModeLabels: Record<RegistrationMode, string> = {
         Open: t("dashboard.siteInfo.registrationMode.open"),
@@ -103,7 +103,7 @@ const DashboardPage = () => {
                         <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4"/>
                             <span
-                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108jobs"}
+                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108heros"}
                         </div>
                         <div className="flex items-center gap-2">
                             <Settings className="w-4 h-4"/>
