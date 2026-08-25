@@ -86,7 +86,7 @@ export default function AdminRidersManagementPage() {
     // Independent of the tab: the queue depth is the same number whichever tab
     // is open, and refetching it when somebody switches to Verified would be a
     // request for a figure nothing on screen is showing.
-    const {count: unresolvedCount} = useUnresolvedRiderCount();
+    const {count: unresolvedCount, refresh: refreshUnresolvedCount} = useUnresolvedRiderCount();
 
     const emptyMessage = viewMode === "Pending"
         ? t("admin.riders.emptyPending")
@@ -339,6 +339,9 @@ export default function AdminRidersManagementPage() {
                         onReviewed={() => {
                             setReviewingRider(null);
                             refetch();
+                            // The decision resolved this rider's queue notification,
+                            // so the badge is now one too high until it refetches.
+                            refreshUnresolvedCount();
                         }}
                     />
                 )}
