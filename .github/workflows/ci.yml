@@ -95,13 +95,13 @@ jobs:
         with:
           node-version: 22
 
-      # src/lib/108jobs-client is a standalone package (own package.json/
+      # src/lib/108heros-client is a standalone package (own package.json/
       # pnpm-lock.yaml/node_modules, not a pnpm workspace member) that the
       # root install links via a file: dependency but does NOT install the
       # dependencies of. Its own `prepare` script (triggered by the root
       # install below) needs those already in place to build successfully --
       # confirmed directly: without this step, the root install's dist/
-      # output for 108jobs-client never gets produced on a fresh checkout,
+      # output for 108heros-client never gets produced on a fresh checkout,
       # and every file importing it fails with "Cannot find module".
       # This is a real gate (no continue-on-error): a genuine failure of the
       # generated client to install or build must fail CI. It used to be
@@ -122,17 +122,17 @@ jobs:
       # own -- so the version lives only in that file. Spelling it out here
       # instead would put the same number in three steps across two jobs, each
       # free to drift from the package.json that actually governs the lockfile.
-      - name: Install 108jobs-client sub-package dependencies
-        working-directory: src/lib/108jobs-client
+      - name: Install 108heros-client sub-package dependencies
+        working-directory: src/lib/108heros-client
         run: corepack pnpm install --frozen-lockfile
 
       # The sub-package owns a vitest suite (src/http.test.ts) asserting the
       # generated client's identity-platform method surface. The root vitest
-      # run below deliberately excludes src/lib/108jobs-client/**, so this is
+      # run below deliberately excludes src/lib/108heros-client/**, so this is
       # the only place that suite runs -- invoke it with the sub-package's own
       # pinned pnpm/vitest (installed by the step above).
-      - name: Test 108jobs-client sub-package
-        working-directory: src/lib/108jobs-client
+      - name: Test 108heros-client sub-package
+        working-directory: src/lib/108heros-client
         run: corepack pnpm run test
 
       - run: pnpm install --frozen-lockfile
@@ -184,8 +184,8 @@ jobs:
 
       # See the equivalent step in the lint-typecheck-test job -- same reason,
       # and likewise a real gate (no continue-on-error).
-      - name: Install 108jobs-client sub-package dependencies
-        working-directory: src/lib/108jobs-client
+      - name: Install 108heros-client sub-package dependencies
+        working-directory: src/lib/108heros-client
         run: corepack pnpm install --frozen-lockfile
 
       - run: pnpm install --frozen-lockfile

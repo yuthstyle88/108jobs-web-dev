@@ -6,7 +6,7 @@
 
 **Architecture:** api-108jobs gains a thin new proxy endpoint (`POST /account/auth/refresh/identity-platform`), mirroring the existing login/register-via-identity-platform pattern exactly. The frontend stores the refresh token alongside the access token, and `UserService` schedules a `setTimeout` to refresh shortly before the access token's known expiry — no reactive/401-catching logic, matching the design's proactive-only decision.
 
-**Tech Stack:** Rust/Actix (api-108jobs), Next.js/TypeScript with Vitest (108jobs-clean).
+**Tech Stack:** Rust/Actix (api-108jobs), Next.js/TypeScript with Vitest (108heros-clean).
 
 **Design doc:** `docs/superpowers/specs/2026-07-06-access-token-refresh-design.md` — read it first for full rationale. Its Verification record section confirms every file path, line number, and existing-code quote in this plan against live source at time of writing.
 
@@ -29,7 +29,7 @@
 - Create: `crates/http/src/crud/user/refresh_via_identity_platform.rs`
 - Modify: `crates/http/src/crud/user/mod.rs`
 - Modify: `src/api_routes.rs` (import block at lines 69-75, route block at lines 358-362)
-- Modify: `crates/http/Cargo.toml` (add `app_108jobs_identity = { workspace = true }` — discovered missing during implementation; `crates/http` didn't previously depend on `crates/identity` at all, but already has the identical pattern established for `app_108jobs_db_views_site` (`login_via_identity_platform.rs` imports `LoginRequest` from it the same way this task imports `RefreshTokenRequest` from `app_108jobs_identity::refresh`). No feature flag needed — `RefreshTokenRequest` has no `#[cfg(feature = ...)]` gates. Confirmed no circular dependency (`crates/identity` doesn't depend on `crates/http`).
+- Modify: `crates/http/Cargo.toml` (add `app_108heros_identity = { workspace = true }` — discovered missing during implementation; `crates/http` didn't previously depend on `crates/identity` at all, but already has the identical pattern established for `app_108heros_db_views_site` (`login_via_identity_platform.rs` imports `LoginRequest` from it the same way this task imports `RefreshTokenRequest` from `app_108heros_identity::refresh`). No feature flag needed — `RefreshTokenRequest` has no `#[cfg(feature = ...)]` gates. Confirmed no circular dependency (`crates/identity` doesn't depend on `crates/http`).
 
 **Interfaces:**
 - Consumes: `App108Context::settings()` (`crates/api/api_utils/src/context.rs:70`, returns `&'static Settings`), `identity_platform_base_url(settings: &Settings) -> App108Result<String>` (`identity_platform.rs:238`), `RefreshTokenRequest { refresh_token: String }` (`crates/identity/src/refresh.rs:12-15`), `IdentityPlatformLoginResponse { access_token, refresh_token, expires_in }` (`crates/http/src/crud/user/login_via_identity_platform.rs:18`, already `pub`).
@@ -85,10 +85,10 @@ Then add this test inside the file's existing `mod tests { ... }` block (add it 
 
 - [ ] **Step 2: Run the new test to verify it passes**
 
-Run: `cargo test -p app_108jobs_api_utils --features full refresh_request_body_serializes_snake_case`
+Run: `cargo test -p app_108heros_api_utils --features full refresh_request_body_serializes_snake_case`
 Expected: `1 passed, N filtered out`.
 
-Note the `--features full` flag is required here specifically — `app_108jobs_api_utils` has a `full` Cargo feature (`crates/api/api_utils/Cargo.toml`, pulling in `app_108jobs_db/full` and friends) that this workspace's CI enables via its workspace-wide `cargo test --workspace` command (`.woodpecker.yml:150`). Checking or testing this one crate in isolation via a bare `-p app_108jobs_api_utils` (no `--features full`) fails with ~20+ unrelated-looking errors (`unresolved import diesel`, `ExpressionMethods` not in scope, etc.) — this is a Cargo feature-unification artifact, not a real break in the codebase. Confirmed: `cargo check -p app_108jobs_http` and `cargo check -p app_108jobs_api_server` (Step 6, below) both already succeed without any extra flags, since they pull in `app_108jobs_api_utils` correctly as part of the larger dependency graph — only a standalone check/test of `app_108jobs_api_utils` itself needs `--features full`.
+Note the `--features full` flag is required here specifically — `app_108heros_api_utils` has a `full` Cargo feature (`crates/api/api_utils/Cargo.toml`, pulling in `app_108heros_db/full` and friends) that this workspace's CI enables via its workspace-wide `cargo test --workspace` command (`.woodpecker.yml:150`). Checking or testing this one crate in isolation via a bare `-p app_108heros_api_utils` (no `--features full`) fails with ~20+ unrelated-looking errors (`unresolved import diesel`, `ExpressionMethods` not in scope, etc.) — this is a Cargo feature-unification artifact, not a real break in the codebase. Confirmed: `cargo check -p app_108heros_http` and `cargo check -p app_108heros_api_server` (Step 6, below) both already succeed without any extra flags, since they pull in `app_108heros_api_utils` correctly as part of the larger dependency graph — only a standalone check/test of `app_108heros_api_utils` itself needs `--features full`.
 
 - [ ] **Step 3: Write the new handler file**
 
@@ -96,12 +96,12 @@ Create `crates/http/src/crud/user/refresh_via_identity_platform.rs`:
 
 ```rust
 use actix_web::web::{Data, Json};
-use app_108jobs_api_utils::{
+use app_108heros_api_utils::{
   context::App108Context,
   identity_platform::{identity_platform_base_url, refresh_with_identity_platform},
 };
-use app_108jobs_core::error::App108Result;
-use app_108jobs_identity::refresh::RefreshTokenRequest;
+use app_108heros_core::error::App108Result;
+use app_108heros_identity::refresh::RefreshTokenRequest;
 
 use crate::crud::user::login_via_identity_platform::IdentityPlatformLoginResponse;
 
@@ -203,7 +203,7 @@ Note: this scope already has an unrelated, dead `.route("/refresh", post().to(re
 
 - [ ] **Step 6: Confirm the workspace builds**
 
-Run: `cargo check -p app_108jobs_api_utils` (checks Step 1's new code) and `cargo check -p app_108jobs_http` (checks Step 3's new handler file) and `cargo check -p app_108jobs_api_server` (checks Step 5's route-registration edit, in the root binary crate — confirmed in the prior Identity-Platform login-endpoint plan that `crates/http` itself has no `[[bin]]` target, so this is the correct binary to check).
+Run: `cargo check -p app_108heros_api_utils` (checks Step 1's new code) and `cargo check -p app_108heros_http` (checks Step 3's new handler file) and `cargo check -p app_108heros_api_server` (checks Step 5's route-registration edit, in the root binary crate — confirmed in the prior Identity-Platform login-endpoint plan that `crates/http` itself has no `[[bin]]` target, so this is the correct binary to check).
 Expected: no errors from any of the three commands.
 
 - [ ] **Step 7: Commit**
@@ -218,10 +218,10 @@ login/register-via-identity-platform pattern exactly. Reuses the existing
 RefreshTokenRequest and IdentityPlatformLoginResponse types -- no new
 backend response type needed.
 
-Adds app_108jobs_identity as a new crates/http dependency (needed for
+Adds app_108heros_identity as a new crates/http dependency (needed for
 RefreshTokenRequest) -- crates/http had no prior dependency on
 crates/identity; the same cross-crate-import pattern already exists for
-app_108jobs_db_views_site, so this isn't a new architectural precedent.
+app_108heros_db_views_site, so this isn't a new architectural precedent.
 
 The request shape sent to Identity-Platform ({refresh_token} snake_case)
 is an assumption, not a confirmed fact -- verify during manual end-to-end
@@ -232,27 +232,27 @@ testing (final task of this plan)."
 
 ---
 
-## Task 2: Frontend client + cookie storage (108jobs-clean)
+## Task 2: Frontend client + cookie storage (108heros-clean)
 
 **Files:**
-- Create: `src/lib/108jobs-client/src/types/RefreshIdentityPlatform.ts`
-- Modify: `src/lib/108jobs-client/src/http.ts`
-- Modify: `src/lib/108jobs-client/src/index.ts`
+- Create: `src/lib/108heros-client/src/types/RefreshIdentityPlatform.ts`
+- Modify: `src/lib/108heros-client/src/http.ts`
+- Modify: `src/lib/108heros-client/src/index.ts`
 - Modify: `src/utils/config.ts`
 - Modify: `src/utils/browser.ts`
-- Test: `src/lib/108jobs-client/src/http.test.ts` (existing file, add a case)
+- Test: `src/lib/108heros-client/src/http.test.ts` (existing file, add a case)
 
 **Interfaces:**
 - Consumes: the existing `#wrapper<Req, Res>`/`RequestOptions`/`@Post`/`@Tags` decorator pattern already used by `loginWithIdentityPlatform` (`http.ts:944-956`); the existing `IdentityPlatformLoginResponse` type (already exported from this package).
-- Produces: `Api108Jobs.refreshWithIdentityPlatform(form: RefreshIdentityPlatform, options?: RequestOptions): Promise<IdentityPlatformLoginResponse>`, consumed by Task 3. `setRefreshTokenCookie(refreshToken: string): void` / `getRefreshTokenCookie(): string | null`, consumed by Task 3.
+- Produces: `Api108Heros.refreshWithIdentityPlatform(form: RefreshIdentityPlatform, options?: RequestOptions): Promise<IdentityPlatformLoginResponse>`, consumed by Task 3. `setRefreshTokenCookie(refreshToken: string): void` / `getRefreshTokenCookie(): string | null`, consumed by Task 3.
 
 - [ ] **Step 1: Write the failing test**
 
-In `src/lib/108jobs-client/src/http.test.ts`, add this test alongside the existing one:
+In `src/lib/108heros-client/src/http.test.ts`, add this test alongside the existing one:
 
 ```typescript
 it("exposes refreshWithIdentityPlatform", () => {
-  const client = new Api108Jobs("http://localhost:8536");
+  const client = new Api108Heros("http://localhost:8536");
   expect(typeof client.refreshWithIdentityPlatform).toBe("function");
 });
 ```
@@ -264,7 +264,7 @@ Expected: FAIL — `refreshWithIdentityPlatform` is `undefined` (method doesn't 
 
 - [ ] **Step 3: Add the new type file**
 
-Create `src/lib/108jobs-client/src/types/RefreshIdentityPlatform.ts`:
+Create `src/lib/108heros-client/src/types/RefreshIdentityPlatform.ts`:
 
 ```typescript
 export type RefreshIdentityPlatform = {
@@ -402,10 +402,10 @@ Expected: all tests pass (28 existing + 1 new from Step 6 = 29).
 - [ ] **Step 10: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types/RefreshIdentityPlatform.ts src/lib/108jobs-client/src/http.ts src/lib/108jobs-client/src/http.test.ts src/lib/108jobs-client/src/index.ts src/utils/config.ts src/utils/browser.ts
+git add src/lib/108heros-client/src/types/RefreshIdentityPlatform.ts src/lib/108heros-client/src/http.ts src/lib/108heros-client/src/http.test.ts src/lib/108heros-client/src/index.ts src/utils/config.ts src/utils/browser.ts
 git commit -m "feat(auth): add refresh-token client method and cookie storage
 
-Api108Jobs.refreshWithIdentityPlatform() calls the new backend endpoint;
+Api108Heros.refreshWithIdentityPlatform() calls the new backend endpoint;
 setRefreshTokenCookie/getRefreshTokenCookie mirror the existing JWT
 cookie helpers exactly. Nothing calls these yet -- wired up in the next
 task."
@@ -413,7 +413,7 @@ task."
 
 ---
 
-## Task 3: `UserService` — scheduling mechanism (108jobs-clean)
+## Task 3: `UserService` — scheduling mechanism (108heros-clean)
 
 **Files:**
 - Modify: `src/services/UserService.ts`
@@ -672,7 +672,7 @@ leaving the user in a silently-broken state."
 
 ---
 
-## Task 4: Call-site updates (108jobs-clean)
+## Task 4: Call-site updates (108heros-clean)
 
 **Files:**
 - Modify: `src/components/Authentication/LoginForm/handlers.ts:112`

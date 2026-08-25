@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import React, { useState } from 'react';
-import { PersonId, SubmitUserReviewForm, WorkflowId } from '108jobs-client';
+import { PersonId, SubmitUserReviewForm, WorkflowId } from '108heros-client';
 
 interface SubmitReviewModalProps {
     showReviewModal: boolean;

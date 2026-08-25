@@ -1,7 +1,7 @@
 # Chat media history and in-room search — design
 
 Date: 2026-08-18
-Repos: `108jobs-clean` (primary), `api-108jobs` (minimal, required)
+Repos: `108heros-clean` (primary), `api-108jobs` (minimal, required)
 Branches: `feat/chat-media-and-room-search`, `feat/chat-attachment-asset-id`
 
 ## What this adds
@@ -243,8 +243,8 @@ proxy directly does not work.** `read_auth_token`
 (`crates/api/api_utils/src/utils.rs:527`) accepts only an `Authorization:
 Bearer` header or a cookie literally named `jwt`. This app's auth cookie is
 named after `NEXT_PUBLIC_APP_NAME` (`authCookieName` in `src/utils/config.ts`,
-`108Jobs` in this deployment) — not `jwt` — so a browser `<img>`/`<video>` tag
-pointed straight at `media-proxy` sends the `108Jobs` cookie the backend never
+`108Heros` in this deployment) — not `jwt` — so a browser `<img>`/`<video>` tag
+pointed straight at `media-proxy` sends the `108Heros` cookie the backend never
 looks for, and gets `401` every time. Confirmed against a real browser
 request and the backend's own access log.
 
@@ -318,7 +318,7 @@ cargo clippy --workspace --tests --all-targets -- -D warnings
 cargo nextest run --workspace --no-fail-fast --profile ci
 ```
 
-with a fresh local Postgres/Redis and an absolute `app_108jobs_CONFIG_LOCATION`.
+with a fresh local Postgres/Redis and an absolute `app_108heros_CONFIG_LOCATION`.
 Never a bare `cargo fmt --all`.
 
 ## Deliberate limitations

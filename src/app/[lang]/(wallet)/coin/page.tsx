@@ -8,7 +8,7 @@ import TopUpModal from "@/components/Common/Modal/TopUpModal";
 import {useUserStore} from "@/store/useUserStore";
 import WithdrawalModal from "@/components/Common/Modal/WithdrawalModal";
 import {useBankAccountsStore} from "@/store/useBankAccountStore";
-import {BankAccountId, SubmitWithdrawRequest} from "108jobs-client";
+import {BankAccountId, SubmitWithdrawRequest} from "108heros-client";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {isSuccess} from "@/services/HttpService";
 import {toast} from "sonner";

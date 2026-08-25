@@ -1,4 +1,4 @@
-import {Api108Jobs} from "108jobs-client";
+import {Api108Heros} from "108heros-client";
 import {getHttpBase} from "@/utils/env";
 import {UserService} from "@/services/UserService";
 import {isBrowser} from "@/utils";
@@ -46,8 +46,8 @@ export type SuccessRequestState<T> = {
   data: T;
 };
 
-export type Payload<K extends keyof WrappedApi108Jobs> =
-  Awaited<ReturnType<WrappedApi108Jobs[K]>> extends RequestState<infer D>
+export type Payload<K extends keyof WrappedApi108Heros> =
+  Awaited<ReturnType<WrappedApi108Heros[K]>> extends RequestState<infer D>
     ? D
     : never;
 
@@ -64,20 +64,20 @@ export type RequestState<T> =
 
 /* ============================================================ */
 
-export type WrappedApi108Jobs = WrappedApiClient & {
-  [K in keyof Api108Jobs]: Api108Jobs[K] extends (...args: any[]) => any
-    ? ReturnType<Api108Jobs[K]> extends Promise<infer U>
-      ? (...args: Parameters<Api108Jobs[K]>) => Promise<RequestState<U>>
-      : (...args: Parameters<Api108Jobs[K]>) => Promise<RequestState<Api108Jobs[K]>>
-    : Api108Jobs[K];
+export type WrappedApi108Heros = WrappedApiClient & {
+  [K in keyof Api108Heros]: Api108Heros[K] extends (...args: any[]) => any
+    ? ReturnType<Api108Heros[K]> extends Promise<infer U>
+      ? (...args: Parameters<Api108Heros[K]>) => Promise<RequestState<U>>
+      : (...args: Parameters<Api108Heros[K]>) => Promise<RequestState<Api108Heros[K]>>
+    : Api108Heros[K];
 };
 
 /**
- * Wrapped Api108Jobs client that provides consistent request state handling
+ * Wrapped Api108Heros client that provides consistent request state handling
  * and implements caching for GET requests to improve performance.
  */
 class WrappedApiClient {
-  rawClient: Api108Jobs;
+  rawClient: Api108Heros;
   cache: Map<string, {data: any, timestamp: number}> = new Map();
   /** Tracks in-flight GET requests to prevent duplicate concurrent fetches */
   inFlight: Map<string, Promise<any>> = new Map();
@@ -85,16 +85,16 @@ class WrappedApiClient {
   maxCacheSize: number = 100; // Maximum cache entries to prevent memory growth
   [prop: string]: any;
 
-  constructor(client: Api108Jobs) {
+  constructor(client: Api108Heros) {
     this.rawClient = client;
 
-    // Create wrapped methods for all Api108Jobs methods
+    // Create wrapped methods for all Api108Heros methods
     for (const key of Object.getOwnPropertyNames(
       Object.getPrototypeOf(this.rawClient),
     )) {
       if (key !== "constructor") {
         this[key] = async(
-          ...args: Parameters<Api108Jobs[keyof Api108Jobs]>
+          ...args: Parameters<Api108Heros[keyof Api108Heros]>
         ) => {
           // Return loading state first for better UX
           const loadingPromise = Promise.resolve(LOADING_REQUEST);
@@ -201,21 +201,21 @@ class WrappedApiClient {
 }
 
 /* ------------------ public helpers -------------------------- */
-export function wrapClient(client: Api108Jobs) {
-  return new WrappedApiClient(client) as unknown as WrappedApi108Jobs;
+export function wrapClient(client: Api108Heros) {
+  return new WrappedApiClient(client) as unknown as WrappedApi108Heros;
 }
 
 /**
- * HttpService provides a singleton instance of the wrapped Api108Jobs client
+ * HttpService provides a singleton instance of the wrapped Api108Heros client
  * with additional functionality for caching and request management.
  */
 export class HttpService {
   static #_instance: HttpService;
-  #client: WrappedApi108Jobs;
+  #client: WrappedApi108Heros;
   #requestTimeout: number = 30000; // Default timeout: 30 seconds
 
   private constructor() {
-    const apiClient = new Api108Jobs(getHttpBase());
+    const apiClient = new Api108Heros(getHttpBase());
     this.#client = wrapClient(apiClient);
 
     // Add request timeout handling to all methods
@@ -330,17 +330,17 @@ function ensureAuthHeader() {
 
 /* ===== Generic helper ======================================= */
 export function callHttp<
-  K extends keyof WrappedApi108Jobs,
+  K extends keyof WrappedApi108Heros,
 >(
   method: K,
-  ...args: Parameters<WrappedApi108Jobs[K]>
-): ReturnType<WrappedApi108Jobs[K]> {
+  ...args: Parameters<WrappedApi108Heros[K]>
+): ReturnType<WrappedApi108Heros[K]> {
     if(isBrowser() && UserService.Instance?.authInfo?.auth) {
         ensureAuthHeader();
     }
   // Do not inject auth into payload; rely on Authorization header
   return HttpService.client[method](...args) as ReturnType<
-    WrappedApi108Jobs[K]
+    WrappedApi108Heros[K]
   >;
 }
 

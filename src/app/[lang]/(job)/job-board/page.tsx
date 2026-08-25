@@ -5,7 +5,7 @@ import Link from "next/link";
 import {useRouter, useSearchParams} from "next/navigation";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {debounce} from "lodash";
-import {CategoryId, IntendedUse, JobType, PostSortType, SearchCombinedView,} from "108jobs-client";
+import {CategoryId, IntendedUse, JobType, PostSortType, SearchCombinedView,} from "108heros-client";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import JobBoardTab from "@/components/JobBoardTab";
 import {useTranslation} from "react-i18next";

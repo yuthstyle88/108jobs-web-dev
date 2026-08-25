@@ -9,7 +9,7 @@ import {
     unwrapChatFrame,
 } from "@/modules/chat/utils/chatSocketUtils";
 import {emitChatTyping,} from "@/modules/chat/events/index";
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 import {
     buildMessageSignature,

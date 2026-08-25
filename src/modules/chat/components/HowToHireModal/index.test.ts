@@ -16,12 +16,12 @@ const copy: HowToHireCopy = {
         {title: "Approve and pay", items: ["Approve the quotation"]},
         {title: "Review delivery", items: ["Release payment after approval"]},
     ],
-    hintTitle: "Keep it on 108jobs",
+    hintTitle: "Keep it on 108heros",
     hint: "Keep the agreement, delivery, and payment in this conversation.",
 };
 
 describe("HowToHireModal", () => {
-    it("shows the 108jobs hiring guide only while it is open", () => {
+    it("shows the 108heros hiring guide only while it is open", () => {
         const closed = renderToStaticMarkup(
             createElement(HowToHireModal, {isOpen: false, onClose: () => undefined, copy}),
         );
@@ -33,7 +33,7 @@ describe("HowToHireModal", () => {
         expect(open).toContain("Discuss the work");
         expect(open).toContain("Approve and pay");
         expect(open).toContain("Review delivery");
-        expect(open).toContain("Keep it on 108jobs");
+        expect(open).toContain("Keep it on 108heros");
     });
 });
 

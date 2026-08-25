@@ -34,7 +34,7 @@ import {
     RiderReviewDetail,
     RiderVerificationStatus,
     IdentityMismatch,
-} from "108jobs-client";
+} from "108heros-client";
 
 interface RiderReviewModalProps {
     rider: Rider;
@@ -63,7 +63,7 @@ interface FieldGroupDef {
 }
 
 /**
- * Mirrors the section comments on `RiderApplicationFields` (108jobs-client)
+ * Mirrors the section comments on `RiderApplicationFields` (108heros-client)
  * field-for-field and in the same order, so a reviewer can cross-check this
  * against that file directly.
  */

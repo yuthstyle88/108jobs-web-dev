@@ -8,7 +8,7 @@ import {type ChatStorePort, ResendManager} from "@/modules/chat/services/ResendM
 import {GlobalAckMatcher} from "@/modules/chat/utils/AckMatcher";
 import {isBrowser} from "@/utils/browser";
 import {ChatMessageModel} from "@/modules/chat/types";
-import {ChatRoomId, ChatStatus} from "108jobs-client";
+import {ChatRoomId, ChatStatus} from "108heros-client";
 import {WS_EVENT} from "@/modules/chat/protocol/wireEvents";
 
 

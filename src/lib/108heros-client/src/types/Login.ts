@@ -2,7 +2,7 @@
 import type {SensitiveString} from "./SensitiveString";
 
 /**
- * Log in to 108jobs.
+ * Log in to 108heros.
  *
  * Note: Banned users can still log in, to be able to do certain things like delete
  * their account.

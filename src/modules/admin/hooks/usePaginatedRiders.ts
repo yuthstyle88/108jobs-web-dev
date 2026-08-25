@@ -4,7 +4,7 @@ import {useEffect, useMemo} from "react";
 import {useTranslation} from "react-i18next";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {REQUEST_STATE} from "@/services/HttpService";
-import {RiderVerificationStatus} from "108jobs-client";
+import {RiderVerificationStatus} from "108heros-client";
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 
 interface UsePaginatedRidersProps {

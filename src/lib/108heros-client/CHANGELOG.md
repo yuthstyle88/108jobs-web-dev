@@ -1,6 +1,6 @@
 > **This is lemmy-js-client's changelog, not this package's.**
 >
-> `108jobs-client` began as a fork of
+> `108heros-client` began as a fork of
 > [lemmy-js-client](https://github.com/LemmyNet/lemmy-js-client), and everything
 > below happened in that project, before the fork. It is kept as provenance —
 > the entries explain type names and shapes that would otherwise look arbitrary.

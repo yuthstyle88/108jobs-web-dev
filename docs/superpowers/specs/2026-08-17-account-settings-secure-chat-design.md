@@ -64,10 +64,10 @@ its class comment:
 The web page carries the same two-paragraph explanation, translated into
 en/th/vi rather than English-only as Flutter currently has it:
 
-> Messages are encrypted between your device and 108jobs, so nobody on the
+> Messages are encrypted between your device and 108heros, so nobody on the
 > network in between can read them.
 >
-> This is not end-to-end encryption: 108jobs holds the key and can read your
+> This is not end-to-end encryption: 108heros holds the key and can read your
 > messages, which is what lets us act on reports of abuse and scams.
 
 No wording that implies otherwise — not in the section title, the toggle

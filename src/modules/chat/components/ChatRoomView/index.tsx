@@ -34,7 +34,7 @@ import type {
     Post,
     PostPreview,
     SubmitUserReviewForm
-} from "108jobs-client";
+} from "108heros-client";
 import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
 import ChatRoomMessages from "../ChatRoomMessages";

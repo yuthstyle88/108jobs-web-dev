@@ -1,5 +1,5 @@
 import {CategoriesIcon} from "@/constants/icons";
-import {CategoryNodeView} from "108jobs-client";
+import {CategoryNodeView} from "108heros-client";
 import {catalogIcons} from "@/types/catalogIcon";
 import Image from "next/image";
 import Link from "next/link";

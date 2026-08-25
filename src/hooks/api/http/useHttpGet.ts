@@ -1,6 +1,6 @@
 import {useGlobalError} from "@/contexts/GlobalErrorContext"; // Import GlobalError Context
 import useSWR, { SWRConfiguration } from "swr";
-import {callHttp, EMPTY_REQUEST, Payload, REQUEST_STATE, RequestState, WrappedApi108Jobs,} from "@/services/HttpService";
+import {callHttp, EMPTY_REQUEST, Payload, REQUEST_STATE, RequestState, WrappedApi108Heros,} from "@/services/HttpService";
 import {UserService} from "@/services";
 import {useGlobalLoader} from "@/hooks/ui/GlobalLoaderContext";
 
@@ -15,13 +15,13 @@ const PUBLIC_GET_METHODS = new Set([
   "visitProfile",
 ]);
 
-export function useHttpGet<K extends keyof WrappedApi108Jobs>(
+export function useHttpGet<K extends keyof WrappedApi108Heros>(
   // ชื่อ request method
   method: K,
   // พารามิเตอร์ที่อาจเป็น args (อาร์เรย์) หรือตัวเลือกเพิ่มเติม (option object)
   argsOrOptions?:
-    | Parameters<WrappedApi108Jobs[K]>
-    | (Parameters<WrappedApi108Jobs[K]>[0] & SWRConfiguration<RequestState<Payload<K>>, Error> & { showGlobalLoader?: boolean; isPublic?: boolean }),
+    | Parameters<WrappedApi108Heros[K]>
+    | (Parameters<WrappedApi108Heros[K]>[0] & SWRConfiguration<RequestState<Payload<K>>, Error> & { showGlobalLoader?: boolean; isPublic?: boolean }),
   // SWR options
   maybeOptions?: SWRConfiguration<RequestState<Payload<K>>, Error> & { showGlobalLoader?: boolean; isPublic?: boolean },
 ) {
@@ -31,7 +31,7 @@ export function useHttpGet<K extends keyof WrappedApi108Jobs>(
   /* ---------- resolve param / options ---------- */
   // เดิม args เป็นอาร์เรย์ แต่ตอนนี้รองรับ Object เพื่อเพิ่มความยืดหยุ่น
   const args = Array.isArray(argsOrOptions)
-    ? (argsOrOptions as Parameters<WrappedApi108Jobs[K]>)
+    ? (argsOrOptions as Parameters<WrappedApi108Heros[K]>)
     : argsOrOptions && typeof argsOrOptions === "object"
     ? [argsOrOptions] // รวม options ไว้ในอาร์เรย์
     : undefined;
@@ -50,7 +50,7 @@ export function useHttpGet<K extends keyof WrappedApi108Jobs>(
     if (showGlobal) setLoading(true); // แสดง Global Loader เฉพาะเมื่อระบุชัดเจน
     setError(null); // ล้างข้อผิดพลาดเก่าก่อนเริ่มการดึงข้อมูลใหม่
     try {
-      const typedArgs = (args ?? []) as Parameters<WrappedApi108Jobs[K]>;
+      const typedArgs = (args ?? []) as Parameters<WrappedApi108Heros[K]>;
       return (await callHttp(
         method,
         ...typedArgs,

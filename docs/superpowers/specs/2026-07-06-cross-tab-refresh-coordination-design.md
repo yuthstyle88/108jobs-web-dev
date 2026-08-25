@@ -28,7 +28,7 @@ No two tabs of the same origin ever send a refresh request at the same time. Whi
 `src/services/UserService.ts` gets one new constant, one new helper, and one new entry point. `#scheduleRefresh()`'s timer callback changes to call the new entry point instead of `#refreshAccessToken()` directly — everything else about scheduling (the `exp`-based delay math, `REFRESH_MARGIN_MS`, `#clearRefreshTimer()`) is unchanged.
 
 ```typescript
-static readonly #REFRESH_LOCK_NAME = "108jobs-refresh-token-lock";
+static readonly #REFRESH_LOCK_NAME = "108heros-refresh-token-lock";
 
 #scheduleRefresh() {
     this.#clearRefreshTimer();
@@ -107,7 +107,7 @@ New tests, in a new `describe` block that installs a mock `navigator.locks` (a p
 
 1. **Adopts an already-fresh cookie without calling the network.** Log in with a near-expiry token, then directly overwrite the access-token cookie with a fresh one (simulating a sibling tab's completed refresh) before the scheduled timer fires. Advance the timer; confirm `refreshWithIdentityPlatform` is never called, and `UserService.Instance.authInfo` reflects the fresh token's claims.
 2. **Performs the real refresh under the lock when the cookie is still near-expiry.** Same setup as the existing round-1 scheduling test, but with the lock mock installed — confirms the coordinated path still delegates to a real `#refreshAccessToken()` call when adoption isn't possible, not just when it is.
-3. **Actually invokes the Locks API.** A spy on the mocked `navigator.locks.request` asserting it was called with `"108jobs-refresh-token-lock"` — a sanity check that the coordinated path is genuinely going through the lock, not accidentally always taking the direct-call branch.
+3. **Actually invokes the Locks API.** A spy on the mocked `navigator.locks.request` asserting it was called with `"108heros-refresh-token-lock"` — a sanity check that the coordinated path is genuinely going through the lock, not accidentally always taking the direct-call branch.
 
 ## Self-Review
 

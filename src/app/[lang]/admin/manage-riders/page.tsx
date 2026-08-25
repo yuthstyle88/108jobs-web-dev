@@ -17,7 +17,7 @@ import {
     XCircle,
     type LucideIcon,
 } from "lucide-react";
-import {Rider, RiderVerificationStatus, RiderView, VehicleType} from "108jobs-client";
+import {Rider, RiderVerificationStatus, RiderView, VehicleType} from "108heros-client";
 
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
 import {Badge} from "@/components/ui/Badge";

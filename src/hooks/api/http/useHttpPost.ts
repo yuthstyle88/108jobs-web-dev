@@ -1,6 +1,6 @@
 import {useMemo} from "react";
 import useSWRMutation from "swr/mutation";
-import {callHttp, EMPTY_REQUEST, Payload, REQUEST_STATE, RequestState, WrappedApi108Jobs,} from "@/services/HttpService";
+import {callHttp, EMPTY_REQUEST, Payload, REQUEST_STATE, RequestState, WrappedApi108Heros,} from "@/services/HttpService";
 import {useGlobalError} from "@/contexts/GlobalErrorContext";
 import {useGlobalLoader} from "@/hooks/ui/GlobalLoaderContext";
 
@@ -12,7 +12,7 @@ import {useGlobalLoader} from "@/hooks/ui/GlobalLoaderContext";
  * const { execute, data, isMutating } = useHttpPost("createCategory");
  * await execute({ name: "Design", title: "Design" });
  */
-export const useHttpPost = <K extends keyof WrappedApi108Jobs>(method: K) => {
+export const useHttpPost = <K extends keyof WrappedApi108Heros>(method: K) => {
   /** GlobalLoaderContext */
   const { showLoader, hideLoader } = useGlobalLoader();
 
@@ -28,7 +28,7 @@ export const useHttpPost = <K extends keyof WrappedApi108Jobs>(method: K) => {
     RequestState<Payload<K>>, // ค่า State ที่ SWR เก็บ
     Error, // ประเภท Error
     string, // Key ที่เป็น string
-    Parameters<WrappedApi108Jobs[K]> // Argument (Tuple) ที่จะส่งไป
+    Parameters<WrappedApi108Heros[K]> // Argument (Tuple) ที่จะส่งไป
   >(
     `${String(method)}-http-post`, // Use method name as SWR key to avoid collisions
     async(_key, {arg}) => {
@@ -69,7 +69,7 @@ export const useHttpPost = <K extends keyof WrappedApi108Jobs>(method: K) => {
   );
 
   /** Execute Function (triggers API) */
-  const execute = (...args: Parameters<WrappedApi108Jobs[K]>) => {
+  const execute = (...args: Parameters<WrappedApi108Heros[K]>) => {
     if (args.length === 0) {
       /* trigger without arguments */
       return (trigger as () => Promise<RequestState<Payload<K>>>)();
@@ -77,7 +77,7 @@ export const useHttpPost = <K extends keyof WrappedApi108Jobs>(method: K) => {
 
     /* trigger with arguments (tuple) */
     type TriggerWithArgs = (
-      arg: Parameters<WrappedApi108Jobs[K]>,
+      arg: Parameters<WrappedApi108Heros[K]>,
       options?: unknown
     ) => Promise<RequestState<Payload<K>>>;
 

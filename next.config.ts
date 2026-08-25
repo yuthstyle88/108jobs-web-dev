@@ -33,14 +33,14 @@ const nextConfig: NextConfig = {
         ignoreBuildErrors: process.env.NODE_ENV !== 'production',
     },
 
-    // 108jobs-client ships prebuilt CommonJS (tsc output, requiring @tsoa/runtime at module
+    // 108heros-client ships prebuilt CommonJS (tsc output, requiring @tsoa/runtime at module
     // eval time), not raw ESM/TS source -- transpilePackages forces it through Turbopack's
     // ESM transform pipeline, which drops the CJS interop shim and leaves bare require()
     // calls in the RSC/SSR bundle where no `require` global exists ("require is not defined"
     // crashing every server-rendered page that imports it, e.g. /profile/[username]).
     // serverExternalPackages instead leaves it as a real external CJS dependency resolved by
     // Node's native require() at runtime, which is what its prebuilt output actually needs.
-    serverExternalPackages: ['108jobs-client'],
+    serverExternalPackages: ['108heros-client'],
 
     images: {
         // Not a server-leanness choice: avatars/photos come from an external
@@ -132,7 +132,7 @@ const nextConfig: NextConfig = {
     async headers() {
         // Same-origin browser API calls only ever hit our own /api/* routes; the
         // one cross-origin exception is direct calls to NEXT_PUBLIC_API_BASE_URL
-        // made by the generated 108jobs-client (login, register, refresh handoff,
+        // made by the generated 108heros-client (login, register, refresh handoff,
         // etc.), so connect-src has to allow that origin explicitly.
         const apiOrigin = (() => {
             try {

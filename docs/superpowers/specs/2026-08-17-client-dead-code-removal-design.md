@@ -1,9 +1,9 @@
-# Removing dead code from the 108jobs-client package
+# Removing dead code from the 108heros-client package
 
 ## Context
 
-`src/lib/108jobs-client/` is a hand-maintained TypeScript client for the
-108jobs API: 267 type files, a 2512-line `http.ts` exposing 129 methods, and
+`src/lib/108heros-client/` is a hand-maintained TypeScript client for the
+108heros API: 267 type files, a 2512-line `http.ts` exposing 129 methods, and
 a 235-line barrel `index.ts` that re-exports every type by name.
 
 The package has drifted from the backend. Endpoints were removed from

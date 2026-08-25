@@ -151,7 +151,7 @@ the multipart/asset-id upload path, which a plain URL field cannot.
 `AuthenticatedLocalUserView` + `is_admin`, matching their `delete_*`
 counterparts and the site icon/banner endpoints.
 
-### B. Frontend: `108jobs-clean`
+### B. Frontend: `108heros-clean`
 
 #### B1. Correct the stale client types
 

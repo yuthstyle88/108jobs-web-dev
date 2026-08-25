@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ListCategoriesResponse } from "108jobs-client";
+import type { ListCategoriesResponse } from "108heros-client";
 
 export type CategoriesStore = {
   categories: ListCategoriesResponse | null;

@@ -20,11 +20,11 @@ import {parsePath} from "history";
 import {IncomingHttpHeaders} from "http";
 import {
     GetSiteResponse,
-    Api108Jobs, ListBankAccountsResponse,
+    Api108Heros, ListBankAccountsResponse,
     ListCategoriesResponse,
     ListUserChatRoomsResponse,
     MyUserInfo
-} from "108jobs-client";
+} from "108heros-client";
 import {getHttpBase} from "@/utils";
 import {getJwtCookieFromServer, setForwardedHeaders} from "@/utils/helper-server";
 
@@ -96,7 +96,7 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
         const headers = await setForwardedHeaders(incomingHeaders);
         const jwt = await getJwtCookieFromServer(incomingHeaders) ?? "";
         // Create a per-request client and set headers without mutating the shared client
-        const tempClient = wrapClient(new Api108Jobs(getHttpBase()));
+        const tempClient = wrapClient(new Api108Heros(getHttpBase()));
         await (tempClient as any).setHeaders(headers);
 
         // Check authentication for protected routes

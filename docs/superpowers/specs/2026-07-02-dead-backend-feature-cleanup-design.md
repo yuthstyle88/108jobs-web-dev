@@ -5,7 +5,7 @@ Status: Approved
 
 ## Problem
 
-`108jobs-clean` was forked from Lemmy and later had a surface-level rename pass (`lemmy-js-client` → `108jobs-client`, Lemmy identifiers stripped — see commit `7379962`). The sibling backend, `api-108jobs`, has since gone through a phased cleanup (`phase-1` through `phase-7`, plus follow-up chores) that fully removed several Lemmy-era forum-governance features. The frontend's vendored API client (`src/lib/108jobs-client`) and a handful of app-level files still carry type, route, and enum surface for those removed features. None of it is reachable from real UI, but it's misleading — it implies backend capabilities that no longer exist — and it's a hazard for anyone building against a client method that calls a nonexistent endpoint.
+`108heros-clean` was forked from Lemmy and later had a surface-level rename pass (`lemmy-js-client` → `108heros-client`, Lemmy identifiers stripped — see commit `7379962`). The sibling backend, `api-108jobs`, has since gone through a phased cleanup (`phase-1` through `phase-7`, plus follow-up chores) that fully removed several Lemmy-era forum-governance features. The frontend's vendored API client (`src/lib/108heros-client`) and a handful of app-level files still carry type, route, and enum surface for those removed features. None of it is reachable from real UI, but it's misleading — it implies backend capabilities that no longer exist — and it's a hazard for anyone building against a client method that calls a nonexistent endpoint.
 
 Confirmed against the backend's current complete route table (`api-108jobs/src/api_routes.rs`) that the following have **no** backend route at all:
 
@@ -22,7 +22,7 @@ Confirmed against the backend's current complete route table (`api-108jobs/src/a
 
 ### Remove
 
-1. **Client library** (`src/lib/108jobs-client/src`): types/DTOs and `index.ts` exports for `FederationMode`, `apId`/`local` federation fields, `PostActions`/`CommentActions` vote+save+hide+read fields, `VoteShow`, `PersonActions`, `InstanceActions`, `reportCount`/`unresolvedReportCount`/`reportsEmailAdmins`, `listNotifications`/`markNotificationAsRead`/`markAllNotificationsAsRead` and their Notification/`PersonCommentMention`/`CommentReply` types, and any `http.ts` methods calling the above.
+1. **Client library** (`src/lib/108heros-client/src`): types/DTOs and `index.ts` exports for `FederationMode`, `apId`/`local` federation fields, `PostActions`/`CommentActions` vote+save+hide+read fields, `VoteShow`, `PersonActions`, `InstanceActions`, `reportCount`/`unresolvedReportCount`/`reportsEmailAdmins`, `listNotifications`/`markNotificationAsRead`/`markAllNotificationsAsRead` and their Notification/`PersonCommentMention`/`CommentReply` types, and any `http.ts` methods calling the above.
 2. **App code**:
    - `VoteType` / `VoteContentType` enums (`src/utils/types.ts`)
    - `CommentNodeView`'s `personCommentMention` / `commentReply` fields (`src/utils/types.ts`)
@@ -60,5 +60,5 @@ Order of operations:
 ## Out of scope
 
 - Any feature still backed by a live route in `api_routes.rs`.
-- Regenerating or re-architecting the `108jobs-client` package's build tooling (tsoa config, etc.) — this is a deletion pass, not a client-generation overhaul.
-- Backend changes — `api-108jobs` is already clean; this spec only touches `108jobs-clean`.
+- Regenerating or re-architecting the `108heros-client` package's build tooling (tsoa config, etc.) — this is a deletion pass, not a client-generation overhaul.
+- Backend changes — `api-108jobs` is already clean; this spec only touches `108heros-clean`.

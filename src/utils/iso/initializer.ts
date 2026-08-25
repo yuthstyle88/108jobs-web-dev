@@ -1,6 +1,6 @@
 'use server'
 import type {IsoData, RouteData} from '@/utils/types';
-import type {GetSiteResponse} from '108jobs-client';
+import type {GetSiteResponse} from '108heros-client';
 import fetchIsoData from '@/lib/api/fetchIsoData';
 import {IncomingHttpHeaders} from "http";
 import {headers} from "next/headers";

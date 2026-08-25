@@ -1,8 +1,8 @@
 {
-  "name": "108jobs-client",
-  "description": "TypeScript HTTP client for the 108jobs API",
+  "name": "108heros-client",
+  "description": "TypeScript HTTP client for the 108heros API",
   "version": "1.0.0",
-  "author": "108jobs",
+  "author": "108heros",
   "license": "AGPL-3.0",
   "main": "./dist/index.js",
   "files": [
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/108Jobs/108jobs-clean.git"
+    "url": "git+https://github.com/108Heros/108heros-clean.git"
   },
   "dependencies": {
     "@tsoa/runtime": "^6.6.0"

@@ -1,4 +1,4 @@
-# 108jobs-client Dead Code Removal Implementation Plan
+# 108heros-client Dead Code Removal Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -13,16 +13,16 @@ than a pre-written list, because the barrel re-exports every type and makes
 static "is it used?" checks unreliable.
 
 **Tech Stack:** TypeScript, Next.js App Router, react-i18next, the
-hand-maintained `108jobs-client` package.
+hand-maintained `108heros-client` package.
 
 **Companion spec:** `docs/superpowers/specs/2026-08-17-client-dead-code-removal-design.md`
 
 ## Global Constraints
 
-- Touch only: `src/lib/108jobs-client/src/http.ts`,
-  `src/lib/108jobs-client/src/index.ts`,
-  `src/lib/108jobs-client/src/types/*.ts` (deletions only),
-  `src/lib/108jobs-client/putTypesInIndex.js` (deletion),
+- Touch only: `src/lib/108heros-client/src/http.ts`,
+  `src/lib/108heros-client/src/index.ts`,
+  `src/lib/108heros-client/src/types/*.ts` (deletions only),
+  `src/lib/108heros-client/putTypesInIndex.js` (deletion),
   `src/app/[lang]/(profile)/account-setting/manage/page.tsx`,
   `src/components/Common/Modal/TotpModal/` (deletion),
   `src/hooks/api/http/useHttpPost.ts`,
@@ -36,14 +36,14 @@ hand-maintained `108jobs-client` package.
   locally-running dev API only because that binary predates today's merge.
   Both exist on `api-108jobs` `origin/main` and are called by the admin
   category page. Do not remove them.
-- **Rebuild the package after every change under `src/lib/108jobs-client/src/`:**
+- **Rebuild the package after every change under `src/lib/108heros-client/src/`:**
   ```bash
-  cd src/lib/108jobs-client && npm run build && cd -
+  cd src/lib/108heros-client && npm run build && cd -
   ```
   App code imports the package *name*, which resolves to `dist/` — without a
   rebuild, `tsc` checks against the stale build and silently accepts code
   that contradicts your edit.
-- Files under `src/lib/108jobs-client/src/types/` use 2-space indentation;
+- Files under `src/lib/108heros-client/src/types/` use 2-space indentation;
   everything else uses 4-space. Double-quoted strings.
 - After each task: `npx tsc --noEmit` clean at the repo root.
 
@@ -52,11 +52,11 @@ hand-maintained `108jobs-client` package.
 ### Task 1: Remove the 32 dead client methods
 
 **Files:**
-- Modify: `src/lib/108jobs-client/src/http.ts`
+- Modify: `src/lib/108heros-client/src/http.ts`
 
 **Interfaces:**
 - Consumes: nothing.
-- Produces: a smaller `Api108Jobs` class. Two of the removed methods
+- Produces: a smaller `Api108Heros` class. Two of the removed methods
   (`generateTotpSecret`, `updateTotp`) are still referenced by the
   account-settings page — Task 2 removes those call sites, so the repo will
   not type-check cleanly until Task 2 lands. That is expected and is the
@@ -114,7 +114,7 @@ uses them.
 the methods orphans some of those imports. Do not guess which — run:
 
 ```bash
-cd src/lib/108jobs-client && npx tsc --noEmit 2>&1 | head -30
+cd src/lib/108heros-client && npx tsc --noEmit 2>&1 | head -30
 ```
 
 `noUnusedLocals` may or may not be enabled; if it doesn't flag them, find
@@ -125,8 +125,8 @@ drop the line if it doesn't. Report how many import lines you removed.
 - [ ] **Step 3: Verify the class still parses and the kept methods survived**
 
 ```bash
-cd src/lib/108jobs-client && npm run build 2>&1 | tail -5 && cd -
-grep -cE "^    (async )?\w+\s*\(" src/lib/108jobs-client/src/http.ts
+cd src/lib/108heros-client && npm run build 2>&1 | tail -5 && cd -
+grep -cE "^    (async )?\w+\s*\(" src/lib/108heros-client/src/http.ts
 ```
 
 Expected: the build succeeds, and the method count has dropped by exactly 32
@@ -134,8 +134,8 @@ Expected: the build succeeds, and the method count has dropped by exactly 32
 the kept ones vanished:
 
 ```bash
-grep -nE "addModToCategory|authenticateWithOAuth|banFromCategory|getCaptcha|uploadImage|validateAuth" src/lib/108jobs-client/src/http.ts
-grep -cE "createCategory|editCategory|deleteCategory|listCategories|updateSite|getSite" src/lib/108jobs-client/src/http.ts
+grep -nE "addModToCategory|authenticateWithOAuth|banFromCategory|getCaptcha|uploadImage|validateAuth" src/lib/108heros-client/src/http.ts
+grep -cE "createCategory|editCategory|deleteCategory|listCategories|updateSite|getSite" src/lib/108heros-client/src/http.ts
 ```
 
 Expected: the first returns nothing; the second returns a non-zero count.
@@ -147,7 +147,7 @@ removed methods until Task 2. Say so in the commit body rather than leaving
 it to be discovered.
 
 ```bash
-git add src/lib/108jobs-client/src/http.ts
+git add src/lib/108heros-client/src/http.ts
 git commit -m "chore(client): remove 32 methods whose endpoints the backend no longer serves
 
 Verified by probing every client endpoint and distinguishing a missing
@@ -253,7 +253,7 @@ whether `TotpModal`'s own copy lived under a separate key group (e.g.
 ```bash
 npx tsc --noEmit
 npx eslint "src/app/[lang]/(profile)/account-setting/manage/page.tsx"
-grep -rn "totp\|Totp\|TOTP" src/ --include="*.ts" --include="*.tsx" | grep -v "src/lib/108jobs-client"
+grep -rn "totp\|Totp\|TOTP" src/ --include="*.ts" --include="*.tsx" | grep -v "src/lib/108heros-client"
 ```
 
 Expected: `tsc` is now **green** again, eslint clean, and the only surviving
@@ -278,7 +278,7 @@ privacy policy and profile menu link to it."
 
 **Files:**
 - Modify: `src/hooks/api/http/useHttpPost.ts`
-- Delete: `src/lib/108jobs-client/putTypesInIndex.js`
+- Delete: `src/lib/108heros-client/putTypesInIndex.js`
 
 **Interfaces:**
 - Consumes/produces: nothing.
@@ -311,9 +311,9 @@ barrel it means to regenerate, and a route-shaped filename that has no
 meaning inside a library. Nothing invokes it: confirm, then delete.
 
 ```bash
-grep -rn "putTypesInIndex" src/lib/108jobs-client --include="*.json" --include="*.js" --include="*.ts" --include="*.mjs"
-ls src/lib/108jobs-client/src/page.tsx 2>/dev/null || echo "(no stray page.tsx — good)"
-rm src/lib/108jobs-client/putTypesInIndex.js
+grep -rn "putTypesInIndex" src/lib/108heros-client --include="*.json" --include="*.js" --include="*.ts" --include="*.mjs"
+ls src/lib/108heros-client/src/page.tsx 2>/dev/null || echo "(no stray page.tsx — good)"
+rm src/lib/108heros-client/putTypesInIndex.js
 ```
 
 If the grep finds it referenced by an npm script, stop and report.
@@ -322,7 +322,7 @@ If the grep finds it referenced by an npm script, stop and report.
 
 ```bash
 npx tsc --noEmit
-git add src/hooks/api/http/useHttpPost.ts src/lib/108jobs-client/putTypesInIndex.js
+git add src/hooks/api/http/useHttpPost.ts src/lib/108heros-client/putTypesInIndex.js
 git commit -m "chore: fix the useHttpPost doc example and drop the broken index generator"
 ```
 
@@ -331,8 +331,8 @@ git commit -m "chore: fix the useHttpPost doc example and drop the broken index 
 ### Task 4: Remove the type files that are now unreachable
 
 **Files:**
-- Delete: various under `src/lib/108jobs-client/src/types/`
-- Modify: `src/lib/108jobs-client/src/index.ts`
+- Delete: various under `src/lib/108heros-client/src/types/`
+- Modify: `src/lib/108heros-client/src/index.ts`
 
 **Interfaces:**
 - Consumes: Tasks 1–3.
@@ -349,8 +349,8 @@ the eight non-`async` ones. Discover the set instead.
 Put it in the scratchpad, not the repo. It must:
 
 1. Treat as **roots** every type name that appears in (a) a named import
-   from `"108jobs-client"` anywhere under `src/` outside the client package,
-   (b) `src/lib/108jobs-client/src/http.ts`, (c) `other_types.ts`,
+   from `"108heros-client"` anywhere under `src/` outside the client package,
+   (b) `src/lib/108heros-client/src/http.ts`, (c) `other_types.ts`,
    `convert-to-camel.ts`, `http.test.ts`.
 2. Build edges from each `src/types/X.ts` to any `Y` it imports via
    `from "./Y"`.
@@ -381,8 +381,8 @@ The script is throwaway code making deletion decisions, so verify its output
 independently:
 
 ```bash
-git status --short src/lib/108jobs-client/src/types/ | wc -l
-grep -c "^export" src/lib/108jobs-client/src/index.ts
+git status --short src/lib/108heros-client/src/types/ | wc -l
+grep -c "^export" src/lib/108heros-client/src/index.ts
 ```
 
 The number of deleted type files must equal the number of export lines
@@ -399,9 +399,9 @@ under-cleaned package.
 - [ ] **Step 4: Full verification**
 
 ```bash
-cd src/lib/108jobs-client && npm run build && cd -
+cd src/lib/108heros-client && npm run build && cd -
 npx tsc --noEmit
-npx eslint src/lib/108jobs-client/src/index.ts
+npx eslint src/lib/108heros-client/src/index.ts
 pnpm test:unit
 ```
 
@@ -411,7 +411,7 @@ Expected: build succeeds, `tsc` clean, eslint clean, unit suite still
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types src/lib/108jobs-client/src/index.ts
+git add src/lib/108heros-client/src/types src/lib/108heros-client/src/index.ts
 git commit -m "chore(client): remove the type files left unreachable by the dead-method removal"
 ```
 
@@ -422,7 +422,7 @@ git commit -m "chore(client): remove the type files left unreachable by the dead
 - [ ] `npx tsc --noEmit` clean.
 - [ ] `pnpm test:unit` 157/157.
 - [ ] `npx eslint` clean on every touched file.
-- [ ] The package rebuilds from scratch: `cd src/lib/108jobs-client && npm run build`.
+- [ ] The package rebuilds from scratch: `cd src/lib/108heros-client && npm run build`.
 - [ ] In the browser: the account-settings page renders its header with no
       2FA section and no console errors, and the admin category page still
       lists, creates and deletes categories (it exercises the client methods

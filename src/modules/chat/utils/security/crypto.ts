@@ -64,6 +64,12 @@ export type ChatKdf = "raw" | "hkdf-sha256";
  * Must match `CHAT_SESSION_KDF_INFO` in api-108jobs
  * (`crates/infra/src/crypto.rs`) and `_kdfInfo` in 108jobs-flutter
  * (`lib/core/crypto/chat_session_key.dart`) byte for byte.
+ *
+ * ⚠️ This string is on the wire and does NOT get renamed to 108heros. Change
+ * a byte of it and this browser derives a different AES key from the same
+ * ECDH point than the server and the app do, so nothing it sends can be read
+ * and nothing sent to it can be opened. A new name would have to arrive as a
+ * negotiated `v2` alongside this one.
  */
 const KDF_INFO = "108jobs chat session key v1";
 

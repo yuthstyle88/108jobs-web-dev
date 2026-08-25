@@ -132,7 +132,7 @@ That is a reliable tell for Lemmy-era code nobody has read since.
 
 ## 7. Client type files with no consumer
 
-In `108jobs-clean`'s client package, app references (excluding the package's own
+In `108heros-clean`'s client package, app references (excluding the package's own
 sources and `dist/`):
 
 | Type | App refs |

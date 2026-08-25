@@ -6,11 +6,11 @@
 
 **Architecture:** Two new pieces — a shared `completeSignIn` helper extracted out of `PhoneOtpAuthForm` (so both login paths redirect identically), and a new `PasswordLoginForm` component, sibling to `PhoneOtpAuthForm` rather than a branch inside it. `PhoneOtpAuthForm` gains one optional prop for the toggle button; `login/page.tsx` gains a small `authMode` state to swap between the two forms inside the existing `AuthFormContainer`. No backend changes.
 
-**Tech Stack:** Next.js App Router, react-hook-form + zod, `useHttpPost` (the app's standard typed-mutation hook over `HttpService`/`Api108Jobs`), i18next, lucide-react icons.
+**Tech Stack:** Next.js App Router, react-hook-form + zod, `useHttpPost` (the app's standard typed-mutation hook over `HttpService`/`Api108Heros`), i18next, lucide-react icons.
 
 ## Global Constraints
 
-- No backend changes. `Api108Jobs.loginWithIdentityPlatform(form: Login)` (`src/lib/108jobs-client/src/http.ts`) and its request/response types (`src/lib/108jobs-client/src/types/Login.ts`, `IdentityPlatformLoginResponse.ts`) already exist and are already generated — do not hand-edit anything under `src/lib/108jobs-client/`.
+- No backend changes. `Api108Heros.loginWithIdentityPlatform(form: Login)` (`src/lib/108heros-client/src/http.ts`) and its request/response types (`src/lib/108heros-client/src/types/Login.ts`, `IdentityPlatformLoginResponse.ts`) already exist and are already generated — do not hand-edit anything under `src/lib/108heros-client/`.
 - Password-based **registration** and a **forgot-password** flow are explicitly out of scope (see spec, `docs/superpowers/specs/2026-08-14-admin-password-login-design.md`). Do not add either.
 - Accounts with TOTP 2FA enabled (`Login.totp2faToken`) are not supported by this form in v1 — do not build a 2FA input.
 - **Testing approach for this feature deviates from the standard TDD step template**, and this is intentional, not a shortcut: no component-level tests exist anywhere under `src/components/Authentication/` today (confirmed during brainstorming), and the codebase has no established pattern for mocking `UserService.Instance`'s cookie/refresh side effects or `window.location.href` navigation in a unit test. Inventing one for this feature alone would add fragile, one-off test infrastructure for marginal value. Each task's verification is `tsc --noEmit` + `eslint` (must be clean, matching every other change in this codebase) plus a manual browser check — the same testing strategy already used for every other change in this area (`PhoneOtpAuthForm` itself has none).

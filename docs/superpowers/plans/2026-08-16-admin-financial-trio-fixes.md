@@ -22,7 +22,7 @@ in-repo reference implementation.
 
 **Tech Stack:** Next.js App Router, TypeScript, Tailwind CSS,
 react-i18next (en/th/vi), SWR-backed `useHttpGet`/`useHttpPost` hooks
-wrapping the generated `108jobs-client` API client.
+wrapping the generated `108heros-client` API client.
 
 ## Global Constraints
 
@@ -81,7 +81,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useState} from "react";
 import {cn} from "@/lib/utils";
-import {BankAccountId} from "108jobs-client";
+import {BankAccountId} from "108heros-client";
 ```
 
 Change to:
@@ -100,7 +100,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useState} from "react";
 import {cn} from "@/lib/utils";
-import {BankAccountId} from "108jobs-client";
+import {BankAccountId} from "108heros-client";
 import {isSuccess, isFailed} from "@/services/HttpService";
 ```
 
@@ -469,7 +469,7 @@ git commit -m "fix(admin): bank-accounts pagination shows loading feedback on Ne
   (post-Task-3 state)
 
 **Interfaces:**
-- Consumes: `BankAccountView` type, exported from `108jobs-client`
+- Consumes: `BankAccountView` type, exported from `108heros-client`
   (`{userBankAccount: BankAccount, bank: Bank}`).
 - Produces: nothing later tasks depend on.
 
@@ -477,17 +477,17 @@ git commit -m "fix(admin): bank-accounts pagination shows loading feedback on Ne
 `item.userBankAccount`. The real type matches the existing destructuring
 exactly.
 
-- [ ] **Step 1: Add `BankAccountView` to the `108jobs-client` import**
+- [ ] **Step 1: Add `BankAccountView` to the `108heros-client` import**
 
 Current (post-Task-1 state, the last import line):
 ```tsx
-import {BankAccountId} from "108jobs-client";
+import {BankAccountId} from "108heros-client";
 import {isSuccess, isFailed} from "@/services/HttpService";
 ```
 
 Change to:
 ```tsx
-import {BankAccountId, BankAccountView} from "108jobs-client";
+import {BankAccountId, BankAccountView} from "108heros-client";
 import {isSuccess, isFailed} from "@/services/HttpService";
 ```
 

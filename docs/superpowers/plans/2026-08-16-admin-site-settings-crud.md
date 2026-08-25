@@ -24,11 +24,11 @@ convention), zustand (`useSiteStore`).
 
 ## Global Constraints
 
-- Touch only: `src/lib/108jobs-client/src/types/EditSiteRequest.ts` (new),
-  `src/lib/108jobs-client/src/types/SiteResponse.ts` (new),
-  `src/lib/108jobs-client/src/http.ts`,
-  `src/lib/108jobs-client/src/index.ts`,
-  `src/lib/108jobs-client/src/types/PlatformConfig.ts`,
+- Touch only: `src/lib/108heros-client/src/types/EditSiteRequest.ts` (new),
+  `src/lib/108heros-client/src/types/SiteResponse.ts` (new),
+  `src/lib/108heros-client/src/http.ts`,
+  `src/lib/108heros-client/src/index.ts`,
+  `src/lib/108heros-client/src/types/PlatformConfig.ts`,
   `src/app/[lang]/admin/dashboard/page.tsx`,
   `src/app/[lang]/admin/site-settings/page.tsx` (new),
   `src/modules/admin/components/layout/AdminSidebar/index.tsx`,
@@ -58,16 +58,16 @@ convention), zustand (`useSiteStore`).
 ### Task 1: Wire the `updateSite` client method
 
 **Files:**
-- Create: `src/lib/108jobs-client/src/types/EditSiteRequest.ts`
-- Create: `src/lib/108jobs-client/src/types/SiteResponse.ts`
-- Modify: `src/lib/108jobs-client/src/http.ts`
-- Modify: `src/lib/108jobs-client/src/index.ts`
+- Create: `src/lib/108heros-client/src/types/EditSiteRequest.ts`
+- Create: `src/lib/108heros-client/src/types/SiteResponse.ts`
+- Modify: `src/lib/108heros-client/src/http.ts`
+- Modify: `src/lib/108heros-client/src/index.ts`
 
 **Interfaces:**
 - Consumes: nothing new.
 - Produces: `EditSiteRequest` (36 optional fields, all consumed by Task 3's
   zod schema), `SiteResponse = {siteView: SiteView}`, and
-  `WrappedApi108Jobs["updateSite"]` — the method Task 3's submit handler
+  `WrappedApi108Heros["updateSite"]` — the method Task 3's submit handler
   calls via `useHttpPut("updateSite")`.
 
 This package is hand-maintained, not auto-generated from the backend in
@@ -299,14 +299,14 @@ export type {SiteResponse} from "./types/SiteResponse";
 
 `npx tsc --noEmit` shows no new errors. `useHttpPut("updateSite")`
 type-checks (this is exercised for real starting in Task 3, but confirm
-here that `WrappedApi108Jobs["updateSite"]`'s inferred parameter/return
+here that `WrappedApi108Heros["updateSite"]`'s inferred parameter/return
 types resolve without error by checking the IDE/tsc output on the new
 `http.ts` method itself).
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types/EditSiteRequest.ts src/lib/108jobs-client/src/types/SiteResponse.ts src/lib/108jobs-client/src/http.ts src/lib/108jobs-client/src/index.ts
+git add src/lib/108heros-client/src/types/EditSiteRequest.ts src/lib/108heros-client/src/types/SiteResponse.ts src/lib/108heros-client/src/http.ts src/lib/108heros-client/src/index.ts
 git commit -m "feat(admin): wire the updateSite client method (backend endpoint already existed, unwired)"
 ```
 
@@ -315,7 +315,7 @@ git commit -m "feat(admin): wire the updateSite client method (backend endpoint 
 ### Task 2: Fix the stale captcha type
 
 **Files:**
-- Modify: `src/lib/108jobs-client/src/types/PlatformConfig.ts`
+- Modify: `src/lib/108heros-client/src/types/PlatformConfig.ts`
 - Modify: `src/app/[lang]/admin/dashboard/page.tsx`
 - Modify: `src/translations/en.ts`, `src/translations/th.ts`,
   `src/translations/vi.ts`
@@ -511,7 +511,7 @@ without a visual gap where Captcha used to be.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types/PlatformConfig.ts "src/app/[lang]/admin/dashboard/page.tsx" src/translations/en.ts src/translations/th.ts src/translations/vi.ts
+git add src/lib/108heros-client/src/types/PlatformConfig.ts "src/app/[lang]/admin/dashboard/page.tsx" src/translations/en.ts src/translations/th.ts src/translations/vi.ts
 git commit -m "fix(admin): remove the stale captchaEnabled/captchaDifficulty type and dashboard display -- the backend removed this subsystem three weeks ago"
 ```
 
@@ -564,7 +564,7 @@ import {CustomInput} from "@/components/ui/InputField";
 import {useHttpPut} from "@/hooks/api/http/useHttpPut";
 import {isSuccess, isFailed, callHttp} from "@/services/HttpService";
 import {useSiteStore} from "@/store/useSiteStore";
-import type {EditSiteRequest, SiteView} from "108jobs-client";
+import type {EditSiteRequest, SiteView} from "108heros-client";
 
 const getSiteSettingsSchema = (t: (key: string) => string) => z.object({
     name: z.string()
@@ -847,7 +847,7 @@ import {
 First, add the sidebar nav entry's own title/description. Current
 (`admin.layout.sidebar.nav`, its last entry):
 ```ts
-                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108jobs"},
+                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108heros"},
                     },
                 },
             },
@@ -855,7 +855,7 @@ First, add the sidebar nav entry's own title/description. Current
 
 Change to:
 ```ts
-                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108jobs"},
+                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108heros"},
                         siteSettings: {title: "Site Settings", description: "Configure site identity, registration, and rate limits"},
                     },
                 },
@@ -886,7 +886,7 @@ sibling entry anywhere inside it, e.g. right after `withdraw` closes):
                 fields: {
                     name: {
                         label: "Site Name",
-                        placeholder: "e.g. 108Jobs",
+                        placeholder: "e.g. 108Heros",
                         errorMin: "Site name is required",
                         errorMax: "Site name must be 20 characters or fewer",
                     },
@@ -907,7 +907,7 @@ sibling entry anywhere inside it, e.g. right after `withdraw` closes):
 First, add the sidebar nav entry's own title/description. Current
 (`admin.layout.sidebar.nav`, its last entry):
 ```ts
-                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108jobs"},
+                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108heros"},
                     },
                 },
             },
@@ -915,7 +915,7 @@ First, add the sidebar nav entry's own title/description. Current
 
 Change to:
 ```ts
-                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108jobs"},
+                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108heros"},
                         siteSettings: {title: "การตั้งค่าไซต์", description: "ตั้งค่าข้อมูลไซต์ การลงทะเบียน และขีดจำกัดอัตราการใช้งาน"},
                     },
                 },
@@ -943,7 +943,7 @@ Then add the same structure, real Thai text:
                 fields: {
                     name: {
                         label: "ชื่อไซต์",
-                        placeholder: "เช่น 108Jobs",
+                        placeholder: "เช่น 108Heros",
                         errorMin: "กรุณากรอกชื่อไซต์",
                         errorMax: "ชื่อไซต์ต้องมีความยาวไม่เกิน 20 ตัวอักษร",
                     },
@@ -964,7 +964,7 @@ Then add the same structure, real Thai text:
 First, add the sidebar nav entry's own title/description. Current
 (`admin.layout.sidebar.nav`, its last entry):
 ```ts
-                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108jobs"},
+                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108heros"},
                     },
                 },
             },
@@ -972,7 +972,7 @@ First, add the sidebar nav entry's own title/description. Current
 
 Change to:
 ```ts
-                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108jobs"},
+                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108heros"},
                         siteSettings: {title: "Cài Đặt Trang Web", description: "Cấu hình thông tin trang web, đăng ký và giới hạn tần suất"},
                     },
                 },
@@ -1000,7 +1000,7 @@ Then add the same structure, real Vietnamese text:
                 fields: {
                     name: {
                         label: "Tên Trang Web",
-                        placeholder: "ví dụ: 108Jobs",
+                        placeholder: "ví dụ: 108Heros",
                         errorMin: "Vui lòng nhập tên trang web",
                         errorMax: "Tên trang web không được vượt quá 20 ký tự",
                     },

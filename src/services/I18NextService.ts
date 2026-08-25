@@ -4,7 +4,7 @@ import {ImportReport} from "@/utils/dynamic-imports";
 import {en} from "@/translations/en";
 import {vi} from "@/translations/vi";
 import {setupDateFns} from "@/utils/date";
-import {MyUserInfo} from "108jobs-client";
+import {MyUserInfo} from "108heros-client";
 
 export type TranslationDesc = {
   resource: string;

@@ -8,7 +8,7 @@ import type {
     CreateInvoiceForm,
     LocalUser,
     PostId
-} from '108jobs-client';
+} from '108heros-client';
 import type {WsMessageSender} from '@/modules/chat/types';
 import type {StatusKey} from '@/modules/chat/components/FreelanceChatFlow';
 import type {UploadedFile} from '@/modules/chat/hooks/useFileUpload';

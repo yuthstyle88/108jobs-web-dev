@@ -9,7 +9,7 @@ import {getAuthJWTCookie, IsoData} from "@/utils";
 import {useSiteStore} from "@/store/useSiteStore";
 import {useCategoriesStore} from "@/store/useCategoriesStore";
 import {useBankAccountsStore} from "@/store/useBankAccountStore";
-import {BankAccountView} from "108jobs-client";
+import {BankAccountView} from "108heros-client";
 
 // Instance type for the singleton user service
 type UserClient = UserService;

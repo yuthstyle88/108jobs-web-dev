@@ -2,7 +2,7 @@
 // hooks/usePartnerTyping.ts
 // Single-partner typing indicator with auto-decay, filtered by room and self user id.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChatRoomId, LocalUserId } from '108jobs-client';
+import { ChatRoomId, LocalUserId } from '108heros-client';
 import { CHAT_EVENT } from '@/modules/chat/events';
 
 export type TypingEvent = { roomId: ChatRoomId; senderId: LocalUserId; typing: boolean };

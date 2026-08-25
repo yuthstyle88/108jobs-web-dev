@@ -1,6 +1,6 @@
 import {useCallback, useRef} from 'react';
 import type {StatusKey} from '@/modules/chat/components/FreelanceChatFlow';
-import type {ChatMessage as WsChatMessage} from '108jobs-client';
+import type {ChatMessage as WsChatMessage} from '108heros-client';
 import {TYPES_TO_STATUS} from '@/modules/chat/utils/workflowTypes';
 
 export interface UseWorkflowStatusParams {

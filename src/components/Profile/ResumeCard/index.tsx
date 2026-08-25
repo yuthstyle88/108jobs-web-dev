@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import {useTranslation} from "react-i18next";
 import {FileText, Upload} from "lucide-react";
-import {Person} from "108jobs-client";
+import {Person} from "108heros-client";
 import EditButton from "@/components/Profile/EditButton";
 import EmptyState from "@/components/Profile/EmptyState";
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ChatRoomId, LocalUserId } from "108jobs-client";
+import { ChatRoomId, LocalUserId } from "108heros-client";
 import {toMsNormalized} from "@/modules/chat/utils";
 import {RoomView} from "@/modules/chat/types";
 

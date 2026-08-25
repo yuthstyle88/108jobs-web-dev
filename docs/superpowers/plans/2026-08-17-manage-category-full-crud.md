@@ -29,24 +29,24 @@ section for how to point a local run at a backend that has the new endpoints.
 
 ## Global Constraints
 
-- Touch only: `src/lib/108jobs-client/src/types/{Category,CreateCategory,EditCategory,DeleteCategory}.ts`,
+- Touch only: `src/lib/108heros-client/src/types/{Category,CreateCategory,EditCategory,DeleteCategory}.ts`,
   `src/modules/admin/components/CategoryRow/index.tsx`,
   `src/modules/admin/components/Modal/CategoryModal/index.tsx`,
   `src/modules/admin/components/Modal/DeleteCategoryModal/index.tsx` (new),
   `src/app/[lang]/admin/manage-category/page.tsx`,
   and `src/translations/{en,th,vi}.ts`.
 - No new npm dependencies.
-- Files under `src/lib/108jobs-client/src/types/` use **2-space** indentation
+- Files under `src/lib/108heros-client/src/types/` use **2-space** indentation
   (their own long-standing convention). Everything else in this plan uses
   **4-space**, matching the file being edited. Double-quoted strings
   throughout.
-- **After editing anything under `src/lib/108jobs-client/src/`, rebuild the
-  package** — app code imports the package name `"108jobs-client"`, which
-  resolves to `src/lib/108jobs-client/dist/`, not to the sources. Without a
+- **After editing anything under `src/lib/108heros-client/src/`, rebuild the
+  package** — app code imports the package name `"108heros-client"`, which
+  resolves to `src/lib/108heros-client/dist/`, not to the sources. Without a
   rebuild, `tsc` type-checks against the stale build and will happily accept
   code that contradicts your edit:
   ```bash
-  cd src/lib/108jobs-client && npm run build && cd -
+  cd src/lib/108heros-client && npm run build && cd -
   ```
 - Every mutation result goes through `isSuccess`/`isFailed` from
   `@/services/HttpService`. These hooks never reject — a `try/catch` around
@@ -60,10 +60,10 @@ section for how to point a local run at a backend that has the new endpoints.
 ### Task 1: Correct the category client types
 
 **Files:**
-- Modify: `src/lib/108jobs-client/src/types/Category.ts`
-- Modify: `src/lib/108jobs-client/src/types/CreateCategory.ts`
-- Modify: `src/lib/108jobs-client/src/types/EditCategory.ts`
-- Modify: `src/lib/108jobs-client/src/types/DeleteCategory.ts`
+- Modify: `src/lib/108heros-client/src/types/Category.ts`
+- Modify: `src/lib/108heros-client/src/types/CreateCategory.ts`
+- Modify: `src/lib/108heros-client/src/types/EditCategory.ts`
+- Modify: `src/lib/108heros-client/src/types/DeleteCategory.ts`
 
 **Interfaces:**
 - Produces: the corrected `Category`, and the request types every later task
@@ -170,7 +170,7 @@ export type DeleteCategory = {
 - [ ] **Step 5: Rebuild the package and type-check**
 
 ```bash
-cd src/lib/108jobs-client && npm run build && cd -
+cd src/lib/108heros-client && npm run build && cd -
 npx tsc --noEmit
 ```
 
@@ -183,7 +183,7 @@ can confirm they are only the anticipated ones.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types/Category.ts src/lib/108jobs-client/src/types/CreateCategory.ts src/lib/108jobs-client/src/types/EditCategory.ts src/lib/108jobs-client/src/types/DeleteCategory.ts
+git add src/lib/108heros-client/src/types/Category.ts src/lib/108heros-client/src/types/CreateCategory.ts src/lib/108heros-client/src/types/EditCategory.ts src/lib/108heros-client/src/types/DeleteCategory.ts
 git commit -m "fix(client): correct the stale category types and add parentId/name/icon/banner/deleted"
 ```
 

@@ -1,4 +1,4 @@
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import {describe, expect, it} from "vitest";
 
 import {collectAttachments} from "@/modules/chat/attachments/collectAttachments";

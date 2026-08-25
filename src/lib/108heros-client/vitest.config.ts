@@ -7,7 +7,7 @@ import { defineConfig } from "vitest/config";
 // root-only devDep not installed in this package's isolated node_modules, so
 // config load fails with "Cannot find module 'vite-tsconfig-paths'" in CI
 // (where the sub-package test runs before the root install) -- and (b)
-// deliberately excludes `src/lib/108jobs-client/**`, which would make this
+// deliberately excludes `src/lib/108heros-client/**`, which would make this
 // suite silently run zero tests. This package uses relative imports only, so
 // no path-alias plugin is needed.
 export default defineConfig({

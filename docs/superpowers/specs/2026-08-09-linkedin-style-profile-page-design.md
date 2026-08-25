@@ -22,7 +22,7 @@ Separately, the Portfolio (image-gallery) feature is being replaced with a Linke
 ### Explicitly out of scope
 
 - Experience / Education / Certifications sections. The `Person` data model has no backing fields for these (the unused `profile.experienceTitle`/`educationTitle`/`certificationTitle` translation keys are leftovers from a design that predates the current data model). No placeholder/empty sections are added for them.
-- Any "connections"/"endorsements"/social-graph concept — 108jobs is a job marketplace, not a social network, and has no data model for it.
+- Any "connections"/"endorsements"/social-graph concept — 108heros is a job marketplace, not a social network, and has no data model for it.
 - Banner **upload** UI — only display of the existing field. No upload control exists for it today and none is being added.
 - Deploying MAD (`NEXT_PUBLIC_MEDIA_GATEWAY_URL` stays whatever it is per environment).
 - Dropping the `portfolio_pics` column or any existing user portfolio data — see "Backend changes" below.
@@ -30,7 +30,7 @@ Separately, the Portfolio (image-gallery) feature is being replaced with a Linke
 ### Repos touched
 
 - `api-108jobs` — migration + Diesel model + save-settings handler + ts-rs type regen.
-- `108jobs-clean` — page layout, new Resume components, upload hook generalization, account-setting nav/page swap, removal of the Portfolio feature.
+- `108heros-clean` — page layout, new Resume components, upload hook generalization, account-setting nav/page swap, removal of the Portfolio feature.
 - `Media-Platform-dev` — **no code changes.** Confirmed by direct investigation: `media-service`'s upload-session API (`POST /uploads` → `PUT /uploads/{id}/bytes` → `POST /uploads/complete`, owned by `media-service/src/api/uploads.rs`, proxied verbatim by `media-gateway`) already has a `MediaKind::File` variant (`media-service/src/domain/kind.rs`) for generic file attachments — no transcoding, stored/served verbatim — and there is no content-type allowlist anywhere in the validation path (`UploadSession::open` only bounds `declared_content_length` ≤ 50MB). `application/pdf`/`.doc`/`.docx` already pass through unmodified with `kind: "file"`.
 
 ## Backend changes (`api-108jobs`)
@@ -52,9 +52,9 @@ resume_file_name text,
 
 **Portfolio data is not dropped.** `portfolio_pics` (jsonb column on `person`) and `crates/api/api_utils/src/portfolio_media_migration.rs` stay untouched — dropping a column is a destructive, hard-to-reverse action against real uploaded user data, and nothing here requires reclaiming that storage. The frontend simply stops reading/writing it (see Cleanup below). Purging it later, if ever wanted, is a separate explicit decision.
 
-**Type regen** — after the Rust changes, regenerate the ts-rs output under `src/lib/108jobs-client/` (`Person.ts` gains `resumeUrl?`/`resumeFileName?`; `SaveUserSettings.ts` gains the same two optional fields).
+**Type regen** — after the Rust changes, regenerate the ts-rs output under `src/lib/108heros-client/` (`Person.ts` gains `resumeUrl?`/`resumeFileName?`; `SaveUserSettings.ts` gains the same two optional fields).
 
-## Frontend architecture (`108jobs-clean`)
+## Frontend architecture (`108heros-clean`)
 
 ### Page layout — `/profile/[username]`
 
@@ -120,6 +120,6 @@ Confirmed by checking actual importers before listing these as removable:
 ## Out of scope
 
 - Backend content-type validation for uploaded documents (none exists today for either `kind`; not being added here).
-- Regenerating/re-architecting the `108jobs-client` build tooling itself.
+- Regenerating/re-architecting the `108heros-client` build tooling itself.
 - Any change to `Media-Platform-dev` — confirmed unnecessary.
 - Dropping/migrating away `portfolio_pics` data.

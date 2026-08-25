@@ -1,7 +1,7 @@
 import React from "react";
 import {useTranslation} from "react-i18next";
 import ReviewCard from "@/components/Profile/Reviews/ReviewCard";
-import {PersonId} from "108jobs-client";
+import {PersonId} from "108heros-client";
 import {usePaginatedReviews} from "@/hooks/data/usePaginatedReviews";
 import {PaginationControls} from "@/components/PaginationControls";
 

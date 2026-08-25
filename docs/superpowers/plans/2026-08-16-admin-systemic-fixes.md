@@ -478,8 +478,8 @@ Add a `sidebar` key as a sibling of `header`, inside `layout`:
                         withdrawCoins: {title: "Withdraw Coins", description: "Approve coin withdrawal requests"},
                         manageJobBoard: {title: "Manage Job Board", description: "Manage job board posts"},
                         manageCategory: {title: "Manage Category", description: "Manage categories for job board posts"},
-                        managePicture: {title: "Manage Picture", description: "Manage picture for 108jobs"},
-                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108jobs"},
+                        managePicture: {title: "Manage Picture", description: "Manage picture for 108heros"},
+                        manageRiders: {title: "Manage Riders", description: "Manage riders for 108heros"},
                     },
                 },
             },
@@ -504,8 +504,8 @@ In `src/translations/th.ts`, the same insertion (Thai copy):
                         withdrawCoins: {title: "ถอนเหรียญ", description: "อนุมัติคำขอถอนเหรียญ"},
                         manageJobBoard: {title: "จัดการบอร์ดงาน", description: "จัดการโพสต์บอร์ดงาน"},
                         manageCategory: {title: "จัดการหมวดหมู่", description: "จัดการหมวดหมู่สำหรับโพสต์บอร์ดงาน"},
-                        managePicture: {title: "จัดการรูปภาพ", description: "จัดการรูปภาพสำหรับ 108jobs"},
-                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108jobs"},
+                        managePicture: {title: "จัดการรูปภาพ", description: "จัดการรูปภาพสำหรับ 108heros"},
+                        manageRiders: {title: "จัดการไรเดอร์", description: "จัดการไรเดอร์สำหรับ 108heros"},
                     },
                 },
             },
@@ -530,8 +530,8 @@ In `src/translations/vi.ts`, the same insertion (Vietnamese copy):
                         withdrawCoins: {title: "Rút xu", description: "Duyệt yêu cầu rút xu"},
                         manageJobBoard: {title: "Quản lý bảng việc làm", description: "Quản lý bài đăng trên bảng việc làm"},
                         manageCategory: {title: "Quản lý danh mục", description: "Quản lý danh mục cho bài đăng việc làm"},
-                        managePicture: {title: "Quản lý hình ảnh", description: "Quản lý hình ảnh cho 108jobs"},
-                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108jobs"},
+                        managePicture: {title: "Quản lý hình ảnh", description: "Quản lý hình ảnh cho 108heros"},
+                        manageRiders: {title: "Quản lý tài xế", description: "Quản lý tài xế cho 108heros"},
                     },
                 },
             },
@@ -615,13 +615,13 @@ const navigationItems = [
         title: "Manage Picture",
         url: "/admin/manage-picture",
         icon: ImageIcon,
-        description: "Manage picture for 108jobs"
+        description: "Manage picture for 108heros"
     },
     {
         title: "Manage Riders",
         url: "/admin/manage-riders",
         icon: Motorbike,
-        description: "Manage riders for 108jobs"
+        description: "Manage riders for 108heros"
     },
 ];
 ```

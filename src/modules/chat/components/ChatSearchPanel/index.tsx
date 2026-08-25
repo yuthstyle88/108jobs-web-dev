@@ -1,6 +1,6 @@
 "use client";
 
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import React from "react";
 import {useTranslation} from "react-i18next";
 import {Search, X} from "lucide-react";

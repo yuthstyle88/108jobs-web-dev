@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import {useTranslation} from "react-i18next";
-import {Person} from "108jobs-client";
+import {Person} from "108heros-client";
 import {Phone} from "lucide-react";
 import EditButton from "@/components/Profile/EditButton";
 import EmptyState from "@/components/Profile/EmptyState";

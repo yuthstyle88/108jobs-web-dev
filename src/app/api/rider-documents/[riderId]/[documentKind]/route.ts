@@ -1,10 +1,10 @@
 import {NextRequest, NextResponse} from "next/server";
-import type {RiderDocumentKind} from "108jobs-client";
+import type {RiderDocumentKind} from "108heros-client";
 import {forwardAuthedUpstream} from "@/utils/authed-upstream-proxy";
 import {getApiBase} from "@/utils/env";
 
 /**
- * Runtime mirror of the `RiderDocumentKind` union from `108jobs-client`.
+ * Runtime mirror of the `RiderDocumentKind` union from `108heros-client`.
  * TypeScript types disappear at compile time, so a route param (a plain
  * string) still needs a concrete allow-list to validate against. Written as
  * `satisfies Record<RiderDocumentKind, true>` so the two can't silently

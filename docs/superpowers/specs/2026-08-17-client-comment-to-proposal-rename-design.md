@@ -1,4 +1,4 @@
-# Finishing the Comment → Proposal rename in `108jobs-client`
+# Finishing the Comment → Proposal rename in `108heros-client`
 
 ## Context
 
@@ -8,9 +8,9 @@ single `Comment*` API type and not one `CommentSortType`; the routes are
 `/proposal`, `/proposal/list`, `/proposal/delete`, and the columns are
 `collapse_bot_proposals`, `newest_proposal_time_at`, `read_proposals_at`.
 
-`108jobs-clean`'s hand-maintained client package never got the memo. It
+`108heros-clean`'s hand-maintained client package never got the memo. It
 still ships 11 `Comment*` type files, and — because the package is synced by
-hand with no CI check ([[project-108jobs-client-type-sync]]) — the drift went
+hand with no CI check ([[project-108heros-client-type-sync]]) — the drift went
 past the type names into the wire contract itself.
 
 This is not dead code. The proposal feature runs on these types: 14
@@ -171,10 +171,10 @@ gates are:
   string-keyed method breaks every stale reference at compile time, so a
   clean run proves the rename is complete and internally consistent.
 - `npx eslint` clean on touched files.
-- **Both** `cd src/lib/108jobs-client && npm run build && cd -` **and**
-  `pnpm install` after package edits. `node_modules/108jobs-client` resolves
+- **Both** `cd src/lib/108heros-client && npm run build && cd -` **and**
+  `pnpm install` after package edits. `node_modules/108heros-client` resolves
   to a hard copy, not a link to `src/lib/`, so building without reinstalling
-  leaves `tsc` reading the old shape ([[project-108jobs-client-type-sync]]).
+  leaves `tsc` reading the old shape ([[project-108heros-client-type-sync]]).
 
 `tsc` cannot see a wrong JSON key, so the four live bugs are verified by hand
 against the running dev API:

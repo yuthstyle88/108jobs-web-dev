@@ -3,7 +3,7 @@
 import useNotification from '@/hooks/ui/useNotification';
 import { useHttpPost } from '@/hooks/api/http/useHttpPost';
 import { REQUEST_STATE } from '@/services/HttpService';
-import { Person, PortfolioPic, SaveUserSettings, WorkSample } from '108jobs-client';
+import { Person, PortfolioPic, SaveUserSettings, WorkSample } from '108heros-client';
 import { useState } from 'react';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';

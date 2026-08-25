@@ -19,8 +19,8 @@ the save fails.
 
 ## Global Constraints
 
-- Touch only: `src/lib/108jobs-client/src/types/LocalUser.ts`,
-  `src/lib/108jobs-client/src/types/SaveUserSettings.ts`,
+- Touch only: `src/lib/108heros-client/src/types/LocalUser.ts`,
+  `src/lib/108heros-client/src/types/SaveUserSettings.ts`,
   `src/app/[lang]/(profile)/account-setting/manage/page.tsx`,
   `src/containers/AccountSettingWrapper/index.tsx`,
   `src/translations/{en,th,vi}.ts`.
@@ -31,9 +31,9 @@ the save fails.
   it."* No wording in the title, the toggle label, the body copy or any
   toast may imply the platform cannot read messages.
 - **Rebuild the client package after editing anything under
-  `src/lib/108jobs-client/src/`:**
+  `src/lib/108heros-client/src/`:**
   ```bash
-  cd src/lib/108jobs-client && npm run build && cd -
+  cd src/lib/108heros-client && npm run build && cd -
   ```
   App code imports the package *name*, which resolves to `dist/` — without a
   rebuild `tsc` checks the stale build and accepts code contradicting your
@@ -51,8 +51,8 @@ the save fails.
 ### Task 1: Add the two missing client fields
 
 **Files:**
-- Modify: `src/lib/108jobs-client/src/types/LocalUser.ts`
-- Modify: `src/lib/108jobs-client/src/types/SaveUserSettings.ts`
+- Modify: `src/lib/108heros-client/src/types/LocalUser.ts`
+- Modify: `src/lib/108heros-client/src/types/SaveUserSettings.ts`
 
 **Interfaces:**
 - Produces: `LocalUser.secureChatEnabled` (read by Task 2's toggle) and
@@ -74,7 +74,7 @@ Append to the end of the `LocalUser` type, after `showPersonVotes`. It is
   /**
    * Whether this account's chat messages are encrypted in transit.
    *
-   * Not end-to-end: 108jobs holds the key so it can relay and moderate.
+   * Not end-to-end: 108heros holds the key so it can relay and moderate.
    */
   secureChatEnabled: boolean;
 ```
@@ -94,8 +94,8 @@ Append to the end of the `SaveUserSettings` type. Optional here, matching
 - [ ] **Step 3: Rebuild and verify**
 
 ```bash
-cd src/lib/108jobs-client && npm run build && cd -
-grep -n "secureChatEnabled" src/lib/108jobs-client/dist/types/LocalUser.d.ts src/lib/108jobs-client/dist/types/SaveUserSettings.d.ts
+cd src/lib/108heros-client && npm run build && cd -
+grep -n "secureChatEnabled" src/lib/108heros-client/dist/types/LocalUser.d.ts src/lib/108heros-client/dist/types/SaveUserSettings.d.ts
 npx tsc --noEmit
 ```
 
@@ -107,7 +107,7 @@ rather than switching the field to optional to silence it.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types/LocalUser.ts src/lib/108jobs-client/src/types/SaveUserSettings.ts
+git add src/lib/108heros-client/src/types/LocalUser.ts src/lib/108heros-client/src/types/SaveUserSettings.ts
 git commit -m "feat(client): add secureChatEnabled to LocalUser and SaveUserSettings"
 ```
 
@@ -135,8 +135,8 @@ Inside the existing `accountManage` object, after `description`:
                 title: "Secure Chat",
                 toggleLabel: "Encrypt chat messages",
                 toggleHint: "Applies to this account, on every device",
-                bodyInTransit: "Messages are encrypted between your device and 108jobs, so nobody on the network in between can read them.",
-                bodyNotE2e: "This is not end-to-end encryption: 108jobs holds the key and can read your messages, which is what lets us act on reports of abuse and scams.",
+                bodyInTransit: "Messages are encrypted between your device and 108heros, so nobody on the network in between can read them.",
+                bodyNotE2e: "This is not end-to-end encryption: 108heros holds the key and can read your messages, which is what lets us act on reports of abuse and scams.",
                 enabled: "Message encryption enabled",
                 disabled: "Message encryption disabled",
                 saveError: "Couldn't save that. Please try again.",
@@ -152,8 +152,8 @@ Inside the existing `accountManage` object, after `description`:
                 title: "แชทที่เข้ารหัส",
                 toggleLabel: "เข้ารหัสข้อความแชท",
                 toggleHint: "มีผลกับบัญชีนี้ในทุกอุปกรณ์",
-                bodyInTransit: "ข้อความจะถูกเข้ารหัสระหว่างอุปกรณ์ของคุณกับ 108jobs ผู้อื่นบนเครือข่ายระหว่างทางจึงไม่สามารถอ่านได้",
-                bodyNotE2e: "นี่ไม่ใช่การเข้ารหัสแบบต้นทางถึงปลายทาง (end-to-end): 108jobs เป็นผู้ถือกุญแจและสามารถอ่านข้อความของคุณได้ ซึ่งทำให้เราดำเนินการกับรายงานการฉ้อโกงและการละเมิดได้",
+                bodyInTransit: "ข้อความจะถูกเข้ารหัสระหว่างอุปกรณ์ของคุณกับ 108heros ผู้อื่นบนเครือข่ายระหว่างทางจึงไม่สามารถอ่านได้",
+                bodyNotE2e: "นี่ไม่ใช่การเข้ารหัสแบบต้นทางถึงปลายทาง (end-to-end): 108heros เป็นผู้ถือกุญแจและสามารถอ่านข้อความของคุณได้ ซึ่งทำให้เราดำเนินการกับรายงานการฉ้อโกงและการละเมิดได้",
                 enabled: "เปิดการเข้ารหัสข้อความแล้ว",
                 disabled: "ปิดการเข้ารหัสข้อความแล้ว",
                 saveError: "บันทึกไม่สำเร็จ กรุณาลองใหม่",
@@ -167,8 +167,8 @@ Inside the existing `accountManage` object, after `description`:
                 title: "Trò chuyện được mã hóa",
                 toggleLabel: "Mã hóa tin nhắn trò chuyện",
                 toggleHint: "Áp dụng cho tài khoản này trên mọi thiết bị",
-                bodyInTransit: "Tin nhắn được mã hóa giữa thiết bị của bạn và 108jobs, nên không ai trên đường truyền có thể đọc được.",
-                bodyNotE2e: "Đây không phải mã hóa đầu cuối: 108jobs giữ khóa và có thể đọc tin nhắn của bạn, điều này cho phép chúng tôi xử lý các báo cáo lạm dụng và lừa đảo.",
+                bodyInTransit: "Tin nhắn được mã hóa giữa thiết bị của bạn và 108heros, nên không ai trên đường truyền có thể đọc được.",
+                bodyNotE2e: "Đây không phải mã hóa đầu cuối: 108heros giữ khóa và có thể đọc tin nhắn của bạn, điều này cho phép chúng tôi xử lý các báo cáo lạm dụng và lừa đảo.",
                 enabled: "Đã bật mã hóa tin nhắn",
                 disabled: "Đã tắt mã hóa tin nhắn",
                 saveError: "Không thể lưu. Vui lòng thử lại.",

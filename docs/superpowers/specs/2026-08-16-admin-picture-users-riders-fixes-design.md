@@ -62,7 +62,7 @@ showing.
 **4. No way to remove an image, only replace** (whole file)
 The backend already has the endpoints
 (`deleteSiteIcon`/`deleteSiteBanner`, confirmed present and already
-wrapped through the generic `WrappedApi108Jobs` client) — this is a
+wrapped through the generic `WrappedApi108Heros` client) — this is a
 missing-UI gap, not a missing-backend one. Add
 `useHttpDelete("deleteSiteIcon")`/`useHttpDelete("deleteSiteBanner")` and
 a "Remove" button next to each "Upload New" control, shown only when a

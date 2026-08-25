@@ -21,7 +21,7 @@ import ConfirmActionModal from '@/components/Common/Modal/ConfirmActionModal';
 import {useWorkflowStepper} from '@/hooks/utils/useWorkflowMachine';
 import FileUploadModal from '@/components/Common/Modal/FileUploadModal';
 import {UploadedFile} from '@/modules/chat/hooks/useFileUpload';
-import type {WorkflowStatus} from "108jobs-client";
+import type {WorkflowStatus} from "108heros-client";
 import {WorkFlowAction, workflowActionsMap} from "@/modules/chat/types/workflow";
 import WorkflowActionPanel from "@/components/WorkflowActionPanel"
 import {filterByRole} from "@/modules/chat/utils/workflow/helper";

@@ -17,7 +17,7 @@ since roles are baked into the JWT at issuance. That doc's own walkthrough
 for bootstrapping a local admin account uses **username+password login**
 against `POST /account/auth/login/identity-platform` — an endpoint that
 already exists, already works, and is already typed on the frontend client
-as `Api108Jobs.loginWithIdentityPlatform()`. Nothing here reintroduces
+as `Api108Heros.loginWithIdentityPlatform()`. Nothing here reintroduces
 retired backend functionality; the only missing piece is a UI form.
 
 Decided during brainstorming: this becomes a permanent, production option
@@ -33,9 +33,9 @@ case, and building either now would be speculative.
 ### No backend changes
 
 `loginWithIdentityPlatform(form: Login)` already exists in
-`src/lib/108jobs-client/src/http.ts`, takes
+`src/lib/108heros-client/src/http.ts`, takes
 `{usernameOrEmail, password, totp2faToken?}`
-(`src/lib/108jobs-client/src/types/Login.ts`), and returns
+(`src/lib/108heros-client/src/types/Login.ts`), and returns
 `IdentityPlatformLoginResponse {accessToken, refreshToken, expiresIn}`. It
 is unused by any current UI. This work wires a form to it via the standard
 `useHttpPost` hook — the same pattern every other mutation in this app

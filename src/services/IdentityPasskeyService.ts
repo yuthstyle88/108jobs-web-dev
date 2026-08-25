@@ -19,7 +19,7 @@ import {ApiError, FailedRequestState, REQUEST_STATE, SuccessRequestState} from "
 
 type Settled<T> = SuccessRequestState<T> | FailedRequestState;
 
-const REMEMBERED_IDENTIFIER_KEY = "108jobs.passkeyIdentifier";
+const REMEMBERED_IDENTIFIER_KEY = "108heros.passkeyIdentifier";
 
 export interface PasskeyLogin {
     identityId: string;

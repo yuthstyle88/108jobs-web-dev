@@ -156,16 +156,16 @@ enum HttpType {
 type RequestOptions = Pick<RequestInit, "signal">;
 
 /**
- * HTTP client for the 108jobs API.
+ * HTTP client for the 108heros API.
  */
 @Route("api/v4")
-export class Api108Jobs extends Controller {
+export class Api108Heros extends Controller {
     #apiUrl: string;
     #headers: { [key: string]: string } = {};
     #fetchFunction: typeof fetch = fetch.bind(globalThis);
 
     /**
-     * Generates a new instance of Api108Jobs.
+     * Generates a new instance of Api108Heros.
      * @param baseUrl the base url, without the vX version: https://api.108jobs.com -> goes to https://api.108jobs.com/api/vX
      * @param headers optional headers. Should contain `x-real-ip` and `x-forwarded-for` .
      */

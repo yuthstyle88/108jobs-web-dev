@@ -63,12 +63,12 @@ New handler file `crates/http/src/crud/user/refresh_via_identity_platform.rs`, m
 
 ```rust
 use actix_web::web::{Data, Json};
-use app_108jobs_api_utils::{
+use app_108heros_api_utils::{
   context::App108Context,
   identity_platform::{identity_platform_base_url, refresh_with_identity_platform},
 };
-use app_108jobs_core::error::App108Result;
-use app_108jobs_identity::refresh::RefreshTokenRequest;
+use app_108heros_core::error::App108Result;
+use app_108heros_identity::refresh::RefreshTokenRequest;
 use crate::crud::user::login_via_identity_platform::IdentityPlatformLoginResponse;
 
 /// Exchanges a still-valid refresh token for a fresh access/refresh token
@@ -106,9 +106,9 @@ pub async fn refresh_with_identity_platform_handler(
 
 Plus the matching import addition in the `user::{...}` block and a `pub mod refresh_via_identity_platform;` in `crates/http/src/crud/user/mod.rs`.
 
-### 2. Frontend client (108jobs-clean)
+### 2. Frontend client (108heros-clean)
 
-New `Api108Jobs.refreshWithIdentityPlatform(form: {refreshToken: string}, options?: RequestOptions)` in `http.ts`, mirroring `loginWithIdentityPlatform`'s exact shape:
+New `Api108Heros.refreshWithIdentityPlatform(form: {refreshToken: string}, options?: RequestOptions)` in `http.ts`, mirroring `loginWithIdentityPlatform`'s exact shape:
 
 ```typescript
 /**
@@ -129,7 +129,7 @@ async refreshWithIdentityPlatform(
 }
 ```
 
-New minimal type `src/lib/108jobs-client/src/types/RefreshIdentityPlatform.ts`:
+New minimal type `src/lib/108heros-client/src/types/RefreshIdentityPlatform.ts`:
 
 ```typescript
 export type RefreshIdentityPlatform = {

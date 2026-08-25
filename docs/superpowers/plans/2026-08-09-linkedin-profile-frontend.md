@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **This plan depends on the backend plan already being done.** `docs/superpowers/plans/2026-08-09-resume-field-backend.md` (in the sibling `api-108jobs` repo) must have completed Task 3 (its type-sync step) before Task 2 of this plan — `Person.resumeUrl`/`resumeFileName` and `SaveUserSettings.resumeUrl`/`resumeFileName` must already exist in `src/lib/108jobs-client/src/types/` or this plan's code will not compile. Verify with: `grep -n resumeUrl src/lib/108jobs-client/src/types/Person.ts` before starting Task 2.
+- **This plan depends on the backend plan already being done.** `docs/superpowers/plans/2026-08-09-resume-field-backend.md` (in the sibling `api-108jobs` repo) must have completed Task 3 (its type-sync step) before Task 2 of this plan — `Person.resumeUrl`/`resumeFileName` and `SaveUserSettings.resumeUrl`/`resumeFileName` must already exist in `src/lib/108heros-client/src/types/` or this plan's code will not compile. Verify with: `grep -n resumeUrl src/lib/108heros-client/src/types/Person.ts` before starting Task 2.
 - No new test framework is introduced. This repo has **no** React component-rendering tests anywhere (no `@testing-library/react` dependency, no `.test.tsx` files) and **no** existing Playwright coverage of the profile or account-setting pages (`tests/` has only `login.spec.ts`, `home.spec.ts`, `protected-redirect.spec.ts`, `job-board.spec.ts`). This plan does not add either — that would be a separate, bigger decision than this feature warrants. Testing here means: (a) extending the one real test file this feature touches (`madUpload.test.ts`, a pure-logic vitest suite with an established pattern), and (b) manual verification in a browser at the end (Task 9), consistent with "for UI changes, use the feature in a browser before calling it done."
 - Every new/changed component must compile under `pnpm tsc --noEmit`, pass `pnpm lint`, and the final state must pass `pnpm build` — checked cumulatively in Task 9, and after every task that touches shared files (Task 1's hook signature change, Task 7's rewiring).
 - Deletions only happen after verifying zero remaining importers via `grep` — shown explicitly in the steps below, not assumed.
@@ -212,7 +212,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
 
   import {useCallback, useRef, useState} from 'react';
   import {useTranslation} from 'react-i18next';
-  import {Person, SaveUserSettings} from '108jobs-client';
+  import {Person, SaveUserSettings} from '108heros-client';
   import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
   import {useHttpPost} from '@/hooks/api/http/useHttpPost';
   import {REQUEST_STATE} from '@/services/HttpService';
@@ -681,7 +681,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
   import Image from "next/image";
   import {useTranslation} from "react-i18next";
   import {BadgeCheck} from "lucide-react";
-  import {Person, PersonId} from "108jobs-client";
+  import {Person, PersonId} from "108heros-client";
   import {AssetIcon} from "@/constants/icons";
   import {ProfileImage} from "@/constants/images";
   import EditButton from "@/components/Profile/EditButton";
@@ -828,7 +828,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
   "use client";
   import React, {useEffect, useRef, useState} from "react";
   import {useTranslation} from "react-i18next";
-  import {Person} from "108jobs-client";
+  import {Person} from "108heros-client";
   import EditButton from "@/components/Profile/EditButton";
 
   interface AboutCardProps {
@@ -883,7 +883,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
   "use client";
   import React from "react";
   import {useTranslation} from "react-i18next";
-  import {Person} from "108jobs-client";
+  import {Person} from "108heros-client";
   import EditButton from "@/components/Profile/EditButton";
 
   interface SkillsCardProps {
@@ -929,7 +929,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
   "use client";
   import React from "react";
   import {useTranslation} from "react-i18next";
-  import {Person} from "108jobs-client";
+  import {Person} from "108heros-client";
   import EditButton from "@/components/Profile/EditButton";
 
   interface ContactCardProps {
@@ -1001,7 +1001,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
   import Link from "next/link";
   import {useTranslation} from "react-i18next";
   import {FileText} from "lucide-react";
-  import {Person} from "108jobs-client";
+  import {Person} from "108heros-client";
   import EditButton from "@/components/Profile/EditButton";
 
   interface ResumeCardProps {
@@ -1103,7 +1103,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
   ```tsx
   "use client";
   import React from "react";
-  import {Person} from "108jobs-client";
+  import {Person} from "108heros-client";
   import ProfileHero from "@/components/Profile/ProfileHero";
   import AboutCard from "@/components/Profile/AboutCard";
   import SkillsCard from "@/components/Profile/SkillsCard";
@@ -1378,7 +1378,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
 - [ ] **Step 2: Final dead-code sweep**
 
   ```bash
-  grep -rn "PortfolioSlider\|PortfolioImages\|portfolioPics\|PortfolioImageModal\|FullScreenImageModal\|usePortfolioImagesForm" src --include="*.tsx" --include="*.ts" | grep -v "/lib/108jobs-client/"
+  grep -rn "PortfolioSlider\|PortfolioImages\|portfolioPics\|PortfolioImageModal\|FullScreenImageModal\|usePortfolioImagesForm" src --include="*.tsx" --include="*.ts" | grep -v "/lib/108heros-client/"
   ```
 
   Expected: nothing outside the vendored client library (`portfolioPics` legitimately still exists there — the backend plan deliberately keeps that field; the frontend just no longer reads or writes it from any call site, which this grep confirms).

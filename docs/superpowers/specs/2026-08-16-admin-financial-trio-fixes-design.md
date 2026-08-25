@@ -8,7 +8,7 @@ withdrawal approvals. All findings below were re-verified against current
 source immediately before this spec (not recalled from the earlier audit)
 — every citation is the current file:line, confirmed accurate, and every
 backend type referenced was read directly from the generated
-`108jobs-client` package.
+`108heros-client` package.
 
 This batch is noticeably larger than prior ones (14 fixes across 3 files,
 vs. 7–14 per prior batch) because these three pages share the same root
@@ -88,7 +88,7 @@ both, matching `manage-users`' already-fixed equivalent.
 `bankAccounts.map((item: any) => {...})` — the real type,
 `BankAccountView = {userBankAccount: BankAccount, bank: Bank}`, matches
 the existing destructuring (`item.bank`, `item.userBankAccount`) exactly.
-Swap `any` for `BankAccountView`, imported from `108jobs-client`.
+Swap `any` for `BankAccountView`, imported from `108heros-client`.
 
 ### B. `topup-coins`
 

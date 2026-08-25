@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {QRCodeCanvas} from "qrcode.react";
 import {callHttp, isSuccess} from "@/services/HttpService";
-import {type TopUpResponse, TopUpStatus} from "108jobs-client";
+import {type TopUpResponse, TopUpStatus} from "108heros-client";
 import LoadingMultiCircle from "@/components/Common/Loading/LoadingMultiCircle";
 
 interface TopUpModalProps {

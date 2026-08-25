@@ -281,7 +281,7 @@ describe("uploadToMad", () => {
     );
   });
 
-  it("reads a private asset through 108jobs, never MAD directly", async () => {
+  it("reads a private asset through 108heros, never MAD directly", async () => {
     const calls = stubFetch([SESSION, COMPLETE]);
     installFakeXhr(calls);
 

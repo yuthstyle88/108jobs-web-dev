@@ -1,5 +1,5 @@
 import {create} from 'zustand';
-import type {WorkflowStatus} from '108jobs-client';
+import type {WorkflowStatus} from '108heros-client';
 import {ORDER, WORKFLOW_TRANSITIONS, WorkflowEvent} from "@/modules/chat/types/workflow";
 
 // Generic, reusable finite state machine store with typed states and events

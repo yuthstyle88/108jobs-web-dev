@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restore a working login round trip and a working register round trip for 108jobs-clean against api-108jobs's Identity-Platform-only auth, by adding the one missing backend endpoint and rebuilding the frontend's client methods, `Claims`/`UserService`, and `LoginForm`/`RegisterForm` around what the backend actually does today.
+**Goal:** Restore a working login round trip and a working register round trip for 108heros-clean against api-108jobs's Identity-Platform-only auth, by adding the one missing backend endpoint and rebuilding the frontend's client methods, `Claims`/`UserService`, and `LoginForm`/`RegisterForm` around what the backend actually does today.
 
-**Architecture:** One new Actix route in api-108jobs (`POST /account/auth/login/identity-platform`) exposes the already-implemented `login_with_identity_platform()` standalone. The frontend's generated-style API client (`108jobs-client`) gets two new methods and loses one dead one. `UserService`'s `Claims` type is rewritten to the real JWT shape; profile fields that no longer live on the token (`email`/`interfaceLanguage`/`acceptedTerms`) are sourced from the existing `getMyUser()` call instead. `LoginForm` and `RegisterForm` are rewired to the new client methods; the register form gains username/password fields and the now-fully-unreachable OTP-verify/terms-accept flow is deleted.
+**Architecture:** One new Actix route in api-108jobs (`POST /account/auth/login/identity-platform`) exposes the already-implemented `login_with_identity_platform()` standalone. The frontend's generated-style API client (`108heros-client`) gets two new methods and loses one dead one. `UserService`'s `Claims` type is rewritten to the real JWT shape; profile fields that no longer live on the token (`email`/`interfaceLanguage`/`acceptedTerms`) are sourced from the existing `getMyUser()` call instead. `LoginForm` and `RegisterForm` are rewired to the new client methods; the register form gains username/password fields and the now-fully-unreachable OTP-verify/terms-accept flow is deleted.
 
-**Tech Stack:** Rust/Actix-web (api-108jobs), Next.js/React/TypeScript with react-hook-form + zod (108jobs-clean), Vitest (frontend unit tests, already set up from the prior wire-event-naming stage).
+**Tech Stack:** Rust/Actix-web (api-108jobs), Next.js/React/TypeScript with react-hook-form + zod (108heros-clean), Vitest (frontend unit tests, already set up from the prior wire-event-naming stage).
 
-**Design doc:** `docs/superpowers/specs/2026-07-05-identity-platform-auth-design.md` (108jobs-clean). Read it first for the full investigation and rationale — this plan implements it with two small, mechanical deviations discovered during planning (both noted in Global Constraints below).
+**Design doc:** `docs/superpowers/specs/2026-07-05-identity-platform-auth-design.md` (108heros-clean). Read it first for the full investigation and rationale — this plan implements it with two small, mechanical deviations discovered during planning (both noted in Global Constraints below).
 
 ## Global Constraints
 
@@ -20,7 +20,7 @@
 - **Deviation from the design spec, #1:** the spec proposed adding `ts-rs` derive/export annotations to the new and existing Identity-Platform response structs on the Rust side. `crates/http/Cargo.toml` has no `ts-rs` optional dependency/feature at all (confirmed: `grep -c ts-rs crates/http/Cargo.toml` returns nothing), unlike `crates/db_views/site` which does. Wiring up a new cross-crate feature for two structs is out of scope for this fix and not needed — the frontend types are hand-authored regardless (no automated sync pipeline exists between the repos, confirmed in the design doc). This plan adds the new Rust struct with the same plain `Debug, Serialize, Clone` derives `IdentityPlatformAuthResponse` already has, and does **not** touch `crates/http/Cargo.toml` or add any `ts-rs` attributes anywhere.
 - **Deviation from the design spec, #2:** the spec's Testing section proposed a route-level test hitting the new endpoint against a mock Identity-Platform instance. `create_via_identity_platform.rs`'s own test module explicitly documents that no HTTP test-double exists anywhere in this codebase for the Identity-Platform client, and its tests are scoped to pure/parsing logic only. This plan follows that same, already-established pattern: the new endpoint's automated tests cover response serialization and empty-credential rejection (pure logic, no network); the full round trip (real login succeeding, real login failing) is covered only by this plan's final manual end-to-end verification task, exactly as it already is for the sibling register-combo handler.
 - Every deleted frontend file in Task 7, and every call site touched by the `UserService.login()` signature change in Task 3, was checked by an adversarial verification pass against the live source *after* this plan's first draft — that pass found and this revision fixed two real gaps (a missed OAuth-callback call site, and an over-broad deletion that would have broken the unrelated forgot-password flow). See the note at the end of this document for the full verification record.
-- Existing test commands: backend `cargo test -p app_108jobs_http` / `cargo test -p app_108jobs_api_utils`; frontend `npm run test:unit` (Vitest, from `108jobs-clean`).
+- Existing test commands: backend `cargo test -p app_108heros_http` / `cargo test -p app_108heros_api_utils`; frontend `npm run test:unit` (Vitest, from `108heros-clean`).
 
 ---
 
@@ -33,7 +33,7 @@
 - Test: inline `#[cfg(test)] mod tests` in the new file (matches the sibling `create_via_identity_platform.rs` pattern)
 
 **Interfaces:**
-- Consumes: `app_108jobs_api_utils::identity_platform::{identity_platform_base_url, login_with_identity_platform}` (both already exist, unchanged by this task — `identity_platform_base_url(settings: &Settings) -> FastJobResult<String>`, `login_with_identity_platform(context: &FastJobContext, base_url: &str, identifier: &str, password: &str) -> FastJobResult<IdentityPlatformTokenSet>`); `app_108jobs_db_views_site::api::LoginRequest` (existing, fields `username_or_email: Option<SensitiveString>`, `password: Option<SensitiveString>`, `totp_2fa_token: Option<String>`); `FastJobErrorType::IncorrectLogin` (existing, maps to HTTP 401).
+- Consumes: `app_108heros_api_utils::identity_platform::{identity_platform_base_url, login_with_identity_platform}` (both already exist, unchanged by this task — `identity_platform_base_url(settings: &Settings) -> FastJobResult<String>`, `login_with_identity_platform(context: &FastJobContext, base_url: &str, identifier: &str, password: &str) -> FastJobResult<IdentityPlatformTokenSet>`); `app_108heros_db_views_site::api::LoginRequest` (existing, fields `username_or_email: Option<SensitiveString>`, `password: Option<SensitiveString>`, `totp_2fa_token: Option<String>`); `FastJobErrorType::IncorrectLogin` (existing, maps to HTTP 401).
 - Produces: `pub struct IdentityPlatformLoginResponse { access_token, refresh_token, expires_in }` and `pub async fn login_with_identity_platform_handler(...)` — both consumed only by `src/api_routes.rs`'s route registration; no other task in this plan touches Rust code.
 
 - [ ] **Step 1: Write the new handler file with its own unit tests**
@@ -42,12 +42,12 @@ Create `crates/http/src/crud/user/login_via_identity_platform.rs`:
 
 ```rust
 use actix_web::web::{Data, Json};
-use app_108jobs_api_utils::{
+use app_108heros_api_utils::{
   context::FastJobContext,
   identity_platform::{identity_platform_base_url, login_with_identity_platform},
 };
-use app_108jobs_core::error::{FastJobErrorType, FastJobResult};
-use app_108jobs_db_views_site::api::LoginRequest;
+use app_108heros_core::error::{FastJobErrorType, FastJobResult};
+use app_108heros_db_views_site::api::LoginRequest;
 use serde::Serialize;
 use serde_with::skip_serializing_none;
 
@@ -123,7 +123,7 @@ mod tests {
 
 - [ ] **Step 2: Run the new test to verify it passes**
 
-Run: `cargo test -p app_108jobs_http login_via_identity_platform`
+Run: `cargo test -p app_108heros_http login_via_identity_platform`
 Expected: `identity_platform_login_response_serializes_camel_case ... ok` (1 passed; the handler function itself has no unit test — it's a thin composition of two already-tested functions, exercised end-to-end only in Task 8's manual verification, matching this codebase's established pattern for this style of handler).
 
 - [ ] **Step 3: Wire the module into `crates/http/src/crud/user/mod.rs`**
@@ -217,7 +217,7 @@ New (adds one `.service(...)` block after `/login`'s):
 
 - [ ] **Step 5: Confirm the workspace still builds**
 
-Run: `cargo check -p app_108jobs_http` (checks the new handler file itself compiles — `serde_with` is confirmed a direct dependency of this crate, `crates/http/Cargo.toml:51`, so no dependency changes are needed) and `cargo check -p app_108jobs_api_server` (checks `src/api_routes.rs`'s route-registration edit compiles — this is the actual binary crate; there is no `[[bin]]` override anywhere in the workspace, so the binary target name equals the root package name, confirmed via the root `Cargo.toml`'s `[package] name = "app_108jobs_api_server"` and `src/main.rs`'s `pub async fn main()`. `crates/http` itself has no binary target — running `--bin` against it is not a valid command).
+Run: `cargo check -p app_108heros_http` (checks the new handler file itself compiles — `serde_with` is confirmed a direct dependency of this crate, `crates/http/Cargo.toml:51`, so no dependency changes are needed) and `cargo check -p app_108heros_api_server` (checks `src/api_routes.rs`'s route-registration edit compiles — this is the actual binary crate; there is no `[[bin]]` override anywhere in the workspace, so the binary target name equals the root package name, confirmed via the root `Cargo.toml`'s `[package] name = "app_108heros_api_server"` and `src/main.rs`'s `pub async fn main()`. `crates/http` itself has no binary target — running `--bin` against it is not a valid command).
 Expected: no errors from either command.
 
 - [ ] **Step 6: Commit**
@@ -235,31 +235,31 @@ reusing the existing LoginRequest shape."
 
 ---
 
-## Task 2: Frontend client — new types and methods (108jobs-clean)
+## Task 2: Frontend client — new types and methods (108heros-clean)
 
 **Files:**
-- Create: `src/lib/108jobs-client/src/types/IdentityPlatformLoginResponse.ts`
-- Create: `src/lib/108jobs-client/src/types/IdentityPlatformAuthResponse.ts`
-- Create: `src/lib/108jobs-client/src/types/RegisterIdentityPlatform.ts`
-- Modify: `src/lib/108jobs-client/src/http.ts` (remove `login()`, add `loginWithIdentityPlatform()` and `registerWithIdentityPlatform()`)
-- Modify: `src/lib/108jobs-client/src/index.ts` (export the three new types)
-- Test: `src/lib/108jobs-client/src/http.test.ts` (new — this package currently has no tests of its own; a minimal one is added here since this task changes its public surface)
+- Create: `src/lib/108heros-client/src/types/IdentityPlatformLoginResponse.ts`
+- Create: `src/lib/108heros-client/src/types/IdentityPlatformAuthResponse.ts`
+- Create: `src/lib/108heros-client/src/types/RegisterIdentityPlatform.ts`
+- Modify: `src/lib/108heros-client/src/http.ts` (remove `login()`, add `loginWithIdentityPlatform()` and `registerWithIdentityPlatform()`)
+- Modify: `src/lib/108heros-client/src/index.ts` (export the three new types)
+- Test: `src/lib/108heros-client/src/http.test.ts` (new — this package currently has no tests of its own; a minimal one is added here since this task changes its public surface)
 
 **Interfaces:**
-- Consumes: the existing `Login` type (`src/lib/108jobs-client/src/types/Login.ts`, unchanged: `{usernameOrEmail, password, totp2faToken?}`), the existing `#wrapper`/`RequestOptions`/decorator pattern already used by every other method in `http.ts`.
-- Produces: `Api108Jobs.loginWithIdentityPlatform(form: Login, options?: RequestOptions): Promise<IdentityPlatformLoginResponse>`, `Api108Jobs.registerWithIdentityPlatform(form: RegisterIdentityPlatform, options?: RequestOptions): Promise<IdentityPlatformAuthResponse>` — both consumed by Task 5 (`LoginForm`) and Task 6 (`RegisterForm`) respectively. `IdentityPlatformLoginResponse`/`IdentityPlatformAuthResponse`/`RegisterIdentityPlatform` types, consumed by Tasks 3, 5, 6.
+- Consumes: the existing `Login` type (`src/lib/108heros-client/src/types/Login.ts`, unchanged: `{usernameOrEmail, password, totp2faToken?}`), the existing `#wrapper`/`RequestOptions`/decorator pattern already used by every other method in `http.ts`.
+- Produces: `Api108Heros.loginWithIdentityPlatform(form: Login, options?: RequestOptions): Promise<IdentityPlatformLoginResponse>`, `Api108Heros.registerWithIdentityPlatform(form: RegisterIdentityPlatform, options?: RequestOptions): Promise<IdentityPlatformAuthResponse>` — both consumed by Task 5 (`LoginForm`) and Task 6 (`RegisterForm`) respectively. `IdentityPlatformLoginResponse`/`IdentityPlatformAuthResponse`/`RegisterIdentityPlatform` types, consumed by Tasks 3, 5, 6.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/lib/108jobs-client/src/http.test.ts`:
+Create `src/lib/108heros-client/src/http.test.ts`:
 
 ```typescript
 import { describe, expect, it } from "vitest";
-import { Api108Jobs } from "./http";
+import { Api108Heros } from "./http";
 
-describe("Api108Jobs identity-platform methods", () => {
+describe("Api108Heros identity-platform methods", () => {
   it("exposes loginWithIdentityPlatform and registerWithIdentityPlatform, and no longer exposes login", () => {
-    const client = new Api108Jobs("http://localhost:8536");
+    const client = new Api108Heros("http://localhost:8536");
     expect(typeof client.loginWithIdentityPlatform).toBe("function");
     expect(typeof client.registerWithIdentityPlatform).toBe("function");
     expect((client as unknown as Record<string, unknown>).login).toBeUndefined();
@@ -274,7 +274,7 @@ Expected: FAIL — `loginWithIdentityPlatform`/`registerWithIdentityPlatform` ar
 
 - [ ] **Step 3: Add the three new type files**
 
-Create `src/lib/108jobs-client/src/types/IdentityPlatformLoginResponse.ts`:
+Create `src/lib/108heros-client/src/types/IdentityPlatformLoginResponse.ts`:
 
 ```typescript
 export type IdentityPlatformLoginResponse = {
@@ -284,7 +284,7 @@ export type IdentityPlatformLoginResponse = {
 };
 ```
 
-Create `src/lib/108jobs-client/src/types/IdentityPlatformAuthResponse.ts`:
+Create `src/lib/108heros-client/src/types/IdentityPlatformAuthResponse.ts`:
 
 ```typescript
 export type IdentityPlatformAuthResponse = {
@@ -295,7 +295,7 @@ export type IdentityPlatformAuthResponse = {
 };
 ```
 
-Create `src/lib/108jobs-client/src/types/RegisterIdentityPlatform.ts`:
+Create `src/lib/108heros-client/src/types/RegisterIdentityPlatform.ts`:
 
 ```typescript
 export type RegisterIdentityPlatform = {
@@ -374,7 +374,7 @@ If `Login`'s import becomes unused elsewhere in the file after `login()` is remo
 
 - [ ] **Step 5: Export the new types from `index.ts`**
 
-Add three lines to `src/lib/108jobs-client/src/index.ts`, alongside the existing `export type {X} from "./types/X";` block (alphabetical position, matching the file's existing convention):
+Add three lines to `src/lib/108heros-client/src/index.ts`, alongside the existing `export type {X} from "./types/X";` block (alphabetical position, matching the file's existing convention):
 
 ```typescript
 export type {IdentityPlatformAuthResponse} from "./types/IdentityPlatformAuthResponse";
@@ -389,12 +389,12 @@ Expected: PASS.
 
 - [ ] **Step 7: Confirm the package and its consumer still type-check**
 
-Run: `npx tsc --noEmit` (from `108jobs-clean`'s root — this will surface any other file still calling the now-deleted `client.login(...)`; per the design doc, the only two call sites are both in `LoginForm/handlers.ts`, addressed in Task 5, so expect type errors there until Task 5 lands — that's expected at this point in the plan, not a regression).
+Run: `npx tsc --noEmit` (from `108heros-clean`'s root — this will surface any other file still calling the now-deleted `client.login(...)`; per the design doc, the only two call sites are both in `LoginForm/handlers.ts`, addressed in Task 5, so expect type errors there until Task 5 lands — that's expected at this point in the plan, not a regression).
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/lib/108jobs-client/src/types/IdentityPlatformLoginResponse.ts src/lib/108jobs-client/src/types/IdentityPlatformAuthResponse.ts src/lib/108jobs-client/src/types/RegisterIdentityPlatform.ts src/lib/108jobs-client/src/http.ts src/lib/108jobs-client/src/http.test.ts src/lib/108jobs-client/src/index.ts
+git add src/lib/108heros-client/src/types/IdentityPlatformLoginResponse.ts src/lib/108heros-client/src/types/IdentityPlatformAuthResponse.ts src/lib/108heros-client/src/types/RegisterIdentityPlatform.ts src/lib/108heros-client/src/http.ts src/lib/108heros-client/src/http.test.ts src/lib/108heros-client/src/index.ts
 git commit -m "feat(client): add Identity-Platform login/register client methods
 
 Removes the login() method (only ever posted to the now-dead
@@ -796,9 +796,9 @@ New:
   loginRes: RequestState<IdentityPlatformLoginResponse>;
 ```
 
-Update the import at the top of `interface.ts` (currently `import {GetSiteResponse, LoginResponse, PublicOAuthProvider,} from "108jobs-client";`) to:
+Update the import at the top of `interface.ts` (currently `import {GetSiteResponse, LoginResponse, PublicOAuthProvider,} from "108heros-client";`) to:
 ```typescript
-import {GetSiteResponse, IdentityPlatformLoginResponse, PublicOAuthProvider,} from "108jobs-client";
+import {GetSiteResponse, IdentityPlatformLoginResponse, PublicOAuthProvider,} from "108heros-client";
 ```
 
 Remove `totp2faToken` from `LoginFormProps.formState`/`setFormState` and `State.form` (lines 9-19, 27-31) — the 2FA modal is being removed in Step 3 below, so this field is no longer read or written. New `State.form`:
@@ -812,9 +812,9 @@ Remove `totp2faToken` from `LoginFormProps.formState`/`setFormState` and `State.
 
 - [ ] **Step 2: Rewrite `handlers.ts`**
 
-Update the import at the top (currently `import {LoginResponse, OAuthProvider,} from "108jobs-client";`):
+Update the import at the top (currently `import {LoginResponse, OAuthProvider,} from "108heros-client";`):
 ```typescript
-import {IdentityPlatformLoginResponse, OAuthProvider,} from "108jobs-client";
+import {IdentityPlatformLoginResponse, OAuthProvider,} from "108heros-client";
 ```
 Add: `import {isAdminClaims, Claims} from "@/services/UserService";` (the file already imports `Claims` from there — confirm and extend rather than duplicate).
 
@@ -1372,9 +1372,9 @@ IDENTITY_ISSUER=auth-service
 ```
 Start api-108jobs against a fresh/migrated local Postgres, per this repo's normal local-dev instructions (see its own README/CONTRIBUTING for exact DB setup — not repeated here since it's unrelated to this plan).
 
-- [ ] **Step 3: Run 108jobs-clean against that local backend**
+- [ ] **Step 3: Run 108heros-clean against that local backend**
 
-Set 108jobs-clean's API base URL env var to point at the local api-108jobs instance (check `src/utils/env.ts`'s `getHttpBase()` for the exact env var name this repo uses). Run `npm run dev`.
+Set 108heros-clean's API base URL env var to point at the local api-108jobs instance (check `src/utils/env.ts`'s `getHttpBase()` for the exact env var name this repo uses). Run `npm run dev`.
 
 - [ ] **Step 4: Register a brand-new user through the redesigned `RegisterForm`**
 
@@ -1402,4 +1402,4 @@ This plan was checked against the live source of both repos twice: once after th
 
 Confirmed correct as originally written: the `getMyUser()` wrapping chain resolves to exactly `{state: "success", data: MyUserInfo}` with no double-nesting; `RegisterForm`'s cited line numbers, the stray-backtick and `sss` bugs, and `getAppName`'s single usage; `serde_with` as a direct dependency of `crates/http`; the exact current content of `crates/http/src/crud/user/mod.rs` and the relevant `src/api_routes.rs` line ranges; `FastJobErrorType::IncorrectLogin`'s declaration and 401 mapping; and that `HttpService.client.register(...)` (the dead call `RegisterForm` currently makes) has exactly one caller in the whole app.
 
-Found and fixed: Task 1's proposed `cargo check -p app_108jobs_http --bin app_108jobs` was wrong — `crates/http` has no `[[bin]]` target at all (it's a library crate); the real binary is the root package `app_108jobs_api_server`. Task 3 was missing a third caller of `UserService.Instance.login()` — the OAuth callback page (`src/app/[lang]/api/auth/callback/[provider]/page.tsx`) — which would have failed to compile against the new signature; a fix step was added there. Task 7's deletion list originally included `src/types/register-data.ts`, which is also used by four files in the unrelated forgot-password/reset-password flow; the deletion was narrowed to leave that file in place.
+Found and fixed: Task 1's proposed `cargo check -p app_108heros_http --bin app_108heros` was wrong — `crates/http` has no `[[bin]]` target at all (it's a library crate); the real binary is the root package `app_108heros_api_server`. Task 3 was missing a third caller of `UserService.Instance.login()` — the OAuth callback page (`src/app/[lang]/api/auth/callback/[provider]/page.tsx`) — which would have failed to compile against the new signature; a fix step was added there. Task 7's deletion list originally included `src/types/register-data.ts`, which is also used by four files in the unrelated forgot-password/reset-password flow; the deletion was narrowed to leave that file in place.

@@ -1,6 +1,6 @@
 import {clearAuthCookie, getAuthJWTCookie, isBrowser, setAuthJWTCookie, setLangCookie} from "@/utils/browser";
 import {jwtDecode} from "jwt-decode";
-import {MyUserInfo} from "108jobs-client";
+import {MyUserInfo} from "108heros-client";
 import {HttpService} from "./index";
 import {isSuccess} from "./HttpService";
 import {toast} from "sonner";
@@ -220,7 +220,7 @@ export class UserService {
     static readonly #REFRESH_MARGIN_MS = 60_000;
     static readonly #REFRESH_RETRY_DELAY_MS = 3_000;
     static readonly #MAX_REFRESH_RETRIES = 2;
-    static readonly #REFRESH_LOCK_NAME = "108jobs-refresh-token-lock";
+    static readonly #REFRESH_LOCK_NAME = "108heros-refresh-token-lock";
     #refreshTimer?: ReturnType<typeof setTimeout>;
 
     #scheduleRefresh() {

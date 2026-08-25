@@ -1,4 +1,4 @@
-import type {WorkflowStatus} from '108jobs-client';
+import type {WorkflowStatus} from '108heros-client';
 import {useStateMachineStore} from '@/modules/chat/store/stateMachineStore';
 import {
     ORDER,

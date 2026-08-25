@@ -19,7 +19,7 @@ pattern (`callHttp("getSite")` → `isSuccess` → `setSiteRes`) already
 proven in `manage-picture/page.tsx`.
 
 **Tech Stack:** Next.js App Router, TypeScript, Tailwind CSS, react-i18next
-(en/th/vi), zustand (`useSiteStore`), the generated `108jobs-client` types.
+(en/th/vi), zustand (`useSiteStore`), the generated `108heros-client` types.
 
 ## Global Constraints
 
@@ -316,7 +316,7 @@ Current (lines 65-69):
                         <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4"/>
                             <span
-                                className="font-medium tex">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108jobs"}
+                                className="font-medium tex">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108heros"}
                         </div>
 ```
 
@@ -325,7 +325,7 @@ Change to:
                         <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4"/>
                             <span
-                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108jobs"}
+                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108heros"}
                         </div>
 ```
 
@@ -354,7 +354,7 @@ git commit -m "fix(admin): remove stray dead className fragment from dashboard i
   `src/translations/vi.ts` (each file's `dashboard.siteInfo` object)
 
 **Interfaces:**
-- Consumes: `RegistrationMode` type, exported from `108jobs-client`
+- Consumes: `RegistrationMode` type, exported from `108heros-client`
   (`export type RegistrationMode = "Closed" | "RequireApplication" |
   "Open";`). `dashboard.siteInfo.unknown` (Task 3).
 - Produces: nothing later tasks depend on.
@@ -390,7 +390,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
-import {RegistrationMode} from "108jobs-client";
+import {RegistrationMode} from "108heros-client";
 ```
 
 Current (lines 11-20, the component's opening lines):
@@ -404,7 +404,7 @@ const DashboardPage = () => {
     const admins = siteRes?.admins || [];
     const version = siteRes?.version;
 
-    const siteName = localSite?.name ?? "108Jobs";
+    const siteName = localSite?.name ?? "108Heros";
 ```
 
 Change to (adds the two lookup maps right after `siteName`; `localSite`/
@@ -419,7 +419,7 @@ const DashboardPage = () => {
     const admins = siteRes?.admins || [];
     const version = siteRes?.version;
 
-    const siteName = localSite?.name ?? "108Jobs";
+    const siteName = localSite?.name ?? "108Heros";
 
     const registrationModeLabels: Record<RegistrationMode, string> = {
         Open: t("dashboard.siteInfo.registrationMode.open"),
@@ -615,7 +615,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
-import {RegistrationMode} from "108jobs-client";
+import {RegistrationMode} from "108heros-client";
 ```
 
 Change to:
@@ -630,7 +630,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
-import {RegistrationMode} from "108jobs-client";
+import {RegistrationMode} from "108heros-client";
 import {callHttp, isSuccess} from "@/services/HttpService";
 ```
 

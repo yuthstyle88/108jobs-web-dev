@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Api108Jobs } from "108jobs-client";
+import { Api108Heros } from "108heros-client";
 import { REFRESH_TOKEN_COOKIE } from "@/utils/config";
 import { getApiBase, isHttps } from "@/utils/env";
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "no_refresh_token" }, { status: 401 });
   }
 
-  const client = new Api108Jobs(getApiBase());
+  const client = new Api108Heros(getApiBase());
   try {
     const data = await client.refreshWithIdentityPlatform({ refreshToken });
     const res = NextResponse.json({ accessToken: data.accessToken, expiresIn: data.expiresIn });

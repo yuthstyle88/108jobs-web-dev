@@ -13,7 +13,7 @@ import {CustomInput} from "@/components/ui/InputField";
 import {useHttpPut} from "@/hooks/api/http/useHttpPut";
 import {isSuccess, isFailed, callHttp} from "@/services/HttpService";
 import {useSiteStore} from "@/store/useSiteStore";
-import type {EditSiteRequest, SiteView} from "108jobs-client";
+import type {EditSiteRequest, SiteView} from "108heros-client";
 
 const getSiteSettingsSchema = (t: (key: string) => string) => z.object({
     name: z.string()

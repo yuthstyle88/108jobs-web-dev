@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Two worktrees, already created and green.** Frontend: `/Users/koeyl/108-ecosystem/108jobs/108jobs-clean/.worktrees/chat-media-search` on branch `feat/chat-media-and-room-search`. Backend: `/Users/koeyl/108-ecosystem/108jobs/api-108jobs/.worktrees/chat-attachment-asset-id` on branch `feat/chat-attachment-asset-id`. **Verify the branch with `git rev-parse --abbrev-ref HEAD` before every commit** — other sessions share these repos.
+- **Two worktrees, already created and green.** Frontend: `/Users/koeyl/108-ecosystem/108heros/108heros-clean/.worktrees/chat-media-search` on branch `feat/chat-media-and-room-search`. Backend: `/Users/koeyl/108-ecosystem/108heros/api-108jobs/.worktrees/chat-attachment-asset-id` on branch `feat/chat-attachment-asset-id`. **Verify the branch with `git rev-parse --abbrev-ref HEAD` before every commit** — other sessions share these repos.
 - **Never touch `.claude/worktrees/`** in either repo.
 - **Frontend baseline is 18 test files / 160 tests passing.** Any task that ends with fewer is a regression.
 - **No new dependencies and no changes to `vitest.config.ts`.** It runs `environment: "node"` and includes only `src/**/*.test.ts`. All new tests are `.test.ts` over pure modules. Do not write `.test.tsx`.
@@ -18,7 +18,7 @@
 - **Do not alter encryption behavior.** `sendEvents.ts` keeps encrypting message content exactly as it does today.
 - **Do not weaken `media_proxy` authorization** and never emit a direct MAD URL for a private asset.
 - **Never run a bare `cargo fmt --all`** in the backend — always the `RUSTFMT=` nightly form given in Task 21.
-- **Do not hand-edit `src/lib/108jobs-client/dist/`.** Task 9 edits one hand-written source type under `src/lib/108jobs-client/src/types/` and rebuilds.
+- **Do not hand-edit `src/lib/108heros-client/dist/`.** Task 9 edits one hand-written source type under `src/lib/108heros-client/src/types/` and rebuilds.
 
 ### Wire contract (fixed — every task must match exactly)
 
@@ -56,7 +56,7 @@
 | `src/modules/chat/components/ChatSearchPanel/index.tsx` | Search input + results overlay |
 | `src/modules/chat/components/ChatSearchPanel/SearchResultItem.tsx` | One result row |
 
-**Modify (frontend):** `src/services/media/madUpload.ts`, `src/services/media/madUpload.test.ts`, `src/modules/chat/hooks/useFileUpload.ts`, `src/modules/chat/hooks/useChatHistory.ts`, `src/modules/chat/types/common.ts`, `src/modules/chat/events/sendEvents.ts`, `src/modules/chat/utils/structured.ts`, `src/modules/chat/hooks/useWorkflowActions.ts`, `src/modules/chat/components/ChatRoomView/index.tsx`, `src/modules/chat/components/ChatHeader/index.tsx`, `src/modules/chat/components/ChatRoomMessages/index.tsx`, `src/modules/chat/components/ChatMessageBubble/index.tsx`, `src/lib/108jobs-client/src/types/ChatMessage.ts`, `src/translations/{en,th,vi}.ts`.
+**Modify (frontend):** `src/services/media/madUpload.ts`, `src/services/media/madUpload.test.ts`, `src/modules/chat/hooks/useFileUpload.ts`, `src/modules/chat/hooks/useChatHistory.ts`, `src/modules/chat/types/common.ts`, `src/modules/chat/events/sendEvents.ts`, `src/modules/chat/utils/structured.ts`, `src/modules/chat/hooks/useWorkflowActions.ts`, `src/modules/chat/components/ChatRoomView/index.tsx`, `src/modules/chat/components/ChatHeader/index.tsx`, `src/modules/chat/components/ChatRoomMessages/index.tsx`, `src/modules/chat/components/ChatMessageBubble/index.tsx`, `src/lib/108heros-client/src/types/ChatMessage.ts`, `src/translations/{en,th,vi}.ts`.
 
 **Modify (backend):** `crates/chat_realtime/src/protocol/api.rs`, `crates/chat_realtime/src/broker/bridge_message.rs`, `crates/db/src/impls/chat_message.rs`.
 
@@ -64,7 +64,7 @@
 
 ## Task 1: Backend — explicit `assetId` on the websocket payload
 
-Work in `/Users/koeyl/108-ecosystem/108jobs/api-108jobs/.worktrees/chat-attachment-asset-id`.
+Work in `/Users/koeyl/108-ecosystem/108heros/api-108jobs/.worktrees/chat-attachment-asset-id`.
 
 **Why:** `extract_asset_id` parses `content` as JSON. Encrypted content is ciphertext, so `chat_message.asset_id` stays NULL and `media_proxy` 404s. An explicit field is the only way to persist it without reading the ciphertext.
 
@@ -147,7 +147,7 @@ Append to the `extract_asset_id_tests` module at the bottom of `crates/chat_real
 - [ ] **Step 2: Run the tests to verify they fail**
 
 ```bash
-cargo test --package app_108jobs_chat_realtime asset_id_tests 2>&1 | tail -20
+cargo test --package app_108heros_chat_realtime asset_id_tests 2>&1 | tail -20
 ```
 
 Expected: FAIL — `MessageModel` has no field named `asset_id`.
@@ -188,7 +188,7 @@ In `crates/chat_realtime/src/broker/bridge_message.rs`, replace the `asset_id` l
 - [ ] **Step 5: Run the tests to verify they pass**
 
 ```bash
-cargo test --package app_108jobs_chat_realtime asset_id_tests 2>&1 | tail -20
+cargo test --package app_108heros_chat_realtime asset_id_tests 2>&1 | tail -20
 ```
 
 Expected: PASS — 9 tests (4 pre-existing `extract_asset_id` + 5 new).
@@ -257,9 +257,9 @@ Write `two_rooms` and `insert_message_with_asset` as local helpers in the same m
 Bring up the database first (see Task 21 for the full environment):
 
 ```bash
-export app_108jobs_DATABASE_URL="postgres://app_108jobs:password@localhost:5432/app_108jobs"
-export DATABASE_URL="$app_108jobs_DATABASE_URL"
-export app_108jobs_CONFIG_LOCATION="$PWD/config/config.ci.hjson"
+export app_108heros_DATABASE_URL="postgres://app_108heros:password@localhost:5432/app_108heros"
+export DATABASE_URL="$app_108heros_DATABASE_URL"
+export app_108heros_CONFIG_LOCATION="$PWD/config/config.ci.hjson"
 cargo nextest run --profile ci -E 'test(find_by_asset_id_returns_the_earliest_binding)' 2>&1 | tail -20
 ```
 
@@ -319,7 +319,7 @@ existing binding, so membership was checked against the wrong room."
 
 ## Task 3: Attachment kinds and MIME classification
 
-All remaining tasks work in `/Users/koeyl/108-ecosystem/108jobs/108jobs-clean/.worktrees/chat-media-search`.
+All remaining tasks work in `/Users/koeyl/108-ecosystem/108heros/108heros-clean/.worktrees/chat-media-search`.
 
 **Files:**
 - Create: `src/modules/chat/attachments/types.ts`
@@ -724,7 +724,7 @@ git commit -m "feat(chat): parse a file envelope safely, once, in one place"
 Create `src/modules/chat/attachments/collectAttachments.test.ts`:
 
 ```ts
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import {describe, expect, it} from "vitest";
 
 import {collectAttachments} from "@/modules/chat/attachments/collectAttachments";
@@ -826,7 +826,7 @@ export function compareNewestFirst(a: TimelineOrdered, b: TimelineOrdered): numb
 Create `src/modules/chat/attachments/collectAttachments.ts`:
 
 ```ts
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 
 import {compareNewestFirst} from "@/modules/chat/utils/ordering";
 
@@ -1381,7 +1381,7 @@ storage handle. MAD validates neither, so both failed silently."
 ## Task 9: Thread `assetId` onto the wire
 
 **Files:**
-- Modify: `src/lib/108jobs-client/src/types/ChatMessage.ts`
+- Modify: `src/lib/108heros-client/src/types/ChatMessage.ts`
 - Modify: `src/modules/chat/types/common.ts` (`MessagePayload`)
 - Modify: `src/modules/chat/events/sendEvents.ts` (`sendChatMessage`)
 - Modify: `src/modules/chat/utils/structured.ts` (`sendStructured`)
@@ -1443,7 +1443,7 @@ Expected: FAIL — `assetId` is not on the sent payload.
 
 - [ ] **Step 3: Write the implementation**
 
-In `src/lib/108jobs-client/src/types/ChatMessage.ts`, add to the `ChatMessage` type:
+In `src/lib/108heros-client/src/types/ChatMessage.ts`, add to the `ChatMessage` type:
 
 ```ts
   /**
@@ -1506,8 +1506,8 @@ and change the final send call:
 
 ```bash
 pnpm vitest run src/modules/chat/events/sendEvents.test.ts
-(cd src/lib/108jobs-client && pnpm build)
-rm -rf node_modules/.pnpm/file+src+lib+108jobs-client && pnpm install
+(cd src/lib/108heros-client && pnpm build)
+rm -rf node_modules/.pnpm/file+src+lib+108heros-client && pnpm install
 pnpm vitest run src/modules/chat/
 ```
 
@@ -1517,7 +1517,7 @@ Expected: PASS. The rebuild-and-reinstall is required — pnpm copies the sub-pa
 
 ```bash
 git rev-parse --abbrev-ref HEAD
-git add src/lib/108jobs-client/src/types/ChatMessage.ts src/modules/chat/types/common.ts src/modules/chat/events/sendEvents.ts src/modules/chat/utils/structured.ts src/modules/chat/events/sendEvents.test.ts
+git add src/lib/108heros-client/src/types/ChatMessage.ts src/modules/chat/types/common.ts src/modules/chat/events/sendEvents.ts src/modules/chat/utils/structured.ts src/modules/chat/events/sendEvents.test.ts
 git commit -m "feat(chat): send an attachment's asset id beside its content"
 ```
 
@@ -1937,7 +1937,7 @@ Update the imports at the top of the file:
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {fetchHistoryPage} from '@/modules/chat/utils/chatSocketUtils';
 import {runBackfill, type BackfillOutcome} from '@/modules/chat/hooks/historyBackfill';
-import {ChatMessage} from "108jobs-client";
+import {ChatMessage} from "108heros-client";
 ```
 
 and extend the result type:
@@ -2267,7 +2267,7 @@ git commit -m "feat(chat): a store for panel tabs, backfill state and jumps"
 Create `src/modules/chat/search/searchMessages.test.ts`:
 
 ```ts
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import {describe, expect, it} from "vitest";
 
 import {searchMessages} from "@/modules/chat/search/searchMessages";
@@ -2380,7 +2380,7 @@ Expected: FAIL — cannot resolve `@/modules/chat/search/searchMessages`.
 Create `src/modules/chat/search/searchMessages.ts`:
 
 ```ts
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 
 import {parseAttachment} from "@/modules/chat/attachments";
 import {compareNewestFirst} from "@/modules/chat/utils/ordering";
@@ -3363,7 +3363,7 @@ Create `src/modules/chat/components/ChatMediaPanel/index.tsx`:
 ```tsx
 "use client";
 
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import React from "react";
 import {useTranslation} from "react-i18next";
 
@@ -3733,7 +3733,7 @@ Create `src/modules/chat/components/ChatSearchPanel/index.tsx`:
 ```tsx
 "use client";
 
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 import React from "react";
 import {useTranslation} from "react-i18next";
 import {Search, X} from "lucide-react";
@@ -3998,7 +3998,7 @@ git commit -m "feat(chat): search within the open conversation"
 - [ ] **Step 1: Frontend**
 
 ```bash
-cd /Users/koeyl/108-ecosystem/108jobs/108jobs-clean/.worktrees/chat-media-search
+cd /Users/koeyl/108-ecosystem/108heros/108heros-clean/.worktrees/chat-media-search
 pnpm test:unit 2>&1 | tail -8
 pnpm lint 2>&1 | tail -10
 pnpm build 2>&1 | tail -20
@@ -4009,11 +4009,11 @@ Expected: all three succeed. The suite must be **at least** 18 files / 160 tests
 - [ ] **Step 2: Backend — bring up a clean database**
 
 ```bash
-cd /Users/koeyl/108-ecosystem/108jobs/api-108jobs/.worktrees/chat-attachment-asset-id
-export app_108jobs_DATABASE_URL="postgres://app_108jobs:password@localhost:5432/app_108jobs"
-export DATABASE_URL="$app_108jobs_DATABASE_URL"
-export app_108jobs_CONFIG_LOCATION="$PWD/config/config.ci.hjson"
-export app_108jobs_TEST_FAST_FEDERATION=1
+cd /Users/koeyl/108-ecosystem/108heros/api-108jobs/.worktrees/chat-attachment-asset-id
+export app_108heros_DATABASE_URL="postgres://app_108heros:password@localhost:5432/app_108heros"
+export DATABASE_URL="$app_108heros_DATABASE_URL"
+export app_108heros_CONFIG_LOCATION="$PWD/config/config.ci.hjson"
+export app_108heros_TEST_FAST_FEDERATION=1
 ```
 
 Read `api-108jobs/CLAUDE.md` before running these — it documents the exact database bring-up, why the config path must be absolute, and why `--profile ci` (which pins `test-threads = 1`) is not optional.

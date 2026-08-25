@@ -1,9 +1,9 @@
-# 108jobs-client
+# 108heros-client
 
-A TypeScript HTTP client and type system for the [108jobs
+A TypeScript HTTP client and type system for the [108heros
 API](https://github.com/108-Plaza/api-108jobs).
 
-This package is vendored into `108jobs-web` at `src/lib/108jobs-client` and
+This package is vendored into `108jobs-web` at `src/lib/108heros-client` and
 consumed through a `file:` dependency. It is not published to npm.
 
 ## Where it came from
@@ -11,19 +11,19 @@ consumed through a `file:` dependency. It is not published to npm.
 It began as a fork of
 [lemmy-js-client](https://github.com/LemmyNet/lemmy-js-client) — that is why
 `CHANGELOG.md` records other people's releases up to the fork point, and why
-some type names still read like Lemmy's. The API it speaks to is 108jobs's
+some type names still read like Lemmy's. The API it speaks to is 108heros's
 own; the Lemmy lineage is history rather than a dependency, and nothing here
 talks to a Lemmy instance.
 
 ## Usage
 
 ```ts
-import { Api108Jobs } from "108jobs-client";
+import { Api108Heros } from "108heros-client";
 
 // The base URL goes without the version — the client appends `/api/vX` itself.
-const client = new Api108Jobs("https://api.108jobs.com");
+const client = new Api108Heros("https://api.108jobs.com");
 
-// Bearer tokens are Identity-Platform's, not this API's: 108jobs verifies
+// Bearer tokens are Identity-Platform's, not this API's: 108heros verifies
 // them, it does not issue them. See `docs/` in api-108jobs for the split.
 client.setHeaders({ Authorization: `Bearer ${accessToken}` });
 ```

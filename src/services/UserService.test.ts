@@ -385,7 +385,7 @@ describe("UserService refresh scheduling with Web Locks", () => {
     await vi.advanceTimersByTimeAsync(61_000);
 
     expect(mockLocksRequest).toHaveBeenCalledTimes(1);
-    expect(mockLocksRequest).toHaveBeenCalledWith("108jobs-refresh-token-lock", expect.any(Function));
+    expect(mockLocksRequest).toHaveBeenCalledWith("108heros-refresh-token-lock", expect.any(Function));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/auth/refresh", expect.objectContaining({ method: "POST" }));
   });

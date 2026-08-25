@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import {Person} from "108jobs-client";
+import {Person} from "108heros-client";
 import ProfileHero from "@/components/Profile/ProfileHero";
 import AboutCard from "@/components/Profile/AboutCard";
 import SkillsCard from "@/components/Profile/SkillsCard";

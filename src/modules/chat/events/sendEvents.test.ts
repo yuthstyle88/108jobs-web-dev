@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ChatMessage } from "108jobs-client";
+import type { ChatMessage } from "108heros-client";
 import { sendChatMessage, sendDeliveryAck, sendReadReceipt, sendTyping } from "@/modules/chat/events/sendEvents";
 import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 import { useChatStore } from "@/modules/chat/store/chatStore";

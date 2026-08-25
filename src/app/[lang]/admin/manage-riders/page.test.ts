@@ -12,7 +12,7 @@ import {act, createElement} from "react";
 import {createRoot, type Root} from "react-dom/client";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {ReactNode} from "react";
-import type {Rider, RiderView} from "108jobs-client";
+import type {Rider, RiderView} from "108heros-client";
 
 vi.mock("@/modules/admin/hooks/usePaginatedRiders", () => ({usePaginatedRiders: vi.fn()}));
 vi.mock("@/modules/admin/components/layout/AdminLayout", () => ({

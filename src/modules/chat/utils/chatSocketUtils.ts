@@ -8,7 +8,7 @@ import type {
     ChatRoomId,
     ChatStatus,
     LocalUserId
-} from "108jobs-client";
+} from "108heros-client";
 import {decrypt} from "@/utils";
 import {REQUEST_STATE} from "@/services/HttpService";
 import {dbg} from "@/modules/chat/utils/helpers";
@@ -548,7 +548,7 @@ export async function fetchHistoryPage(
     deps: {
         localUserId: number;
         receivedSet: Set<string>;
-        broadcast?: (m: import("108jobs-client").ChatMessage) => void;
+        broadcast?: (m: import("108heros-client").ChatMessage) => void;
     }
 ) {
 

@@ -2,7 +2,7 @@
 
 import {useCallback, useRef, useState} from 'react';
 import {useTranslation} from 'react-i18next';
-import {Person, SaveUserSettings} from '108jobs-client';
+import {Person, SaveUserSettings} from '108heros-client';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useHttpPost} from '@/hooks/api/http/useHttpPost';
 import {REQUEST_STATE} from '@/services/HttpService';

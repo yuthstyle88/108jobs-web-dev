@@ -15,8 +15,8 @@ import {act, createElement} from "react";
 import {createRoot, type Root} from "react-dom/client";
 import {renderToStaticMarkup} from "react-dom/server";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import type {GetRiderResponse, Rider, RiderApplicationView} from "108jobs-client";
-import {ApiRequestError} from "108jobs-client";
+import type {GetRiderResponse, Rider, RiderApplicationView} from "108heros-client";
+import {ApiRequestError} from "108heros-client";
 import {en} from "@/translations/en";
 import {th} from "@/translations/th";
 import {vi as viTranslation} from "@/translations/vi";
@@ -820,7 +820,7 @@ describe("RiderReviewModal rendering", () => {
         //
         // err is a real ApiRequestError, not a plain {error: ...} literal.
         // That is the shape the client actually throws
-        // (src/lib/108jobs-client/src/http.ts:1895's `new ApiRequestError(
+        // (src/lib/108heros-client/src/http.ts:1895's `new ApiRequestError(
         // json.error ?? ..., json.message)`, whose constructor sets
         // `this.name` -- there is no `.error` property on the thrown
         // object). A plain-object mock with an `.error` key would exercise

@@ -4,7 +4,7 @@ import {notFound, useRouter} from "next/navigation";
 import useNotification from "@/hooks/ui/useNotification";
 import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {CreatePost, IntendedUse, JobType, PostId, PostView, Tag} from "108jobs-client";
+import {CreatePost, IntendedUse, JobType, PostId, PostView, Tag} from "108heros-client";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCoins, faExclamationCircle, faInfoCircle} from "@fortawesome/free-solid-svg-icons";
 import {z} from "zod";

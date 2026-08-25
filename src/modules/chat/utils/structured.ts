@@ -1,5 +1,5 @@
 import {v4 as uuidv4} from 'uuid';
-import {LocalUserId} from "108jobs-client";
+import {LocalUserId} from "108heros-client";
 import {WsMessageSender} from "@/modules/chat/types";
 
 export type Structured = Record<string, unknown>;

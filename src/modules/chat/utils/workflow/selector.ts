@@ -1,4 +1,4 @@
-import type {WorkflowStatus} from "108jobs-client";
+import type {WorkflowStatus} from "108heros-client";
 import {WORKFLOW_TRANSITIONS} from "@/modules/chat/types/workflow";
 
 export const can = <E extends keyof (typeof WORKFLOW_TRANSITIONS)[WorkflowStatus]>(ev: E) =>

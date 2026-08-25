@@ -650,29 +650,29 @@ In `src/translations/vi.ts`, the same insertion (Vietnamese copy):
 
 In `src/translations/en.ts`, find:
 ```ts
-                        managePicture: {title: "Manage Picture", description: "Manage picture for 108jobs"},
+                        managePicture: {title: "Manage Picture", description: "Manage picture for 108heros"},
 ```
 Change to:
 ```ts
-                        managePicture: {title: "Site Appearance", description: "Manage picture for 108jobs"},
+                        managePicture: {title: "Site Appearance", description: "Manage picture for 108heros"},
 ```
 
 In `src/translations/th.ts`, find:
 ```ts
-                        managePicture: {title: "จัดการรูปภาพ", description: "จัดการรูปภาพสำหรับ 108jobs"},
+                        managePicture: {title: "จัดการรูปภาพ", description: "จัดการรูปภาพสำหรับ 108heros"},
 ```
 Change to:
 ```ts
-                        managePicture: {title: "รูปลักษณ์เว็บไซต์", description: "จัดการรูปภาพสำหรับ 108jobs"},
+                        managePicture: {title: "รูปลักษณ์เว็บไซต์", description: "จัดการรูปภาพสำหรับ 108heros"},
 ```
 
 In `src/translations/vi.ts`, find:
 ```ts
-                        managePicture: {title: "Quản lý hình ảnh", description: "Quản lý hình ảnh cho 108jobs"},
+                        managePicture: {title: "Quản lý hình ảnh", description: "Quản lý hình ảnh cho 108heros"},
 ```
 Change to:
 ```ts
-                        managePicture: {title: "Giao diện trang web", description: "Quản lý hình ảnh cho 108jobs"},
+                        managePicture: {title: "Giao diện trang web", description: "Quản lý hình ảnh cho 108heros"},
 ```
 
 (Only each `title` value changes — `description` stays exactly as it is in all three files.)
@@ -1245,7 +1245,7 @@ Current (lines 1-23, the full top of the file):
 ```tsx
 import {User, Mail, Calendar, FileText, X} from "lucide-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
-import {LocalUserView} from "108jobs-client";
+import {LocalUserView} from "108heros-client";
 
 interface UserDetailModalProps {
     isOpen: boolean;
@@ -1273,7 +1273,7 @@ Change to:
 import {useEffect} from "react";
 import {User, Mail, Calendar, FileText, X} from "lucide-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
-import {LocalUserView} from "108jobs-client";
+import {LocalUserView} from "108heros-client";
 
 interface UserDetailModalProps {
     isOpen: boolean;

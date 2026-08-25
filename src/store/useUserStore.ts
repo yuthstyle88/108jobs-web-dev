@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import {LocalUser, MyUserInfo, Person} from "108jobs-client";
+import {LocalUser, MyUserInfo, Person} from "108heros-client";
 
 type UserStore = {
   user: LocalUser | null;

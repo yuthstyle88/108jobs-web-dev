@@ -2,7 +2,7 @@ import {create} from 'zustand';
 
 import {useUnreadStore} from '@/modules/chat/store/unreadStore';
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
-import {ChatParticipantView, LocalUserId} from "108jobs-client";
+import {ChatParticipantView, LocalUserId} from "108heros-client";
 import {RoomView} from "@/modules/chat/types";
 
 // Utility functions for store interactions

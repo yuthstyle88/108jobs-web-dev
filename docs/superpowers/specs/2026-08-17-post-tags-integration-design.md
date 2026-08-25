@@ -27,7 +27,7 @@ anomaly rather than the rule. So the backend sends `ap_id`, `display_name`,
 `categoryId`, `publishedAt`. `displayName` — the only field anyone renders —
 resolves to `undefined`.
 
-The cause is `src/lib/108jobs-client/src/convert-to-camel.ts`, a codemod that
+The cause is `src/lib/108heros-client/src/convert-to-camel.ts`, a codemod that
 rewrites every type property from snake to camel without checking whether the
 Rust struct opted in. It is the same mechanism that left `PostActions` and
 `ProposalActions` mis-cased.
@@ -252,10 +252,10 @@ until it is.
 `Tag` change is an attribute addition, so the gate that matters is that nothing
 which asserts on serialized tag JSON breaks.
 
-`108jobs-clean` has no component-test infrastructure, matching every prior batch
+`108heros-clean` has no component-test infrastructure, matching every prior batch
 here. `npx tsc --noEmit` and `npx eslint` are the mechanical gates, and after
-any edit under `src/lib/108jobs-client/src/` **both** `npm run build` in the
-package and `pnpm install` at the root are required — `node_modules/108jobs-client`
+any edit under `src/lib/108heros-client/src/` **both** `npm run build` in the
+package and `pnpm install` at the root are required — `node_modules/108heros-client`
 resolves to a hard copy, so building without reinstalling leaves `tsc` reading
 the old shape.
 

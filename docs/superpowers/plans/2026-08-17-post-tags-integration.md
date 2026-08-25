@@ -4,9 +4,9 @@
 
 **Goal:** Make the existing backend tag system usable — correct its wire casing, give the client methods for it, let admins manage tags, let posters apply them, and show them on posts.
 
-**Architecture:** One small `api-108jobs` change (a serde attribute), then four `108jobs-clean` changes. The two repos decouple cleanly: the client's `Tag.ts` already declares camelCase, so it becomes correct the moment the backend ships and needs no edit of its own. Only manual verification needs the backend deployed.
+**Architecture:** One small `api-108jobs` change (a serde attribute), then four `108heros-clean` changes. The two repos decouple cleanly: the client's `Tag.ts` already declares camelCase, so it becomes correct the moment the backend ships and needs no edit of its own. Only manual verification needs the backend deployed.
 
-**Tech Stack:** Rust/serde/actix (api-108jobs); TypeScript, Next.js 16, react-hook-form + zod, pnpm (108jobs-clean).
+**Tech Stack:** Rust/serde/actix (api-108jobs); TypeScript, Next.js 16, react-hook-form + zod, pnpm (108heros-clean).
 
 **Spec:** `docs/superpowers/specs/2026-08-17-post-tags-integration-design.md`
 
@@ -16,19 +16,19 @@
 - **Only `Tag` gets `rename_all`.** `PostTag` is write-path only and never serialized — do not touch it. Do not add the attribute to any other struct; a wider casing audit is explicitly out of scope.
 - **Do not implement tag filtering.** `Tag`'s doc comment promises "displayed and filtered on", but filtering does not exist and is out of scope. Chips are display only — not links, not filter controls.
 - **Every user-facing string needs `en`/`th`/`vi`** in `src/translations/`, matching each locale's existing wording. Never leave English in `th.ts` or `vi.ts`.
-- **After ANY edit under `src/lib/108jobs-client/src/`, run BOTH commands, in this order:**
+- **After ANY edit under `src/lib/108heros-client/src/`, run BOTH commands, in this order:**
   ```bash
-  cd src/lib/108jobs-client && npm run build && cd - && pnpm install
+  cd src/lib/108heros-client && npm run build && cd - && pnpm install
   ```
-  `node_modules/108jobs-client` resolves to a hard copy, not a link. Building without reinstalling leaves `tsc` reading the old shape.
-- **Every 108jobs-clean task ends with `npx tsc --noEmit` and `npx eslint` clean** before its commit.
+  `node_modules/108heros-client` resolves to a hard copy, not a link. Building without reinstalling leaves `tsc` reading the old shape.
+- **Every 108heros-clean task ends with `npx tsc --noEmit` and `npx eslint` clean** before its commit.
 - Commit with `git add -A src/ tsconfig.tsbuildinfo` — an untracked `.claude/worktrees/` directory holds another session's work and must never be committed.
 
 ---
 
 ### Task 1: Give `Tag` camelCase wire keys (api-108jobs)
 
-Repo: `/Users/koeyl/108-ecosystem/108jobs/api-108jobs`. This is the only task in that repo. Work on a branch off `main`; `Cargo.lock` is intentionally dirty there and must be left alone.
+Repo: `/Users/koeyl/108-ecosystem/108heros/api-108jobs`. This is the only task in that repo. Work on a branch off `main`; `Cargo.lock` is intentionally dirty there and must be left alone.
 
 **Files:**
 - Modify: `crates/db/src/source/tag.rs`
@@ -83,15 +83,15 @@ git add crates/db/src/source/tag.rs && git commit -m "fix(tag): serialize Tag wi
 ### Task 2: Add the three client tag methods
 
 **Files:**
-- Modify: `src/lib/108jobs-client/src/http.ts`
+- Modify: `src/lib/108heros-client/src/http.ts`
 
 **Interfaces:**
-- Consumes: `CreateCategoryTag`, `UpdateCategoryTag`, `DeleteCategoryTag` (already exist in `src/lib/108jobs-client/src/types/`), and `Tag` as the response type.
+- Consumes: `CreateCategoryTag`, `UpdateCategoryTag`, `DeleteCategoryTag` (already exist in `src/lib/108heros-client/src/types/`), and `Tag` as the response type.
 - Produces: `createCategoryTag`, `updateCategoryTag`, `deleteCategoryTag` — used by Task 3.
 
 - [ ] **Step 1: Read the shape of an existing category method**
 
-Open `src/lib/108jobs-client/src/http.ts` and read the `createCategory` method (search `@Post("/category")`). Your three methods copy its structure exactly: decorators, `@Tags(...)`, `#wrapper<Request, Response>` call, JSDoc `@summary`. Match it rather than inventing a shape.
+Open `src/lib/108heros-client/src/http.ts` and read the `createCategory` method (search `@Post("/category")`). Your three methods copy its structure exactly: decorators, `@Tags(...)`, `#wrapper<Request, Response>` call, JSDoc `@summary`. Match it rather than inventing a shape.
 
 - [ ] **Step 2: Add the three methods**
 
@@ -108,14 +108,14 @@ Add the three type imports at the top alongside the other type imports.
 - [ ] **Step 3: Verify the response type against the backend**
 
 ```bash
-grep -n -A 6 "pub async fn create_category_tag" /Users/koeyl/108-ecosystem/108jobs/api-108jobs/crates/category/src/create_tag.rs
+grep -n -A 6 "pub async fn create_category_tag" /Users/koeyl/108-ecosystem/108heros/api-108jobs/crates/category/src/create_tag.rs
 ```
 Confirm what the handler returns. If it is not a bare `Tag`, use the type it actually returns and say so in your report — do not assume.
 
 - [ ] **Step 4: Rebuild, reinstall, verify**
 
 ```bash
-cd src/lib/108jobs-client && npm run build && cd - && pnpm install && npx tsc --noEmit
+cd src/lib/108heros-client && npm run build && cd - && pnpm install && npx tsc --noEmit
 ```
 Expected: clean.
 
@@ -149,7 +149,7 @@ Show a "no tags yet" empty state rather than an empty row.
 
 - [ ] **Step 3: Add tag create**
 
-An "Add tag" control per category, opening the page's existing modal pattern with a single name field. On submit call `createCategoryTag({categoryId, displayName})` — confirm the exact request field names against `src/lib/108jobs-client/src/types/CreateCategoryTag.ts` rather than assuming. Refetch the category list on success.
+An "Add tag" control per category, opening the page's existing modal pattern with a single name field. On submit call `createCategoryTag({categoryId, displayName})` — confirm the exact request field names against `src/lib/108heros-client/src/types/CreateCategoryTag.ts` rather than assuming. Refetch the category list on success.
 
 - [ ] **Step 4: Add tag rename and delete**
 
@@ -274,7 +274,7 @@ git add -A src/ tsconfig.tsbuildinfo && git commit -m "feat(jobs): show a post's
 
 - [ ] **Step 1: Add the missing `tags` field to `EditPost.ts`**
 
-The backend's `EditPost` struct accepts `pub tags: Option<Vec<TagId>>` (`crates/db/src/source/post_view/api.rs`, line ~15), but `src/lib/108jobs-client/src/types/EditPost.ts` declares no `tags` field at all. Task 4's edit path works only because it spreads the payload — TypeScript does not apply excess-property checks through a spread — so tags reach the wire despite the type not describing them.
+The backend's `EditPost` struct accepts `pub tags: Option<Vec<TagId>>` (`crates/db/src/source/post_view/api.rs`, line ~15), but `src/lib/108heros-client/src/types/EditPost.ts` declares no `tags` field at all. Task 4's edit path works only because it spreads the payload — TypeScript does not apply excess-property checks through a spread — so tags reach the wire despite the type not describing them.
 
 That is drift of exactly the kind this package keeps producing: the type stops describing the wire, and the next person to touch it guesses. It is the same defect Task 2 fixed on `UpdateCategoryTag`.
 
@@ -286,9 +286,9 @@ Add, matching how `CreatePost.ts` declares the same field:
 
 with the `TagId` import alongside the file's existing type imports. Check `CreatePost.ts` first and mirror its declaration exactly rather than inventing a shape.
 
-Then rebuild and reinstall — this is an edit under `src/lib/108jobs-client/src/`:
+Then rebuild and reinstall — this is an edit under `src/lib/108heros-client/src/`:
 ```bash
-cd src/lib/108jobs-client && npm run build && cd - && pnpm install
+cd src/lib/108heros-client && npm run build && cd - && pnpm install
 ```
 
 Confirm the spread in `PostForm` still compiles, and say in your report whether the field is now carried by the declared type rather than only by the spread.
@@ -296,7 +296,7 @@ Confirm the spread in `PostForm` still compiles, and say in your report whether 
 - [ ] **Step 2: Full gates**
 
 ```bash
-cd src/lib/108jobs-client && npm run build && cd - && pnpm install
+cd src/lib/108heros-client && npm run build && cd - && pnpm install
 npx tsc --noEmit && npx eslint src --ext .ts,.tsx
 ```
 Expected: `tsc` clean; eslint 0 errors. Pre-existing warnings in untouched files are reported, not fixed.

@@ -19,7 +19,7 @@ the backend (`api-108jobs`) already has a complete, admin-gated
 `crates/http/src/crud/site/update.rs`) supporting edits to name, sidebar,
 description, registration mode, email verification, OAuth registration, and
 all 7 rate-limit pairs — none of which is currently wired into the
-frontend's `108jobs-client` TS package. Per an explicit sequencing decision,
+frontend's `108heros-client` TS package. Per an explicit sequencing decision,
 that becomes its own follow-on batch ("Site Settings") with its own
 brainstorm/spec/plan, once this batch ships. Nothing in this spec touches
 that endpoint or adds any editing capability — this batch is a read-only
@@ -82,7 +82,7 @@ unrecognized string somehow appears (defensive, not expected in practice).
 (`UserServiceContext.tsx`) — not fetched by this page directly. If it's
 ever `null` when the dashboard renders (a cold client-only render, or the
 ISO hydration payload didn't include site data), every stat and info field
-silently falls back to `0`/`"N/A"`/`"108jobs"` with zero indication
+silently falls back to `0`/`"N/A"`/`"108heros"` with zero indication
 anything is missing or wrong — unlike the loading/error-state pattern
 every other admin page in this initiative now has. Since there's no
 page-level fetch to show a spinner for, the right shape here is different:

@@ -10,7 +10,7 @@
 
 ## Approved behavior
 
-`JobFlowContent` is the decision boundary for the Orders tab. A valid job ID, derived from the hydrated post first and the room's `postId` association as a fallback, renders a Job Details link followed by the existing workflow node. An absent job ID renders `HowToHireGuide`, which owns the prompt and the existing 108jobs-specific modal. `ChatSidebarTabs` remains responsible only for switching between Orders and Media.
+`JobFlowContent` is the decision boundary for the Orders tab. A valid job ID, derived from the hydrated post first and the room's `postId` association as a fallback, renders a Job Details link followed by the existing workflow node. An absent job ID renders `HowToHireGuide`, which owns the prompt and the existing 108heros-specific modal. `ChatSidebarTabs` remains responsible only for switching between Orders and Media.
 
 The avatar fix has two layers: Tailwind must scan `src/modules`, and the incoming message avatar is rendered inside a fixed, non-shrinking wrapper with a cover-fitted image. This fixes the root configuration error and prevents future message-card layout changes from stretching the image.
 

@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Lock name is exactly `"108jobs-refresh-token-lock"` (spec's Architecture section).
+- Lock name is exactly `"108heros-refresh-token-lock"` (spec's Architecture section).
 - `#refreshAccessToken` and `#handleRefreshFailure` are not modified in any way — only what calls them changes.
 - The freshness check reuses the existing `#REFRESH_MARGIN_MS` constant (60,000ms) — no new magic number for "how fresh is fresh enough."
 - No backend changes, no changes to `login()`, `setToken()`, `logout()`, cookie helpers, or any file other than `src/services/UserService.ts` and `src/services/UserService.test.ts`.
@@ -114,7 +114,7 @@ describe("UserService refresh scheduling with Web Locks", () => {
     await vi.advanceTimersByTimeAsync(61_000);
 
     expect(mockLocksRequest).toHaveBeenCalledTimes(1);
-    expect(mockLocksRequest).toHaveBeenCalledWith("108jobs-refresh-token-lock", expect.any(Function));
+    expect(mockLocksRequest).toHaveBeenCalledWith("108heros-refresh-token-lock", expect.any(Function));
     expect(refreshSpy).toHaveBeenCalledTimes(1);
     expect(refreshSpy).toHaveBeenCalledWith({ refreshToken: "a-refresh-token" });
   });
@@ -170,7 +170,7 @@ to:
     static readonly #REFRESH_MARGIN_MS = 60_000;
     static readonly #REFRESH_RETRY_DELAY_MS = 3_000;
     static readonly #MAX_REFRESH_RETRIES = 2;
-    static readonly #REFRESH_LOCK_NAME = "108jobs-refresh-token-lock";
+    static readonly #REFRESH_LOCK_NAME = "108heros-refresh-token-lock";
     #refreshTimer?: ReturnType<typeof setTimeout>;
 
     #scheduleRefresh() {

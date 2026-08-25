@@ -1,4 +1,4 @@
-import type {ChatMessage} from "108jobs-client";
+import type {ChatMessage} from "108heros-client";
 
 import {compareNewestFirst} from "@/modules/chat/utils/ordering";
 

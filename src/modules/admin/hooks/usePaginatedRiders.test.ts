@@ -21,7 +21,7 @@ import {createElement} from "react";
 import {act} from "react";
 import {createRoot, type Root} from "react-dom/client";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import type {RiderVerificationStatus} from "108jobs-client";
+import type {RiderVerificationStatus} from "108heros-client";
 
 vi.mock("@/hooks/api/http/useHttpGet", () => ({useHttpGet: vi.fn()}));
 vi.mock("react-i18next", () => ({

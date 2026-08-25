@@ -259,7 +259,7 @@ export async function uploadToMad(
 
 /**
  * A public asset is read straight from MAD; a private one is read back through
- * 108jobs's own media-proxy.
+ * 108heros's own media-proxy.
  *
  * That asymmetry is the point, not an inconsistency: the proxy is where room
  * membership is re-checked. Handing out MAD's own address for a private asset

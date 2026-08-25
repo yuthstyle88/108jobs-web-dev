@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  108jobs-client:
-    specifier: file:./src/lib/108jobs-client
-    version: file:src/lib/108jobs-client
+  108heros-client:
+    specifier: file:./src/lib/108heros-client
+    version: file:src/lib/108heros-client
   '@fortawesome/fontawesome-svg-core':
     specifier: ^7.1.0
     version: 7.1.0
@@ -9074,9 +9074,9 @@ packages:
       react: 19.2.0
     dev: false
 
-  file:src/lib/108jobs-client:
-    resolution: {directory: src/lib/108jobs-client, type: directory}
-    name: 108jobs-client
+  file:src/lib/108heros-client:
+    resolution: {directory: src/lib/108heros-client, type: directory}
+    name: 108heros-client
     dependencies:
       '@tsoa/runtime': 6.6.0
     transitivePeerDependencies:

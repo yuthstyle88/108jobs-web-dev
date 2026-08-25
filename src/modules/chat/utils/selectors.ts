@@ -1,6 +1,6 @@
 // src/modules/chat/utils/selectors.ts
 import memoizeOne from 'memoize-one';
-import type {ChatMessage} from '108jobs-client';
+import type {ChatMessage} from '108heros-client';
 
 // Merge & sort for a room (defensive against undefined inputs)
 function mergeRoomLists(

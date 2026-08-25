@@ -10,7 +10,7 @@ name, description, sidebar, registration mode, email verification, OAuth
 registration, several moderation/content-default toggles, and all 7
 rate-limit pairs — confirmed by reading the handler and its
 `EditSiteRequest` struct directly, today. None of it is wired into the
-frontend's `108jobs-client` TS package (confirmed: no `editSite`/
+frontend's `108heros-client` TS package (confirmed: no `editSite`/
 `updateSite` method exists in `http.ts`, and no `EditSiteRequest` type
 file exists at all).
 
@@ -49,7 +49,7 @@ Two things surfaced during re-verification that shape this spec:
 
 ## Design
 
-### A. Wire up the client (`src/lib/108jobs-client/`)
+### A. Wire up the client (`src/lib/108heros-client/`)
 
 This package is hand-maintained, not auto-generated across repos (every
 existing type file's `ts-rs`-generated header is a snapshot from when it
@@ -61,7 +61,7 @@ existing TS union types (`RegistrationMode`, `ListingType`,
 `PostSortType`, `PostListingMode`, `ProposalSortType` — confirmed all 5
 already exist as generated types).
 
-**New file:** `src/lib/108jobs-client/src/types/EditSiteRequest.ts` — one
+**New file:** `src/lib/108heros-client/src/types/EditSiteRequest.ts` — one
 optional field per `EditSiteRequest` field on the backend (36 fields:
 `name`, `sidebar`, `description`, `categoryCreationAdminOnly`,
 `requireEmailVerification`, `applicationQuestion`, `defaultTheme`,
@@ -75,7 +75,7 @@ optional field per `EditSiteRequest` field on the backend (36 fields:
 `contentWarning`, `oauthRegistration`, `disallowSelfPromotionContent`,
 `disableEmailNotifications`).
 
-**New file:** `src/lib/108jobs-client/src/types/SiteResponse.ts` — the
+**New file:** `src/lib/108heros-client/src/types/SiteResponse.ts` — the
 backend's `update_site` handler returns `SiteResponse {site_view}`, a
 different (smaller) shape than the existing `GetSiteResponse` (which also
 carries `admins`/`version`/`tagline`/`oauthProviders`/etc.). New type:
@@ -95,7 +95,7 @@ async updateSite(@Body() form: EditSiteRequest, @Inject() options?: RequestOptio
 
 ### B. Fix the stale captcha type
 
-**`src/lib/108jobs-client/src/types/PlatformConfig.ts`:** remove
+**`src/lib/108heros-client/src/types/PlatformConfig.ts`:** remove
 `captchaEnabled`/`captchaDifficulty` — these fields no longer exist in
 the real API response and the type has been lying about them being
 always-present since the backend change three weeks ago.

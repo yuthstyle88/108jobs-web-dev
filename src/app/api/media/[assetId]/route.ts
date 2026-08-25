@@ -17,7 +17,7 @@ const FORWARDED_RESPONSE_HEADERS = ["content-type", "content-length", "content-r
  *
  * The backend's `read_auth_token` accepts only an `Authorization: Bearer`
  * header or a cookie literally named `jwt`. This app's auth cookie is named
- * after `NEXT_PUBLIC_APP_NAME` (`108Jobs`), so a plain `<img src>` pointed
+ * after `NEXT_PUBLIC_APP_NAME` (`108Heros`), so a plain `<img src>` pointed
  * straight at the backend's `media-proxy` sends neither and is always `401`
  * -- confirmed against a real browser request. This route reads the token
  * server-side, where `getJwtFromRequest` already checks both cookie names,

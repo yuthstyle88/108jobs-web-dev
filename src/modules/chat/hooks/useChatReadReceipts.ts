@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useMemo} from "react";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
 import {isBrowser} from "@/utils";
-import {ChatMessage, ChatRoomId, LocalUserId} from "108jobs-client";
+import {ChatMessage, ChatRoomId, LocalUserId} from "108heros-client";
 
 interface UseChatReadReceiptsProps {
     roomId: ChatRoomId;

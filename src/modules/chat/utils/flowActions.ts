@@ -1,6 +1,6 @@
 import {FlowActions, StatusKey} from '@/modules/chat/components/FreelanceChatFlow';
 import {v4 as uuidv4} from 'uuid';
-import type {LocalUser} from '108jobs-client';
+import type {LocalUser} from '108heros-client';
 import {sendChatMessage} from "@/modules/chat/events";
 
 export type CreateFlowActionsDeps = {
