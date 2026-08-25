@@ -4094,6 +4094,7 @@ export const en = {
                 tabPending: "Pending",
                 tabApproved: "Approved",
                 tabRejected: "Rejected",
+                unresolvedCountLabel: "{{count}} awaiting a decision",
 
                 // Status & badges
                 statusPending: "Pending Review",

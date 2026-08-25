@@ -96,6 +96,7 @@ export type {ExchangeKeyResponse} from "./types/ExchangeKeyResponse";
 export type {MyUserInfo} from "./types/MyUserInfo";
 export type {OAuthProvider} from "./types/OAuthProvider";
 export type {OAuthProviderId} from "./types/OAuthProviderId";
+export type {NotificationCountResponse} from "./types/NotificationCountResponse";
 export type {PaginationCursor} from "./types/PaginationCursor";
 export type {Person} from "./types/Person";
 export type {PersonActions} from "./types/PersonActions";
