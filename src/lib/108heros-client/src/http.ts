@@ -166,7 +166,7 @@ export class Api108Heros extends Controller {
 
     /**
      * Generates a new instance of Api108Heros.
-     * @param baseUrl the base url, without the vX version: https://api.108jobs.com -> goes to https://api.108jobs.com/api/vX
+     * @param baseUrl the base url, without the vX version: https://api.108heros.com -> goes to https://api.108heros.com/api/vX
      * @param headers optional headers. Should contain `x-real-ip` and `x-forwarded-for` .
      */
     constructor(

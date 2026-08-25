@@ -17,7 +17,7 @@
     "spec": {
       "servers": [
         {
-          "url": "https://api.108jobs.com",
+          "url": "https://api.108heros.com",
           "description": "Production"
         },
         {

@@ -16,7 +16,7 @@ export const fetchLimit = 20;
 export const similarPostFetchLimit = 6;
 export const relTags = "noopener nofollow";
 export const emDash = "\u2014";
-export const authCookieName =  process.env.NEXT_PUBLIC_APP_NAME ?? "108jobs.com" ;
+export const authCookieName =  process.env.NEXT_PUBLIC_APP_NAME ?? "108heros.com" ;
 export const JWT =  "jwt";
 export const REFRESH_TOKEN_COOKIE = "refresh_token";
 export const adultConsentCookieKey = "adultConsent";
@@ -40,7 +40,7 @@ export const instanceLinkRegex = new RegExp(
   "g",
 );
 
-export const testHost = process.env.NEXT_PUBLIC_API_HOST_NAME ?? "108jobs.com";
+export const testHost = process.env.NEXT_PUBLIC_API_HOST_NAME ?? "108heros.com";
 
 export const validActorRegexPattern =
   "^\\w+|[\\p{Script=Arabic}\\d_]+|[\\p{Script=Cyrillic}\\d_]+$";
