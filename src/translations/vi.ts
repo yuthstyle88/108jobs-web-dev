@@ -4107,6 +4107,17 @@ export const vi = {
                 verifyFailed: "Xác minh tài khoản ngân hàng thất bại",
                 fetchError: "Không thể tải danh sách tài khoản ngân hàng. Vui lòng thử lại.",
             },
+            notifications: {
+                bellLabel: "Thông báo",
+                bellLabelWithCount: "Thông báo, {{count}} hồ sơ đang chờ duyệt",
+                panelTitle: "Đang chờ duyệt",
+                loading: "Đang tải…",
+                empty: "Không có hồ sơ nào đang chờ. Tất cả đã được duyệt.",
+                kindSubmitted: "Hồ sơ tài xế mới",
+                kindResubmitted: "Hồ sơ được gửi lại",
+                kindUnknown: "Cập nhật hồ sơ tài xế",
+                riderRef: "Tài xế #{{id}}",
+            },
             riders: {
                 // Page title & tabs
                 title: "Quản lý tài xế",

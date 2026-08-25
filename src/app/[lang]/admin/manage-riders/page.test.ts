@@ -14,8 +14,24 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 import type {ReactNode} from "react";
 import type {Rider, RiderView} from "108jobs-client";
 
+// The page reads the query string to open an application straight from the
+// notification bell, so it needs a router. Held in module-level boxes the tests
+// reassign, because vi.mock is hoisted above any per-test state.
+let currentSearch = new URLSearchParams();
+// Faithful to the real router: navigating changes what `useSearchParams` returns.
+// A `vi.fn()` that only records the call would let the deep-link tests pass while
+// the page's actual close path -- which works by dropping the parameter -- was
+// broken, because the URL would never stop naming the rider.
+const routerReplace = vi.fn((url: string) => {
+    currentSearch = new URLSearchParams(url.split("?")[1] ?? "");
+});
+vi.mock("next/navigation", () => ({
+    useRouter: () => ({replace: routerReplace, push: vi.fn(), prefetch: vi.fn()}),
+    useSearchParams: () => currentSearch,
+}));
 vi.mock("@/modules/admin/hooks/usePaginatedRiders", () => ({usePaginatedRiders: vi.fn()}));
 vi.mock("@/modules/admin/hooks/useUnresolvedRiderCount", () => ({useUnresolvedRiderCount: vi.fn()}));
+vi.mock("@/modules/admin/hooks/useAdminQueueRefresh", () => ({useAdminQueueRefresh: vi.fn()}));
 vi.mock("@/modules/admin/components/layout/AdminLayout", () => ({
     AdminLayout: ({children}: {children: ReactNode}) => children,
 }));
@@ -24,8 +40,18 @@ vi.mock("@/modules/admin/components/layout/AdminLayout", () => ({
 // modal has its own suite for that. No other test in this file opens the modal
 // (`reviewingRider` starts null), so the stub is inert for them.
 vi.mock("@/modules/admin/components/Modal/RiderReviewModal", () => ({
-    RiderReviewModal: ({onReviewed}: {onReviewed: () => void}) =>
-        createElement("button", {"data-testid": "stub-finish-review", onClick: onReviewed}),
+    RiderReviewModal: (
+        {rider, onReviewed, onClose}:
+            {rider: {id: number}; onReviewed: () => void; onClose: () => void},
+    ) =>
+        createElement("div", null,
+            createElement("button", {
+                "data-testid": "stub-finish-review",
+                "data-rider-id": String(rider.id),
+                onClick: onReviewed,
+            }),
+            createElement("button", {"data-testid": "stub-close-review", onClick: onClose}),
+        ),
 }));
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({t: (key: string) => key}),
@@ -33,6 +59,7 @@ vi.mock("react-i18next", () => ({
 
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
 import {useUnresolvedRiderCount} from "@/modules/admin/hooks/useUnresolvedRiderCount";
+import {useAdminQueueRefresh} from "@/modules/admin/hooks/useAdminQueueRefresh";
 import AdminRidersManagementPage from "@/app/[lang]/admin/manage-riders/page";
 
 // usePaginatedRiders is generic-free at the call site here, so the mock
@@ -40,6 +67,7 @@ import AdminRidersManagementPage from "@/app/[lang]/admin/manage-riders/page";
 // casts useHttpGet/useHttpPost -- gives mockReturnValue etc. without `any`.
 const mockUsePaginatedRiders = usePaginatedRiders as unknown as ReturnType<typeof vi.fn>;
 const mockUseUnresolvedRiderCount = useUnresolvedRiderCount as unknown as ReturnType<typeof vi.fn>;
+const mockUseAdminQueueRefresh = useAdminQueueRefresh as unknown as ReturnType<typeof vi.fn>;
 
 function fakeRider(overrides: Partial<Rider> = {}): Rider {
     return {
@@ -89,9 +117,10 @@ describe("AdminRidersManagementPage", () => {
         act(() => root.unmount());
         container.remove();
         vi.clearAllMocks();
+        currentSearch = new URLSearchParams();
     });
 
-    const refreshUnresolvedCount = vi.fn();
+    const refreshQueue = vi.fn();
 
     type HookState = ReturnType<typeof usePaginatedRiders> & {currentPage?: number};
 
@@ -100,11 +129,8 @@ describe("AdminRidersManagementPage", () => {
         overrides: Partial<HookState> = {},
         unresolved: number | null = null,
     ) {
-        mockUseUnresolvedRiderCount.mockReturnValue({
-            count: unresolved,
-            isLoading: false,
-            refresh: refreshUnresolvedCount,
-        });
+        mockUseUnresolvedRiderCount.mockReturnValue({count: unresolved, isLoading: false});
+        mockUseAdminQueueRefresh.mockReturnValue(refreshQueue);
         mockUsePaginatedRiders.mockReturnValue({
             riders,
             isLoading: false,
@@ -284,13 +310,13 @@ describe("AdminRidersManagementPage", () => {
 
         expect(darkThemeClasses).toEqual([]);
     });
-    // Found in a live smoke test, not by a unit test: rejecting a rider from
-    // the modal left the "Pending" badge one too high until the page was
-    // reloaded. The riders list refetched, so the row correctly disappeared --
-    // which made the stale number look all the more like the truth. The count
-    // is a separate SWR key, and `revalidateOnFocus` cannot save it here
-    // because the decision happens in this same, already-focused tab.
-    it("refetches the unresolved count after a decision, not just the riders list", () => {
+    // Found in a live smoke test, not by a unit test: deciding a rider from the
+    // modal left the queue's own numbers stale until the page was reloaded. The
+    // riders list refetched, so the row correctly disappeared -- which made the
+    // stale count look all the more like the truth. Both the badge and the
+    // bell's list are separate SWR keys, and `revalidateOnFocus` cannot save
+    // them here because the decision happens in this same, already-focused tab.
+    it("invalidates the whole queue after a decision, not just the riders list", () => {
         const refetch = vi.fn();
         mount([fakeRiderView("Somchai Test")], {refetch}, 1);
 
@@ -307,6 +333,101 @@ describe("AdminRidersManagementPage", () => {
         act(() => finish!.click());
 
         expect(refetch).toHaveBeenCalledTimes(1);
-        expect(refreshUnresolvedCount).toHaveBeenCalledTimes(1);
+        expect(refreshQueue).toHaveBeenCalledTimes(1);
+    });
+    // The bell hands over a rider id and nothing else, so the page has to be
+    // able to open an application it was not already showing.
+    it("opens the application named in the query string", () => {
+        currentSearch = new URLSearchParams("rider=7");
+        mount([fakeRiderView("Somchai Test")]);
+
+        const modal = container.querySelector('[data-testid="stub-finish-review"]');
+        expect(modal).not.toBeNull();
+        expect(modal!.getAttribute("data-rider-id")).toBe("7");
+    });
+
+    // The queue page shows ten rows at a time; a notification can easily name a
+    // rider sitting on page three. Opening only what happens to be on screen
+    // would make those notifications dead links.
+    it("opens a deep-linked rider who is not in the loaded page of results", () => {
+        currentSearch = new URLSearchParams("rider=904");
+        mount([fakeRiderView("Somebody Else")]);
+
+        const modal = container.querySelector('[data-testid="stub-finish-review"]');
+        expect(modal).not.toBeNull();
+        expect(modal!.getAttribute("data-rider-id")).toBe("904");
+    });
+
+    it("ignores a rider parameter that is not a usable id", () => {
+        currentSearch = new URLSearchParams("rider=not-a-number");
+        mount([fakeRiderView("Somchai Test")]);
+
+        expect(container.querySelector('[data-testid="stub-finish-review"]')).toBeNull();
+    });
+
+    // Closing has to drop the parameter as well as the state. If it only cleared
+    // state the modal would reopen immediately, because the URL still names the
+    // rider and the subject is derived from it.
+    it("clears the query parameter when a deep-linked application is closed", () => {
+        currentSearch = new URLSearchParams("rider=7");
+        mount([fakeRiderView("Somchai Test")]);
+
+        const close = container.querySelector<HTMLButtonElement>('[data-testid="stub-close-review"]');
+        act(() => close!.click());
+
+        expect(routerReplace).toHaveBeenCalledWith("/admin/manage-riders");
+
+        // Next re-renders the page on navigation; nothing in this bare jsdom
+        // setup does, and the close itself cannot trigger one -- it sets the
+        // manual subject to null when it is already null, which React skips.
+        // Rendering again is standing in for the router, not papering over a
+        // missing update: the assertion that matters is that the page no longer
+        // shows the application once the URL has stopped naming it.
+        act(() => {
+            root.render(createElement(AdminRidersManagementPage));
+        });
+        expect(container.querySelector('[data-testid="stub-finish-review"]')).toBeNull();
+    });
+
+    it("shows the application clicked in the queue even while a deep link is in the URL", () => {
+        currentSearch = new URLSearchParams("rider=7");
+        mount([fakeRiderView("Somchai Test")]);
+
+        const review = container.querySelector<HTMLButtonElement>(
+            '[aria-label="admin.riders.reviewRiderLabel"]',
+        );
+        act(() => review!.click());
+
+        // fakeRiderView's rider id, not the 7 still sitting in the URL.
+        expect(
+            container.querySelector('[data-testid="stub-finish-review"]')!.getAttribute("data-rider-id"),
+        ).toBe("1");
+    });
+    // Caught in a live click-through, not by a unit test. An earlier version
+    // remembered "the admin dismissed rider 7" so that closing felt instant.
+    // That made the rider unopenable from the bell for the rest of the page's
+    // life: selecting it again pushes the very same URL, and the remembered
+    // dismissal kept suppressing it. Closing has to be expressed as dropping the
+    // parameter, nothing more.
+    it("reopens the same rider after it was closed once", () => {
+        currentSearch = new URLSearchParams("rider=7");
+        mount([fakeRiderView("Somchai Test")]);
+
+        const close = container.querySelector<HTMLButtonElement>('[data-testid="stub-close-review"]');
+        act(() => close!.click());
+        act(() => {
+            root.render(createElement(AdminRidersManagementPage));
+        });
+        expect(container.querySelector('[data-testid="stub-finish-review"]')).toBeNull();
+
+        // The bell selecting rider 7 again -- the same URL as the first time.
+        currentSearch = new URLSearchParams("rider=7");
+        act(() => {
+            root.render(createElement(AdminRidersManagementPage));
+        });
+
+        const modal = container.querySelector('[data-testid="stub-finish-review"]');
+        expect(modal).not.toBeNull();
+        expect(modal!.getAttribute("data-rider-id")).toBe("7");
     });
 });

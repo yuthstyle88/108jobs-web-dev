@@ -36,8 +36,20 @@ import {
     IdentityMismatch,
 } from "108jobs-client";
 
+/**
+ * The two fields this modal actually reads off a rider. Narrowed from `Rider`
+ * so a caller who only knows a rider's id -- the notification panel, arriving
+ * from a deep link -- can open the modal without inventing the twenty other
+ * fields. A full `Rider` still satisfies it structurally, so the queue's own
+ * call site is unchanged.
+ *
+ * `verificationStatus` is only a placeholder here: the modal fetches the
+ * application and prefers `application.decision.status` the moment it lands.
+ */
+export type RiderReviewSubject = Pick<Rider, "id" | "verificationStatus">;
+
 interface RiderReviewModalProps {
-    rider: Rider;
+    rider: RiderReviewSubject;
     onClose: () => void;
     /** Called after a successful approve/reject so the page can close and refetch. */
     onReviewed: () => void;
