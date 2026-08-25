@@ -55,15 +55,15 @@ describe("next.config headers() CSP connect-src", () => {
   });
 
   it("allows a media public URL that differs from the gateway (e.g. a CDN in front of it)", async () => {
-    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.108jobs.com";
-    process.env.NEXT_PUBLIC_IDENTITY_BASE_URL = "https://identity.108jobs.com";
-    process.env.NEXT_PUBLIC_MEDIA_GATEWAY_URL = "https://media-gateway.108jobs.com";
-    process.env.NEXT_PUBLIC_MEDIA_PUBLIC_URL = "https://cdn.108jobs.com";
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.108heros.com";
+    process.env.NEXT_PUBLIC_IDENTITY_BASE_URL = "https://identity.108heros.com";
+    process.env.NEXT_PUBLIC_MEDIA_GATEWAY_URL = "https://media-gateway.108heros.com";
+    process.env.NEXT_PUBLIC_MEDIA_PUBLIC_URL = "https://cdn.108heros.com";
 
     const directive = await connectSrcDirective();
 
-    expect(directive).toContain("https://media-gateway.108jobs.com");
-    expect(directive).toContain("https://cdn.108jobs.com");
+    expect(directive).toContain("https://media-gateway.108heros.com");
+    expect(directive).toContain("https://cdn.108heros.com");
   });
 
   it("omits media origins entirely when unset, instead of injecting an empty source", async () => {

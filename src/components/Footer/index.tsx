@@ -75,11 +75,11 @@ const Footer = () => {
                             <Link
                                 className="hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
                                 prefetch={false}
-                                href="mailto:support@108jobs.com"
-                                title="Email support@108jobs.com"
+                                href="mailto:support@108heros.com"
+                                title="Email support@108heros.com"
                                 aria-label="Email support"
                             >
-                                support@108jobs.com
+                                support@108heros.com
                             </Link>
                         </li>
                         <li>

@@ -113,7 +113,7 @@ export default function BasicInformation() {
                             label={t('profileInfo.labelUsername')}
                             placeholder={t('profileInfo.labelUsername') || 'Enter username'}
                             error={errors.username}
-                            prefix="108jobs.com/profile/"
+                            prefix="108heros.com/profile/"
                             aria-describedby={errors.username ? 'username-error' : undefined}
                         />
                     </div>

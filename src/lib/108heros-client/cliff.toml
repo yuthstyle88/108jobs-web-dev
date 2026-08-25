@@ -7,7 +7,7 @@
 # somebody else's project.
 [remote.github]
 owner = "108-Plaza"
-repo = "108jobs-web"
+repo = "108heros-web"
 # token = ""
 
 [changelog]

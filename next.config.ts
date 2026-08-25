@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
 
     images: {
         // Not a server-leanness choice: avatars/photos come from an external
-        // CDN (cdn.108jobs.com) and from this app's own auth-gated same-origin
+        // CDN (cdn.108heros.com) and from this app's own auth-gated same-origin
         // proxies (/api/media/*, /api/rider-documents/*). Neither is allow-
         // listed via `remotePatterns`, and the proxied ones aren't even
         // guaranteed to return decodable image bytes -- Next's built-in
@@ -209,7 +209,7 @@ const nextConfig: NextConfig = {
             // the failed load and falls back to the real (slower,
             // retry-hardened) `/api/media/{assetId}` URL, but the composer's
             // preview has no such fallback, so it never renders at all.
-            "img-src 'self' data: blob: https://cdn.108jobs.com",
+            "img-src 'self' data: blob: https://cdn.108heros.com https://cdn.108jobs.com",
             // `<video>`/`<audio>` sources fall back to `default-src` when
             // `media-src` is unset, which -- like `img-src` before this
             // change -- does not cover `blob:` either. Spelled out
@@ -262,7 +262,7 @@ const nextConfig: NextConfig = {
         if (!process.env.API_INTERNAL_URL && process.env.NODE_ENV === 'production') {
             throw new Error('API_INTERNAL_URL must be set in production (refusing to fall back to the staging backend)');
         }
-        const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108jobs.com';
+        const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108heros.com';
         return {
             // Ensure these filesystem routes win before any proxying. This only
             // works for *non-dynamic* routes -- Next resolves static files and
@@ -306,7 +306,7 @@ const nextConfig: NextConfig = {
                 // See #86.
                 { source: '/api/rider-documents/:path*', destination: '/api/rider-documents/:path*' },
                 { source: '/api/:path*', destination: `${apiBase}/:path*` },
-                { source: '/uploads/:path*', destination: 'https://cdn.108jobs.com/uploads/:path*' },
+                { source: '/uploads/:path*', destination: 'https://cdn.108heros.com/uploads/:path*' },
             ],
             fallback: [],
         };
