@@ -77,7 +77,7 @@ export const seoTranslations: Record<SupportedLang, LangSeoData> = {
         "เลือกบริการจากฟรีแลนซ์คุณภาพทุกหมวดหมู่ ไม่ว่าจะเป็นออกแบบ การตลาด เขียนโปรแกรม และอื่นๆ บนแพลตฟอร์ม "+getAppName(),
     },
     login: {
-      title: "เข้าสู่ระบบ 108jobs.com",
+      title: "เข้าสู่ระบบ 108heros.com",
       description:
         "เข้าสู่ระบบเพื่อเริ่มต้นใช้งานแพลตฟอร์มฟรีแลนซ์อันดับ 1 ของไทย",
     },
@@ -155,7 +155,7 @@ export const seoTranslations: Record<SupportedLang, LangSeoData> = {
         "Browse quality freelance services across all categories – design, marketing, development and more, only on "+getAppName()+".",
     },
     login: {
-      title: "Authentication to 108jobs.com",
+      title: "Authentication to 108heros.com",
       description:
         "Sign in to manage your projects, hire freelancers and grow your business on "+getAppName()+".",
     },
@@ -233,7 +233,7 @@ export const seoTranslations: Record<SupportedLang, LangSeoData> = {
         "Khám phá các dịch vụ freelancer chất lượng trong mọi lĩnh vực: thiết kế, marketing, lập trình và nhiều hơn nữa tại "+getAppName()+".",
     },
     login: {
-      title: "Đăng nhập 108jobs.com",
+      title: "Đăng nhập 108heros.com",
       description:
         "Đăng nhập để quản lý dự án và thuê freelancer chất lượng trên nền tảng "+getAppName()+".",
     },

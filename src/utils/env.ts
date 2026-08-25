@@ -92,7 +92,7 @@ export function getStaticDir(): string {
   if (isBrowserEnv()) {
     return "/_next/static"; // browser always fetches via public path
   }
-  return process.env.NEXT_STATIC_DIR || "/var/www/apps/108jobs-front-dev/.next/static";
+  return process.env.NEXT_STATIC_DIR || "/var/www/apps/108heros-front-dev/.next/static";
 }
 
 /** Path helpers **/
