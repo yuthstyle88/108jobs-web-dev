@@ -14,7 +14,7 @@ import {useUnresolvedRiderCount} from "@/modules/admin/hooks/useUnresolvedRiderC
 const mockUseHttpGet = useHttpGet as unknown as ReturnType<typeof vi.fn>;
 
 /** Runs the hook body. It calls no React hook except `useMemo`, which is pure here. */
-function run() {
+function useHookHarness() {
     return useUnresolvedRiderCount();
 }
 
@@ -31,14 +31,14 @@ describe("useUnresolvedRiderCount", () => {
         // survive both, because a bigint reaching i18next's `count` renders
         // nothing at all and a `bigint > number` comparison throws.
         mockUseHttpGet.mockReturnValue({data: {count: 7n}, isLoading: false});
-        const {count} = run();
+        const {count} = useHookHarness();
         expect(count).toBe(7);
         expect(typeof count).toBe("number");
     });
 
     it("passes a plain number through unchanged — the real runtime shape", () => {
         mockUseHttpGet.mockReturnValue({data: {count: 3}, isLoading: false});
-        expect(run().count).toBe(3);
+        expect(useHookHarness().count).toBe(3);
     });
 
     it("is null before the first response, not zero", () => {
@@ -46,16 +46,16 @@ describe("useUnresolvedRiderCount", () => {
         // badge. Guessing it while loading would flash an empty queue at an
         // admin whose queue is not empty.
         mockUseHttpGet.mockReturnValue({data: undefined, isLoading: true});
-        expect(run().count).toBeNull();
+        expect(useHookHarness().count).toBeNull();
     });
 
     it("is null when the payload has no count at all", () => {
         mockUseHttpGet.mockReturnValue({data: {}, isLoading: false});
-        expect(run().count).toBeNull();
+        expect(useHookHarness().count).toBeNull();
     });
 
     it("zero stays zero rather than becoming null", () => {
         mockUseHttpGet.mockReturnValue({data: {count: 0}, isLoading: false});
-        expect(run().count).toBe(0);
+        expect(useHookHarness().count).toBe(0);
     });
 });

@@ -72,8 +72,9 @@ describe("AdminNotificationBell", () => {
     function mount(
         notifications: NotificationWithDecision[] = [],
         count: number | null = notifications.length,
+        isLoading = false,
     ) {
-        mockList.mockReturnValue({notifications, isLoading: false, error: null, refresh: vi.fn()});
+        mockList.mockReturnValue({notifications, isLoading, error: null, refresh: vi.fn()});
         mockCount.mockReturnValue({count, isLoading: false, refresh: vi.fn()});
         act(() => {
             root.render(createElement(AdminNotificationBell));
@@ -127,6 +128,31 @@ describe("AdminNotificationBell", () => {
         expect(label).toBe("admin.notifications.bellLabelWithCount");
     });
 
+    it("summarizes the pending count in the panel header", () => {
+        mount([fakeNotification()], 7);
+        openPanel();
+
+        expect(document.body.textContent).toContain("admin.notifications.pendingCount");
+        expect(document.body.textContent).toContain("admin.notifications.panelDescription");
+    });
+
+    it("announces the loading state while the notification list is requested", () => {
+        mount([], null, true);
+        openPanel();
+
+        const status = document.body.querySelector('[role="status"]');
+        expect(status?.textContent).toContain("admin.notifications.loading");
+    });
+
+    it("presents an intentional empty state when the queue is clear", () => {
+        mount([], 0);
+        openPanel();
+
+        const text = document.body.textContent ?? "";
+        expect(text).toContain("admin.notifications.emptyTitle");
+        expect(text).toContain("admin.notifications.empty");
+    });
+
     it("lists a row per waiting application, labelled by kind", () => {
         mount([
             fakeNotification({id: 1, riderId: 12, kind: "RiderApplicationSubmitted"}),
@@ -140,6 +166,18 @@ describe("AdminNotificationBell", () => {
         // this application has already been round once, which is exactly what the
         // count on its own cannot say.
         expect(text).toContain("admin.notifications.kindResubmitted");
+    });
+
+    it("gives submitted and resubmitted applications distinct status labels", () => {
+        mount([
+            fakeNotification({id: 1, riderId: 12, kind: "RiderApplicationSubmitted"}),
+            fakeNotification({id: 2, riderId: 13, kind: "RiderApplicationResubmitted"}),
+        ]);
+        openPanel();
+
+        const text = document.body.textContent ?? "";
+        expect(text).toContain("admin.notifications.badgeSubmitted");
+        expect(text).toContain("admin.notifications.badgeResubmitted");
     });
 
     it("opens the rider's application when a row is clicked", () => {
@@ -156,6 +194,20 @@ describe("AdminNotificationBell", () => {
         act(() => (row as HTMLElement).click());
 
         expect(routerPush).toHaveBeenCalledWith("/admin/manage-riders?rider=12");
+    });
+
+    it("offers a direct route to the full rider queue", () => {
+        mount([fakeNotification({id: 1, riderId: 12})], 7);
+        openPanel();
+
+        const queueAction = Array.from(document.body.querySelectorAll('[role="menuitem"]')).find(
+            (el) => (el.textContent ?? "").includes("admin.notifications.viewQueue"),
+        );
+        expect(queueAction).toBeDefined();
+
+        act(() => (queueAction as HTMLElement).click());
+
+        expect(routerPush).toHaveBeenCalledWith("/admin/manage-riders");
     });
 
     // A row with no rider is not clickable to anywhere, so it would be a dead
