@@ -17,7 +17,7 @@ import {useHttpGet} from "@/hooks/api/http/useHttpGet";
  * Pending with no outstanding notification once an admin has acted.
  */
 export const useUnresolvedRiderCount = () => {
-    const {data, isLoading} = useHttpGet("adminUnresolvedNotificationCount", {
+    const {data, isLoading, execute: refresh} = useHttpGet("adminUnresolvedNotificationCount", {
         // A queue depth other admins are changing under us. Revalidating on
         // focus is the cheapest way to stop showing a number that went stale
         // while this tab sat in the background.
@@ -36,5 +36,9 @@ export const useUnresolvedRiderCount = () => {
         return Number.isFinite(value) ? value : null;
     }, [data?.count]);
 
-    return {count, isLoading};
+    // Deciding an application resolves its queue notification, so the badge is
+    // stale the moment an admin approves or rejects one. `revalidateOnFocus`
+    // does not cover it: the decision happens in this same tab, which never
+    // loses and regains focus, so the caller has to say when it acted.
+    return {count, isLoading, refresh};
 };

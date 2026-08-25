@@ -19,6 +19,14 @@ vi.mock("@/modules/admin/hooks/useUnresolvedRiderCount", () => ({useUnresolvedRi
 vi.mock("@/modules/admin/components/layout/AdminLayout", () => ({
     AdminLayout: ({children}: {children: ReactNode}) => children,
 }));
+// Stubbed down to a single button that fires `onReviewed`. Driving the real
+// modal's approve flow would test the modal, not this page's wiring -- and the
+// modal has its own suite for that. No other test in this file opens the modal
+// (`reviewingRider` starts null), so the stub is inert for them.
+vi.mock("@/modules/admin/components/Modal/RiderReviewModal", () => ({
+    RiderReviewModal: ({onReviewed}: {onReviewed: () => void}) =>
+        createElement("button", {"data-testid": "stub-finish-review", onClick: onReviewed}),
+}));
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({t: (key: string) => key}),
 }));
@@ -83,6 +91,8 @@ describe("AdminRidersManagementPage", () => {
         vi.clearAllMocks();
     });
 
+    const refreshUnresolvedCount = vi.fn();
+
     type HookState = ReturnType<typeof usePaginatedRiders> & {currentPage?: number};
 
     function mount(
@@ -90,7 +100,11 @@ describe("AdminRidersManagementPage", () => {
         overrides: Partial<HookState> = {},
         unresolved: number | null = null,
     ) {
-        mockUseUnresolvedRiderCount.mockReturnValue({count: unresolved, isLoading: false});
+        mockUseUnresolvedRiderCount.mockReturnValue({
+            count: unresolved,
+            isLoading: false,
+            refresh: refreshUnresolvedCount,
+        });
         mockUsePaginatedRiders.mockReturnValue({
             riders,
             isLoading: false,
@@ -269,5 +283,30 @@ describe("AdminRidersManagementPage", () => {
             .filter((className) => className.startsWith("dark:"));
 
         expect(darkThemeClasses).toEqual([]);
+    });
+    // Found in a live smoke test, not by a unit test: rejecting a rider from
+    // the modal left the "Pending" badge one too high until the page was
+    // reloaded. The riders list refetched, so the row correctly disappeared --
+    // which made the stale number look all the more like the truth. The count
+    // is a separate SWR key, and `revalidateOnFocus` cannot save it here
+    // because the decision happens in this same, already-focused tab.
+    it("refetches the unresolved count after a decision, not just the riders list", () => {
+        const refetch = vi.fn();
+        mount([fakeRiderView("Somchai Test")], {refetch}, 1);
+
+        const reviewButton = container.querySelector<HTMLButtonElement>(
+            '[aria-label="admin.riders.reviewRiderLabel"]',
+        );
+        expect(reviewButton).not.toBeNull();
+        act(() => reviewButton!.click());
+
+        const finish = container.querySelector<HTMLButtonElement>(
+            '[data-testid="stub-finish-review"]',
+        );
+        expect(finish).not.toBeNull();
+        act(() => finish!.click());
+
+        expect(refetch).toHaveBeenCalledTimes(1);
+        expect(refreshUnresolvedCount).toHaveBeenCalledTimes(1);
     });
 });
