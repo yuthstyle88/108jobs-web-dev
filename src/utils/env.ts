@@ -1,7 +1,7 @@
-// Clean env helpers for 108Jobs Frontend
+// Clean env helpers for 108Heros Frontend
 // Source of truth (production):
-//   NEXT_PUBLIC_API_BASE_URL  – e.g. https://api-staging.108jobs.com
-//   NEXT_PUBLIC_APP_URL       – e.g. https://staging.108jobs.com
+//   NEXT_PUBLIC_API_BASE_URL  – e.g. https://api-staging.108heros.com
+//   NEXT_PUBLIC_APP_URL       – e.g. https://staging.108heros.com
 //   API_INTERNAL_URL          – e.g. http://localhost:8523  (server-only)
 
 import {NextRequest} from "next/server";

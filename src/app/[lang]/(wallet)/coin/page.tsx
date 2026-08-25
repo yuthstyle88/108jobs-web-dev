@@ -14,7 +14,7 @@ import {isSuccess} from "@/services/HttpService";
 import {toast} from "sonner";
 import WithdrawHistory from "@/components/WithdrawHistory";
 
-const Coins108Jobs = () => {
+const Coins108Heros = () => {
     const {t} = useTranslation();
     const {userInfo} = useUserStore();
     const {bankAccounts} = useBankAccountsStore();
@@ -258,4 +258,4 @@ const Coins108Jobs = () => {
     );
 };
 
-export default Coins108Jobs;
+export default Coins108Heros;
