@@ -267,7 +267,7 @@ export const ChatBridgeProvider: React.FC<WebSocketProviderProps> = ({children, 
 
     // Inbound: messageNack -> mark the message failed and arm ResendManager's
     // retry, using the same clientId the message was originally sent with.
-    // Mirrors the api-108jobs contract: a nack means the message never made
+    // Mirrors the api-108heros contract: a nack means the message never made
     // it into durable storage, so the client should react like any other
     // send failure (see ResendManager.onSendFailure's own doc comment)
     // instead of only finding out via a much longer ack-wait timeout.

@@ -4,7 +4,7 @@ import {create} from "zustand";
  * How long a just-uploaded file's local preview outlives its upload before
  * falling back to the network URL. Generous relative to
  * `MEDIA_RETRY_DELAYS_MS`'s ~15.5s worst case (see `mediaRetryPolicy.ts`,
- * whose own doc comment ties that number to api-108jobs's 10s chat-flush
+ * whose own doc comment ties that number to api-108heros's 10s chat-flush
  * interval), so the handoff is not itself a race: by the time this fires,
  * the row that whole policy works around has essentially always already
  * landed, and `ChatMessageBubble` falls back to the ordinary,

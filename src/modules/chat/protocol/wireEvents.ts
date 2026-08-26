@@ -1,5 +1,5 @@
 /**
- * WebSocket wire-protocol event names, mirroring api-108jobs's ChatEvent
+ * WebSocket wire-protocol event names, mirroring api-108heros's ChatEvent
  * enum variant-for-variant (crates/ws/src/protocol/api.rs's enum definition,
  * crates/ws/src/protocol/impls.rs's ChatEvent::as_str()/FromStr). A developer
  * working on either side of the wire can look up a name here and find the
@@ -25,7 +25,7 @@
  *    place, what the envelope already said.
  *
  * The v1 spellings are deleted, not aliased -- all three clients (this app,
- * api-108jobs and the Flutter widget) ship together and there is no third
+ * api-108heros and the Flutter widget) ship together and there is no third
  * party to stay compatible with.
  *
  * Names carried over from v1 untouched: messageAck, messageNack, ackConfirm,
@@ -51,7 +51,7 @@ export const WS_EVENT = Object.freeze({
   /** Server-to-client only: a sent message failed to make it into the
    * durable buffer backing persistence. Carries the same `clientId` shape
    * as MessageAck, so it can drive the same resend-until-ack tracking
-   * instead of only a client-side timeout (see api-108jobs'
+   * instead of only a client-side timeout (see api-108heros'
    * crates/ws/src/broker/bridge_message.rs, add_messages_to_room). */
   MessageNack: "messageNack",
   AckConfirm: "ackConfirm",

@@ -398,7 +398,7 @@ export interface RealtimeChannelAdapter {
  * per-user event channel uses it: the server keeps no join registry, and
  * decides whether to deliver a user-scoped frame by parsing the id out of
  * the topic and comparing it to the session's authenticated user
- * (`PhoenixSession::should_deliver` in api-108jobs' chat_realtime crate).
+ * (`PhoenixSession::should_deliver` in api-108heros' chat_realtime crate).
  * Joining that channel would be a frame the server has nothing to do with.
  */
 export function getChannelAdapter(

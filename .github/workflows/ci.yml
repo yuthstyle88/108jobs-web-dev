@@ -25,7 +25,7 @@ jobs:
   # The fleet runs on self-hosted runners only. This job is the enforcement:
   # a GitHub-hosted label reintroduced by a copy-paste (or by a sync from the
   # personal mirror, which pins its own pool) fails CI instead of quietly
-  # billing hosted minutes on a private repo. Same guard as api-108jobs.
+  # billing hosted minutes on a private repo. Same guard as api-108heros.
   # ---------------------------------------------------------------------------
   runners:
     name: self-hosted only

@@ -1,11 +1,11 @@
 // Phone/OTP sign-up and sign-in against Identity-Platform directly.
 //
-// Every other credential in this app goes through api-108jobs
+// Every other credential in this app goes through api-108heros
 // (loginWithIdentityPlatform / registerWithIdentityPlatform). This doesn't:
-// the account may not exist yet, and api-108jobs has nothing to look up —
+// the account may not exist yet, and api-108heros has nothing to look up —
 // Identity is the system of record for who you are. It provisions its own
 // half (person + local_user) just-in-time on the first call that carries the
-// resulting token. Mirrors 108jobs-flutter's identity_otp_api.dart.
+// resulting token. Mirrors 108heros-flutter's identity_otp_api.dart.
 //
 // registerIfAbsent is always sent true: without it, verifying a code for a
 // number nobody holds just confirms the code and stops; with it, Identity

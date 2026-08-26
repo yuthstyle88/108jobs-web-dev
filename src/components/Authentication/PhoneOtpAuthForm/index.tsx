@@ -20,7 +20,7 @@ import {resolveApiErrorMessage} from "@/utils/errorMessage";
 import {KeyRound} from "lucide-react";
 
 // Sign in or create an account: a phone number, or nothing else -- mirrors
-// 108jobs-flutter's PhoneOtpAuthFlow, which the same widget backs for both
+// 108heros-flutter's PhoneOtpAuthFlow, which the same widget backs for both
 // its login and register pages. Login and register are functionally the
 // same operation now (phone + OTP, registerIfAbsent always true on the
 // server) so there is nothing left for two separate components to do
@@ -104,7 +104,7 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Mirrors 108jobs-flutter's PhoneOtpAuthFlow(autoPasskey: ...): login
+    // Mirrors 108heros-flutter's PhoneOtpAuthFlow(autoPasskey: ...): login
     // auto-attempts a passkey sign-in for whichever identifier this browser
     // last enrolled one for; register never does (unsolicited biometric
     // prompt on a screen nobody has claimed an account on yet).

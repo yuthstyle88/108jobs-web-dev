@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { toCamelCaseLastSegment } from "@/utils/helpers";
 
 // Regression coverage for the fix to PostView.category / GetPostResponse.categoryView
-// becoming optional (they mirror api-108jobs's Option<Category> / Option<CategoryView>,
+// becoming optional (they mirror api-108heros's Option<Category> / Option<CategoryView>,
 // nullable for delivery/RideTaxi posts). Every call site now passes
 // `job.category?.path` / `jobDetailData?.categoryView?.category?.path` instead of an
 // unguarded chain, so `path` can genuinely be `undefined` on real data -- this locks in

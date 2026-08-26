@@ -61,8 +61,8 @@ export type ChatKdf = "raw" | "hkdf-sha256";
 /**
  * The `info` string bound into the HKDF expansion, for domain separation.
  *
- * Must match `CHAT_SESSION_KDF_INFO` in api-108jobs
- * (`crates/infra/src/crypto.rs`) and `_kdfInfo` in 108jobs-flutter
+ * Must match `CHAT_SESSION_KDF_INFO` in api-108heros
+ * (`crates/infra/src/crypto.rs`) and `_kdfInfo` in 108heros-flutter
  * (`lib/core/crypto/chat_session_key.dart`) byte for byte.
  *
  * ⚠️ This string is on the wire and does NOT get renamed to 108heros. Change
@@ -109,8 +109,8 @@ async function deriveKeyAesGcmKey(
   // requires the parameter to be present, and an empty one is equivalent here
   // because HKDF-Extract is HMAC keyed by the salt and HMAC zero-pads any key
   // shorter than its block size. That equivalence is asserted rather than
-  // assumed: the vector in crypto.test.ts is the same one api-108jobs and
-  // 108jobs-flutter pin, so all three HKDF implementations are checked against
+  // assumed: the vector in crypto.test.ts is the same one api-108heros and
+  // 108heros-flutter pin, so all three HKDF implementations are checked against
   // each other.
   const ikm = await subtle!.importKey("raw", shared, "HKDF", false, ["deriveBits"]);
   const okm = await subtle!.deriveBits(

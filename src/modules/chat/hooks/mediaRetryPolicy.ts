@@ -4,7 +4,7 @@
  *
  * Why this exists: chat messages are written to Redis immediately, but only
  * persisted to Postgres by a periodic flush task -- every
- * `FLUSH_INTERVAL_SECS` (currently 10s; see api-108jobs's
+ * `FLUSH_INTERVAL_SECS` (currently 10s; see api-108heros's
  * `crates/chat_realtime/src/broker/manager.rs:30`, consumed by the
  * `ctx.run_interval` a few hundred lines below it). `media_proxy` resolves
  * an asset to its room by reading `chat_message` in Postgres
