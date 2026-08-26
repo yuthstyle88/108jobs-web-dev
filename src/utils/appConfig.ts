@@ -23,8 +23,8 @@ export function getAppUrl(): string {
  * The bare host the site is served from — no scheme, no trailing slash.
  *
  * Deliberately separate from getAppName(). The product name and the domain
- * diverged in the 108Heros rebrand, so interpolating the name into a URL or an
- * email address would produce a host that does not exist.
+ * are set to diverge in an upcoming rebrand, so interpolating the name into a
+ * URL or an email address would produce a host that does not exist.
  */
 export function getAppDomain(): string {
   if (!isBrowser()) {
