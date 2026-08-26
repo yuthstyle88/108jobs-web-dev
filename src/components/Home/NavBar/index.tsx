@@ -41,13 +41,13 @@ const NavBar: React.FC<NavBarProps> = ({
     return (
         <nav className={`flex items-center justify-between px-3 sm:py-2 ${className}`}>
             <Link href={`/${lang}`} aria-label="Home"
-                  className="text-white/90 hover:text-white focus:outline-none rounded-full hover:bg-white/10">
+                  className="text-white/90 hover:text-white focus:outline-none rounded-md hover:bg-white/10 p-1">
                 <Image
                     src={AssetIcon.logo}
-                    alt="logo"
-                    className="w-18 h-18"
-                    width={200}
-                    height={200}
+                    alt="108Heros logo"
+                    className="w-auto h-10 sm:h-12 object-contain"
+                    width={210}
+                    height={56}
                     priority
                 />
             </Link>

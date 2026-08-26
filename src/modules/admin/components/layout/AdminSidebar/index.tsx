@@ -58,10 +58,10 @@ export function AdminSidebar() {
                                 <Link prefetch href="/admin/dashboard" className="shrink-0 block">
                                     <Image
                                         src={logoUrl}
-                                        alt="Site logo"
-                                        width={181}
-                                        height={62}
-                                        className="w-auto h-12 object-contain transition-all hover:opacity-90"
+                                        alt="108Heros logo"
+                                        width={210}
+                                        height={56}
+                                        className="w-auto h-11 object-contain transition-all hover:opacity-90"
                                         priority
                                     />
                                 </Link>

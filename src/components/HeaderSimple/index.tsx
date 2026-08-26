@@ -13,7 +13,7 @@ const HeaderSimple = () => {
       <nav className="mx-[1.5rem] flex items-center h-auto min-h-[70px] py-1 justify-between">
         <section className="flex items-center gap-x-4 w-full md:w-auto">
           <Link prefetch={false} href={`/${lang}`} className="shrink-0">
-            <Image src={AssetIcon.logo} alt="logo" className="w-full h-full"/>
+            <Image src={AssetIcon.logo} alt="108Heros logo" width={210} height={56} className="w-auto h-10 sm:h-12 object-contain"/>
           </Link>
         </section>
 

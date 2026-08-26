@@ -29,10 +29,10 @@ const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch
                         <Link prefetch={true} href={`/${lang}`} className="shrink-0">
                             <Image
                                 src={logoUrl}
-                                alt="Site logo"
-                                width={181}
-                                height={62}
-                                className="w-16 h-16 object-contain"
+                                alt="108Heros logo"
+                                width={210}
+                                height={56}
+                                className="w-auto h-10 object-contain"
                                 priority
                             />
                         </Link>
@@ -43,10 +43,10 @@ const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch
                         <Link prefetch={true} href={`/${lang}`} className="shrink-0">
                             <Image
                                 src={logoUrl}
-                                alt="Site logo"
-                                width={181}
-                                height={62}
-                                className="w-auto h-12 md:h-14 lg:h-16 object-contain"
+                                alt="108Heros logo"
+                                width={210}
+                                height={56}
+                                className="w-auto h-11 md:h-12 lg:h-13 object-contain"
                                 priority
                             />
                         </Link>
