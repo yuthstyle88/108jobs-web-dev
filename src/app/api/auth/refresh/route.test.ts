@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
-import { REFRESH_TOKEN_COOKIE } from "@/utils/config";
+import { authCookieName, REFRESH_TOKEN_COOKIE } from "@/utils/config";
 
 function refreshRequest(cookie?: string) {
   return new NextRequest("http://localhost:3000/api/auth/refresh", {
@@ -47,6 +47,7 @@ describe("POST /api/auth/refresh", () => {
     expect(JSON.parse(init.body)).toEqual({ refreshToken: "rt-old" });
 
     const setCookie = res.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain(`${authCookieName}=at-new`);
     expect(setCookie).toContain(`${REFRESH_TOKEN_COOKIE}=rt-new`);
     expect(setCookie).toContain("HttpOnly");
   });
@@ -62,6 +63,7 @@ describe("POST /api/auth/refresh", () => {
     expect(res.status).toBe(401);
     const setCookie = res.headers.get("set-cookie") ?? "";
     expect(setCookie).toContain(`${REFRESH_TOKEN_COOKIE}=`);
+    expect(setCookie).toContain(`${authCookieName}=`);
     expect(setCookie).toMatch(/Max-Age=0/);
   });
 

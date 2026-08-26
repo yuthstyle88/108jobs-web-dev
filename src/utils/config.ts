@@ -16,8 +16,11 @@ export const fetchLimit = 20;
 export const similarPostFetchLimit = 6;
 export const relTags = "noopener nofollow";
 export const emDash = "\u2014";
-export const authCookieName =  process.env.NEXT_PUBLIC_APP_NAME ?? "108heros.com" ;
 export const JWT =  "jwt";
+// This name is part of the API authentication contract. The backend accepts
+// the `jwt` cookie and an HttpOnly cookie with that name can cross the
+// same-origin rewrite without exposing the credential to page JavaScript.
+export const authCookieName = JWT;
 export const REFRESH_TOKEN_COOKIE = "refresh_token";
 export const adultConsentCookieKey = "adultConsent";
 

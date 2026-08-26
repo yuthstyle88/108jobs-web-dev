@@ -436,7 +436,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         setError,
         approveQuotation: approveQuotationWrapped,
         startWork: async () => await startWork(),
-        getPostId: () => roomPostId,
+        getPostId: () => roomPostId ?? undefined,
         submitDelivery: async () => await submitDelivery(),
         hasSelectedFile: () => !!selectedFile,
         requestRevision: async () => await requestRevision(),
@@ -491,7 +491,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 orders={
                     <JobFlowContent
                         renderFlowContent={renderFlowContent}
-                        jobId={roomPostId}
+                        jobId={roomPostId ?? undefined}
                         lang={lang}
                     />
                 }
@@ -708,8 +708,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 isOpen={showQuotationModal}
                 onClose={() => setShowQuotationModal(false)}
                 onSubmit={quotationSubmit}
-                postId={roomPostId}
-                proposalId={roomProposalId}
+                postId={roomPostId ?? undefined}
+                proposalId={roomProposalId ?? undefined}
                 partnerId={partnerId}
                 projectName={post?.name || t("profileChat.noJobTitle")}
                 amount={post?.budget}

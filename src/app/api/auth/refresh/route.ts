@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Api108Heros } from "108heros-client";
-import { REFRESH_TOKEN_COOKIE } from "@/utils/config";
+import { authCookieName, REFRESH_TOKEN_COOKIE } from "@/utils/config";
 import { getApiBase, isHttps } from "@/utils/env";
 
 const REFRESH_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
@@ -8,6 +8,13 @@ const REFRESH_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 function clearedCookieResponse(status: number, body: object, req: NextRequest) {
   const res = NextResponse.json(body, { status });
   res.cookies.set(REFRESH_TOKEN_COOKIE, "", {
+    httpOnly: true,
+    secure: isHttps(req),
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  res.cookies.set(authCookieName, "", {
     httpOnly: true,
     secure: isHttps(req),
     sameSite: "lax",
@@ -27,6 +34,13 @@ export async function POST(req: NextRequest) {
   try {
     const data = await client.refreshWithIdentityPlatform({ refreshToken });
     const res = NextResponse.json({ accessToken: data.accessToken, expiresIn: data.expiresIn });
+    res.cookies.set(authCookieName, data.accessToken, {
+      httpOnly: true,
+      secure: isHttps(req),
+      sameSite: "lax",
+      path: "/",
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    });
     res.cookies.set(REFRESH_TOKEN_COOKIE, data.refreshToken, {
       httpOnly: true,
       secure: isHttps(req),

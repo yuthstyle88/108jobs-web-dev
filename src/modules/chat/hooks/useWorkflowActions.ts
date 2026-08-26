@@ -3,7 +3,6 @@ import {useWorkflow} from '@/modules/chat/hooks/useWorkflow';
 import {getLatestProposedQuoteSeq} from '@/modules/chat/utils/message';
 import type {
     ApproveQuotationForm,
-    ChatRoomData,
     ChatRoomView,
     CreateInvoiceForm,
     LocalUser,
