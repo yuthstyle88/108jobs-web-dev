@@ -6,17 +6,24 @@ import React, {useState} from "react";
 import {useForm} from "react-hook-form";
 import * as z from "zod";
 import {useTranslation} from "react-i18next";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {REQUEST_STATE} from "@/services/HttpService";
 import {completeSignIn} from "@/services/authRedirect";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
+import {Phone} from "lucide-react";
 
-export const PasswordLoginForm: React.FC = () => {
-    const {t} = useTranslation();
+interface PasswordLoginFormProps {
+    onSwitchToOtp?: () => void;
+}
+
+export const PasswordLoginForm: React.FC<PasswordLoginFormProps> = ({onSwitchToOtp}) => {
+    const {t, i18n} = useTranslation();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/";
     const [apiError, setApiError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
 
     const passwordLoginSchema = z.object({
         usernameOrEmail: z.string().min(1, t("authen.errorUsernameOrEmailRequired")),
@@ -26,6 +33,10 @@ export const PasswordLoginForm: React.FC = () => {
     const form = useForm<z.infer<typeof passwordLoginSchema>>({
         resolver: zodResolver(passwordLoginSchema),
         mode: "onChange",
+        defaultValues: {
+            usernameOrEmail: "",
+            password: "",
+        },
     });
 
     const {execute: login} = useHttpPost("loginWithIdentityPlatform");
@@ -65,16 +76,20 @@ export const PasswordLoginForm: React.FC = () => {
                 placeholder={t("authen.placeholderUsernameOrEmail")}
                 register={form.register("usernameOrEmail")}
                 error={errors.usernameOrEmail?.message}
+                required
             />
 
             <CustomInput
                 label={t("authen.labelPassword")}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 autoComplete="current-password"
                 placeholder={t("authen.placeholderPassword")}
                 register={form.register("password")}
                 error={errors.password?.message}
+                showPassword={showPassword}
+                toggleShowPassword={() => setShowPassword((prev) => !prev)}
+                required
             />
 
             <div className="text-center">
@@ -85,6 +100,34 @@ export const PasswordLoginForm: React.FC = () => {
                 >
                     {form.formState.isSubmitting ? <LoadingCircle/> : t("global.labelLoginButton")}
                 </button>
+
+                {onSwitchToOtp && (
+                    <>
+                        <div className="flex items-center gap-3 my-4">
+                            <div className="flex-1 border-t border-gray-200"/>
+                            <span className="text-xs text-gray-400">{t("authen.labelOr")}</span>
+                            <div className="flex-1 border-t border-gray-200"/>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={onSwitchToOtp}
+                            className="flex items-center justify-center gap-2 cursor-pointer w-full py-3 rounded-md border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition duration-300"
+                        >
+                            <Phone className="h-[18px] w-[18px]"/>
+                            {t("authen.buttonLoginOtp")}
+                        </button>
+                    </>
+                )}
+
+                <div className="text-sm text-primary mt-4">
+                    <button
+                        type="button"
+                        onClick={() => router.push(`/${i18n.language}/register`)}
+                        className="hover:underline"
+                    >
+                        {t("authen.linkCreateAccount")}
+                    </button>
+                </div>
             </div>
         </form>
     );

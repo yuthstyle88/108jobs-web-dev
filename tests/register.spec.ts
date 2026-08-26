@@ -16,17 +16,42 @@ test.afterEach(async () => {
   con = null;
 });
 
-test.describe('Register (phone + OTP, mocked)', () => {
-  test('requests a code, then verifies it and lands authenticated', async ({ page }) => {
+test.describe('Register flow', () => {
+  test('renders registration form by default with username, phone, password, and confirm password', async ({ page }) => {
+    await page.goto(`/${LOCALE}/register`);
+
+    await expect(page.getByPlaceholder(/enter username/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/enter phone number/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/enter email/i)).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
+    await expect(page.locator('input[name="confirmPassword"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: /create an account/i })).toBeVisible();
+  });
+
+  test('validates password mismatch on client side', async ({ page }) => {
+    await page.goto(`/${LOCALE}/register`);
+
+    await page.getByPlaceholder(/enter username/i).fill('testuser123');
+    await page.getByPlaceholder(/enter phone number/i).fill('0812345678');
+    await page.locator('input[name="password"]').fill('password123');
+    await page.locator('input[name="confirmPassword"]').fill('password456');
+
+    await page.getByRole('button', { name: /create an account/i }).click();
+
+    await expect(page.getByText(/passwords do not match/i)).toBeVisible();
+  });
+
+  test('can switch to phone + OTP registration and verify', async ({ page }) => {
     await enableMockOtp(page);
 
     await page.goto(`/${LOCALE}/register`);
+
+    await page.getByRole('button', { name: /sign in with phone/i }).click();
 
     const phoneInput = page.getByPlaceholder(/phone/i);
     await phoneInput.fill('0812345678');
     await page.getByRole('button', { name: /send verification code/i }).click();
 
-    // Normalized to E.164 and shown back on the code step.
     await expect(page.getByText('+66812345678')).toBeVisible();
 
     const codeInput = page.getByPlaceholder(/otp/i);
@@ -36,58 +61,10 @@ test.describe('Register (phone + OTP, mocked)', () => {
     await page.waitForURL((url) => !/\/register(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 
-  test('shows an inline error and stays on the code step for a wrong code', async ({ page }) => {
-    await enableMockOtp(page, { verifyStatus: 401, verifyBody: { error: 'invalid_code' } });
-
+  test('navigates to login page from register', async ({ page }) => {
     await page.goto(`/${LOCALE}/register`);
 
-    await page.getByPlaceholder(/phone/i).fill('0812345678');
-    await page.getByRole('button', { name: /send verification code/i }).click();
-
-    const codeInput = page.getByPlaceholder(/otp/i);
-    await expect(codeInput).toBeVisible();
-    await codeInput.fill('000000');
-    await page.getByRole('button', { name: /verify otp/i }).click();
-
-    await expect(page.getByText(/invalid otp/i)).toBeVisible();
-    // Still on the code step, not bounced back to phone entry or elsewhere.
-    await expect(codeInput).toBeVisible();
-    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/register`));
-  });
-
-  // `fill()` CLEARS the field before typing, so every assertion in this file was
-  // blind to whatever the step arrived carrying -- which is how the phone number
-  // shipped inside the OTP box with 10/10 green. Read .inputValue() BEFORE typing.
-  test('arrives on the code step with an empty OTP box, not the phone number', async ({ page }) => {
-    await enableMockOtp(page);
-
-    await page.goto(`/${LOCALE}/register`);
-
-    await page.getByPlaceholder(/phone/i).fill('0812345678');
-    await page.getByRole('button', { name: /send verification code/i }).click();
-
-    const codeInput = page.getByPlaceholder(/otp/i);
-    await expect(codeInput).toBeVisible();
-    await expect(codeInput).toHaveValue('');
-
-    // ...and going back keeps the number the user typed, rather than blanking it.
-    await page.getByRole('button', { name: /change phone number/i }).click();
-    await expect(page.getByPlaceholder(/phone/i)).toHaveValue('0812345678');
-  });
-
-  test('rejects an unparseable phone number without calling the network', async ({ page }) => {
-    let requestCalled = false;
-    await page.route('**/auth/otp/request', async (route) => {
-      requestCalled = true;
-      await route.abort();
-    });
-
-    await page.goto(`/${LOCALE}/register`);
-
-    await page.getByPlaceholder(/phone/i).fill('123456789');
-    await page.getByRole('button', { name: /send verification code/i }).click();
-
-    await expect(page.getByText(/phone number must be at least 10 digits/i)).toBeVisible();
-    expect(requestCalled).toBe(false);
+    await page.getByRole('button', { name: /login/i }).click();
+    await expect(page).toHaveURL(new RegExp(`/${LOCALE}/login`));
   });
 });

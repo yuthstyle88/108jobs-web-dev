@@ -500,9 +500,11 @@ export const en = {
             signInWithPasskey: "Sign in with passkey",
             linkCreateAccount: "Create an account",
             buttonLoginPassword: "Log in with a password",
+            buttonLoginOtp: "Sign in with phone (OTP)",
             linkForgotPassword: "Forgot your password?",
             errorUsernameOrEmailRequired: "Username or email is required",
             errorPasswordRequired: "Password is required",
+            errorPasswordVerifyRequired: "Password confirmation is required",
             invalidLoginCredentials: "Invalid username/email or password.",
             messageEnterCode:
                 "Please enter the code to activate your account. (If you don’t see it, check your Spam and Junk folders)",
