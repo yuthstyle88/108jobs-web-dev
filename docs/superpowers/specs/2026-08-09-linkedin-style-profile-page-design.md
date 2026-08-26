@@ -16,7 +16,7 @@ Separately, the Portfolio (image-gallery) feature is being replaced with a Linke
 - Rebuild `/profile/[username]` into a single-column stacked-card layout.
 - Replace the Portfolio image gallery (display + account-setting management) with a single-file Resume upload/download feature.
 - Display the existing but currently-unused `Person.banner` field as the cover photo (read-only; fallback to today's gradient+logo when unset).
-- Backend migration in `api-108jobs` adding `resume_url`/`resume_file_name` to `person`.
+- Backend migration in `api-108heros` adding `resume_url`/`resume_file_name` to `person`.
 - Generalize the upload path (`useFileUpload` / `uploadToMad`) to send `kind: "file"` for the resume instead of the hardcoded `kind: "image"`.
 
 ### Explicitly out of scope
@@ -29,13 +29,13 @@ Separately, the Portfolio (image-gallery) feature is being replaced with a Linke
 
 ### Repos touched
 
-- `api-108jobs` — migration + Diesel model + save-settings handler + ts-rs type regen.
+- `api-108heros` — migration + Diesel model + save-settings handler + ts-rs type regen.
 - `108heros-clean` — page layout, new Resume components, upload hook generalization, account-setting nav/page swap, removal of the Portfolio feature.
 - `Media-Platform-dev` — **no code changes.** Confirmed by direct investigation: `media-service`'s upload-session API (`POST /uploads` → `PUT /uploads/{id}/bytes` → `POST /uploads/complete`, owned by `media-service/src/api/uploads.rs`, proxied verbatim by `media-gateway`) already has a `MediaKind::File` variant (`media-service/src/domain/kind.rs`) for generic file attachments — no transcoding, stored/served verbatim — and there is no content-type allowlist anywhere in the validation path (`UploadSession::open` only bounds `declared_content_length` ≤ 50MB). `application/pdf`/`.doc`/`.docx` already pass through unmodified with `kind: "file"`.
 
-## Backend changes (`api-108jobs`)
+## Backend changes (`api-108heros`)
 
-**Migration** — added directly into the existing base migration rather than a new incremental one, per explicit direction: [migrations/2026-06-29-000009_create_person/up.sql](../../../../api-108jobs/migrations/2026-06-29-000009_create_person/up.sql) gains two nullable columns in the `CREATE TABLE person` statement:
+**Migration** — added directly into the existing base migration rather than a new incremental one, per explicit direction: [migrations/2026-06-29-000009_create_person/up.sql](../../../../api-108heros/migrations/2026-06-29-000009_create_person/up.sql) gains two nullable columns in the `CREATE TABLE person` statement:
 
 ```sql
 resume_url text,

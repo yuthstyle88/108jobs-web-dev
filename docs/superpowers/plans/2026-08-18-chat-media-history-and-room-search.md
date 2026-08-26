@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **Two worktrees, already created and green.** Frontend: `/Users/koeyl/108-ecosystem/108heros/108heros-clean/.worktrees/chat-media-search` on branch `feat/chat-media-and-room-search`. Backend: `/Users/koeyl/108-ecosystem/108heros/api-108jobs/.worktrees/chat-attachment-asset-id` on branch `feat/chat-attachment-asset-id`. **Verify the branch with `git rev-parse --abbrev-ref HEAD` before every commit** — other sessions share these repos.
+- **Two worktrees, already created and green.** Frontend: `/Users/koeyl/108-ecosystem/108heros/108heros-clean/.worktrees/chat-media-search` on branch `feat/chat-media-and-room-search`. Backend: `/Users/koeyl/108-ecosystem/108heros/api-108heros/.worktrees/chat-attachment-asset-id` on branch `feat/chat-attachment-asset-id`. **Verify the branch with `git rev-parse --abbrev-ref HEAD` before every commit** — other sessions share these repos.
 - **Never touch `.claude/worktrees/`** in either repo.
 - **Frontend baseline is 18 test files / 160 tests passing.** Any task that ends with fewer is a regression.
 - **No new dependencies and no changes to `vitest.config.ts`.** It runs `environment: "node"` and includes only `src/**/*.test.ts`. All new tests are `.test.ts` over pure modules. Do not write `.test.tsx`.
@@ -64,7 +64,7 @@
 
 ## Task 1: Backend — explicit `assetId` on the websocket payload
 
-Work in `/Users/koeyl/108-ecosystem/108heros/api-108jobs/.worktrees/chat-attachment-asset-id`.
+Work in `/Users/koeyl/108-ecosystem/108heros/api-108heros/.worktrees/chat-attachment-asset-id`.
 
 **Why:** `extract_asset_id` parses `content` as JSON. Encrypted content is ciphertext, so `chat_message.asset_id` stays NULL and `media_proxy` 404s. An explicit field is the only way to persist it without reading the ciphertext.
 
@@ -4009,14 +4009,14 @@ Expected: all three succeed. The suite must be **at least** 18 files / 160 tests
 - [ ] **Step 2: Backend — bring up a clean database**
 
 ```bash
-cd /Users/koeyl/108-ecosystem/108heros/api-108jobs/.worktrees/chat-attachment-asset-id
+cd /Users/koeyl/108-ecosystem/108heros/api-108heros/.worktrees/chat-attachment-asset-id
 export app_108heros_DATABASE_URL="postgres://app_108heros:password@localhost:5432/app_108heros"
 export DATABASE_URL="$app_108heros_DATABASE_URL"
 export app_108heros_CONFIG_LOCATION="$PWD/config/config.ci.hjson"
 export app_108heros_TEST_FAST_FEDERATION=1
 ```
 
-Read `api-108jobs/CLAUDE.md` before running these — it documents the exact database bring-up, why the config path must be absolute, and why `--profile ci` (which pins `test-threads = 1`) is not optional.
+Read `api-108heros/CLAUDE.md` before running these — it documents the exact database bring-up, why the config path must be absolute, and why `--profile ci` (which pins `test-threads = 1`) is not optional.
 
 - [ ] **Step 3: Backend — the three gates**
 

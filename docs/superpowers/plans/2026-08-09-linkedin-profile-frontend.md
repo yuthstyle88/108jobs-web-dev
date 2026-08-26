@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- **This plan depends on the backend plan already being done.** `docs/superpowers/plans/2026-08-09-resume-field-backend.md` (in the sibling `api-108jobs` repo) must have completed Task 3 (its type-sync step) before Task 2 of this plan — `Person.resumeUrl`/`resumeFileName` and `SaveUserSettings.resumeUrl`/`resumeFileName` must already exist in `src/lib/108heros-client/src/types/` or this plan's code will not compile. Verify with: `grep -n resumeUrl src/lib/108heros-client/src/types/Person.ts` before starting Task 2.
+- **This plan depends on the backend plan already being done.** `docs/superpowers/plans/2026-08-09-resume-field-backend.md` (in the sibling `api-108heros` repo) must have completed Task 3 (its type-sync step) before Task 2 of this plan — `Person.resumeUrl`/`resumeFileName` and `SaveUserSettings.resumeUrl`/`resumeFileName` must already exist in `src/lib/108heros-client/src/types/` or this plan's code will not compile. Verify with: `grep -n resumeUrl src/lib/108heros-client/src/types/Person.ts` before starting Task 2.
 - No new test framework is introduced. This repo has **no** React component-rendering tests anywhere (no `@testing-library/react` dependency, no `.test.tsx` files) and **no** existing Playwright coverage of the profile or account-setting pages (`tests/` has only `login.spec.ts`, `home.spec.ts`, `protected-redirect.spec.ts`, `job-board.spec.ts`). This plan does not add either — that would be a separate, bigger decision than this feature warrants. Testing here means: (a) extending the one real test file this feature touches (`madUpload.test.ts`, a pure-logic vitest suite with an established pattern), and (b) manual verification in a browser at the end (Task 9), consistent with "for UI changes, use the feature in a browser before calling it done."
 - Every new/changed component must compile under `pnpm tsc --noEmit`, pass `pnpm lint`, and the final state must pass `pnpm build` — checked cumulatively in Task 9, and after every task that touches shared files (Task 1's hook signature change, Task 7's rewiring).
 - Deletions only happen after verifying zero remaining importers via `grep` — shown explicitly in the steps below, not assumed.
@@ -1395,7 +1395,7 @@ Note: there is no "remove resume" here — the approved design (`docs/superpower
 
 ## Out of scope
 
-- Any change to `Media-Platform-dev` or `api-108jobs` beyond the already-completed backend plan.
+- Any change to `Media-Platform-dev` or `api-108heros` beyond the already-completed backend plan.
 - A "remove resume" feature (see Task 2's note).
 - Banner upload UI.
 - New component-testing or e2e infrastructure.

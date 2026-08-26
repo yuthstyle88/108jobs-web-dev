@@ -36,7 +36,7 @@ clients' settings surfaces:
 | **Secure chat** | **yes** | **no** |
 | Theme | yes | handled globally |
 
-And the backend just fixed it. `api-108jobs` PR #233,
+And the backend just fixed it. `api-108heros` PR #233,
 `fix(settings): persist secure_chat_enabled on save_user_settings`, merged
 into `main`, whose commit message reads: *"PUT /account/settings/save
 accepted `secureChatEnabled` and returned `{"success": true}`, but silently
@@ -122,7 +122,7 @@ change to make as a side effect of a settings feature.
 
 - **Consent management.** No backend model exists; building the UI first is
   the failure mode this page is recovering from. If it is wanted, it starts
-  in `api-108jobs` with consent columns and endpoints, and Flutter would
+  in `api-108heros` with consent columns and endpoints, and Flutter would
   follow.
 - **Theme settings**, which Flutter exposes and the web handles globally.
 - **Correcting Flutter's English-only copy** on its own page.

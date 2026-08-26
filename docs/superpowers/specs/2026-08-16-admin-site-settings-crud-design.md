@@ -4,7 +4,7 @@
 
 Sixth batch in this initiative, and a different kind of work from the
 prior five: those were bug fixes on existing pages; this adds a genuinely
-new capability. The backend (`api-108jobs`) has a complete, admin-gated
+new capability. The backend (`api-108heros`) has a complete, admin-gated
 `PUT /api/v4/site` endpoint (`update_site`) supporting edits to the site's
 name, description, sidebar, registration mode, email verification, OAuth
 registration, several moderation/content-default toggles, and all 7

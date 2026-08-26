@@ -2,7 +2,7 @@
 
 ## Context
 
-`api-108jobs` has a complete post-tagging system that neither client uses.
+`api-108heros` has a complete post-tagging system that neither client uses.
 
 A `Tag` is owned by a category (`Tag.category_id`), created by admins through
 `POST`/`PUT`/`DELETE /category/tag`. Posts carry tags through a `post_tag` join
@@ -39,7 +39,7 @@ create, rename, or delete a tag.
 
 ### 3. The Flutter app will crash on the first tagged post
 
-`108jobs-flutter`'s `PostView` declares `List<String> tags`, and its generated
+`108heros-flutter`'s `PostView` declares `List<String> tags`, and its generated
 parser does `(json['tags'] as List).map((e) => e as String)`. The backend sends
 `TagsView` — `#[serde(transparent)]` over `Vec<Tag>` — an array of *objects*.
 This is invisible today only because no post has tags.
@@ -84,7 +84,7 @@ An earlier draft required 2 when the category offered at least 2. That was
 dropped, and the reason is worth recording because it is not a UX preference:
 
 **A minimum makes tagging compulsory, and compulsory tagging is unsafe while
-`108jobs-flutter` is unfixed.** With a minimum, an admin adding two tags to a
+`108heros-flutter` is unfixed.** With a minimum, an admin adding two tags to a
 category means any author editing a post in that category — even to correct a
 budget — cannot save without selecting tags. That produces the first tagged
 post, and the first tagged post throws a `TypeError` parsing the whole
@@ -211,7 +211,7 @@ a `TypeError` parsing the feed — not a blank chip, a failed parse of the whole
 safe to deploy: creating a tag harms nothing while no post uses it. **Assigning
 a tag to a post is the unsafe step.**
 
-So either `108jobs-flutter`'s `PostView.tags` is retyped from `List<String>` to
+So either `108heros-flutter`'s `PostView.tags` is retyped from `List<String>` to
 `List<Tag>` first, or the PostForm picker stays out of the production build
 until it is.
 
@@ -234,7 +234,7 @@ until it is.
   Proposals inherit the post's tags; see The model above.
 - **Clearing a post's last tag.** Not expressible through the API: `PostTag::set`
   derives `post_id` from `tags.first()`, so an empty list targets post id 0. The
-  fix is to pass `post_id` explicitly, in `api-108jobs`. Out of scope here, and
+  fix is to pass `post_id` explicitly, in `api-108heros`. Out of scope here, and
   made largely unreachable by tags being optional.
 - **Backend enforcement of a tag count.** `update_post_tags` validates
   membership only. Making the count a real invariant across every client means
@@ -248,7 +248,7 @@ until it is.
 
 ## Testing
 
-`api-108jobs` has the four CI gates (fmt, clippy, nextest, config check); the
+`api-108heros` has the four CI gates (fmt, clippy, nextest, config check); the
 `Tag` change is an attribute addition, so the gate that matters is that nothing
 which asserts on serialized tag JSON breaks.
 

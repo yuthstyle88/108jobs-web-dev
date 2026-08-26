@@ -5,7 +5,7 @@
 The Identity-Platform auth work (2026-07-05) restored a working login/register round trip, but left a real gap: `IdentityPlatformLoginResponse`/`IdentityPlatformAuthResponse` both include a `refreshToken` field that nothing in the frontend stores or uses, and nothing calls any refresh endpoint. When the short-lived access token expires, the user is silently logged out — API calls start failing with no automatic recovery, and nothing tells them why.
 
 Investigation confirmed:
-- api-108jobs's own local refresh endpoint (`crates/identity/src/refresh.rs`) is deliberately dead (`Err(App108ErrorType::LocalLoginDisabled)`, 410 Gone), with a comment saying local refresh was retired since "Clients holding an Identity-Platform token should refresh against Identity-Platform directly."
+- api-108heros's own local refresh endpoint (`crates/identity/src/refresh.rs`) is deliberately dead (`Err(App108ErrorType::LocalLoginDisabled)`, 410 Gone), with a comment saying local refresh was retired since "Clients holding an Identity-Platform token should refresh against Identity-Platform directly."
 - An expired access token does **not** reliably produce an HTTP 401. `App108ErrorType::NotLoggedIn` (what an expired/invalid JWT maps to via `local_user_view_from_jwt`) has no explicit status-code match arm in `crates/core/src/error.rs` and falls through to the generic 400 Bad Request — only `IncorrectLogin` gets a real 401. This rules out "catch 401, refresh, retry" as a reliable trigger.
 - No `Identity-Platform-dev` checkout exists in this workspace, so the exact `/auth/refresh` request/response shape can't be read directly the way `/auth/login`'s shape could be. **This design assumes it mirrors `/auth/login` and `/auth/register`** (same base URL + path convention, returns the same token-set shape) — an explicit, acknowledged assumption to verify against the real service during implementation, not a confirmed fact.
 - `IdentityPlatformTokenSet` (the Rust struct already used for login/register responses) deserializes `access_token`, `token_type`, `expires_in`, `refresh_token` with no rename attributes (implying Identity-Platform's wire format is snake_case for these), and only `identity_id` gets a `#[serde(rename = "identityId")]`. The assumed refresh request body follows the same snake_case convention as the existing `LoginRequestBody`/`RegisterRequestBody` structs.
@@ -18,11 +18,11 @@ When a user is logged in, their session survives past the access token's origina
 
 - Reactive (catch-a-failure-then-refresh) handling — proactive-only is sufficient given predictable token lifetimes and no server-side revocation currently in play; can be added later as a safety net if it ever proves necessary in practice.
 - OAuth login's refresh handling — that flow is already broken server-side (out of scope, established in the prior auth-fix work) and has no refresh token available from its response shape regardless.
-- Any change to api-108jobs's dead local `/account/auth/refresh` endpoint — left exactly as-is (a separate, unrelated retirement).
+- Any change to api-108heros's dead local `/account/auth/refresh` endpoint — left exactly as-is (a separate, unrelated retirement).
 
 ## Architecture
 
-### 1. Backend — new refresh proxy endpoint (api-108jobs)
+### 1. Backend — new refresh proxy endpoint (api-108heros)
 
 Add `POST /account/auth/refresh/identity-platform`, registered in `src/api_routes.rs`'s existing `scope("/account/auth")` block (next to the sibling `/login/identity-platform` and `/register/identity-platform` resources), wrapped in the same `rate_limit.login()` limiter those two already use.
 
@@ -242,7 +242,7 @@ Two more call sites, both small:
 
 - **Backend**: unit test for `RefreshRequestBody`'s serialization (mirrors `identity_platform_auth_response_serializes_camel_case`-style existing tests) confirming the snake_case wire shape sent to Identity-Platform. No mocked-HTTP integration test, matching the established pattern for this whole family of handlers (no test-double exists for the Identity-Platform client anywhere in this codebase).
 - **Frontend**: a pure-function test for the refresh-delay calculation (given an `exp`, `REFRESH_MARGIN_MS`, and a mocked "now", what delay results — including the already-expired case producing `0`, not a negative number). A `UserService` test using `vi.useFakeTimers()`: call `login()` with both tokens, advance time to just past the scheduled delay, and confirm exactly one call to `refreshWithIdentityPlatform` fired (no real waiting, no real network).
-- **Manual end-to-end verification**: against the same live local stack established in the prior auth-fix work (local api-108jobs + Identity-Platform-dev), log in, and either wait out a real (short-lived, e.g. dev-configured) token lifetime or use fake-timer-free direct observation to confirm a real refresh call fires before expiry and the session survives uninterrupted past the original token's expiry — the thing this whole design exists to prove.
+- **Manual end-to-end verification**: against the same live local stack established in the prior auth-fix work (local api-108heros + Identity-Platform-dev), log in, and either wait out a real (short-lived, e.g. dev-configured) token lifetime or use fake-timer-free direct observation to confirm a real refresh call fires before expiry and the session survives uninterrupted past the original token's expiry — the thing this whole design exists to prove.
 
 ## Self-Review
 

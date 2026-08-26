@@ -361,7 +361,7 @@ In the browser preview, navigate to `/en/login`:
 1. Confirm the phone form shows by default, with a new "Log in with a password" button below the Google button.
 2. Click it — confirm the container swaps to the username/email + password form, and a back-arrow now appears in the container header (top-left, from `AuthFormContainer`'s `onBack`).
 3. Click the back arrow — confirm it returns to the phone form cleanly (no leftover error message or stale state from the password form).
-4. Submit the password form with the credentials from `api-108jobs/docs/identity-platform-setup.md`'s walkthrough (or any account known to have a password set) — confirm a successful login redirects to `/admin/dashboard` if the account has the `jobs:admin` role, or to `/` otherwise.
+4. Submit the password form with the credentials from `api-108heros/docs/identity-platform-setup.md`'s walkthrough (or any account known to have a password set) — confirm a successful login redirects to `/admin/dashboard` if the account has the `jobs:admin` role, or to `/` otherwise.
 5. Submit with deliberately wrong credentials — confirm an error message appears and the form stays usable (fields aren't cleared, another attempt is possible).
 
 - [ ] **Step 5: Commit**

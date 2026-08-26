@@ -9,7 +9,7 @@ came with them and never got a job.
 
 ## The pattern that blocks almost everything
 
-`108jobs-flutter`'s domain entities are Freezed classes whose generated parsers
+`108heros-flutter`'s domain entities are Freezed classes whose generated parsers
 read fields with no default:
 
 ```dart
@@ -107,7 +107,7 @@ and are blocked on the same Flutter change.
 | `instance` | 229 (test detritus) | No route; 91 Rust files |
 
 `tagline` is Lemmy's rotating homepage quote and is genuinely dead — removed in
-api-108jobs #240.
+api-108heros #240.
 
 > **Correction (2026-08-18).** This section originally listed `admin_purge_post`
 > as unreachable. It is not. `POST /admin/site/purge/post` routes to
@@ -149,7 +149,7 @@ worth a closer look individually.
 
 1. **Client-type deletions** (§7) — frontend-only, no wire change, no risk.
 2. **`tagline`** — empty, unreachable, optional-and-always-null on the wire.
-   Done in api-108jobs #240, together with `ModlogActionType` and
+   Done in api-108heros #240, together with `ModlogActionType` and
    `person.private_key`. (`admin_purge_post` was in this tier and has been
    removed from it — it is live.)
 3. **`ModlogActionType`** — unreachable enum; check nothing serializes it first.
@@ -200,5 +200,5 @@ empty until someone does the thing it audits.
   depended on `users_active_month` and blocked its `DROP COLUMN` outright.
 - The `search_combined` / `*_combined` tables, which are a Lemmy pattern and
   likely carry more of this.
-- `108jobs-flutter` beyond the entity fields named above.
+- `108heros-flutter` beyond the entity fields named above.
 - Anything in `108bipbyte`, `108plaza-pos`, or the platform services.

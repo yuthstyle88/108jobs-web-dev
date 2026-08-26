@@ -5,9 +5,9 @@ Status: Approved
 
 ## Problem
 
-`108heros-clean` was forked from Lemmy and later had a surface-level rename pass (`lemmy-js-client` → `108heros-client`, Lemmy identifiers stripped — see commit `7379962`). The sibling backend, `api-108jobs`, has since gone through a phased cleanup (`phase-1` through `phase-7`, plus follow-up chores) that fully removed several Lemmy-era forum-governance features. The frontend's vendored API client (`src/lib/108heros-client`) and a handful of app-level files still carry type, route, and enum surface for those removed features. None of it is reachable from real UI, but it's misleading — it implies backend capabilities that no longer exist — and it's a hazard for anyone building against a client method that calls a nonexistent endpoint.
+`108heros-clean` was forked from Lemmy and later had a surface-level rename pass (`lemmy-js-client` → `108heros-client`, Lemmy identifiers stripped — see commit `7379962`). The sibling backend, `api-108heros`, has since gone through a phased cleanup (`phase-1` through `phase-7`, plus follow-up chores) that fully removed several Lemmy-era forum-governance features. The frontend's vendored API client (`src/lib/108heros-client`) and a handful of app-level files still carry type, route, and enum surface for those removed features. None of it is reachable from real UI, but it's misleading — it implies backend capabilities that no longer exist — and it's a hazard for anyone building against a client method that calls a nonexistent endpoint.
 
-Confirmed against the backend's current complete route table (`api-108jobs/src/api_routes.rs`) that the following have **no** backend route at all:
+Confirmed against the backend's current complete route table (`api-108heros/src/api_routes.rs`) that the following have **no** backend route at all:
 
 - Federation / ActivityPub
 - Voting / likes on posts and proposals
@@ -61,4 +61,4 @@ Order of operations:
 
 - Any feature still backed by a live route in `api_routes.rs`.
 - Regenerating or re-architecting the `108heros-client` package's build tooling (tsoa config, etc.) — this is a deletion pass, not a client-generation overhaul.
-- Backend changes — `api-108jobs` is already clean; this spec only touches `108heros-clean`.
+- Backend changes — `api-108heros` is already clean; this spec only touches `108heros-clean`.

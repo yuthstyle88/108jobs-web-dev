@@ -1,7 +1,7 @@
 # 108heros-client
 
 A TypeScript HTTP client and type system for the [108heros
-API](https://github.com/108-Plaza/api-108jobs).
+API](https://github.com/108-Plaza/api-108heros).
 
 This package is vendored into `108heros-web` at `src/lib/108heros-client` and
 consumed through a `file:` dependency. It is not published to npm.

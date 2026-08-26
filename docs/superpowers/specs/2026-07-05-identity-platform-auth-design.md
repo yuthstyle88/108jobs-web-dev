@@ -2,9 +2,9 @@
 
 ## Context
 
-A manual smoke test (2026-07-05) found this frontend's login and register UI flows are broken against the current `api-108jobs` backend, which has migrated to authenticating exclusively through an Identity-Platform service (see `api-108jobs/docs/identity-platform-setup.md`). Investigation (this session) traced both symptoms to their root causes and found the true scope is larger than "two independent bugs":
+A manual smoke test (2026-07-05) found this frontend's login and register UI flows are broken against the current `api-108heros` backend, which has migrated to authenticating exclusively through an Identity-Platform service (see `api-108heros/docs/identity-platform-setup.md`). Investigation (this session) traced both symptoms to their root causes and found the true scope is larger than "two independent bugs":
 
-**Backend state, as of api-108jobs commit `9fe747892` ("retire local password login and token refresh", 2026-07-03):**
+**Backend state, as of api-108heros commit `9fe747892` ("retire local password login and token refresh", 2026-07-03):**
 
 | Endpoint | Status |
 |---|---|
@@ -31,19 +31,19 @@ The function that calls Identity-Platform's own login (`login_with_identity_plat
 
 ## Goal
 
-Restore a working login → authenticated-page-load round trip and a working register → authenticated-page-load round trip against the real Identity-Platform-backed api-108jobs, by: adding the one missing backend endpoint, making the frontend's `Claims` type and API client honestly match what the backend actually sends today, and rebuilding the register form around what the working registration endpoint actually requires.
+Restore a working login → authenticated-page-load round trip and a working register → authenticated-page-load round trip against the real Identity-Platform-backed api-108heros, by: adding the one missing backend endpoint, making the frontend's `Claims` type and API client honestly match what the backend actually sends today, and rebuilding the register form around what the working registration endpoint actually requires.
 
 ## Non-Goals
 
 - OAuth login/registration (`authenticate-with-oauth`) — confirmed also retired backend-side, but not part of the original bug report; left as a separate, known issue.
 - Token refresh — confirmed retired backend-side by design (clients should refresh directly against Identity-Platform); not addressed here. Access tokens are short-lived (`expiresIn` from the token response); re-login on expiry is the fallback until refresh is designed.
 - Distinguishing "wrong password" from "Identity-Platform unreachable" as different error responses on the new login endpoint — the existing frontend's error-handling fallback already produces a reasonable outcome for both (see Error Handling below), and the existing register-combo handler has the same coarse-grained behavior today, so this isn't a regression to fix as part of this work.
-- Multi-tenant per-client audience registration (`POST /admin/client-applications`) — explicitly out of scope per `identity-platform-setup.md`, not wired into api-108jobs at all.
+- Multi-tenant per-client audience registration (`POST /admin/client-applications`) — explicitly out of scope per `identity-platform-setup.md`, not wired into api-108heros at all.
 - 2FA/TOTP for Identity-Platform-backed accounts — the existing TOTP UI (`show2faModal`) is being removed as dead code (see LoginForm section below), not redesigned; if TOTP is wanted again it needs its own design once Identity-Platform's own 2FA story is known.
 
 ## Architecture
 
-### 1. Backend: new login endpoint (api-108jobs)
+### 1. Backend: new login endpoint (api-108heros)
 
 Add `POST /account/auth/login/identity-platform`, registered in `src/api_routes.rs` alongside the existing `/register/identity-platform` resource, wrapped in the same `rate_limit.login()` limiter the dead `/login` route already uses:
 
@@ -190,7 +190,7 @@ On `REQUEST_STATE.SUCCESS`, the response (`{accessToken, refreshToken, expiresIn
 
 - **Backend**: unit test for `IdentityPlatformLoginResponse` camelCase serialization (mirrors the existing `identity_platform_auth_response_serializes_camel_case` test already in `create_via_identity_platform.rs`). Route-level test hitting `/account/auth/login/identity-platform` against a mock/test Identity-Platform instance, covering: successful login returns a token set; empty username/password returns `IncorrectLogin`; upstream failure returns `identityPlatformLoginFailed`.
 - **Frontend unit tests** (Vitest, already set up in this repo from the prior wire-event-naming stage): `isAdminClaims()` pure-function tests (empty roles, missing roles, roles containing `jobs:admin`, roles containing other values only); a `UserService` test asserting `currentLanguage`/`acceptedTerms` come from a mocked `getMyUser()` response, not from JWT claims.
-- **Manual end-to-end verification** (covers the original ask's requirement (d)): run Identity-Platform-dev locally (`AUTH_HTTP_ADDR=127.0.0.1:8089 AUTH_AUDIENCE=jobs cargo run -p identity-api`), point a local api-108jobs at it via the four `IDENTITY_*` env vars, run 108heros-clean against that local api-108jobs, and by hand: register a new user through the redesigned `RegisterForm`, confirm redirect into an authenticated page; log out; log back in through the redesigned `LoginForm` with the same credentials; confirm an authenticated page loads (proving the previously-impossible "returning user" path now works).
+- **Manual end-to-end verification** (covers the original ask's requirement (d)): run Identity-Platform-dev locally (`AUTH_HTTP_ADDR=127.0.0.1:8089 AUTH_AUDIENCE=jobs cargo run -p identity-api`), point a local api-108heros at it via the four `IDENTITY_*` env vars, run 108heros-clean against that local api-108heros, and by hand: register a new user through the redesigned `RegisterForm`, confirm redirect into an authenticated page; log out; log back in through the redesigned `LoginForm` with the same credentials; confirm an authenticated page loads (proving the previously-impossible "returning user" path now works).
 
 ## Self-Review
 

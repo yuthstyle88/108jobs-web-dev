@@ -9,7 +9,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make every WebSocket wire-protocol event-name string this frontend sends or matches identical to api-108jobs's `ChatEvent::as_str()` canonical values, sourced from one new constant module, with real unit tests proving the contract — not just inspection.
+**Goal:** Make every WebSocket wire-protocol event-name string this frontend sends or matches identical to api-108heros's `ChatEvent::as_str()` canonical values, sourced from one new constant module, with real unit tests proving the contract — not just inspection.
 
 **Architecture:** A new module, `src/modules/chat/protocol/wireEvents.ts`, exports `WS_EVENT` — a frozen const object mirroring the backend's `ChatEvent` enum variant-for-variant. Every file that currently references a wire-protocol event name as an inline string literal switches to reference `WS_EVENT.X` instead. `types/common.ts`'s `PhoenixEvent` type union and `EVENTS` array are extended (additively — nothing existing is removed except one confirmed-dead typo) to include every `WS_EVENT` value. A new Vitest setup provides real unit tests: a contract test pinning `WS_EVENT`'s values, a no-stray-literal regression test, and behavioral tests on the outbound builders.
 
@@ -17,7 +17,7 @@
 
 ## Global Constraints
 
-- `WS_EVENT`'s values must exactly match api-108jobs's `ChatEvent::as_str()` (`crates/ws/src/protocol/impls.rs` in the api-108jobs repo, already verified during design): `PhxJoin: "phx_join"`, `PhxLeave: "phx_leave"`, `Heartbeat: "heartbeat"`, `Message: "chat:message"`, `MessageAck: "messageAck"`, `AckConfirm: "ackConfirm"`, `SyncPending: "sync:pending"`, `ReadUpTo: "readUpTo"`, `ActiveRooms: "chat:activeRooms"`, `Typing: "chat:typing"`, `TypingStart: "typing:start"`, `TypingStop: "typing:stop"`, `Update: "chat:update"`, `ChatsSignal: "chats:signal"`, `GlobalOnline: "globalOnline"`, `GlobalOffline: "globalOffline"`.
+- `WS_EVENT`'s values must exactly match api-108heros's `ChatEvent::as_str()` (`crates/ws/src/protocol/impls.rs` in the api-108heros repo, already verified during design): `PhxJoin: "phx_join"`, `PhxLeave: "phx_leave"`, `Heartbeat: "heartbeat"`, `Message: "chat:message"`, `MessageAck: "messageAck"`, `AckConfirm: "ackConfirm"`, `SyncPending: "sync:pending"`, `ReadUpTo: "readUpTo"`, `ActiveRooms: "chat:activeRooms"`, `Typing: "chat:typing"`, `TypingStart: "typing:start"`, `TypingStop: "typing:stop"`, `Update: "chat:update"`, `ChatsSignal: "chats:signal"`, `GlobalOnline: "globalOnline"`, `GlobalOffline: "globalOffline"`.
 - `src/modules/chat/events/chatEvents.ts`'s `CHAT_EVENT` constant is a **separate, unrelated concern** (in-browser DOM `CustomEvent` names for cross-component signaling) — it must not be touched or conflated with `WS_EVENT`.
 - The `ackReminder` branch in `handleWSMessage.ts` is confirmed dead code (the backend sends its reminder under `"sync:pending"`, never `"ackReminder"` — see the design spec's Finding section). This plan documents that fact with a code comment; it does **not** rewire the branch to fire, since that would be a behavior change outside this stage's scope.
 - No unit-testing framework exists in this project today (only Playwright E2E, no chat coverage). This plan adds Vitest as a new dev dependency.
@@ -81,11 +81,11 @@ This resolves the `@/*` alias from `tsconfig.json` the same way `next dev`/`tsc`
 import { describe, expect, it } from "vitest";
 import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 
-// Pins this frontend's wire-protocol event names to api-108jobs's
+// Pins this frontend's wire-protocol event names to api-108heros's
 // ChatEvent::as_str() (crates/ws/src/protocol/impls.rs) -- one assertion per
 // variant, so a change to either side that isn't mirrored here fails loudly
 // instead of silently drifting (the exact failure mode that caused real,
-// silently-dropped-message bugs before api-108jobs PR #132).
+// silently-dropped-message bugs before api-108heros PR #132).
 describe("WS_EVENT matches the backend's ChatEvent::as_str() exactly", () => {
   it("PhxJoin is the real phoenix.js wire format", () => {
     expect(WS_EVENT.PhxJoin).toBe("phx_join");
@@ -167,7 +167,7 @@ Expected: FAIL — `Cannot find module '@/modules/chat/protocol/wireEvents'` (th
 ```typescript
 // src/modules/chat/protocol/wireEvents.ts
 /**
- * WebSocket wire-protocol event names, mirroring api-108jobs's ChatEvent
+ * WebSocket wire-protocol event names, mirroring api-108heros's ChatEvent
  * enum variant-for-variant (crates/ws/src/protocol/api.rs's enum definition,
  * crates/ws/src/protocol/impls.rs's ChatEvent::as_str()/FromStr). A developer
  * working on either side of the wire can look up a name here and find the
@@ -583,7 +583,7 @@ Change (currently line 123), adding the dead-code documentation the design spec 
 ```
 to:
 ```typescript
-            // NOTE: this branch is currently unreachable. api-108jobs sends its
+            // NOTE: this branch is currently unreachable. api-108heros sends its
             // ack-reminder response under the wire string "sync:pending" (see
             // AnyIncomingEvent::SyncPending in bridge_message.rs), never a
             // distinct "ackReminder" string -- so this rich per-clientId
