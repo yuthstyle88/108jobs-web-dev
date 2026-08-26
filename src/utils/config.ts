@@ -16,7 +16,29 @@ export const fetchLimit = 20;
 export const similarPostFetchLimit = 6;
 export const relTags = "noopener nofollow";
 export const emDash = "\u2014";
-export const authCookieName =  process.env.NEXT_PUBLIC_APP_NAME ?? "108jobs.com" ;
+/**
+ * Name of the cookie holding the access token.
+ *
+ * Fixed and brand-independent on purpose. This used to be derived from
+ * NEXT_PUBLIC_APP_NAME, which meant renaming the product renamed the cookie and
+ * logged every signed-in user out -- and it did not self-heal, because a session
+ * with no claims never schedules the refresh that would redeem the surviving
+ * refresh_token cookie.
+ */
+export const authCookieName = "108_auth";
+
+/**
+ * Cookie names a browser may still hold from before the decoupling above.
+ * The deployed NEXT_PUBLIC_APP_NAME was not knowable from the repository, so this
+ * covers every plausible value it held. Reads migrate these on contact; add to this
+ * list if an environment turns out to have used something else.
+ */
+export const legacyAuthCookieNames = [
+  "108Jobs",
+  "108Jobs.com",
+  "108jobs.com",
+  "108jobs",
+] as const;
 export const JWT =  "jwt";
 export const REFRESH_TOKEN_COOKIE = "refresh_token";
 export const adultConsentCookieKey = "adultConsent";

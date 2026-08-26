@@ -1,4 +1,4 @@
-import {authCookieName} from "@/utils/config";
+import {authCookieName, legacyAuthCookieNames} from "@/utils/config";
 import {GetSiteResponse, MyUserInfo} from "108jobs-client";
 import {isHttps} from "@/utils/env";
 import {LANGUAGE_COOKIE} from "@/constants/language";
@@ -24,11 +24,13 @@ export function canShare() {
 }
 
 export function clearAuthCookie() {
-  document.cookie = serializeCookie(authCookieName, "", {
-    maxAge: -1,
-    sameSite: "lax",
-    path: "/",
-  });
+  for (const name of [authCookieName, ...legacyAuthCookieNames]) {
+    document.cookie = serializeCookie(name, "", {
+      maxAge: -1,
+      sameSite: "lax",
+      path: "/",
+    });
+  }
 }
 
 export function dataBsTheme(
@@ -133,15 +135,37 @@ export function setAuthJWTCookie(jwt: string) {
   });
 }
 
-export function getAuthJWTCookie(): string | null {
-  if (!isBrowser()) return null;
-  const name = `${authCookieName}=`;
+function readRawCookie(name: string): string | null {
+  const prefix = `${name}=`;
   const parts = (document.cookie || "").split(/;\s*/);
   for (const part of parts) {
-    if (part.startsWith(name)) {
-      return decodeURIComponent(part.slice(name.length));
+    if (part.startsWith(prefix)) {
+      return decodeURIComponent(part.slice(prefix.length));
     }
   }
+  return null;
+}
+
+export function getAuthJWTCookie(): string | null {
+  if (!isBrowser()) return null;
+
+  const current = readRawCookie(authCookieName);
+  if (current) return current;
+
+  // Adopt a token written before the cookie was decoupled from the product name,
+  // then retire the old cookie so this runs at most once per browser.
+  for (const legacy of legacyAuthCookieNames) {
+    const token = readRawCookie(legacy);
+    if (!token) continue;
+    setAuthJWTCookie(token);
+    document.cookie = serializeCookie(legacy, "", {
+      maxAge: -1,
+      sameSite: "lax",
+      path: "/",
+    });
+    return token;
+  }
+
   return null;
 }
 
