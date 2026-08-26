@@ -1203,7 +1203,7 @@ export const vi = {
             buttonJobCategoriesViewMore: "Xem thêm",
             confidenceInFastwork:
                 "Gặp gỡ đội ngũ freelancer chất lượng, sẵn sàng đáp ứng mọi nhu cầu của mọi doanh nghiệp, bao gồm mọi lĩnh vực, ngành nghề.",
-            contentFastwork1: `${getAppDomain()} là nền tảng tập hợp các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau, bao gồm thiết kế logo, làm banner quảng cáo, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác nhằm đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ ${getAppDomain()} tập trung vào sự đơn giản và tiện lợi, giúp freelancer và khách hàng tiết kiệm thời gian, đồng thời hỗ trợ phát triển và mở rộng kinh doanh cho các doanh nghiệp lớn, nhỏ cũng như giúp freelancer dễ dàng tìm việc, tăng thu nhập và nâng cao chất lượng dịch vụ.`,
+            contentFastwork1: `${getAppName()} là nền tảng tập hợp các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau, bao gồm thiết kế logo, làm banner quảng cáo, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác nhằm đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ ${getAppName()} tập trung vào sự đơn giản và tiện lợi, giúp freelancer và khách hàng tiết kiệm thời gian, đồng thời hỗ trợ phát triển và mở rộng kinh doanh cho các doanh nghiệp lớn, nhỏ cũng như giúp freelancer dễ dàng tìm việc, tăng thu nhập và nâng cao chất lượng dịch vụ.`,
             contentFastwork2: `${getAppDomain()} hoạt động như một nền tảng trung gian trực tuyến giữa freelancer và khách hàng, giúp họ kết nối mọi lúc, mọi nơi. Freelancer có thể đăng tải dịch vụ trên ${getAppDomain()}, trong khi khách hàng có thể tìm kiếm và thuê freelancer phù hợp. Hệ thống thanh toán an toàn của ${getAppDomain()} đảm bảo freelancer nhận được tiền công khi hoàn thành công việc, đồng thời bảo vệ quyền lợi của khách hàng khi nhận sản phẩm đúng yêu cầu.`,
             contentFastwork3: `Hiện tại, ${getAppDomain()} có hơn 50.000 freelancer đã qua kiểm duyệt chất lượng, cung cấp hơn 15.000 dịch vụ trong 90 danh mục khác nhau. Dịch vụ phù hợp với nhiều đối tượng khách hàng, từ chủ doanh nghiệp, SME, freelancer hàng online đến cá nhân đang tìm kiếm dịch vụ chuyên nghiệp với chi phí hợp lý. ${getAppDomain()} là nền tảng freelancer chuyên nghiệp được hơn 700.000 khách hàng tin tưởng.`,
             contentFreelancerVerification: `Freelancer được tuyển chọn và xác minh bởi ${getAppName()} có thể được kiểm tra.`,
@@ -1237,7 +1237,7 @@ export const vi = {
             contentStartHiringSection4:
                 "Xem xét công việc được gửi, xác nhận và để lại đánh giá.",
             freelancerQuality: `Freelancer đã qua tuyển chọn và xác minh danh tính bởi ${getAppName()} và bạn có thể kiểm tra thông tin này.`,
-            freelancerStatistics: `Hiện tại, ${getAppDomain()} có hơn 50.000 freelancer chất lượng, cung cấp dịch vụ trong hơn 90 danh mục khác nhau. Hơn 15.000 công việc đã được hoàn thành thành công, với các freelancer được lựa chọn kỹ lưỡng theo kỹ năng và kinh nghiệm để đáp ứng tốt nhất nhu cầu của khách hàng—bao gồm chủ doanh nghiệp, SME, người kinh doanh trực tuyến hoặc cá nhân đang tìm kiếm dịch vụ chuyên nghiệp. ${getAppName()} hiện đang được hơn 70.000 khách hàng tin tưởng sử dụng.`,
+            freelancerStatistics: `Hiện tại, ${getAppName()} có hơn 50.000 freelancer chất lượng, cung cấp dịch vụ trong hơn 90 danh mục khác nhau. Hơn 15.000 công việc đã được hoàn thành thành công, với các freelancer được lựa chọn kỹ lưỡng theo kỹ năng và kinh nghiệm để đáp ứng tốt nhất nhu cầu của khách hàng—bao gồm chủ doanh nghiệp, SME, người kinh doanh trực tuyến hoặc cá nhân đang tìm kiếm dịch vụ chuyên nghiệp. ${getAppName()} hiện đang được hơn 70.000 khách hàng tin tưởng sử dụng.`,
             graphicDesign: "Thiết kế đồ họa",
             graphicDesignServices:
                 "Thiết kế banner, danh thiếp, áp phích, đồ họa thông tin (infographic), hồ sơ xin việc (resume), thiết kế hình xăm, bao bì sản phẩm, nhận diện thương hiệu (CI), và nhiều hơn nữa.",
@@ -1260,7 +1260,7 @@ export const vi = {
             mediaAudio: "Truyền thông & Âm thanh",
             mediaAudioServices:
                 "Nhiếp ảnh, chụp ảnh sự kiện, tạo podcast, chỉnh sửa bài hát, biên tập video, thiết kế website động, đồ họa chuyển động, phát trực tiếp, thuê người mẫu, lồng tiếng, và nhiều hơn nữa.",
-            platformDescription: `${getAppDomain()} là nền tảng kết nối các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau tại một nơi, bao gồm thiết kế đồ họa, quảng cáo banner, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác để đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ phát triển của chúng tôi đã thiết kế ${getAppDomain()} với sự đơn giản và tiện lợi, tạo ra một nền tảng giúp freelancer và khách hàng tiết kiệm thời gian. Ngoài ra, chúng tôi còn hỗ trợ các doanh nghiệp mới khởi nghiệp, thúc đẩy tinh thần kinh doanh và giúp freelancer làm việc hiệu quả hơn, tạo thu nhập ổn định và nâng cao tiêu chuẩn của freelancer tại Thái Lan.`,
+            platformDescription: `${getAppName()} là nền tảng kết nối các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau tại một nơi, bao gồm thiết kế đồ họa, quảng cáo banner, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác để đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ phát triển của chúng tôi đã thiết kế ${getAppName()} với sự đơn giản và tiện lợi, tạo ra một nền tảng giúp freelancer và khách hàng tiết kiệm thời gian. Ngoài ra, chúng tôi còn hỗ trợ các doanh nghiệp mới khởi nghiệp, thúc đẩy tinh thần kinh doanh và giúp freelancer làm việc hiệu quả hơn, tạo thu nhập ổn định và nâng cao tiêu chuẩn của freelancer tại Thái Lan.`,
             platformPurpose: `${getAppDomain()} đóng vai trò là nền tảng trung gian trực tuyến kết nối freelancer với khách hàng, giúp họ dễ dàng tìm thấy và hợp tác với nhau mọi lúc. Freelancer có thể đăng tin tìm việc trên ${getAppDomain()} một cách thuận tiện tại một nơi duy nhất, đồng thời khách hàng có thể dễ dàng tìm kiếm, so sánh giá cả và đánh giá chất lượng freelancer để lựa chọn dịch vụ phù hợp nhất. Hệ thống thanh toán an toàn của ${getAppDomain()} đảm bảo freelancer chỉ nhận được tiền sau khi công việc đã hoàn thành, mang lại sự an tâm cho cả hai bên.`,
             subtitleBanner:
                 "Tăng trưởng doanh nghiệp nhanh chóng với freelancer phù hợp",
@@ -2775,7 +2775,7 @@ export const vi = {
         },
         terms: {
             confirmFreelancerRegistrationTitle: "Xác nhận đăng ký freelancer",
-            homepageTitle: `${getAppDomain()} - Nền tảng số 1 cung cấp freelancer chất lượng được doanh nghiệp trên khắp Thái Lan lựa chọn`,
+            homepageTitle: `${getAppName()} - Nền tảng số 1 cung cấp freelancer chất lượng được doanh nghiệp trên khắp Thái Lan lựa chọn`,
             homepageSubtitle: `Thuê Freelancer trên ${getAppName()} `,
             homepageAppPrompt: "Mở ứng dụng để trải nghiệm đầy đủ",
             homepageFreelancerSectionTitle:

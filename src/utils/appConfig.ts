@@ -5,10 +5,10 @@ export const __DEV__ = process.env.NODE_ENV !== "production";
 export function getAppName(): string {
   // On the server we can read APP_NAME; on the client we must rely on NEXT_PUBLIC_APP_NAME
   if (!isBrowser()) {
-    return process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || '108jobs.com';
+    return process.env.APP_NAME || process.env.NEXT_PUBLIC_APP_NAME || '108Heros';
   }
   // Client side
-  return process.env.NEXT_PUBLIC_APP_NAME || '108jobs.com';
+  return process.env.NEXT_PUBLIC_APP_NAME || '108Heros';
 }
 export function getAppUrl(): string {
   // On the server we can read APP_URL; on the client we must rely on NEXT_PUBLIC_APP_URL
