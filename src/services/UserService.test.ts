@@ -117,7 +117,7 @@ describe("UserService refresh scheduling", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledWith("/api/auth/session", expect.objectContaining({
       method: "POST",
-      body: JSON.stringify({ refreshToken: "a-refresh-token" }),
+      body: JSON.stringify({ accessToken: fakeJwt, refreshToken: "a-refresh-token" }),
     }));
 
     // Token expires in 120s from "now"; REFRESH_MARGIN_MS is 60s, so the

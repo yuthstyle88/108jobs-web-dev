@@ -64,6 +64,7 @@ export async function GET(req: NextRequest) {
 
     const res = NextResponse.redirect(new URL(redirectTo, req.url));
     res.cookies.set(authCookieName, login.access_token, {
+        httpOnly: true,
         maxAge: COOKIE_MAX_AGE,
         secure: isHttps(req),
         sameSite: "lax",

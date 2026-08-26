@@ -89,7 +89,7 @@ export class UserService {
         // so it's already visible to SSR/middleware on the very next request --
         // no separate server-side HttpOnly cookie round trip is needed.
         setAuthJWTCookie(accessToken);
-        if (refreshToken) await UserService.#persistRefreshToken(refreshToken);
+        if (refreshToken) await UserService.#persistSession(accessToken, refreshToken);
         this.#setAuthInfo(accessToken);
         this.#hydrateReadLastMap();
         this.#scheduleRefresh();
@@ -208,20 +208,20 @@ export class UserService {
         }
     }
 
-    // Hands the refresh token to the server so it can be stored as an
-    // HttpOnly, Secure cookie -- it is never written to document.cookie.
+    // Hands the tokens to the server so they can be stored as
+    // HttpOnly, Secure cookies -- refresh token is never written to document.cookie.
     // Best-effort: a failure here just means auto-refresh won't work until
     // the next login, not that the user is logged out.
-    static async #persistRefreshToken(refreshToken: string): Promise<void> {
+    static async #persistSession(accessToken: string, refreshToken: string): Promise<void> {
         try {
             await fetch("/api/auth/session", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refreshToken }),
+                body: JSON.stringify({ accessToken, refreshToken }),
             });
         } catch (e) {
-            console.warn("[UserService.persistRefreshToken] Failed to persist refresh token", e);
+            console.warn("[UserService.persistSession] Failed to persist session", e);
         }
     }
 

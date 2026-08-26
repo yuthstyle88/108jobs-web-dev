@@ -74,7 +74,7 @@ function roomView(id: string, lastMessageAt: string): RoomView {
             id: id as never,
             roomName: id,
             createdAt: "2026-08-20T08:00:00.000Z",
-        },
+        } as never,
         participants: [],
         lastMessage: {
             id: `${id}-message`,
@@ -239,7 +239,7 @@ describe("UserEventsProvider room-list synchronization", () => {
                 id: "new-room" as never,
                 roomName: "new-room",
                 createdAt: "2026-08-20T08:00:00.000Z",
-            },
+            } as never,
             participants: [],
             isActive: false,
         };
