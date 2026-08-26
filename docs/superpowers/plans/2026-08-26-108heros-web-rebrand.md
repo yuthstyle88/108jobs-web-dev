@@ -313,15 +313,13 @@ before writing the fix.
 
 - [ ] **Step 1: Search for an existing issue in both repos, including closed ones**
 
+CLAUDE.md's "search both repos" rule assumes the `108-Plaza/<name>` + `yuthstyle88/<name>-dev` mirror pattern. That pattern does not apply to this repository: `yuthstyle88/108jobs-clean` is the only copy that exists — the `108-Plaza` org holds four unrelated repos and no `108jobs-clean`, and a global search finds no other variant. One search is therefore the complete search.
+
 ```bash
 gh issue list --repo yuthstyle88/108jobs-clean --state all --search "getAppUrl app name url"
 ```
 
-```bash
-gh issue list --repo 108-Plaza/108jobs-clean --state all --search "getAppUrl app name url"
-```
-
-If either search returns a matching issue, reuse its number and skip Step 2.
+If it returns a matching issue, reuse its number and skip Step 2.
 
 - [ ] **Step 2: Open the issue in the repo the PR will merge into**
 
@@ -757,7 +755,7 @@ git push -u origin feat/108heros-rebrand
 ```
 
 ```bash
-gh pr create --repo yuthstyle88/108jobs-clean --title "Rebrand the web app to 108Heros" --body "$(cat <<'PRBODY'
+gh pr create --repo yuthstyle88/108heros-web-dev --title "Rebrand the web app to 108Heros" --body "$(cat <<'PRBODY'
 Name-only rebrand of the web app, matching what the Flutter client did.
 
 The load-bearing change is not the rename but the auth cookie, whose name was
