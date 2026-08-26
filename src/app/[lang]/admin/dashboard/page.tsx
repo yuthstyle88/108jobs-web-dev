@@ -10,6 +10,7 @@ import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
 import {RegistrationMode} from "108jobs-client";
 import {callHttp, isSuccess} from "@/services/HttpService";
+import {getAppName} from "@/utils/appConfig";
 
 const DashboardPage = () => {
     const {t} = useTranslation();
@@ -21,7 +22,7 @@ const DashboardPage = () => {
     const admins = siteRes?.admins || [];
     const version = siteRes?.version;
 
-    const siteName = localSite?.name ?? "108Jobs";
+    const siteName = localSite?.name ?? getAppName();
 
     const registrationModeLabels: Record<RegistrationMode, string> = {
         Open: t("dashboard.siteInfo.registrationMode.open"),
@@ -103,7 +104,7 @@ const DashboardPage = () => {
                         <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4"/>
                             <span
-                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? "108jobs"}
+                                className="font-medium">{t("dashboard.siteInfo.instance")}:</span> {localSite?.name ?? getAppName()}
                         </div>
                         <div className="flex items-center gap-2">
                             <Settings className="w-4 h-4"/>
