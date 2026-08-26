@@ -585,7 +585,7 @@ export const vi = {
             seoLinksFacebook: "SEO Facebook",
             seoLinksAudit: "SEO Audit",
             seoLinksMonthly: "SEO hàng tháng",
-            seoDescription2Part1: `Chất lượng giúp website của bạn hiển thị ở vị trí hàng đầu trên Google, tăng cơ hội được truy cập và nhận diện thương hiệu. Tại ${getAppDomain()}, chúng tôi có các freelancer chuyên môn cao trong việc `,
+            seoDescription2Part1: `Chất lượng giúp website của bạn hiển thị ở vị trí hàng đầu trên Google, tăng cơ hội được truy cập và nhận diện thương hiệu. Tại ${getAppName()}, chúng tôi có các freelancer chuyên môn cao trong việc `,
             seoDescription2Strong1: "cung cấp dịch vụ SEO mũ trắng",
             seoDescription2Middle:
                 " giúp website của bạn lên top Google một cách ổn định và hiệu quả, bao gồm ",
@@ -610,7 +610,7 @@ export const vi = {
                 "Tối ưu thẻ Meta (Từ khóa, Mô tả, Tiêu đề) tương ứng với nội dung.",
             seoPrinciples4:
                 "Tăng số lượng backlink chất lượng để nâng cao uy tín nội dung.",
-            seoConclusionPart1: `Chi tiết về SEO không cố định và thay đổi thường xuyên. Do đó, bạn cần cập nhật nguyên tắc SEO liên tục. Nếu bạn chưa có kinh nghiệm, kỹ năng hay kiến thức, có thể thuê freelancer chuyên SEO để bắt đầu dễ dàng hơn. ${getAppDomain()} đã tập hợp các freelancer SEO chuyên nghiệp với `,
+            seoConclusionPart1: `Chi tiết về SEO không cố định và thay đổi thường xuyên. Do đó, bạn cần cập nhật nguyên tắc SEO liên tục. Nếu bạn chưa có kinh nghiệm, kỹ năng hay kiến thức, có thể thuê freelancer chuyên SEO để bắt đầu dễ dàng hơn. ${getAppName()} đã tập hợp các freelancer SEO chuyên nghiệp với `,
             seoConclusionStrong1: "dịch vụ SEO thuê ngoài, SEO mũ trắng",
             seoConclusionMiddle:
                 " theo mọi yêu cầu của khách hàng. Dịch vụ SEO giá rẻ, giúp tiết kiệm chi phí kinh doanh nhưng vẫn đảm bảo hiệu quả theo mục tiêu mong muốn ",
