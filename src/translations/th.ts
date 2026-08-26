@@ -4008,6 +4008,7 @@ export const th = {
                 tabPending: "รอตรวจสอบ",
                 tabApproved: "อนุมัติแล้ว",
                 tabRejected: "ถูกปฏิเสธ",
+                unresolvedCountLabel: "{{count}} รอการตัดสิน",
 
                 // Status & badges
                 statusPending: "รอการตรวจสอบ",

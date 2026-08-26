@@ -4118,6 +4118,7 @@ export const vi = {
                 tabPending: "Chờ duyệt",
                 tabApproved: "Đã phê duyệt",
                 tabRejected: "Đã từ chối",
+                unresolvedCountLabel: "{{count}} đang chờ quyết định",
 
                 // Status & badges
                 statusPending: "Đang chờ duyệt",

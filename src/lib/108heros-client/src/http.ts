@@ -92,6 +92,7 @@ import type {SaveUserSettings} from "./types/SaveUserSettings";
 import type {Search} from "./types/Search";
 import type {SearchResponse} from "./types/SearchResponse";
 import type {SetDefaultBankAccount} from "./types/SetDefaultBankAccount";
+import type {NotificationCountResponse} from "./types/NotificationCountResponse";
 import type {SuccessResponse} from "./types/SuccessResponse";
 import type {Tag} from "./types/Tag";
 import type {UpdateCategoryTag} from "./types/UpdateCategoryTag";
@@ -1104,6 +1105,30 @@ export class Api108Heros extends Controller {
             HttpType.Get,
             "/admin/riders/list",
             form,
+            options,
+        );
+    }
+
+    /**
+     * How many admin notifications are still unresolved — the rider queue's
+     * "waiting for a decision" count.
+     *
+     * A role-addressed notification is resolved by whoever acts on it, not read
+     * by an owner, so this is a queue depth rather than an unread badge: it
+     * falls to zero when the applications are decided, by any admin.
+     *
+     * @summary Unresolved admin notification count
+     */
+    @Security("bearerAuth")
+    @Get("/admin/notifications/unresolved-count")
+    @Tags("Admin", "Notifications")
+    async adminUnresolvedNotificationCount(
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<object, NotificationCountResponse>(
+            HttpType.Get,
+            "/admin/notifications/unresolved-count",
+            {},
             options,
         );
     }

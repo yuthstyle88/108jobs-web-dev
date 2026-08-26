@@ -27,6 +27,7 @@ import {cn} from "@/lib/utils";
 import {RiderReviewModal} from "@/modules/admin/components/Modal/RiderReviewModal";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {usePaginatedRiders} from "@/modules/admin/hooks/usePaginatedRiders";
+import {useUnresolvedRiderCount} from "@/modules/admin/hooks/useUnresolvedRiderCount";
 
 const vehicleIconMap: Record<VehicleType, JSX.Element> = {
     Motorcycle: <Motorbike className="h-4 w-4 shrink-0"/>,
@@ -82,6 +83,11 @@ export default function AdminRidersManagementPage() {
         limit: 10,
     });
 
+    // Independent of the tab: the queue depth is the same number whichever tab
+    // is open, and refetching it when somebody switches to Verified would be a
+    // request for a figure nothing on screen is showing.
+    const {count: unresolvedCount} = useUnresolvedRiderCount();
+
     const emptyMessage = viewMode === "Pending"
         ? t("admin.riders.emptyPending")
         : viewMode === "Verified"
@@ -107,6 +113,10 @@ export default function AdminRidersManagementPage() {
                     <div className="grid w-full min-w-0 grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 xl:w-auto xl:min-w-[430px]">
                         {viewTabs.map(({mode, labelKey, Icon}) => {
                             const active = viewMode === mode;
+                            // Only Pending carries the queue depth. Verified and
+                            // Rejected are outcomes, not a backlog -- a count
+                            // beside them would be a number nobody is waiting on.
+                            const showCount = mode === "Pending" && unresolvedCount !== null && unresolvedCount > 0;
                             return (
                                 <Button
                                     key={mode}
@@ -123,6 +133,20 @@ export default function AdminRidersManagementPage() {
                                 >
                                     <Icon className="h-4 w-4 shrink-0"/>
                                     <span className="truncate">{t(labelKey)}</span>
+                                    {showCount && (
+                                        <span
+                                            data-testid="unresolved-rider-count"
+                                            aria-label={t("admin.riders.unresolvedCountLabel", {count: unresolvedCount})}
+                                            className={cn(
+                                                "ml-1 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
+                                                active
+                                                    ? "bg-white/20 text-white"
+                                                    : "bg-amber-100 text-amber-800",
+                                            )}
+                                        >
+                                            {unresolvedCount}
+                                        </span>
+                                    )}
                                 </Button>
                             );
                         })}
