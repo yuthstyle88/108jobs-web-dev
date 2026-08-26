@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restore a working login round trip and a working register round trip for 108heros-clean against api-108jobs's Identity-Platform-only auth, by adding the one missing backend endpoint and rebuilding the frontend's client methods, `Claims`/`UserService`, and `LoginForm`/`RegisterForm` around what the backend actually does today.
+**Goal:** Restore a working login round trip and a working register round trip for 108heros-clean against api-108heros's Identity-Platform-only auth, by adding the one missing backend endpoint and rebuilding the frontend's client methods, `Claims`/`UserService`, and `LoginForm`/`RegisterForm` around what the backend actually does today.
 
-**Architecture:** One new Actix route in api-108jobs (`POST /account/auth/login/identity-platform`) exposes the already-implemented `login_with_identity_platform()` standalone. The frontend's generated-style API client (`108heros-client`) gets two new methods and loses one dead one. `UserService`'s `Claims` type is rewritten to the real JWT shape; profile fields that no longer live on the token (`email`/`interfaceLanguage`/`acceptedTerms`) are sourced from the existing `getMyUser()` call instead. `LoginForm` and `RegisterForm` are rewired to the new client methods; the register form gains username/password fields and the now-fully-unreachable OTP-verify/terms-accept flow is deleted.
+**Architecture:** One new Actix route in api-108heros (`POST /account/auth/login/identity-platform`) exposes the already-implemented `login_with_identity_platform()` standalone. The frontend's generated-style API client (`108heros-client`) gets two new methods and loses one dead one. `UserService`'s `Claims` type is rewritten to the real JWT shape; profile fields that no longer live on the token (`email`/`interfaceLanguage`/`acceptedTerms`) are sourced from the existing `getMyUser()` call instead. `LoginForm` and `RegisterForm` are rewired to the new client methods; the register form gains username/password fields and the now-fully-unreachable OTP-verify/terms-accept flow is deleted.
 
-**Tech Stack:** Rust/Actix-web (api-108jobs), Next.js/React/TypeScript with react-hook-form + zod (108heros-clean), Vitest (frontend unit tests, already set up from the prior wire-event-naming stage).
+**Tech Stack:** Rust/Actix-web (api-108heros), Next.js/React/TypeScript with react-hook-form + zod (108heros-clean), Vitest (frontend unit tests, already set up from the prior wire-event-naming stage).
 
 **Design doc:** `docs/superpowers/specs/2026-07-05-identity-platform-auth-design.md` (108heros-clean). Read it first for the full investigation and rationale — this plan implements it with two small, mechanical deviations discovered during planning (both noted in Global Constraints below).
 
@@ -689,7 +689,7 @@ async function handleLoginSuccess(loginData: LoginResponse, prev?: string) {
     await UserService.Instance.login(loginData.jwt ?? "");
 ```
 
-No other change to this file. This page calls `HttpService.client.authenticateWithOAuth(...)` (a different, existing client method this plan does not touch), which maps to api-108jobs's `authenticate_with_oauth` handler — confirmed during this plan's investigation to also unconditionally return `LocalLoginDisabled` (retired alongside local login/register). OAuth sign-in is therefore already non-functional today, independent of this plan (see the design doc's Non-Goals) — this step exists only to keep this file compiling against `UserService.login()`'s new signature, not to fix or further break OAuth, which stays explicitly out of scope.
+No other change to this file. This page calls `HttpService.client.authenticateWithOAuth(...)` (a different, existing client method this plan does not touch), which maps to api-108heros's `authenticate_with_oauth` handler — confirmed during this plan's investigation to also unconditionally return `LocalLoginDisabled` (retired alongside local login/register). OAuth sign-in is therefore already non-functional today, independent of this plan (see the design doc's Non-Goals) — this step exists only to keep this file compiling against `UserService.login()`'s new signature, not to fix or further break OAuth, which stays explicitly out of scope.
 
 - [ ] **Step 8: Type-check to confirm the fix**
 
@@ -1152,7 +1152,7 @@ This file has two small, unrelated pre-existing bugs directly in the code this t
 Run: `npx tsc --noEmit`
 Expected: no errors in `RegisterForm`.
 
-Run the dev server, navigate to `/register`, fill in username/email/password/password-confirm with a valid-looking new account, submit. Without a running local Identity-Platform + api-108jobs (set up in Task 8), this call will fail against whatever backend the dev server is pointed at — confirm at minimum that a network request now actually fires (visible in the browser's network tab) and that a mismatched password-confirm shows a validation error before any request fires. The full successful-registration path is verified in Task 8.
+Run the dev server, navigate to `/register`, fill in username/email/password/password-confirm with a valid-looking new account, submit. Without a running local Identity-Platform + api-108heros (set up in Task 8), this call will fail against whatever backend the dev server is pointed at — confirm at minimum that a network request now actually fires (visible in the browser's network tab) and that a mismatched password-confirm shows a validation error before any request fires. The full successful-registration path is verified in Task 8.
 
 - [ ] **Step 6: Commit**
 
@@ -1361,20 +1361,20 @@ From the `Identity-Platform-dev` repo:
 AUTH_HTTP_ADDR=127.0.0.1:8089 AUTH_AUDIENCE=jobs cargo run -p identity-api
 ```
 
-- [ ] **Step 2: Point a local api-108jobs at it**
+- [ ] **Step 2: Point a local api-108heros at it**
 
-Set the four env vars (or the equivalent `config.hjson` `identity` section, now that PR #133 added file-based config support) before starting api-108jobs:
+Set the four env vars (or the equivalent `config.hjson` `identity` section, now that PR #133 added file-based config support) before starting api-108heros:
 ```bash
 IDENTITY_BASE_URL=http://127.0.0.1:8089
 IDENTITY_JWKS_URL=http://127.0.0.1:8089/.well-known/jwks.json
 IDENTITY_AUDIENCE=jobs
 IDENTITY_ISSUER=auth-service
 ```
-Start api-108jobs against a fresh/migrated local Postgres, per this repo's normal local-dev instructions (see its own README/CONTRIBUTING for exact DB setup — not repeated here since it's unrelated to this plan).
+Start api-108heros against a fresh/migrated local Postgres, per this repo's normal local-dev instructions (see its own README/CONTRIBUTING for exact DB setup — not repeated here since it's unrelated to this plan).
 
 - [ ] **Step 3: Run 108heros-clean against that local backend**
 
-Set 108heros-clean's API base URL env var to point at the local api-108jobs instance (check `src/utils/env.ts`'s `getHttpBase()` for the exact env var name this repo uses). Run `npm run dev`.
+Set 108heros-clean's API base URL env var to point at the local api-108heros instance (check `src/utils/env.ts`'s `getHttpBase()` for the exact env var name this repo uses). Run `npm run dev`.
 
 - [ ] **Step 4: Register a brand-new user through the redesigned `RegisterForm`**
 
@@ -1388,7 +1388,7 @@ This step is the one this whole plan exists to make possible — before Task 1, 
 
 - [ ] **Step 6: Confirm the admin path still works**
 
-Using the RBAC-grant walkthrough from `api-108jobs/docs/identity-platform-setup.md` (grant `jobs:admin` directly against the local Identity-Platform instance, then log back in through `LoginForm`), confirm the post-login redirect goes to `/admin/dashboard` and that `/admin/*` routes are reachable (proxy.ts's roles-based gate from Task 4 passes).
+Using the RBAC-grant walkthrough from `api-108heros/docs/identity-platform-setup.md` (grant `jobs:admin` directly against the local Identity-Platform instance, then log back in through `LoginForm`), confirm the post-login redirect goes to `/admin/dashboard` and that `/admin/*` routes are reachable (proxy.ts's roles-based gate from Task 4 passes).
 
 - [ ] **Step 7: Report results**
 
@@ -1398,7 +1398,7 @@ If every step above passes, this plan's goal is met — both round trips work ag
 
 ## Verification record
 
-This plan was checked against the live source of both repos twice: once after the first draft (a 4-way adversarial pass covering the `getMyUser()`/`isSuccess` return-shape mechanics, `RegisterForm`'s exact current content and `getAppName` usage, api-108jobs's crate dependencies/module wiring/binary target, and a full blast-radius sweep of every call site touched by the `UserService.login()` signature change and every deletion in Task 7).
+This plan was checked against the live source of both repos twice: once after the first draft (a 4-way adversarial pass covering the `getMyUser()`/`isSuccess` return-shape mechanics, `RegisterForm`'s exact current content and `getAppName` usage, api-108heros's crate dependencies/module wiring/binary target, and a full blast-radius sweep of every call site touched by the `UserService.login()` signature change and every deletion in Task 7).
 
 Confirmed correct as originally written: the `getMyUser()` wrapping chain resolves to exactly `{state: "success", data: MyUserInfo}` with no double-nesting; `RegisterForm`'s cited line numbers, the stray-backtick and `sss` bugs, and `getAppName`'s single usage; `serde_with` as a direct dependency of `crates/http`; the exact current content of `crates/http/src/crud/user/mod.rs` and the relevant `src/api_routes.rs` line ranges; `FastJobErrorType::IncorrectLogin`'s declaration and 401 mapping; and that `HttpService.client.register(...)` (the dead call `RegisterForm` currently makes) has exactly one caller in the whole app.
 

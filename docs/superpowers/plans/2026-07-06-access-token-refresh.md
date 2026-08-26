@@ -4,9 +4,9 @@
 
 **Goal:** A logged-in user's session survives past the access token's original expiry without visible interruption, by refreshing the access token proactively before it expires.
 
-**Architecture:** api-108jobs gains a thin new proxy endpoint (`POST /account/auth/refresh/identity-platform`), mirroring the existing login/register-via-identity-platform pattern exactly. The frontend stores the refresh token alongside the access token, and `UserService` schedules a `setTimeout` to refresh shortly before the access token's known expiry — no reactive/401-catching logic, matching the design's proactive-only decision.
+**Architecture:** api-108heros gains a thin new proxy endpoint (`POST /account/auth/refresh/identity-platform`), mirroring the existing login/register-via-identity-platform pattern exactly. The frontend stores the refresh token alongside the access token, and `UserService` schedules a `setTimeout` to refresh shortly before the access token's known expiry — no reactive/401-catching logic, matching the design's proactive-only decision.
 
-**Tech Stack:** Rust/Actix (api-108jobs), Next.js/TypeScript with Vitest (108heros-clean).
+**Tech Stack:** Rust/Actix (api-108heros), Next.js/TypeScript with Vitest (108heros-clean).
 
 **Design doc:** `docs/superpowers/specs/2026-07-06-access-token-refresh-design.md` — read it first for full rationale. Its Verification record section confirms every file path, line number, and existing-code quote in this plan against live source at time of writing.
 
@@ -22,7 +22,7 @@
 
 ---
 
-## Task 1: Backend — refresh proxy endpoint (api-108jobs)
+## Task 1: Backend — refresh proxy endpoint (api-108heros)
 
 **Files:**
 - Modify: `crates/api/api_utils/src/identity_platform.rs` (add `RefreshRequestBody` + `refresh_with_identity_platform`, plus a test)
@@ -737,7 +737,7 @@ for real logins and registrations."
 
 - [ ] **Step 1: Confirm the assumed Identity-Platform `/auth/refresh` shape**
 
-Before testing the full flow, directly confirm this plan's central assumption. Against a running local Identity-Platform-dev instance (same setup as prior auth-fix verification: `AUTH_HTTP_ADDR=127.0.0.1:8089 AUTH_AUDIENCE=jobs cargo run -p identity-api`), obtain a real refresh token (log in via `POST http://localhost:8089/auth/login` directly, or via api-108jobs's `/account/auth/login/identity-platform`, and inspect the response), then:
+Before testing the full flow, directly confirm this plan's central assumption. Against a running local Identity-Platform-dev instance (same setup as prior auth-fix verification: `AUTH_HTTP_ADDR=127.0.0.1:8089 AUTH_AUDIENCE=jobs cargo run -p identity-api`), obtain a real refresh token (log in via `POST http://localhost:8089/auth/login` directly, or via api-108heros's `/account/auth/login/identity-platform`, and inspect the response), then:
 
 ```bash
 curl -s -X POST http://localhost:8089/auth/refresh \
@@ -747,9 +747,9 @@ curl -s -X POST http://localhost:8089/auth/refresh \
 
 Expected: a 200 response with a fresh token set. If the actual field name, path, or response shape differs from what Task 1 assumed, fix `refresh_with_identity_platform` (and if needed `RefreshRequestBody`) in `crates/api/api_utils/src/identity_platform.rs` to match reality before continuing — this is the one point in the whole plan where a wrong assumption would need a real code fix, not just a config change.
 
-- [ ] **Step 2: Verify the new api-108jobs endpoint end-to-end**
+- [ ] **Step 2: Verify the new api-108heros endpoint end-to-end**
 
-With api-108jobs running locally (pointed at the same Identity-Platform instance, per the four `IDENTITY_*` env vars established in the original auth-fix work) and a real refresh token in hand from Step 1:
+With api-108heros running locally (pointed at the same Identity-Platform instance, per the four `IDENTITY_*` env vars established in the original auth-fix work) and a real refresh token in hand from Step 1:
 
 ```bash
 curl -s -X POST http://localhost:8536/api/v4/account/auth/refresh/identity-platform \
@@ -761,7 +761,7 @@ Expected: 200, with a JSON body `{"accessToken": "...", "refreshToken": "...", "
 
 - [ ] **Step 3: Verify the full frontend round trip**
 
-Run the frontend dev server against the local api-108jobs. Log in with a real account. Confirm via the browser's cookie inspector that both the access-token cookie and the new refresh-token cookie (`refresh_token`) are set. Confirm no console errors.
+Run the frontend dev server against the local api-108heros. Log in with a real account. Confirm via the browser's cookie inspector that both the access-token cookie and the new refresh-token cookie (`refresh_token`) are set. Confirm no console errors.
 
 - [ ] **Step 4: Confirm the refresh actually fires before expiry**
 

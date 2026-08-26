@@ -58,7 +58,7 @@ endpoints and fixes, and the admin page becomes a real CRUD screen.
 
 ## Design
 
-### A. Backend: `api-108jobs`
+### A. Backend: `api-108heros`
 
 #### A1. `POST /category` — create
 

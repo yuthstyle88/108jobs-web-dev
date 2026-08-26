@@ -4,15 +4,15 @@
 
 **Goal:** Make the existing backend tag system usable — correct its wire casing, give the client methods for it, let admins manage tags, let posters apply them, and show them on posts.
 
-**Architecture:** One small `api-108jobs` change (a serde attribute), then four `108heros-clean` changes. The two repos decouple cleanly: the client's `Tag.ts` already declares camelCase, so it becomes correct the moment the backend ships and needs no edit of its own. Only manual verification needs the backend deployed.
+**Architecture:** One small `api-108heros` change (a serde attribute), then four `108heros-clean` changes. The two repos decouple cleanly: the client's `Tag.ts` already declares camelCase, so it becomes correct the moment the backend ships and needs no edit of its own. Only manual verification needs the backend deployed.
 
-**Tech Stack:** Rust/serde/actix (api-108jobs); TypeScript, Next.js 16, react-hook-form + zod, pnpm (108heros-clean).
+**Tech Stack:** Rust/serde/actix (api-108heros); TypeScript, Next.js 16, react-hook-form + zod, pnpm (108heros-clean).
 
 **Spec:** `docs/superpowers/specs/2026-08-17-post-tags-integration-design.md`
 
 ## Global Constraints
 
-- **Release order is not optional.** `108jobs-flutter`'s `PostView.tags` is typed `List<String>` against a backend sending `Vec<Tag>` objects. Creating and managing tags is safe; **assigning a tag to a post is what breaks the Flutter feed** — a `TypeError` parsing the whole `PostView`, not a blank chip. Task 4 (the picker) must not reach production before that retype lands. Building it is fine; shipping it ahead of Flutter is not.
+- **Release order is not optional.** `108heros-flutter`'s `PostView.tags` is typed `List<String>` against a backend sending `Vec<Tag>` objects. Creating and managing tags is safe; **assigning a tag to a post is what breaks the Flutter feed** — a `TypeError` parsing the whole `PostView`, not a blank chip. Task 4 (the picker) must not reach production before that retype lands. Building it is fine; shipping it ahead of Flutter is not.
 - **Only `Tag` gets `rename_all`.** `PostTag` is write-path only and never serialized — do not touch it. Do not add the attribute to any other struct; a wider casing audit is explicitly out of scope.
 - **Do not implement tag filtering.** `Tag`'s doc comment promises "displayed and filtered on", but filtering does not exist and is out of scope. Chips are display only — not links, not filter controls.
 - **Every user-facing string needs `en`/`th`/`vi`** in `src/translations/`, matching each locale's existing wording. Never leave English in `th.ts` or `vi.ts`.
@@ -26,9 +26,9 @@
 
 ---
 
-### Task 1: Give `Tag` camelCase wire keys (api-108jobs)
+### Task 1: Give `Tag` camelCase wire keys (api-108heros)
 
-Repo: `/Users/koeyl/108-ecosystem/108heros/api-108jobs`. This is the only task in that repo. Work on a branch off `main`; `Cargo.lock` is intentionally dirty there and must be left alone.
+Repo: `/Users/koeyl/108-ecosystem/108heros/api-108heros`. This is the only task in that repo. Work on a branch off `main`; `Cargo.lock` is intentionally dirty there and must be left alone.
 
 **Files:**
 - Modify: `crates/db/src/source/tag.rs`
@@ -108,7 +108,7 @@ Add the three type imports at the top alongside the other type imports.
 - [ ] **Step 3: Verify the response type against the backend**
 
 ```bash
-grep -n -A 6 "pub async fn create_category_tag" /Users/koeyl/108-ecosystem/108heros/api-108jobs/crates/category/src/create_tag.rs
+grep -n -A 6 "pub async fn create_category_tag" /Users/koeyl/108-ecosystem/108heros/api-108heros/crates/category/src/create_tag.rs
 ```
 Confirm what the handler returns. If it is not a bare `Tag`, use the type it actually returns and say so in your report — do not assume.
 
@@ -192,7 +192,7 @@ Add `tags: []` to the defaults (around line 96), and to the zod schema (around l
     tags: z.array(z.coerce.number().int().positive()).max(5, t("validation.tagsMax")).default([]),
 ```
 
-**No minimum.** Tags are optional; a post may carry none. A minimum would make tagging compulsory once a category has tags — an author editing a post to fix its budget could not save without tagging — which forces the first tagged post into existence while `108jobs-flutter` still crashes on tagged posts.
+**No minimum.** Tags are optional; a post may carry none. A minimum would make tagging compulsory once a category has tags — an author editing a post to fix its budget could not save without tagging — which forces the first tagged post into existence while `108heros-flutter` still crashes on tagged posts.
 
 `tags: []` in `defaultValues` is **load-bearing, not redundant**: react-hook-form's `register` ref callback only takes the array branch for a single-checkbox group when `_defaultValues[name]` is an array. Without it, a category offering exactly one tag yields a bare string instead of an array. Leave it, with a comment saying why.
 
@@ -329,7 +329,7 @@ git add -A src/ tsconfig.tsbuildinfo && git commit -m "chore(tags): final verifi
 
 ## Before this reaches production
 
-`108jobs-flutter`'s `PostView.tags` must be retyped from `List<String>` to
+`108heros-flutter`'s `PostView.tags` must be retyped from `List<String>` to
 `List<Tag>` first. Tasks 1-3 and 5 are safe to deploy on their own; **Task 4 is
 the one that must wait**, because it is what puts a tag on a post, and the first
 tagged post throws a `TypeError` in the Flutter feed.

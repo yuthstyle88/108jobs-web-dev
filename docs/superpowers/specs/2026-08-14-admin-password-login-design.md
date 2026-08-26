@@ -5,14 +5,14 @@
 `/login` currently offers only phone+OTP (`PhoneOtpAuthForm`) plus passkey
 and Google sign-in — password-based login was deliberately removed from the
 UI when the app migrated to phone+OTP (see commit `28b5cea`, "Replace
-password register with phone+OTP, matching 108jobs-flutter"). Only a stale
+password register with phone+OTP, matching 108heros-flutter"). Only a stale
 `LoginForm/interface.ts` survives from before that migration; the actual
 component is gone.
 
 The immediate trigger: testing admin-only pages requires an account with the
 `jobs:admin` role, and getting one today means registering via OTP, then
 manually granting the role straight against Identity-Platform's RBAC API
-(`api-108jobs/docs/identity-platform-setup.md`), then logging in *again*
+(`api-108heros/docs/identity-platform-setup.md`), then logging in *again*
 since roles are baked into the JWT at issuance. That doc's own walkthrough
 for bootstrapping a local admin account uses **username+password login**
 against `POST /account/auth/login/identity-platform` — an endpoint that
@@ -46,7 +46,7 @@ already uses.
 `src/components/Authentication/PasswordLoginForm/index.tsx`, a sibling to
 `PhoneOtpAuthForm`, not a branch inside it. `PhoneOtpAuthForm` is explicitly
 documented as the shared widget behind *both* login and register (mirroring
-108jobs-flutter's `PhoneOtpAuthFlow`); password login is login-only, so it
+108heros-flutter's `PhoneOtpAuthFlow`); password login is login-only, so it
 gets its own component rather than adding login-specific UI to a component
 register also renders.
 

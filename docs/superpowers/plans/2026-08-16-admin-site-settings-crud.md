@@ -73,7 +73,7 @@ convention), zustand (`useSiteStore`).
 This package is hand-maintained, not auto-generated from the backend in
 this repo — new types are authored to match the backend Rust struct
 field-for-field (confirmed by reading `EditSiteRequest` directly in
-`api-108jobs`), converting `snake_case` → `camelCase` and `Option<T>` →
+`api-108heros`), converting `snake_case` → `camelCase` and `Option<T>` →
 an optional TS field, matching every existing generated type's own
 convention.
 
@@ -81,7 +81,7 @@ convention.
 
 ```ts
 // This file was hand-authored to match the backend's EditSiteRequest struct.
-// Keep in sync with crates/db/src/source/site_view/api.rs in api-108jobs.
+// Keep in sync with crates/db/src/source/site_view/api.rs in api-108heros.
 import type {ListingType} from "./ListingType";
 import type {PostListingMode} from "./PostListingMode";
 import type {PostSortType} from "./PostSortType";
@@ -216,7 +216,7 @@ export type EditSiteRequest = {
 
 ```ts
 // This file was hand-authored to match the backend's SiteResponse struct.
-// Keep in sync with crates/db/src/source/site_view/api.rs in api-108jobs.
+// Keep in sync with crates/db/src/source/site_view/api.rs in api-108heros.
 import type {SiteView} from "./SiteView";
 
 /**

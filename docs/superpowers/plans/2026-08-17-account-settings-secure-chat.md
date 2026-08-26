@@ -59,7 +59,7 @@ the save fails.
   `SaveUserSettings.secureChatEnabled` (sent by Task 2's save).
 
 Both exist on the backend and neither is in the web client. Confirmed
-against `api-108jobs` `origin/main`: `local_user.secure_chat_enabled` is a
+against `api-108heros` `origin/main`: `local_user.secure_chat_enabled` is a
 non-null `bool`, and `SaveUserSettings.secure_chat_enabled` is
 `Option<bool>` — added by PR #233, whose commit message records that
 `PUT /account/settings/save` previously accepted the field and silently

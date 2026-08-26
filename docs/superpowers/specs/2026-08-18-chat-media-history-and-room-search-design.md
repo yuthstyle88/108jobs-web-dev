@@ -1,7 +1,7 @@
 # Chat media history and in-room search — design
 
 Date: 2026-08-18
-Repos: `108heros-clean` (primary), `api-108jobs` (minimal, required)
+Repos: `108heros-clean` (primary), `api-108heros` (minimal, required)
 Branches: `feat/chat-media-and-room-search`, `feat/chat-attachment-asset-id`
 
 ## What this adds
@@ -310,7 +310,7 @@ Backend: unit tests for `MessageModel` round-tripping with and without
 DB-backed test that `find_by_asset_id` returns the earliest binding.
 
 **Verification commands.** Frontend: `pnpm test:unit`, `pnpm lint`, `pnpm build`.
-Backend, per `api-108jobs/CLAUDE.md`:
+Backend, per `api-108heros/CLAUDE.md`:
 
 ```
 RUSTFMT="$(rustup which --toolchain nightly rustfmt)" cargo +nightly fmt --all -- --check

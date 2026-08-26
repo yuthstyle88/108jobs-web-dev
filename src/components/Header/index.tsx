@@ -11,7 +11,7 @@ import {useLanguage} from "@/contexts/LanguageContext";
 import {useSiteStore} from "@/store/useSiteStore";
 
 const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch?: boolean }) => {
-    const {isLoggedIn, userInfo} = useAuthInfo();
+    const {isLoggedIn, isAdmin} = useAuthInfo();
     const {siteView} = useSiteStore();
     const {lang} = useLanguage();
     const {t} = useTranslation();
@@ -60,7 +60,7 @@ const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch
                     )}
                     {isLoggedIn && <UserProfileSection/>}
                     {/* Admin Dashboard Button */}
-                    {userInfo?.localUserView.localUser.admin && (
+                    {isLoggedIn && isAdmin && (
                         <Link
                             href={`/${lang}/admin/dashboard`}
                             className="bg-amber-500 text-white text-sm px-3 py-1 rounded hover:bg-amber-200"

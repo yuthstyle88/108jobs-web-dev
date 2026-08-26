@@ -20,7 +20,7 @@ backend batch, so this plan's types must match that new API exactly.
 **Companion spec:** `docs/superpowers/specs/2026-08-17-category-full-crud-design.md`
 (section B).
 
-**Companion backend branch:** `api-108jobs` `feat/category-crud-api`, which
+**Companion backend branch:** `api-108heros` `feat/category-crud-api`, which
 adds `POST /category` (with `parentId`), `POST /category/delete` (with
 `deleted`), `icon`/`banner` on edit, and makes renaming persist. **This
 frontend cannot be end-to-end verified against the currently-running dev API
@@ -821,7 +821,7 @@ The running dev API on :8536 predates the backend batch, so create and
 delete will fail against it. To verify end to end, run the companion backend
 branch on another port and point the frontend at it:
 
-- [ ] Build and run `api-108jobs` branch `feat/category-crud-api` on :8537.
+- [ ] Build and run `api-108heros` branch `feat/category-crud-api` on :8537.
 - [ ] Temporarily set `NEXT_PUBLIC_API_BASE_URL="http://localhost:8537"` in
       `.env` and restart the frontend dev server so the value is picked up.
 - [ ] Walk the spec's testing list: create a root, create a child under it,

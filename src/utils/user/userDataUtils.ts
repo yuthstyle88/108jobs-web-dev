@@ -59,8 +59,10 @@ export function isEmailVerified(localUser: LocalUser): boolean {
 }
 
 /**
- * Check if the profile is an admin
- * @returns Whether the profile is an admin
+ * Check if the profile has localUser.admin set
+ * Note: for route access and admin navigation, the verified token's `roles` claim
+ * (`jobs:admin`) via `useAuthInfo().isAdmin` / `isAdminClaims()` is the source of truth.
+ * @returns Whether the local user record has admin set
  * @param localUser
  */
 export function isAdmin(localUser: LocalUser): boolean {

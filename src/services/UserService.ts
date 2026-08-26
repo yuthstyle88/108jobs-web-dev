@@ -6,6 +6,7 @@ import {isSuccess} from "./HttpService";
 import {toast} from "sonner";
 import {VALID_LANGUAGES} from "@/constants/language";
 import {getClientCurrentLanguage} from "@/utils/getClientCurrentLanguage";
+import {useUserStore} from "@/store/useUserStore";
 
 export const JOBS_ADMIN_ROLE = "jobs:admin";
 
@@ -69,6 +70,10 @@ export class UserService {
         return Boolean(this.authInfo?.auth);
     }
 
+    get isAdmin(): boolean {
+        return isAdminClaims(this.authInfo?.claims);
+    }
+
     public async login(accessToken: string, refreshToken?: string, showToast = false): Promise<void> {
         if (!isBrowser() || !accessToken) return;
 
@@ -129,6 +134,7 @@ export class UserService {
             this.#clearRefreshTimer();
             this.authInfo = undefined;
             this.myUserInfo = undefined;
+            useUserStore.getState().resetStore();
 
             if (isBrowser()) {
                 // Clear client-side cookies
@@ -195,8 +201,10 @@ export class UserService {
         try {
             const claims = jwtDecode<Claims>(jwt ?? "");
             this.authInfo = { auth: jwt, claims };
+            useUserStore.getState().setClaims(claims);
         } catch {
             this.authInfo = { jwt } as AuthInfo;
+            useUserStore.getState().setClaims(null);
         }
     }
 

@@ -34,7 +34,7 @@ hand-maintained `108heros-client` package.
   legitimately exposes more surface than the app consumes.
 - **`createCategory` / `deleteCategory` are NOT dead.** They 404 against a
   locally-running dev API only because that binary predates today's merge.
-  Both exist on `api-108jobs` `origin/main` and are called by the admin
+  Both exist on `api-108heros` `origin/main` and are called by the admin
   category page. Do not remove them.
 - **Rebuild the package after every change under `src/lib/108heros-client/src/`:**
   ```bash

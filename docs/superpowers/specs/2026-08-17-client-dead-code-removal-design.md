@@ -7,7 +7,7 @@
 a 235-line barrel `index.ts` that re-exports every type by name.
 
 The package has drifted from the backend. Endpoints were removed from
-`api-108jobs` over time without the client following, so a substantial part
+`api-108heros` over time without the client following, so a substantial part
 of its surface points at routes that no longer exist and can only ever fail.
 
 **32 of the client's 117 distinct endpoints — 27% — do not exist on the

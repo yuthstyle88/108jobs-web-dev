@@ -14,7 +14,7 @@ before this spec (not recalled from the earlier audit) — every citation is
 the current file:line, confirmed accurate.
 
 A separate, larger piece of work came up during this batch's brainstorm:
-the backend (`api-108jobs`) already has a complete, admin-gated
+the backend (`api-108heros`) already has a complete, admin-gated
 `PUT /api/v4/site` endpoint (`update_site`, in
 `crates/http/src/crud/site/update.rs`) supporting edits to name, sidebar,
 description, registration mode, email verification, OAuth registration, and

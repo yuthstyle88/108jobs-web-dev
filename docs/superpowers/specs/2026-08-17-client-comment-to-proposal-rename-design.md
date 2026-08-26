@@ -2,7 +2,7 @@
 
 ## Context
 
-`api-108jobs` renamed its whole comment domain to **proposal** — types,
+`api-108heros` renamed its whole comment domain to **proposal** — types,
 routes, DB columns, and enum variants. On `origin/main` today there is not a
 single `Comment*` API type and not one `CommentSortType`; the routes are
 `/proposal`, `/proposal/list`, `/proposal/delete`, and the columns are
@@ -108,7 +108,7 @@ name; its two importers point at the existing file instead.
 
 ## The full inventory
 
-Every item verified against `api-108jobs` `origin/main`.
+Every item verified against `api-108heros` `origin/main`.
 
 **Type files renamed (10) + 1 deleted**
 
@@ -149,7 +149,7 @@ translation keys.
 
 ## Out of scope
 
-- **Backend handler function names.** `api-108jobs` still calls its handlers
+- **Backend handler function names.** `api-108heros` still calls its handlers
   `create_comment`, `list_comments`, and carries a stale
   `// …add the comment() rate limiter`. Internal to that repo, zero wire
   impact, and a change there is its own PR.

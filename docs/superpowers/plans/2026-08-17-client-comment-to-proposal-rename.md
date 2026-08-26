@@ -12,8 +12,8 @@
 
 ## Global Constraints
 
-- **Never edit `api-108jobs`.** This plan is frontend-only. The backend wire contract is the fixed reference.
-- **Rename only names this plan lists.** Every listed name was verified renamed on `api-108jobs` `origin/main`. Do not rename any other "Comment" occurrence — several are correct as-is (`PostNotificationsMode`'s `"AllComments"`, `useNotification.ts`'s `postComment`/`updateComment`/`deleteComment` keys). A blanket find-and-replace breaks the app.
+- **Never edit `api-108heros`.** This plan is frontend-only. The backend wire contract is the fixed reference.
+- **Rename only names this plan lists.** Every listed name was verified renamed on `api-108heros` `origin/main`. Do not rename any other "Comment" occurrence — several are correct as-is (`PostNotificationsMode`'s `"AllComments"`, `useNotification.ts`'s `postComment`/`updateComment`/`deleteComment` keys). A blanket find-and-replace breaks the app.
 - **No compatibility aliases.** No `export type CommentView = ProposalView`. Delete the old name.
 - **After ANY edit under `src/lib/108heros-client/src/`, run BOTH commands, in this order:**
   ```bash
