@@ -590,6 +590,167 @@ No visible change: getAppName() still returns the current name."
 
 ---
 
+### Task 3.5: Separate the domain from the brand name
+
+`getAppName()` is overloaded: it is both the display name and the domain stem. 53 sites
+build a URL, host, or email address out of it, so flipping it to `108Heros` in Task 4
+would rewrite the privacy-policy link, the CDN links, and the support mailbox to
+`108Heros.com` — a host that does not exist. That directly violates this plan's own
+constraint that `108jobs.com` and its subdomains must not be renamed. Literal-string
+greps never caught these because the domains are assembled by interpolation.
+
+The two usages are already mutually inconsistent, which proves one of them is broken in
+production today whatever `NEXT_PUBLIC_APP_NAME` holds: `en.ts:1196` renders
+`support@<name>` while `th.ts:1161` and `vi.ts:1187` render `support@<name>.com`. Only
+one of those can be a real address. Introducing an explicit domain accessor fixes that
+pre-existing defect as a side effect.
+
+The nine LINE Official Account handles (`@${getAppName()}`) deliberately stay on
+`getAppName()` — the LINE account was renamed with the product, so they track the brand.
+
+**Files:**
+- Modify: `src/utils/appConfig.ts` (add `getAppDomain`)
+- Modify: `src/translations/en.ts`, `th.ts`, `vi.ts` (51 `.com` sites + `en.ts:1196`)
+- Modify: `src/lib/metadata/generators.ts:29`
+
+**Interfaces:**
+- Consumes: `getAppName()` and `isBrowser()` from the existing module.
+- Produces: `getAppDomain(): string`, exported from `@/utils/appConfig`, returning the bare host (no scheme, no trailing slash) — e.g. `108jobs.com`.
+
+- [ ] **Step 1: Add the domain accessor**
+
+Append to `src/utils/appConfig.ts`, after `getAppUrl`:
+
+```ts
+/**
+ * The bare host the site is served from — no scheme, no trailing slash.
+ *
+ * Deliberately separate from getAppName(). The product name and the domain
+ * diverged in the 108Heros rebrand, so interpolating the name into a URL or an
+ * email address would produce a host that does not exist.
+ */
+export function getAppDomain(): string {
+  if (!isBrowser()) {
+    return process.env.APP_DOMAIN || process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com';
+  }
+  return process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com';
+}
+```
+
+- [ ] **Step 2: Point every domain-shaped interpolation at it**
+
+In `src/translations/en.ts`, `th.ts`, and `vi.ts`, replace every occurrence of the
+exact text `${getAppName()}.com` with `${getAppDomain()}`. There are 51: 7 in `en.ts`,
+18 in `th.ts`, 26 in `vi.ts`. This is a plain textual substitution — the surrounding
+copy, including all Thai and Vietnamese text, must be left byte-identical.
+
+The substitution covers all three shapes at once, because the `.com` is part of the
+replaced text:
+
+```ts
+// before                                        after
+`https://${getAppName()}.com/privacy`         →  `https://${getAppDomain()}/privacy`
+`https://static.${getAppName()}.com/...`      →  `https://static.${getAppDomain()}/...`
+`support@${getAppName()}.com`                 →  `support@${getAppDomain()}`
+`${getAppName()}.com คือเว็บไซต์...`            →  `${getAppDomain()} คือเว็บไซต์...`
+```
+
+Then fix the one English site that omits `.com` and so is not covered by the
+substitution above — `src/translations/en.ts:1196`:
+
+```ts
+            supportEmail: `support@${getAppDomain()}`,
+```
+
+- [ ] **Step 3: Fix the bare-host use in the metadata base URL**
+
+`src/lib/metadata/generators.ts:29` interpolates the name directly as a host. Replace:
+
+```ts
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || `https://${getAppName()}`;
+```
+
+with:
+
+```ts
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || `https://${getAppDomain()}`;
+```
+
+- [ ] **Step 4: Add the import everywhere it is now used**
+
+Each of the four modified files imports from `@/utils/appConfig` on line 1 or 3. Extend
+the existing import rather than adding a second one — for example, in `src/translations/en.ts`:
+
+```ts
+import {getAppDomain, getAppName} from "@/utils/appConfig";
+```
+
+`src/lib/metadata/generators.ts` still uses `getAppName` for `APP_NAME`, so it needs
+both names too. Do not remove `getAppName` from any import.
+
+- [ ] **Step 5: Verify the split is complete and the LINE handles survived**
+
+```bash
+grep -rn 'getAppName()}\.com' src/translations/ src/lib/
+```
+
+Expected: no output.
+
+```bash
+grep -rn 'https://\${getAppName()}' src/
+```
+
+Expected: no output.
+
+```bash
+grep -rn '@\${getAppName()}' src/translations/ | wc -l
+```
+
+Expected: exactly `9` — the LINE handles (`chatToHireButton`, `faqQuestion3Step1`,
+`addLineButton` in each of the three languages). These are correct and must remain.
+
+```bash
+grep -ohF 'getAppDomain()' src/translations/*.ts | wc -l
+```
+
+Expected: `52` — the 51 substitutions plus `en.ts`'s `supportEmail`.
+
+```bash
+grep -c "getAppDomain" src/translations/en.ts src/translations/th.ts src/translations/vi.ts src/lib/metadata/generators.ts
+```
+
+Expected: a non-zero count for all four files, which confirms each got the import.
+
+- [ ] **Step 6: Run the gate**
+
+```bash
+pnpm test:unit && pnpm lint
+```
+
+Expected: PASS, with lint errors at 0 (the ~608-warning noise floor is pre-existing).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/utils/appConfig.ts src/translations/en.ts src/translations/th.ts src/translations/vi.ts src/lib/metadata/generators.ts
+git commit -m "fix(config): separate the site domain from the product name
+
+getAppName() was doing double duty as the display name and the domain stem.
+53 sites built a URL, host, or email out of it, so renaming the product would
+have pointed the privacy policy, the CDN links, and the support mailbox at a
+host that does not exist.
+
+The two usages were already inconsistent -- en.ts rendered support@<name>
+while th.ts and vi.ts rendered support@<name>.com -- so one of them was a
+broken address whatever the deployed name was. An explicit getAppDomain()
+settles it.
+
+The LINE handles stay on getAppName(): that account was renamed with the
+product."
+```
+
+---
+
 ### Task 4: Flip the brand to 108Heros
 
 Everything now reads through `getAppName()`. This task changes the value once, which is
