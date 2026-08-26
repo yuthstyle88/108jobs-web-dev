@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { authCookieName, legacyAuthCookieNames } from "@/utils/config";
-import { clearAuthCookie, getAuthJWTCookie, setAuthJWTCookie } from "@/utils/browser";
+import {
+  clearAuthCookie,
+  getAuthJWTCookie,
+  retireLegacyAuthCookies,
+  setAuthJWTCookie,
+} from "@/utils/browser";
 
 function wipeAuthCookies() {
   for (const name of [authCookieName, ...legacyAuthCookieNames]) {
@@ -50,5 +55,53 @@ describe("auth cookie", () => {
     expect(document.cookie).not.toContain("stable-token");
     expect(document.cookie).not.toContain("legacy-token");
     expect(getAuthJWTCookie()).toBeNull();
+  });
+});
+
+// UserServiceContext's SSR path can populate the token from isoData.jwt --
+// itself read from a legacy cookie name by getJwtCookieFromServer /
+// getJwtFromRequest (see src/utils/helper-server.ts) -- without ever calling
+// getAuthJWTCookie(). retireLegacyAuthCookies() is the standalone retirement
+// step called from that hydration path so a legacy cookie still gets cleared
+// even when it never went through getAuthJWTCookie()'s own migration branch.
+describe("retireLegacyAuthCookies", () => {
+  afterEach(wipeAuthCookies);
+
+  it("retires a legacy cookie without changing an already-present stable cookie", () => {
+    setAuthJWTCookie("stable-token");
+    document.cookie = `108Jobs=legacy-token; path=/`;
+
+    retireLegacyAuthCookies();
+
+    expect(document.cookie).toContain(`${authCookieName}=stable-token`);
+    expect(document.cookie).not.toContain("108Jobs=legacy-token");
+  });
+
+  it("adopts the legacy token into the stable cookie when no stable cookie exists yet", () => {
+    document.cookie = `108Jobs=legacy-token; path=/`;
+
+    retireLegacyAuthCookies();
+
+    expect(document.cookie).toContain(`${authCookieName}=legacy-token`);
+    expect(document.cookie).not.toContain("108Jobs=legacy-token");
+  });
+
+  it("is idempotent: a second call is a no-op", () => {
+    document.cookie = `108Jobs=legacy-token; path=/`;
+
+    retireLegacyAuthCookies();
+    retireLegacyAuthCookies();
+
+    expect(document.cookie).toContain(`${authCookieName}=legacy-token`);
+    expect(document.cookie).not.toContain("108Jobs=legacy-token");
+  });
+
+  it("is a no-op when no auth cookie is present at all", () => {
+    retireLegacyAuthCookies();
+
+    expect(getAuthJWTCookie()).toBeNull();
+    for (const legacy of legacyAuthCookieNames) {
+      expect(document.cookie).not.toContain(`${legacy}=`);
+    }
   });
 });
