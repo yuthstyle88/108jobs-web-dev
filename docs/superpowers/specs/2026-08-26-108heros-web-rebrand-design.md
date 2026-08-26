@@ -89,9 +89,40 @@ admin menu descriptions, and a form placeholder. Each becomes `${getAppName()}`;
 files already use that form for `labelProductFastwork`, so this introduces no new
 pattern and removes the drift permanently.
 
+The tenth Vietnamese string is the LINE Official Account handle in `addLineButton`,
+which `en.ts` and `th.ts` already render as `@${getAppName()}`. The LINE account was
+renamed alongside the product, so the handle tracks the brand and `vi.ts` is brought
+into line with the other two rather than the reverse.
+
 `src/app/[lang]/admin/dashboard/page.tsx` hardcodes the brand twice as a fallback for
 the backend-supplied site name, once as `"108Jobs"` and once as `"108jobs"`. Both
 become `getAppName()`.
+
+`src/lib/metadata/translations.ts` hardcodes the domain in the `login.title` of each
+language while using `getAppName()` at 68 other sites in the same file — including the
+`description` directly beneath each of those titles. These are browser-tab and SEO
+titles, so they are user-visible, and they follow the brand like their siblings.
+
+### Strings that must not be touched
+
+Two identifiers contain the old brand, fail silently when changed, and are covered by no
+test in this repository. Both are called out in the implementation plan's global
+constraints.
+
+`KDF_INFO` in `src/modules/chat/utils/security/crypto.ts` is an HKDF `info` parameter
+pinned identically in `api-108jobs` (`CHAT_SESSION_KDF_INFO`) and in `108jobs-flutter`
+(`_kdfInfo`). Changing it derives a different key, so every chat message fails to
+decrypt across all three clients.
+
+`REMEMBERED_IDENTIFIER_KEY` in `src/services/IdentityPasskeyService.ts` is a
+`localStorage` key; renaming it silently forgets every user's remembered passkey
+identifier.
+
+Alongside these, the Web Locks name in `UserService`, the server filesystem path in
+`env.ts`, the `support@108jobs.com` mailto in the footer, and the profile URL prefix in
+`BasicInformation` all stay, on the same reasoning as the domains. Code comments naming
+`api-108jobs` and `108jobs-flutter` refer to sibling repositories that are not being
+renamed.
 
 ### Legal copy
 
