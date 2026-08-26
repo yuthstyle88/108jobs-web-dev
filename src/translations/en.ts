@@ -1,4 +1,4 @@
-import {getAppName} from "@/utils/appConfig";
+import {getAppDomain, getAppName} from "@/utils/appConfig";
 
 export const en = {
     business: {
@@ -1193,7 +1193,7 @@ export const en = {
                 "Your problem is our priority. You can contact our customer support by the following channels.",
             facebook: "Facebook",
             messenger: "Messenger",
-            supportEmail: `support@${getAppName()}`,
+            supportEmail: `support@${getAppDomain()}`,
             customerSupportWorkingHours:
                 "Our team is ready to serve you every day, Monday-Friday from 9:30 - 22:00",
             customerSupportWeekendHours:
@@ -2818,7 +2818,7 @@ export const en = {
             trustedClientsCta: "View More",
             termsAndConditionsTitle: `Terms and Conditions for Using the ${getAppName()}.co Platform for Freelancers`,
             section1Title: "Definitions",
-            definition1: `Platform refers to the website (https://${getAppName()}.com) and the ${getAppName()} app.`,
+            definition1: `Platform refers to the website (https://${getAppDomain()}) and the ${getAppName()} app.`,
             definition2:
                 "The platform acts as an intermediary for users to create and share services.",
             definition3: "Users can buy and sell services through the platform.",
@@ -3039,7 +3039,7 @@ export const en = {
             intellectualProperty3:
                 "Violators compensate intellectual property owners.",
             section18Title: "Privacy Policy",
-            privacyPolicy1: `Read our privacy policy at https://${getAppName()}.com/seller-privacy.`,
+            privacyPolicy1: `Read our privacy policy at https://${getAppDomain()}/seller-privacy.`,
             privacyPolicy2: "Personal data is treated as confidential.",
             privacyPolicy3: "The company may access chats for monitoring.",
             privacyPolicy4: "Users agree to content use for marketing.",
@@ -3047,8 +3047,8 @@ export const en = {
             contact1: "Contact the company during business hours.",
             contact2: `Company Name: ${getAppName()}`,
             contact3: `Address: ${getAppName()} Headquarters`,
-            contact4: `Email: support@${getAppName()}.com`,
-            contact5: `Website: https://static.${getAppName()}.com/contents/support-center`,
+            contact4: `Email: support@${getAppDomain()}`,
+            contact5: `Website: https://static.${getAppDomain()}/contents/support-center`,
             note1: "These terms are subject to change without prior notice.",
             note2: "Users are responsible for reviewing updates to the Terms of Use.",
             note3: "The company reserves the right to modify platform features.",
@@ -3072,7 +3072,7 @@ export const en = {
             pageTitle: "Terms & Conditions",
             heading: `Platform Terms & Conditions for Employers of ${getAppName()} Technologies Co., Ltd.`,
             definitionTitle: "Definitions",
-            definitionPlatform: `“Platform” means the Company's website (https://${getAppName()}.com/) or ${getAppName()} application, which serves as a channel and central space enabling users to create, share, sell, and purchase work or services in the form of payments based on the defined value of such work or services.`,
+            definitionPlatform: `“Platform” means the Company's website (https://${getAppDomain()}/) or ${getAppName()} application, which serves as a channel and central space enabling users to create, share, sell, and purchase work or services in the form of payments based on the defined value of such work or services.`,
             definitionWork:
                 "“Work” means the deliverables and/or various services that an Employer commissions and a Freelancer delivers via the Platform.",
             definitionCompany: `“Company” means ${getAppName()} Technologies Co., Ltd.`,
@@ -3336,7 +3336,7 @@ export const en = {
             privacyPolicyTitle: "Privacy Policy",
             privacyPolicyContent1:
                 "The Company prioritizes and acknowledges the protection and security of your personal data in accordance with the law. You can review the Privacy Policy at",
-            privacyPolicyLinkText: `https://${getAppName()}.com/privacy`,
+            privacyPolicyLinkText: `https://${getAppDomain()}/privacy`,
             privacyPolicyContent2:
                 "which this Privacy Policy is an integral part of these Terms of Use.",
             privacyPolicyContent3:
@@ -3353,7 +3353,7 @@ export const en = {
                 "Address: 622 Emporium Tower, 24/1-3,8 Sukhumvit Road, Khlong Tan, Khlong Toei, Bangkok 10110",
             contactInfoEmail: "support@ibrowe.com",
             contactInfoPhone: "Phone Number: 02-114-7008",
-            contactInfoWebsiteLinkText: `https://static.${getAppName()}.com/contents/support-center`,
+            contactInfoWebsiteLinkText: `https://static.${getAppDomain()}/contents/support-center`,
             tableOfContents: "Table of Contents",
             selectSection: "Select a section",
             privacyPage: {

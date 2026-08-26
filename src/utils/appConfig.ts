@@ -18,3 +18,17 @@ export function getAppUrl(): string {
   // Client side
   return process.env.NEXT_PUBLIC_APP_URL || 'http://108jobs.com';
 }
+
+/**
+ * The bare host the site is served from — no scheme, no trailing slash.
+ *
+ * Deliberately separate from getAppName(). The product name and the domain
+ * diverged in the 108Heros rebrand, so interpolating the name into a URL or an
+ * email address would produce a host that does not exist.
+ */
+export function getAppDomain(): string {
+  if (!isBrowser()) {
+    return process.env.APP_DOMAIN || process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com';
+  }
+  return process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com';
+}
