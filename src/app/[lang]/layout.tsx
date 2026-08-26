@@ -46,6 +46,16 @@ export async function generateMetadata(
 
     return {
         title: t("global.labelProductFastwork") || process.env.NEXT_PUBLIC_SITE_NAME,
+        icons: {
+            icon: [
+                { url: "/icon.png", type: "image/png" },
+                { url: "/favicon.ico", sizes: "any" },
+            ],
+            shortcut: "/favicon.ico",
+            apple: [
+                { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+            ],
+        },
     };
 }
 
