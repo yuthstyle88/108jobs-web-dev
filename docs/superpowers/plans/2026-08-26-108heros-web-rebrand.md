@@ -815,6 +815,39 @@ NEXT_PUBLIC_APP_NAME="108Heros"
 This file is gitignored. Do not stage it; it exists so the next step renders the new
 name locally.
 
+- [ ] **Step 3b: Align the four platform-description keys across languages**
+
+Task 3.5's substitution followed whichever source string happened to contain `.com`, so
+four parallel keys ended up disagreeing about whether they name the product or the
+domain. English already has the intended shape in all four; Thai and Vietnamese need
+nine occurrences swapped back from `getAppDomain()` to `getAppName()`, across six lines:
+
+| Key | Line | `getAppDomain()` → `getAppName()` |
+| --- | --- | --- |
+| `homepageTitle` | `vi.ts:2778` | 1 |
+| `contentFastwork1` | `vi.ts:1206` | 2 |
+| `freelancerStatistics` | `th.ts:1209` | 1 |
+| `freelancerStatistics` | `vi.ts:1240` | 1 |
+| `platformDescription` | `th.ts:1232` | 2 |
+| `platformDescription` | `vi.ts:1263` | 2 |
+
+Change only the accessor. Every other character on those lines, including all Thai and
+Vietnamese text, stays byte-identical — and note `freelancerStatistics` already mixes
+both accessors on one line, so swap only the `getAppDomain()` one.
+
+These four keys are the homepage `<title>` and the main platform descriptions, so after
+the flip they must read `108Heros` in every language rather than advertising the old
+domain. Verify the counts afterwards:
+
+```bash
+for k in homepageTitle contentFastwork1 freelancerStatistics platformDescription; do
+  grep -n "$k:" src/translations/*.ts | grep -c "getAppDomain"
+done
+```
+
+Expected: `0` four times — no occurrence of `getAppDomain()` remains on any of those
+keys in any language.
+
 - [ ] **Step 4: Verify the rename renders**
 
 ```bash
