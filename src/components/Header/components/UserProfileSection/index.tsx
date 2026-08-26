@@ -62,7 +62,7 @@ const UserProfileSection = () => {
                 </div>
             </div>
             <ChatBadge/>
-            {/*<NotificationDropdown/>*/}
+            <NotificationDropdown/>
             <Link prefetch={false} href="/coin" className="text-white text-xs">
                 <div className="flex items-center gap-1 bg-white rounded-full h-[1.5rem] max-w-[60px] min-w-0">
                     <p className="text-third text-[10px] pl-1 truncate">{wallet?.balanceAvailable || 0}</p>
