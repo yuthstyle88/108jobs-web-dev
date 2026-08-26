@@ -19,6 +19,17 @@ export function getAppUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://108jobs.com';
 }
 
+// Strips a leading scheme (e.g. "https://") and any trailing slash(es) from a
+// misconfigured domain env var. Every getAppDomain() call site interpolates the
+// result directly into a URL or an email address -- e.g.
+// NEXT_PUBLIC_APP_DOMAIN="https://108jobs.com/" would otherwise ship
+// "https://https://108jobs.com//privacy" and "support@https://108jobs.com/"
+// straight to users. This is a defensive backstop, not a substitute for
+// setting the env var correctly.
+function stripSchemeAndTrailingSlash(host: string): string {
+  return host.replace(/^[a-z][a-z0-9+.-]*:\/\//i, '').replace(/\/+$/, '');
+}
+
 /**
  * The bare host the site is served from — no scheme, no trailing slash.
  *
@@ -28,7 +39,9 @@ export function getAppUrl(): string {
  */
 export function getAppDomain(): string {
   if (!isBrowser()) {
-    return process.env.APP_DOMAIN || process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com';
+    return stripSchemeAndTrailingSlash(
+      process.env.APP_DOMAIN || process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com',
+    );
   }
-  return process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com';
+  return stripSchemeAndTrailingSlash(process.env.NEXT_PUBLIC_APP_DOMAIN || '108jobs.com');
 }
