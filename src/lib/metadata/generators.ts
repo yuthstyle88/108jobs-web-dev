@@ -60,6 +60,16 @@ export async function generateLocalizedMetadata(
         vi: `${BASE_URL}/vi`,
       },
     },
+    icons: {
+      icon: [
+        { url: "/icon.png", type: "image/png" },
+        { url: "/favicon.ico", sizes: "any" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: [
+        { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+    },
     referrer: "strict-origin-when-cross-origin",
     ...overrides,
   };
