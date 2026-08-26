@@ -560,7 +560,8 @@ Expected: no output.
 grep -rn "108jobs\|108Jobs" "src/app/[lang]/admin/dashboard/page.tsx"
 ```
 
-Expected: no output.
+Expected: exactly one line — `import {RegistrationMode} from "108jobs-client";`. That
+package name is protected by the global constraints; it is not a leftover.
 
 - [ ] **Step 6: Verify the app still builds and renders the old name**
 
