@@ -10,7 +10,7 @@ import {useTranslation} from "react-i18next";
 
 export default function LoginPage() {
   const {t} = useTranslation();
-  const [authMode, setAuthMode] = useState<"otp" | "password">("otp");
+  const [authMode, setAuthMode] = useState<"password" | "otp">("password");
 
   return (
     <div
@@ -99,12 +99,12 @@ export default function LoginPage() {
           />
           <AuthFormContainer
             title={t("authen.titleLoginForm")}
-            onBack={authMode === "password" ? () => setAuthMode("otp") : undefined}
+            onBack={authMode === "otp" ? () => setAuthMode("password") : undefined}
           >
-            {authMode === "otp" ? (
-              <PhoneOtpAuthForm mode="login" onSwitchToPassword={() => setAuthMode("password")}/>
+            {authMode === "password" ? (
+              <PasswordLoginForm onSwitchToOtp={() => setAuthMode("otp")}/>
             ) : (
-              <PasswordLoginForm/>
+              <PhoneOtpAuthForm mode="login" onSwitchToPassword={() => setAuthMode("password")}/>
             )}
           </AuthFormContainer>
         </div>

@@ -44,6 +44,8 @@ test('signing in from a protected-route bounce returns to the original page, not
   const bounced = new URL(page.url());
   expect(bounced.searchParams.get('redirect')).toBe('/en/account-setting/bank-account');
 
+  await page.getByRole('button', { name: /sign in with phone/i }).click();
+
   await page.getByPlaceholder(/phone/i).fill('0812345678');
   await page.getByRole('button', { name: /send verification code/i }).click();
   await page.getByPlaceholder(/otp/i).fill('123456');
