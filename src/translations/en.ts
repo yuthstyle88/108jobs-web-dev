@@ -2816,7 +2816,7 @@ export const en = {
                 "Rate the freelancer to provide feedback and support their improvement.",
             trustedClientsTitle: "Some of Our Trusted Clients",
             trustedClientsCta: "View More",
-            termsAndConditionsTitle: `Terms and Conditions for Using the ${getAppName()}.co Platform for Freelancers`,
+            termsAndConditionsTitle: `Terms and Conditions for Using the ${getAppDomain()} Platform for Freelancers`,
             section1Title: "Definitions",
             definition1: `Platform refers to the website (https://${getAppDomain()}) and the ${getAppName()} app.`,
             definition2:
@@ -2825,7 +2825,7 @@ export const en = {
             definition4: "Payments are made based on the value of services.",
             definition5:
                 "Work refers to products or services provided by clients and freelancers.",
-            definition6: `Company refers to the entity operating ${getAppName()}.co.`,
+            definition6: `Company refers to the entity operating ${getAppDomain()}.`,
             definition7: `${getAppName()} provides the platform for third-party services.`,
             definition8:
                 "The company facilitates interactions between clients and freelancers.",
