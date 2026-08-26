@@ -1,5 +1,5 @@
 // This file was hand-authored to match the backend's EditSiteRequest struct.
-// Keep in sync with crates/db/src/source/site_view/api.rs in api-108jobs.
+// Keep in sync with crates/db/src/source/site_view/api.rs in api-108heros.
 import type {ListingType} from "./ListingType";
 import type {PostListingMode} from "./PostListingMode";
 import type {PostSortType} from "./PostSortType";

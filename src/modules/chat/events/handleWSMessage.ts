@@ -121,7 +121,7 @@ export function createHandleWSMessage(deps: HandlerDeps) {
 
     const handleAckProtocol = (rawEvt: string, payload: any) => {
         try {
-            // NOTE: this branch is currently unreachable. api-108jobs sends its
+            // NOTE: this branch is currently unreachable. api-108heros sends its
             // ack-reminder response under the wire string "syncPending" (see
             // AnyIncomingEvent::SyncPending in bridge_message.rs), never a
             // distinct "ackReminder" string -- so this rich per-clientId

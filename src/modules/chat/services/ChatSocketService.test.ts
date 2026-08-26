@@ -3,7 +3,7 @@
  * npm client.
  *
  * These assert on the bytes on the wire, not on our own constants, because
- * the whole point of v2 is that three codebases (this app, api-108jobs and
+ * the whole point of v2 is that three codebases (this app, api-108heros and
  * the Flutter client) have to agree frame-for-frame with no compatibility
  * shim between them. A test that compared `frame.event` to `WS_EVENT.Join`
  * would keep passing if both sides of that comparison drifted together.
@@ -306,7 +306,7 @@ describe("chat socket speaks wire v2", () => {
     // The per-user event channel (`user:<id>:events`). The server keeps no
     // join registry: it decides whether a user-scoped frame belongs to this
     // session by parsing the id out of the topic and comparing it to the
-    // authenticated user (PhoenixSession::should_deliver in api-108jobs), so
+    // authenticated user (PhoenixSession::should_deliver in api-108heros), so
     // a join here is a frame nobody reads -- and waiting for a reply to one
     // would leave the channel permanently "connecting".
     const adapter = getChannelAdapter("jwt", "user:7:events", "7", SENDER, {

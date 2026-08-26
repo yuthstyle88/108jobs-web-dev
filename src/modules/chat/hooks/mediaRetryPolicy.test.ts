@@ -3,7 +3,7 @@ import {describe, expect, it} from "vitest";
 import {MEDIA_RETRY_DELAYS_MS, nextMediaRetryDelayMs} from "./mediaRetryPolicy";
 
 /**
- * Mirrors `FLUSH_INTERVAL_SECS` in api-108jobs's
+ * Mirrors `FLUSH_INTERVAL_SECS` in api-108heros's
  * `crates/chat_realtime/src/broker/manager.rs:30` -- the periodic-flush
  * interval that bounds how long `chat_message` can take to persist to
  * Postgres, which is the real constraint `MEDIA_RETRY_DELAYS_MS` has to
@@ -54,7 +54,7 @@ describe("nextMediaRetryDelayMs", () => {
 
   it("comfortably outlives the chat flush interval, not just the common-case latency", () => {
     // This is the whole point of the schedule: the asset is genuinely
-    // unreadable until api-108jobs's periodic flush persists it (up to
+    // unreadable until api-108heros's periodic flush persists it (up to
     // `CHAT_FLUSH_INTERVAL_MS`), so the budget must clear that hard interval
     // -- not just some assumed-brief latency -- with real margin, or a
     // large fraction of loads will exhaust their retries before the row

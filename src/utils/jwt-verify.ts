@@ -14,7 +14,7 @@ import {getIdentityBase} from "@/utils/env";
  *
  * The tokens are EdDSA (Ed25519) -- see Identity-Platform's
  * `crates/auth/src/contract/mod.rs` (`kty: "OKP"`, `crv: "Ed25519"`) -- and are
- * published at `/.well-known/jwks.json`, the same document api-108jobs verifies
+ * published at `/.well-known/jwks.json`, the same document api-108heros verifies
  * against in `crates/api/api_utils/src/identity_platform.rs`.
  */
 

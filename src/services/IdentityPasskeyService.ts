@@ -1,5 +1,5 @@
 // Passkey (WebAuthn) enrollment and sign-in against Identity-Platform,
-// mirroring 108jobs-flutter's identity_passkey_api.dart + passkey_service.dart
+// mirroring 108heros-flutter's identity_passkey_api.dart + passkey_service.dart
 // (which wrap native platform authenticator APIs; this wraps the browser's
 // own navigator.credentials.create()/get()).
 //

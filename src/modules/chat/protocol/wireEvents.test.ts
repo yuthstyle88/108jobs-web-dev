@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { WS_EVENT } from "@/modules/chat/protocol/wireEvents";
 
-// Pins this frontend's wire-protocol event names to api-108jobs's
+// Pins this frontend's wire-protocol event names to api-108heros's
 // ChatEvent::as_str() (crates/ws/src/protocol/impls.rs) -- one assertion per
 // variant, so a change to either side that isn't mirrored here fails loudly
 // instead of silently drifting (the exact failure mode that caused real,
-// silently-dropped-message bugs before api-108jobs PR #132).
+// silently-dropped-message bugs before api-108heros PR #132).
 describe("WS_EVENT matches the backend's ChatEvent::as_str() exactly", () => {
   it("Join replaced phx_join", () => {
     expect(WS_EVENT.Join).toBe("join");

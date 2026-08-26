@@ -30,8 +30,8 @@ const hexToBytes = (hex: string) =>
   new Uint8Array(hex.match(/.{1,2}/g)!.map((h) => parseInt(h, 16)));
 
 /**
- * The vector pinned in api-108jobs (`crypto::tests::flutter_vector`) and in
- * 108jobs-flutter (`chat_session_key_test.dart`). It was produced by the
+ * The vector pinned in api-108heros (`crypto::tests::flutter_vector`) and in
+ * 108heros-flutter (`chat_session_key_test.dart`). It was produced by the
  * Flutter client's PointyCastle implementation; the derived keys below are what
  * the Rust server asserts. Three unrelated crypto stacks, one set of bytes.
  */

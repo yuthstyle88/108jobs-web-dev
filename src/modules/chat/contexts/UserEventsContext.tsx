@@ -55,7 +55,7 @@ export const UserEventsProvider: React.FC<React.PropsWithChildren> = ({children}
             // it decides whether a user-scoped frame is for this session by
             // parsing the id out of the topic and comparing it to the
             // session's authenticated user (PhoenixSession::should_deliver in
-            // api-108jobs). A join here would be a frame nobody reads.
+            // api-108heros). A join here would be a frame nobody reads.
             joinOnConnect: false,
             autoConnect: true,
             debug: process.env.NODE_ENV === 'development',
