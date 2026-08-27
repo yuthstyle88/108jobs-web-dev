@@ -305,7 +305,15 @@ const nextConfig: NextConfig = {
                 // way -- only an HTTP request through a running server shows it.
                 // See #86.
                 { source: '/api/rider-documents/:path*', destination: '/api/rider-documents/:path*' },
-                { source: '/api/:path*', destination: `${apiBase}/:path*` },
+                // `${apiBase}/api/:path*`, not `${apiBase}/:path*`. API_INTERNAL_URL is
+                // documented as an origin, and `getApiBase()` in src/utils/env.ts reads
+                // the same variable as one -- the generated client appends `/api/v4/...`
+                // to it for every server-side call. Stripping `/api` here meant no single
+                // value could satisfy both readers: an origin made getSite() work and
+                // 404'd every stored image, while a value ending in `/api` did the
+                // reverse and made SSR request `/api/api/v4/site`. Keeping the prefix
+                // lets the origin be correct for both. See #111.
+                { source: '/api/:path*', destination: `${apiBase}/api/:path*` },
                 { source: '/uploads/:path*', destination: 'https://cdn.108jobs.com/uploads/:path*' },
             ],
             fallback: [],
