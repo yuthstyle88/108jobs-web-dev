@@ -18,7 +18,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Build local client dependency first, then Next.js standalone application
-RUN cd src/lib/108heros-client && pnpm run build
+RUN ./node_modules/.bin/tsc -p src/lib/108heros-client/tsconfig.json
 RUN --mount=type=cache,target=/app/.next/cache \
     pnpm run build
 
