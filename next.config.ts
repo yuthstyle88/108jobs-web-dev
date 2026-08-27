@@ -1,7 +1,8 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-    // Produce a minimal, self-contained output for faster cold starts
+    // Produce a minimal, self-contained output for standalone container deployment
+    output: 'standalone',
     // Fail fast in production; allow flexibility in dev/CI if desired
     // Next.js 16: 'eslint' in next.config is no longer supported; manage ESLint via .eslintrc and CLI
     // Continue to ignore TypeScript build errors in non-prod to ease local dev/CI

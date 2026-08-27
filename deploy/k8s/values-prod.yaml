@@ -1,0 +1,40 @@
+# Helm values for the 108heros-web application on the ting-service chart, PROD namespace.
+#   helm upgrade --install jobs-web charts/ting-service -n prod \
+#     -f deploy/k8s/values-prod.yaml --set image.tag=sha-<short>
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/108-plaza/108heros-web
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-pull
+
+service:
+  type: NodePort
+  nodePort: 31441
+  targetPort: 3000
+
+ingress:
+  enabled: false
+
+probes:
+  liveness:
+    path: /
+    initialDelaySeconds: 20
+  readiness:
+    path: /
+    initialDelaySeconds: 10
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+securityContext:
+  readOnlyRootFilesystem: false
