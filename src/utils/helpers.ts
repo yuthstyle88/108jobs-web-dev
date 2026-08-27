@@ -445,7 +445,7 @@ async function toBlob(src: string | File | Blob): Promise<Blob> {
  */
 export async function uploadSelectedImage(
     selectedImage: File | string,
-    uploadImage?: (payload: { image: File }) => Promise<RequestState<import("108heros-client").UploadImageResponse>>
+    uploadImage?: (payload: { image: File }) => Promise<RequestState<import("108heros-client").LinkImageResponse>>
 ): Promise<string> {
     let file: File;
 
@@ -472,7 +472,7 @@ export async function uploadSelectedImage(
         const result = await uploadImage({ image: file });
 
         if (isSuccess(result)) {
-            const imageUrl = result.data?.images?.[0]?.imageUrl;
+            const imageUrl = result.data?.url;
             if (imageUrl) return imageUrl;
         }
 

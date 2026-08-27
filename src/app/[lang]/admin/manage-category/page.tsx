@@ -174,8 +174,8 @@ export default function AdminCategoriesPage() {
 
         if (iconMode === "upload" && iconFile && editingCategory) {
             const res = await uploadIcon({id: editingCategory.category.id}, {image: iconFile});
-            if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
-                iconUrl = res.data.images[0].imageUrl;
+            if (isSuccess(res) && res.data?.url) {
+                iconUrl = res.data.url;
             } else if (isFailed(res)) {
                 toast.error(t("admin.category.iconUploadError"));
             }
@@ -183,8 +183,8 @@ export default function AdminCategoriesPage() {
 
         if (bannerMode === "upload" && bannerFile && editingCategory) {
             const res = await uploadBanner({id: editingCategory.category.id}, {image: bannerFile});
-            if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
-                bannerUrl = res.data.images[0].imageUrl;
+            if (isSuccess(res) && res.data?.url) {
+                bannerUrl = res.data.url;
             } else if (isFailed(res)) {
                 toast.error(t("admin.category.bannerUploadError"));
             }
