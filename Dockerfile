@@ -29,7 +29,13 @@ RUN --mount=type=cache,target=/app/.next/cache \
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0 \
+    API_INTERNAL_URL="http://127.0.0.1:31440" \
+    NEXT_PUBLIC_API_BASE_URL="https://api-staging.108heros.com" \
+    NEXT_PUBLIC_APP_URL="https://108heros.com"
 RUN useradd -u 10001 -m app
 
 # Copy standalone server, static assets, and public directory
