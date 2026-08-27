@@ -6,6 +6,7 @@ RUN corepack enable
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
+ENV API_INTERNAL_URL="http://127.0.0.1:31440"
 
 COPY package.json pnpm-lock.yaml ./
 COPY src/lib/108heros-client/package.json src/lib/108heros-client/pnpm-lock.yaml ./src/lib/108heros-client/
