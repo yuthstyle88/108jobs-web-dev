@@ -98,7 +98,7 @@ import type {NotificationCountResponse} from "./types/NotificationCountResponse"
 import type {SuccessResponse} from "./types/SuccessResponse";
 import type {Tag} from "./types/Tag";
 import type {UpdateCategoryTag} from "./types/UpdateCategoryTag";
-import type {UploadImageResponse} from "./types/UploadImageResponse";
+import type {LinkImageResponse} from "./types/LinkImageResponse";
 import type {FileUploadResponse} from "./types/FileUploadResponse";
 import type {VerifyEmail} from "./types/VerifyEmail";
 import type {VisitProfileResponse} from "./types/VisitProfileResponse";
@@ -1223,7 +1223,7 @@ export class Api108Jobs extends Controller {
     async uploadUserAvatar(
         @UploadedFile() image: UploadImage,
         @Inject() options?: RequestOptions,
-    ): Promise<UploadImageResponse> {
+    ): Promise<LinkImageResponse> {
         return this.#upload("/account/avatar", image, options);
     }
 
@@ -1253,7 +1253,7 @@ export class Api108Jobs extends Controller {
     async uploadUserBanner(
         @UploadedFile() image: UploadImage,
         @Inject() options?: RequestOptions,
-    ): Promise<UploadImageResponse> {
+    ): Promise<LinkImageResponse> {
         return this.#upload("/account/banner", image, options);
     }
 
@@ -1313,7 +1313,7 @@ export class Api108Jobs extends Controller {
         @Queries() query: CategoryIdQueryI,
         @UploadedFile() image: UploadImage,
         @Inject() options?: RequestOptions,
-    ): Promise<UploadImageResponse> {
+    ): Promise<LinkImageResponse> {
         return this.#uploadWithQuery("/category/icon", query, image, options);
     }
 
@@ -1345,7 +1345,7 @@ export class Api108Jobs extends Controller {
         @Queries() query: CategoryIdQueryI,
         @UploadedFile() image: UploadImage,
         @Inject() options?: RequestOptions,
-    ): Promise<UploadImageResponse> {
+    ): Promise<LinkImageResponse> {
         return this.#uploadWithQuery("/category/banner", query, image, options);
     }
 
@@ -1376,7 +1376,7 @@ export class Api108Jobs extends Controller {
     async uploadSiteIcon(
         @UploadedFile() image: UploadImage,
         @Inject() options?: RequestOptions,
-    ): Promise<UploadImageResponse> {
+    ): Promise<LinkImageResponse> {
         return this.#upload("/site/icon", image, options);
     }
 
@@ -1406,7 +1406,7 @@ export class Api108Jobs extends Controller {
     async uploadSiteBanner(
         @UploadedFile() image: UploadImage,
         @Inject() options?: RequestOptions,
-    ): Promise<UploadImageResponse> {
+    ): Promise<LinkImageResponse> {
         return this.#upload("/site/banner", image, options);
     }
 
