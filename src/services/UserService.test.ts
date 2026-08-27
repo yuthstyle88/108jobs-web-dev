@@ -21,6 +21,7 @@ describe("isAdminClaims", () => {
 });
 
 import { UserService } from "./UserService";
+import { useTermsStore } from "@/store/useTermsStore";
 import { HttpService } from "./HttpService";
 import { getAuthJWTCookie, setAuthJWTCookie } from "@/utils/browser";
 import { LANGUAGE_COOKIE } from "@/constants/language";
@@ -39,9 +40,13 @@ describe("UserService profile hydration", () => {
         state: "success",
         data: {
           localUserView: {
-            localUser: { interfaceLanguage: "th", acceptedTerms: true },
+            localUser: { interfaceLanguage: "th" },
           },
         },
+      }),
+      getTermsStatus: vi.fn().mockResolvedValue({
+        state: "success",
+        data: { jobsVersion: "v1", rideVersion: "v1", jobsAccepted: true, rideAccepted: false },
       }),
     } as any);
 
@@ -50,6 +55,141 @@ describe("UserService profile hydration", () => {
     expect(UserService.Instance.getLanguage).toBe(lang);
     expect(document.cookie).toContain(`${LANGUAGE_COOKIE}=${lang}`);
     expect(UserService.Instance.getAcceptedTerms).toBe(true);
+  });
+});
+
+describe("UserService terms consent is per sub-app", () => {
+  beforeEach(() => {
+    UserService.Instance.acceptedTerms = false;
+    UserService.Instance.jobsTermsVersion = undefined;
+    useTermsStore.getState().reset();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /**
+   * The whole point of the split. Someone on record for the ride service and
+   * nobody else must not read as having accepted this site's terms -- if this
+   * ever passes with `true`, consent is leaking across two separate legal
+   * agreements and the sub-app boundary is decorative.
+   */
+  it("does not count ride consent as jobs consent", async () => {
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({
+      getTermsStatus: vi.fn().mockResolvedValue({
+        state: "success",
+        data: { jobsVersion: "v1", rideVersion: "v1", jobsAccepted: false, rideAccepted: true },
+      }),
+    } as any);
+
+    await UserService.Instance.hydrateTerms();
+
+    expect(UserService.Instance.getAcceptedTerms).toBe(false);
+    expect(useTermsStore.getState().jobsAccepted).toBe(false);
+  });
+
+  it("reads acceptance from the terms endpoint, not from the user payload", async () => {
+    const getMyUser = vi.fn().mockResolvedValue({
+      state: "success",
+      // The field the API used to send and no longer does. Even if something
+      // put it back, it must not be what decides this.
+      data: { localUserView: { localUser: { interfaceLanguage: "th", acceptedTerms: true } } },
+    });
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({
+      getMyUser,
+      getTermsStatus: vi.fn().mockResolvedValue({
+        state: "success",
+        data: { jobsVersion: "v9", rideVersion: "v1", jobsAccepted: false, rideAccepted: false },
+      }),
+    } as any);
+
+    await UserService.Instance.login("not-a-real-jwt");
+
+    expect(UserService.Instance.getAcceptedTerms).toBe(false);
+    expect(UserService.Instance.jobsTermsVersion).toBe("v9");
+  });
+
+  it("accepts as Jobs and echoes back the server's version", async () => {
+    const acceptTerms = vi.fn().mockResolvedValue({
+      state: "success",
+      data: { app: "Jobs", termsVersion: "v9", acceptedAt: "2026-08-27T00:00:00Z" },
+    });
+    const getTermsStatus = vi
+      .fn()
+      .mockResolvedValueOnce({
+        state: "success",
+        data: { jobsVersion: "v9", rideVersion: "v1", jobsAccepted: false, rideAccepted: false },
+      })
+      .mockResolvedValue({
+        state: "success",
+        data: { jobsVersion: "v9", rideVersion: "v1", jobsAccepted: true, rideAccepted: false },
+      });
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({ acceptTerms, getTermsStatus } as any);
+
+    await UserService.Instance.hydrateTerms();
+    const ok = await UserService.Instance.acceptJobsTerms();
+
+    expect(ok).toBe(true);
+    expect(acceptTerms).toHaveBeenCalledWith({ app: "Jobs", termsVersion: "v9" });
+    // Never the other app, whatever else happens on this call.
+    expect(acceptTerms).not.toHaveBeenCalledWith(expect.objectContaining({ app: "Ride" }));
+  });
+
+  /**
+   * A rejected accept must leave the flag alone. Reporting success on a request
+   * the server refused would dismiss the dialog and leave the user believing
+   * they had agreed to something no record exists for.
+   */
+  it("stays unaccepted when the server refuses the acceptance", async () => {
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({
+      acceptTerms: vi.fn().mockResolvedValue({ state: "failed", err: { error: "invalidField" } }),
+      getTermsStatus: vi.fn().mockResolvedValue({
+        state: "success",
+        data: { jobsVersion: "v9", rideVersion: "v1", jobsAccepted: false, rideAccepted: false },
+      }),
+    } as any);
+
+    await UserService.Instance.hydrateTerms();
+
+    expect(await UserService.Instance.acceptJobsTerms()).toBe(false);
+    expect(UserService.Instance.getAcceptedTerms).toBe(false);
+  });
+
+  /**
+   * One browser, two accounts. If logout leaves the consent behind, the next
+   * person to sign in here inherits an acceptance recorded against someone
+   * else -- the failure this whole mechanism exists to make impossible.
+   */
+  it("forgets the consent on logout so the next account does not inherit it", async () => {
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({
+      getTermsStatus: vi.fn().mockResolvedValue({
+        state: "success",
+        data: { jobsVersion: "v9", rideVersion: "v1", jobsAccepted: true, rideAccepted: false },
+      }),
+    } as any);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+
+    await UserService.Instance.hydrateTerms();
+    expect(UserService.Instance.getAcceptedTerms).toBe(true);
+
+    await UserService.Instance.logout();
+
+    expect(UserService.Instance.getAcceptedTerms).toBe(false);
+    expect(UserService.Instance.jobsTermsVersion).toBeUndefined();
+    expect(useTermsStore.getState().jobsAccepted).toBe(false);
+    expect(useTermsStore.getState().loaded).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("survives a terms endpoint that throws, without claiming acceptance", async () => {
+    vi.spyOn(HttpService, "client", "get").mockReturnValue({
+      getTermsStatus: vi.fn().mockRejectedValue(new Error("network down")),
+    } as any);
+
+    await expect(UserService.Instance.hydrateTerms()).resolves.toBeUndefined();
+    expect(UserService.Instance.getAcceptedTerms).toBe(false);
+    expect(useTermsStore.getState().loaded).toBe(false);
   });
 });
 

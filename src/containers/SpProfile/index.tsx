@@ -12,11 +12,18 @@ import Image from "next/image";
 import Link from "next/link";
 import {useTranslation} from "react-i18next";
 import {useUserStore} from "@/store/useUserStore";
+import {useJobsTerms} from "@/hooks/api/terms/useJobsTerms";
 
 const SpProfile = () => {
     const {userInfo} = useUserStore();
     const wallet = userInfo?.wallet;
     const {person, localUser} = userInfo?.localUserView ?? {};
+
+    // Consent is no longer a field on the user -- it lives per sub-app, per
+    // version, behind its own endpoint. Reading `localUser.acceptedTerms` here
+    // returned `undefined` after the API dropped the column, which silently hid
+    // this whole section from everyone (108jobs-web#107).
+    const {accepted: acceptedJobsTerms} = useJobsTerms();
 
     const {lang: currentLang} = useLanguage();
     const {t} = useTranslation();
@@ -87,7 +94,7 @@ const SpProfile = () => {
                 </Link>
             </section>
             {/* Assume profile is an employer and check if freelancerType exists to determine if profile is a freelancer */}
-            {localUser?.acceptedTerms && (
+            {acceptedJobsTerms && (
                 <section className="grid grid-cols-4 px-3 mt-6 gap-y-6 gap-x-3">
                     <Link prefetch={false} href={`/${currentLang}/job-board/jobs`}>
                         <div

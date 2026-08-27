@@ -1,5 +1,9 @@
 export * from "./http";
 export type {UploadImage} from "./other_types";
+export type {AppKind} from "./types/AppKind";
+export type {TermsStatusResponse} from "./types/TermsStatusResponse";
+export type {AcceptTermsRequest} from "./types/AcceptTermsRequest";
+export type {AcceptTermsResponse} from "./types/AcceptTermsResponse";
 export type {ChatRoom} from "./types/ChatRoom";
 export type {ChatRoomView} from "./types/ChatRoomView";
 export type {ChatRoomId} from "./types/ChatRoomId";

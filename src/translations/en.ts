@@ -1,6 +1,17 @@
 import {getAppName} from "@/utils/appConfig";
 
 export const en = {
+    terms: {
+        title: "{{appName}} terms of service",
+        body: "{{appName}} is the jobs marketplace. Accepting here covers this service only — the ride service on 108heros.com is a separate agreement you accept there.",
+        versionLabel: "Version",
+        accept: "Accept",
+        accepting: "Saving…",
+        later: "Not now",
+        accepted: "Terms accepted",
+        acceptFailed: "Could not save your acceptance. Please try again.",
+        required: "Accept the terms of service to use the job board.",
+    },
     business: {
         priceListTitle: "Package and Service Prices",
         graphicDesignTab: "Graphic Design Price List",

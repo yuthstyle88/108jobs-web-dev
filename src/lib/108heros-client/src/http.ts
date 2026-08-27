@@ -35,6 +35,9 @@ import type {
     UploadImage, ListRidersQueryI,
 } from "./other_types";
 import {VERSION} from "./other_types";
+import type {TermsStatusResponse} from "./types/TermsStatusResponse";
+import type {AcceptTermsRequest} from "./types/AcceptTermsRequest";
+import type {AcceptTermsResponse} from "./types/AcceptTermsResponse";
 import type {AdminListUsers} from "./types/AdminListUsers";
 import type {AdminListUsersResponse} from "./types/AdminListUsersResponse";
 import type {BanksResponse} from "./types/BankList";
@@ -233,6 +236,50 @@ export class Api108Heros extends Controller {
             HttpType.Get,
             "/account",
             {},
+            options,
+        );
+    }
+
+    /**
+     * Which terms versions are in force, and whether this user is on record for
+     * each. Readable logged-out (both flags come back false), so the terms can
+     * be shown before there is an account to attach them to.
+     *
+     * @summary Terms versions in force + this user's consent per sub-app.
+     */
+    @Security("bearerAuth")
+    @Get("/account/terms")
+    @Tags("Account")
+    async getTermsStatus(@Inject() options?: RequestOptions) {
+        return this.#wrapper<object, TermsStatusResponse>(
+            HttpType.Get,
+            "/account/terms",
+            {},
+            options,
+        );
+    }
+
+    /**
+     * Record that this user accepted one sub-app's terms. Per app AND per
+     * version: accepting Jobs records nothing for Ride, which is the rule the
+     * whole sub-app split rests on.
+     *
+     * Send back the `termsVersion` that `getTermsStatus` just returned -- the
+     * server rejects any other value rather than recording it.
+     *
+     * @summary Accept one sub-app's terms.
+     */
+    @Security("bearerAuth")
+    @Post("/account/terms/accept")
+    @Tags("Account")
+    async acceptTerms(
+        @Body() form: AcceptTermsRequest,
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<AcceptTermsRequest, AcceptTermsResponse>(
+            HttpType.Post,
+            "/account/terms/accept",
+            form,
             options,
         );
     }

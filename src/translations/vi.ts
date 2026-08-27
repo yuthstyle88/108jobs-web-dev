@@ -1,6 +1,17 @@
 import {getAppName} from "@/utils/appConfig";
 
 export const vi = {
+    terms: {
+        title: "Điều khoản dịch vụ {{appName}}",
+        body: "{{appName}} là sàn việc làm. Chấp nhận tại đây chỉ áp dụng cho dịch vụ này — dịch vụ gọi xe tại 108heros.com là thoả thuận riêng.",
+        versionLabel: "Phiên bản",
+        accept: "Chấp nhận",
+        accepting: "Đang lưu…",
+        later: "Để sau",
+        accepted: "Đã ghi nhận chấp nhận",
+        acceptFailed: "Không lưu được. Vui lòng thử lại.",
+        required: "Hãy chấp nhận điều khoản để dùng sàn việc làm.",
+    },
     business: {
         priceListTitle: "Giá gói và dịch vụ",
         graphicDesignTab: "Bảng giá thiết kế đồ họa",

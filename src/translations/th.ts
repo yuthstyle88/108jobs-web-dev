@@ -1,6 +1,17 @@
 import {getAppName} from "@/utils/appConfig";
 
 export const th = {
+    terms: {
+        title: "เงื่อนไขการให้บริการ {{appName}}",
+        body: "{{appName}} คือตลาดงาน การยอมรับที่นี่ครอบเฉพาะบริการนี้ — บริการเรียกรถที่ 108heros.com เป็นข้อตกลงคนละฉบับ ต้องยอมรับที่นั่นแยก",
+        versionLabel: "ฉบับ",
+        accept: "ยอมรับ",
+        accepting: "กำลังบันทึก…",
+        later: "ไว้ก่อน",
+        accepted: "บันทึกการยอมรับแล้ว",
+        acceptFailed: "บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+        required: "ยอมรับเงื่อนไขการให้บริการก่อน จึงจะใช้กระดานงานได้",
+    },
     business: {
         priceListTitle: "ราคาแพ็คเกจและบริการต่างๆ",
         graphicDesignTab: "Graphic Design Price List",

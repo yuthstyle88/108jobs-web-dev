@@ -10,6 +10,7 @@ import {AnnouncementProvider} from "@/contexts/AnnouncementContext";
 import AccessibleAnnouncements from "@/components/AccessibleAnnouncements";
 import GlobalError from "@/components/GlobalError";
 import GlobalLoader from "@/components/Common/Loading/Loading";
+import TermsGate from "@/components/TermsGate";
 import {getLangCookies} from "@/utils/getLangCookies";
 import {UserServiceProvider} from "@/contexts/UserServiceContext";
 import {UserEventsProvider} from "@/modules/chat/contexts/UserEventsContext";
@@ -88,6 +89,13 @@ export default async function RootLayout({
                                     <AccessibleAnnouncements/>
                                     <GlobalError/>
                                     <GlobalLoader/>
+                                    {/* Mounted app-wide, not per page: a user who
+                                        has not accepted this site's terms is gated
+                                        on every jobs surface, so the prompt has to
+                                        be reachable from wherever they landed.
+                                        Renders nothing until the server has said
+                                        consent is actually missing. */}
+                                    <TermsGate/>
                                     {children}
                                 </TooltipProvider>
                             </AnnouncementProvider>

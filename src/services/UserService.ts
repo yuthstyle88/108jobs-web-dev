@@ -7,6 +7,7 @@ import {toast} from "sonner";
 import {VALID_LANGUAGES} from "@/constants/language";
 import {getClientCurrentLanguage} from "@/utils/getClientCurrentLanguage";
 import {useUserStore} from "@/store/useUserStore";
+import {useTermsStore} from "@/store/useTermsStore";
 
 export const JOBS_ADMIN_ROLE = "jobs:admin";
 
@@ -45,7 +46,26 @@ export class UserService {
     public myUserInfo?: MyUserInfo;
     public authInfo?: AuthInfo;
     public currentLanguage: string = "th";
+    /**
+     * Whether this user is on record for THIS site's terms -- 108jobs.com, the
+     * jobs sub-app. Not "has accepted terms" in general: the ride sub-app on
+     * 108heros.com keeps its own consent and this flag says nothing about it.
+     *
+     * Starts `false` and only ever becomes true from a server answer. A failed
+     * or unsent `/account/terms` call leaves it false, which hides jobs surfaces
+     * rather than showing them to someone who may not have accepted -- the safe
+     * direction to fail in, since the API gate would reject those calls anyway.
+     */
     public acceptedTerms: boolean = false;
+    /**
+     * The jobs terms version currently in force, straight from the server.
+     *
+     * Held so the accept call can echo it back: the server rejects any version
+     * other than the one it currently enforces, so a value the client made up
+     * or remembered from an older session is refused rather than recorded.
+     * `undefined` until `/account/terms` has answered once.
+     */
+    public jobsTermsVersion?: string;
 
     private constructor() {
         this.currentLanguage = getClientCurrentLanguage();
@@ -94,25 +114,89 @@ export class UserService {
         this.#hydrateReadLastMap();
         this.#scheduleRefresh();
 
-        // Profile fields (language, accepted-terms) no longer live on the JWT --
-        //    fetch them once from the real API. Falls back to existing defaults on
-        //    failure rather than blocking login: the user is still logged in even
-        //    if this one call hiccups, and the next getMyUser()-backed page load
-        //    will pick up the real values.
+        // Profile fields (language) no longer live on the JWT -- fetch them once
+        //    from the real API. Falls back to existing defaults on failure rather
+        //    than blocking login: the user is still logged in even if this one
+        //    call hiccups, and the next getMyUser()-backed page load will pick up
+        //    the real values.
         try {
             const myUser = await HttpService.client.getMyUser();
             if (isSuccess(myUser)) {
                 this.myUserInfo = myUser.data;
-                const localUser = myUser.data.localUserView.localUser;
-                this.acceptedTerms = Boolean(localUser.acceptedTerms);
             }
         } catch (e) {
             console.warn('[UserService.login] Failed to hydrate profile via getMyUser()', e);
         }
 
+        await this.hydrateTerms();
+
         // 4) Language cookie (non-HttpOnly for client-side reads)
         if (!VALID_LANGUAGES.includes(this.currentLanguage)) return;
         setLangCookie(this.currentLanguage);
+    }
+
+    /**
+     * Refresh `acceptedTerms` / `jobsTermsVersion` from the server.
+     *
+     * Separate from the `getMyUser()` hydration above, and deliberately so:
+     * consent is no longer a column on the user. It lives in its own per-app,
+     * per-version table, so the only thing that can answer "has this person
+     * accepted THIS site's current terms" is the terms endpoint itself.
+     *
+     * Never throws. A failure leaves the flag at its previous value (`false` on
+     * a fresh login), because the alternative -- assuming acceptance when the
+     * check did not complete -- shows jobs surfaces to someone the API will then
+     * refuse, which reads as a broken site rather than as a consent prompt.
+     */
+    public async hydrateTerms(): Promise<void> {
+        try {
+            const terms = await HttpService.client.getTermsStatus();
+            if (isSuccess(terms)) {
+                this.acceptedTerms = terms.data.jobsAccepted;
+                this.jobsTermsVersion = terms.data.jobsVersion;
+                useTermsStore.getState().setStatus({
+                    jobsAccepted: terms.data.jobsAccepted,
+                    jobsVersion: terms.data.jobsVersion,
+                });
+            }
+        } catch (e) {
+            console.warn('[UserService.hydrateTerms] Failed to read /account/terms', e);
+        }
+    }
+
+    /**
+     * Record acceptance of this site's terms and reflect it locally.
+     *
+     * Sends `AppKind.Jobs` and nothing else -- accepting here must never put the
+     * ride sub-app on record, which is the entire reason consent is stored per
+     * app. Returns whether the server accepted it, so the caller can keep the
+     * dialog open on failure instead of dismissing it over a request that never
+     * landed.
+     *
+     * Re-reads the status afterwards rather than assuming success moved the
+     * flag: the server is the only thing that knows which version is in force,
+     * and it may have moved on between the read and this write.
+     */
+    public async acceptJobsTerms(): Promise<boolean> {
+        const version = this.jobsTermsVersion;
+        if (!version) {
+            // Nothing to echo back. Asking the server to accept a version we
+            // never read would be guessing, and it rejects a guess anyway.
+            await this.hydrateTerms();
+            if (!this.jobsTermsVersion) return false;
+        }
+        try {
+            const res = await HttpService.client.acceptTerms({
+                app: "Jobs",
+                termsVersion: this.jobsTermsVersion as string,
+            });
+            if (!isSuccess(res)) return false;
+        } catch (e) {
+            console.warn('[UserService.acceptJobsTerms] Failed to accept terms', e);
+            return false;
+        }
+        await this.hydrateTerms();
+        return this.acceptedTerms;
     }
 
     public async setToken(jwt: string): Promise<void> {
@@ -134,7 +218,12 @@ export class UserService {
             this.#clearRefreshTimer();
             this.authInfo = undefined;
             this.myUserInfo = undefined;
+            // Consent is per person. Leaving it set would hand the next account
+            // to log in on this browser the previous one's acceptance.
+            this.acceptedTerms = false;
+            this.jobsTermsVersion = undefined;
             useUserStore.getState().resetStore();
+            useTermsStore.getState().reset();
 
             if (isBrowser()) {
                 // Clear client-side cookies
