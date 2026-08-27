@@ -1,26 +1,30 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22-bookworm-slim AS deps
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-COPY package.json pnpm-lock.yaml ./
-COPY src/lib/108heros-client/package.json ./src/lib/108heros-client/
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
-
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+RUN corepack enable
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
+ENV CI=true
 
-# Build local client dependency first, then Next.js standalone application
-RUN ./node_modules/.bin/tsc -p src/lib/108heros-client/tsconfig.json
+COPY package.json pnpm-lock.yaml ./
+COPY src/lib/108heros-client/package.json src/lib/108heros-client/pnpm-lock.yaml ./src/lib/108heros-client/
+COPY src/lib/108heros-client ./src/lib/108heros-client
+
+# Install 108heros-client dependencies and compile it to dist/
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    cd src/lib/108heros-client && corepack pnpm install --frozen-lockfile && corepack pnpm run build
+
+# Install root dependencies (including devDependencies for Next.js build)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    corepack pnpm install --frozen-lockfile
+
+# Copy all source files
+COPY . .
+
+# Build Next.js standalone application
 RUN --mount=type=cache,target=/app/.next/cache \
-    pnpm run build
+    corepack pnpm run build
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
