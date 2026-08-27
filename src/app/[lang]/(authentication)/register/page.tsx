@@ -1,15 +1,18 @@
 "use client";
 import {AuthFormContainer} from "@/components/Authentication/AuthFormContainer";
+import {RegisterForm} from "@/components/Authentication/RegisterForm";
 import {PhoneOtpAuthForm} from "@/components/Authentication/PhoneOtpAuthForm";
 import {AuthenticateIcon} from "@/constants/icons";
 import {CategoriesImage} from "@/constants/images";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
+import {useState} from "react";
 import {useTranslation} from "react-i18next";
 
 export default function RegisterPage() {
     const {t} = useTranslation();
     const router = useRouter();
+    const [authMode, setAuthMode] = useState<"password" | "otp">("password");
 
     return (
         <div
@@ -99,7 +102,11 @@ export default function RegisterPage() {
                         title={t("authen.titleCreateAccount")}
                         onBack={() => router.push("/login")}
                     >
-                        <PhoneOtpAuthForm mode="register"/>
+                        {authMode === "password" ? (
+                            <RegisterForm onSwitchToOtp={() => setAuthMode("otp")}/>
+                        ) : (
+                            <PhoneOtpAuthForm mode="register" onSwitchToPassword={() => setAuthMode("password")}/>
+                        )}
                     </AuthFormContainer>
                 </div>
             </div>
