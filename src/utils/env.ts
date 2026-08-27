@@ -42,10 +42,7 @@ function hostOf(u: string): string {
  */
 export function getApiBase(): string {
   if (isBrowserEnv()) {
-    return (
-      ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL)
-        || "https://api.108heros.com"
-    );
+    return ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
   }
   // Server side: allow internal URL to bypass proxies and TLS if needed
   return (
