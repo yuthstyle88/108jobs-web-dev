@@ -17,25 +17,24 @@ test.afterEach(async () => {
 });
 
 test.describe('Register flow', () => {
-  test('renders registration form by default with phone, password, and confirm password', async ({ page }) => {
+  test('renders registration form by default with phone and password fields', async ({ page }) => {
     await page.goto(`/${LOCALE}/register`);
 
     await expect(page.getByPlaceholder(/phone/i)).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
-    await expect(page.locator('input[name="confirmPassword"]')).toBeVisible();
+    await expect(page.locator('input[name="confirmPassword"]')).toHaveCount(0);
     await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
-  test('validates password mismatch on client side', async ({ page }) => {
+  test('validates password min length on client side', async ({ page }) => {
     await page.goto(`/${LOCALE}/register`);
 
     await page.getByPlaceholder(/phone/i).fill('0812345678');
-    await page.locator('input[name="password"]').fill('password123');
-    await page.locator('input[name="confirmPassword"]').fill('password456');
+    await page.locator('input[name="password"]').fill('123');
 
     await page.locator('button[type="submit"]').click();
 
-    await expect(page.getByText(/passwords do not match/i)).toBeVisible();
+    await expect(page.getByText(/6/i)).toBeVisible();
   });
 
   test('can switch to phone + OTP registration and verify', async ({ page }) => {
