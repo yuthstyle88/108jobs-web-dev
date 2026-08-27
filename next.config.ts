@@ -263,7 +263,8 @@ const nextConfig: NextConfig = {
         if (!process.env.API_INTERNAL_URL && process.env.NODE_ENV === 'production') {
             throw new Error('API_INTERNAL_URL must be set in production (refusing to fall back to the staging backend)');
         }
-        const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108heros.com';
+        const rawApiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108heros.com';
+        const apiBase = rawApiBase.replace(/\/api\/?$/, '').replace(/\/+$/, '');
         return {
             // Ensure these filesystem routes win before any proxying. This only
             // works for *non-dynamic* routes -- Next resolves static files and
@@ -306,7 +307,7 @@ const nextConfig: NextConfig = {
                 // way -- only an HTTP request through a running server shows it.
                 // See #86.
                 { source: '/api/rider-documents/:path*', destination: '/api/rider-documents/:path*' },
-                { source: '/api/:path*', destination: `${apiBase}/:path*` },
+                { source: '/api/:path*', destination: `${apiBase}/api/:path*` },
                 { source: '/uploads/:path*', destination: 'https://cdn.108heros.com/uploads/:path*' },
             ],
             fallback: [],

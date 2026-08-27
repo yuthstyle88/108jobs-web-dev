@@ -276,7 +276,7 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
             }
             return true;
         } else if (trySite.state === REQUEST_STATE.FAILED) {
-            logger.error(`Failed to fetch site data: ${trySite.err.message}`);
+            logger.error(`Failed to fetch site data: ${trySite.err.message}`, trySite.err);
             errorPageData = getErrorPageData(new Error(trySite.err.message),
                 undefined);
             return false;

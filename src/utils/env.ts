@@ -37,15 +37,19 @@ function hostOf(u: string): string {
   try { return new URL(u).host; } catch { return u.replace(/^https?:\/\//i, ""); }
 }
 
+function cleanOrigin(url: string): string {
+  return url ? url.replace(/\/api\/?$/, "").replace(/\/+$/, "") : "";
+}
+
 /**
  * Public API base for browser. On the server, prefer API_INTERNAL_URL when provided.
  */
 export function getApiBase(): string {
   if (isBrowserEnv()) {
-    return ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL);
+    return cleanOrigin(ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL));
   }
   // Server side: allow internal URL to bypass proxies and TLS if needed
-  return (
+  return cleanOrigin(
     ensureAbsoluteUrl(process.env.API_INTERNAL_URL)
       || ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL)
       || "https://api.108heros.com"
