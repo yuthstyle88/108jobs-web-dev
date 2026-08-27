@@ -262,7 +262,14 @@ const nextConfig: NextConfig = {
         if (!process.env.API_INTERNAL_URL && process.env.NODE_ENV === 'production') {
             throw new Error('API_INTERNAL_URL must be set in production (refusing to fall back to the staging backend)');
         }
-        const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108jobs.com';
+        // `||` on a trimmed value, not `??`. `??` only catches null/undefined, and
+        // `.env.example` ships `API_INTERNAL_URL=` -- set but empty -- so the fallback
+        // never applied to the one value a new checkout actually has. apiBase became
+        // '', every rewrite destination collapsed to a relative path, and the request
+        // 404'd inside Next without ever reaching a backend or appearing in its log.
+        // The production guard above already treats blank as absent; this is the same
+        // rule for the fallback. See #112.
+        const apiBase = process.env.API_INTERNAL_URL?.trim() || 'https://api-staging.108jobs.com';
         return {
             // Ensure these filesystem routes win before any proxying. This only
             // works for *non-dynamic* routes -- Next resolves static files and
