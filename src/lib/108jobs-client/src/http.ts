@@ -1881,8 +1881,13 @@ export class Api108Jobs extends Controller {
         {image}: UploadImage,
         options?: RequestOptions,
     ): Promise<ResponseType> {
+        // `store_multipart_file` on the backend skips every part whose name is
+        // neither `file` nor `image`, then answers 400 invalidFile because it
+        // stored nothing. `images[]` matched neither, so every image route --
+        // avatar, banner, category icon/banner, site icon/banner -- 400'd; only
+        // `/account/files`, which took the `file` branch, ever worked. See #109.
         const isFileUpload = path.includes("/account/files") || path.includes("/chat/files");
-        const fieldName = isFileUpload ? "file" : "images[]";
+        const fieldName = isFileUpload ? "file" : "image";
         const formData = createFormData(image, fieldName);
 
         const response = await this.#fetchFunction(this.#buildFullUrl(path), {
@@ -1958,7 +1963,7 @@ function encodeGetParams<BodyType extends object>(p: BodyType): string {
         .join("&");
 }
 
-function createFormData(image: File | Buffer, fieldName: string = "images[]"): FormData {
+function createFormData(image: File | Buffer, fieldName: string = "image"): FormData {
     const formData = new FormData();
 
     if (image instanceof File) {
