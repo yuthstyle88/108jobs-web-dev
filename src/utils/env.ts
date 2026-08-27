@@ -51,7 +51,7 @@ export function getApiBase(): string {
   return (
     ensureAbsoluteUrl(process.env.API_INTERNAL_URL)
       || ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL)
-      || "http://jobs-api:8523"
+      || "https://api.108heros.com"
   );
 }
 
