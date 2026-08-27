@@ -57,6 +57,26 @@ test.describe('Register flow', () => {
     await page.waitForURL((url) => !/\/register(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 
+  test('toggles password visibility with eye button', async ({ page }) => {
+    await page.goto(`/${LOCALE}/register`);
+
+    const passwordInput = page.locator('input[name="password"]');
+    await passwordInput.fill('secret123');
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+
+    const toggleButton = page.getByRole('button', { name: /show password/i });
+    await expect(toggleButton).toBeVisible();
+    await toggleButton.click();
+
+    await expect(passwordInput).toHaveAttribute('type', 'text');
+
+    const hideButton = page.getByRole('button', { name: /hide password/i });
+    await expect(hideButton).toBeVisible();
+    await hideButton.click();
+
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+  });
+
   test('navigates to login page from register', async ({ page }) => {
     await page.goto(`/${LOCALE}/register`);
 
