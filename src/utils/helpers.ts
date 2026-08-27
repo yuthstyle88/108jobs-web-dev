@@ -370,7 +370,7 @@ export function getErrorPageData(error: Error, site?: GetSiteResponse): ErrorPag
     const errorPageData: ErrorPageData = {};
 
     // Always include error message for better debugging
-    errorPageData.error = error?.message || 'Unknown error';
+    errorPageData.error = (error?.message && error.message.trim()) || error?.name || 'Unknown error';
 
     // Safely extract admin matrix IDs with null checks
     if (site?.admins) {

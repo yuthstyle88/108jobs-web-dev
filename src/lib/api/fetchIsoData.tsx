@@ -55,8 +55,10 @@ const logger = {
         if (process.env.NODE_ENV !== "development") {
             // In production, use warn instead of error and minimize logging
             if (err) {
-                console.warn(prefix,
-                    err instanceof Error ? err.message : String(err));
+                const detail = err instanceof Error ? ((err.message && err.message.trim()) || err.name) : String(err);
+                console.warn(prefix, detail);
+            } else {
+                console.warn(prefix);
             }
             return; // Prevent console.error in production
         }
@@ -66,8 +68,8 @@ const logger = {
             console.warn(prefix);
             return;
         }
-        const detail = err instanceof Error ? err.message.trim() : String(err).trim();
-        console.error(detail ? `${prefix}: ${detail}` : prefix, err);
+        const detail = err instanceof Error ? ((err.message && err.message.trim()) || err.name).trim() : String(err).trim();
+        console.error(detail && !prefix.includes(detail) ? `${prefix}: ${detail}` : prefix, err);
     }
 };
 
@@ -170,9 +172,11 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
             errorPageData);
     } catch (err) {
         // Log the error and return a structured error response
-        logger.error("Unhandled error in fetchIsoData",
+        const errorObj = err as Error;
+        const errMsg = (errorObj?.message && errorObj.message.trim()) || errorObj?.name || "Unknown error";
+        logger.error(`Unhandled error in fetchIsoData: ${errMsg}`,
             err);
-        errorPageData = getErrorPageData(err as Error,
+        errorPageData = getErrorPageData(errorObj instanceof Error ? errorObj : new Error(errMsg),
             undefined);
         return createIsoDataResponse(
             undefined,
@@ -265,10 +269,12 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
                 try {
                     routeData = await activeRoute.fetchInitialData(initialFetchReq);
                 } catch (routeError) {
-                    logger.error(`Error fetching route data for ${url}`,
+                    const err = routeError as Error;
+                    const errMsg = (err?.message && err.message.trim()) || err?.name || "Unknown error";
+                    logger.error(`Error fetching route data for ${url}: ${errMsg}`,
                         routeError);
                     errorPageData = getErrorPageData(
-                        new Error(`Failed to fetch route data: ${(routeError as Error).message}`),
+                        err instanceof Error ? err : new Error(`Failed to fetch route data: ${errMsg}`),
                         siteRes
                     );
                     return false;
@@ -276,8 +282,10 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
             }
             return true;
         } else if (trySite.state === REQUEST_STATE.FAILED) {
-            logger.error(`Failed to fetch site data: ${trySite.err.message}`);
-            errorPageData = getErrorPageData(new Error(trySite.err.message),
+            const err = trySite.err;
+            const errMsg = (err?.message && err.message.trim()) || err?.name || "Unknown error";
+            logger.error(`Failed to fetch site data: ${errMsg}`, err);
+            errorPageData = getErrorPageData(err instanceof Error ? err : new Error(errMsg),
                 undefined);
             return false;
         }
@@ -290,13 +298,15 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
      */
     function hasRouteDataErrors(): boolean {
         const error = Object.values(routeData).find(
-            res => res.state === REQUEST_STATE.FAILED && res.err.message !== "couldnt_find_object",
+            res => res.state === REQUEST_STATE.FAILED && res.err?.message !== "couldnt_find_object" && res.err?.name !== "couldnt_find_object",
         ) as FailedRequestState | undefined;
 
         if (error) {
-            logger.error(`Error in route data: ${error.err.message}`,
+            const err = error.err;
+            const errMsg = (err?.message && err.message.trim()) || err?.name || "Unknown error";
+            logger.error(`Error in route data: ${errMsg}`,
                 error.err);
-            errorPageData = getErrorPageData(new Error(error.err.message),
+            errorPageData = getErrorPageData(err instanceof Error ? err : new Error(errMsg),
                 siteRes);
             return true;
         }
