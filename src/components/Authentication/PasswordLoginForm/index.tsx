@@ -43,7 +43,20 @@ export const PasswordLoginForm: React.FC<PasswordLoginFormProps> = ({onSwitchToO
 
     const onSubmit = form.handleSubmit(async (data) => {
         setApiError(null);
-        const res = await login(data);
+        const trimmed = data.usernameOrEmail.trim();
+        const digits = trimmed.replace(/\D/g, "");
+        const normalizedUsernameOrEmail =
+            (trimmed.startsWith("0") || digits.startsWith("0")) &&
+            digits.length >= 9 &&
+            digits.length <= 10 &&
+            !trimmed.includes("@")
+                ? `+66${digits.slice(1)}`
+                : trimmed;
+
+        const res = await login({
+            ...data,
+            usernameOrEmail: normalizedUsernameOrEmail,
+        });
         if (res.state === REQUEST_STATE.FAILED) {
             setApiError(resolveApiErrorMessage(res.err, t, {
                 knownCodes: {
