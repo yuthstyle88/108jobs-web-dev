@@ -521,8 +521,8 @@ export const th = {
             verificationForgotMessage:
                 "รหัสยืนยันได้ถูกส่งไปยังอีเมล / เบอร์โทรศัพท์ของคุณแล้ว",
             verificationMessage: `${getAppName()} จะทำการส่งรหัสยืนยันไปยัง อีเมล/เบอร์โทรศัพท์ของคุณ เพื่อยืนยันความเป็นเจ้าของบัญชี`,
-            placeholderUsernameOrEmail: "กรอกชื่อผู้ใช้หรืออีเมลของคุณ",
-            labelUsernameOrEmail: "ชื่อผู้ใช้หรืออีเมล",
+            placeholderUsernameOrEmail: "กรอกชื่อผู้ใช้หรือเบอร์โทรศัพท์ของคุณ",
+            labelUsernameOrEmail: "ชื่อผู้ใช้หรือเบอร์โทรศัพท์",
             notFound: "รหัส OTP ไม่ถูกต้อง กรุณากรอกรหัสใหม่อีกครั้ง",
             incorrectLogin: "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง!",
             pleaseEnterEmailOrUsernameMin6:
@@ -539,10 +539,10 @@ export const th = {
             placeholderPasswordVerify: "กรอกรหัสผ่านอีกครั้ง",
             buttonLoginPassword: "เข้าสู่ระบบด้วยรหัสผ่าน",
             buttonLoginOtp: "เข้าสู่ระบบด้วยเบอร์โทร (OTP)",
-            errorUsernameOrEmailRequired: "กรุณากรอกชื่อผู้ใช้หรืออีเมล",
+            errorUsernameOrEmailRequired: "กรุณากรอกชื่อผู้ใช้หรือเบอร์โทรศัพท์",
             errorPasswordRequired: "กรุณากรอกรหัสผ่าน",
             errorPasswordVerifyRequired: "กรุณายืนยันรหัสผ่าน",
-            invalidLoginCredentials: "ชื่อผู้ใช้/อีเมล หรือรหัสผ่านไม่ถูกต้อง",
+            invalidLoginCredentials: "ชื่อผู้ใช้/เบอร์โทรศัพท์ หรือรหัสผ่านไม่ถูกต้อง",
             enterCodeBelow: "กรอกรหัสด้านล่าง",
             playing: "กำลังเล่น",
             audio: "ฟังเสียง",

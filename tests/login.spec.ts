@@ -17,10 +17,10 @@ test.afterEach(async () => {
 });
 
 test.describe('Login flow', () => {
-  test('renders password login by default with username/email and password fields', async ({ page }) => {
+  test('renders password login by default with username/phone and password fields', async ({ page }) => {
     await page.goto(`/${LOCALE}/login`);
 
-    await expect(page.getByPlaceholder(/username or email/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/username or phone/i)).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.getByRole('button', { name: /login/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /create an account/i })).toBeVisible();

@@ -490,7 +490,7 @@ export const en = {
             labelRefundPolicy:
                 "If the conditions are violated, we will refund your money.",
             labelUsername: "Username",
-            labelUsernameOrEmail: "Username or email",
+            labelUsernameOrEmail: "Username or Phone number",
             labelOTP: "Enter OTP for verification",
             btnVerifyOTP: "Verify OTP",
             placeholderOTP: "Enter OTP",
@@ -502,10 +502,10 @@ export const en = {
             buttonLoginPassword: "Log in with a password",
             buttonLoginOtp: "Sign in with phone (OTP)",
             linkForgotPassword: "Forgot your password?",
-            errorUsernameOrEmailRequired: "Username or email is required",
+            errorUsernameOrEmailRequired: "Username or phone number is required",
             errorPasswordRequired: "Password is required",
             errorPasswordVerifyRequired: "Password confirmation is required",
-            invalidLoginCredentials: "Invalid username/email or password.",
+            invalidLoginCredentials: "Invalid username/phone number or password.",
             messageEnterCode:
                 "Please enter the code to activate your account. (If you don’t see it, check your Spam and Junk folders)",
             messageVerificationSent:
@@ -520,7 +520,7 @@ export const en = {
             placeholderPassword: "Enter password",
             placeholderPhone: "Enter phone number",
             placeholderUsername: "Enter username",
-            placeholderUsernameOrEmail: "Enter your username or email",
+            placeholderUsernameOrEmail: "Enter your username or phone number",
             resendAttempts: "Resend attempts",
             resendCode: "Resend Code",
             resetPasswordTitle: "Reset Password",
