@@ -85,6 +85,15 @@ export function getApiHost(): string {
  * server/browser split here the way getApiBase() has one.
  */
 export function getIdentityBase(): string {
+  // No `|| "https://identity..."` here, deliberately, and 0447554's was reverted
+  // in 2d02d38. An unset variable has to stay distinguishable from a configured
+  // one: IdentityOtpService answers `identityNotConfigured` without touching the
+  // network and verifyJwt answers `unavailable`, so a box that never configured
+  // Identity refuses instead of posting real phone numbers and real JWTs to
+  // whichever host was compiled in. next.config.ts also reads this variable to
+  // build the CSP `connect-src`, so a host that exists only as a fallback here
+  // is one the page is then forbidden to reach. The container's value lives in
+  // the Dockerfile, beside the other three. See #96.
   return ensureAbsoluteUrl(process.env.NEXT_PUBLIC_IDENTITY_BASE_URL);
 }
 

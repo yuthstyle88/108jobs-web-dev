@@ -9,6 +9,12 @@ ENV CI=true
 ENV API_INTERNAL_URL="https://api.108heros.com"
 ENV NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com"
 ENV NEXT_PUBLIC_APP_URL="https://108heros.com"
+# Needed in the BUILDER stage, not only the runner. Next inlines NEXT_PUBLIC_*
+# into the browser bundle at build time, and next.config.ts reads this same
+# variable then to put the Identity origin into the CSP `connect-src`. Set only
+# at runtime, the phone/OTP calls would be compiled against nothing and, if they
+# were made anyway, blocked by the page's own CSP.
+ENV NEXT_PUBLIC_IDENTITY_BASE_URL="https://identity.108plaza.net"
 
 COPY package.json pnpm-lock.yaml ./
 COPY src/lib/108heros-client/package.json src/lib/108heros-client/pnpm-lock.yaml ./src/lib/108heros-client/
@@ -37,7 +43,8 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     API_INTERNAL_URL="https://api.108heros.com" \
     NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com" \
-    NEXT_PUBLIC_APP_URL="https://108heros.com"
+    NEXT_PUBLIC_APP_URL="https://108heros.com" \
+    NEXT_PUBLIC_IDENTITY_BASE_URL="https://identity.108plaza.net"
 RUN useradd -u 10001 -m app
 
 # Copy standalone server, static assets, and public directory
