@@ -10,13 +10,13 @@ import {useScrollHandler} from "./hooks/useScrollHandler";
 import {useLanguage} from "@/contexts/LanguageContext";
 import {useSiteStore} from "@/store/useSiteStore";
 
-const Header = ({type, forceShowSearch = false}: { type: string; forceShowSearch?: boolean }) => {
+const Header = ({type, forceShowSearch = false}: { type?: string; forceShowSearch?: boolean }) => {
     const {isLoggedIn, isAdmin} = useAuthInfo();
     const {siteView} = useSiteStore();
     const {lang} = useLanguage();
     const {t} = useTranslation();
     const {scrollY, showSearch} = useScrollHandler(forceShowSearch);
-    const bg = scrollY > 0 ? "bg-primary" : type === "transparent" ? "bg-transparent" : "bg-primary";
+    const bg = "bg-primary";
 
     const logoUrl = siteView?.localSite?.icon || AssetIcon.logo.src;
 
