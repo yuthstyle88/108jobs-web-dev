@@ -6,7 +6,9 @@ RUN corepack enable
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
-ENV API_INTERNAL_URL="http://127.0.0.1:31440"
+ENV API_INTERNAL_URL="http://jobs-api:8523"
+ENV NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com"
+ENV NEXT_PUBLIC_APP_URL="https://108heros.com"
 
 COPY package.json pnpm-lock.yaml ./
 COPY src/lib/108heros-client/package.json src/lib/108heros-client/pnpm-lock.yaml ./src/lib/108heros-client/
@@ -33,8 +35,8 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
-    API_INTERNAL_URL="http://127.0.0.1:31440" \
-    NEXT_PUBLIC_API_BASE_URL="https://api-staging.108heros.com" \
+    API_INTERNAL_URL="http://jobs-api:8523" \
+    NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com" \
     NEXT_PUBLIC_APP_URL="https://108heros.com"
 RUN useradd -u 10001 -m app
 

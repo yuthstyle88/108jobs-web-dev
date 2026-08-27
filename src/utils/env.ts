@@ -44,14 +44,14 @@ export function getApiBase(): string {
   if (isBrowserEnv()) {
     return (
       ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL)
-        || "https://api-staging.108heros.com"
+        || "https://api.108heros.com"
     );
   }
   // Server side: allow internal URL to bypass proxies and TLS if needed
   return (
     ensureAbsoluteUrl(process.env.API_INTERNAL_URL)
       || ensureAbsoluteUrl(process.env.NEXT_PUBLIC_API_BASE_URL)
-      || "https://api-staging.108heros.com"
+      || "http://jobs-api:8523"
   );
 }
 
