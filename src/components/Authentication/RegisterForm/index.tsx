@@ -48,10 +48,22 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
 
     const {execute: register} = useHttpPost("registerWithIdentityPlatform");
 
+    const normalizePhone = (input: string): string => {
+        const trimmed = input.trim();
+        if (trimmed.startsWith("0") && trimmed.length >= 9) {
+            return `+66${trimmed.slice(1)}`;
+        }
+        if (trimmed.startsWith("+")) {
+            return trimmed;
+        }
+        return `+${trimmed}`;
+    };
+
     const onSubmit = form.handleSubmit(async (data) => {
         setApiError(null);
+        const normalizedPhone = normalizePhone(data.phone);
         const res = await register({
-            phone: data.phone.trim(),
+            phone: normalizedPhone,
             password: data.password,
         });
 
@@ -60,7 +72,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
                 resolveApiErrorMessage(res.err, t, {
                     knownCodes: {
                         identityPlatformPhoneTaken: t("authen.phoneTaken") || "Phone number already exists",
+                        phone_taken: t("authen.phoneTaken") || "Phone number already exists",
                         identityPlatformPhoneRequired: t("authen.placeholderPhone"),
+                        phone_required: t("authen.placeholderPhone"),
+                        identityPlatformInvalidPhone: t("authen.invalidPhone") || "Invalid phone number format",
+                        invalid_phone: t("authen.invalidPhone") || "Invalid phone number format",
+                        identityPlatformRegistrationFailed: t("authen.identityPlatformRegistrationFailed") || t("authen.apiErrorState"),
+                        identityPlatformPasswordPolicyViolation: t("authen.passwordMin6") || "Password must be at least 6 characters",
+                        password_policy_violation: t("authen.passwordMin6") || "Password must be at least 6 characters",
                     },
                     fallback: t("authen.apiErrorState"),
                 })
