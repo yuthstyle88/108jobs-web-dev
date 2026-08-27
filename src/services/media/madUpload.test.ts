@@ -516,8 +516,13 @@ describe("uploadSelectedImage with MAD", () => {
 
     const fallbackUpload = vi.fn(async () => ({
       state: REQUEST_STATE.SUCCESS,
+      // The shape the image routes actually return -- every `link_*` handler
+      // in api-108heros-dev answers `LinkImageResponse { url }`. This mock
+      // previously asserted `{ images: [{ imageUrl }] }`, a shape no route has
+      // ever sent, which is what let the silent no-op survive: the code and the
+      // test agreed with each other and neither agreed with the server.
       data: {
-        images: [{ imageUrl: "https://legacy.example.com/files/legacy-avatar.png" }],
+        url: "https://legacy.example.com/files/legacy-avatar.png",
       },
     }));
 

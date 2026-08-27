@@ -163,7 +163,7 @@ export type {Tagline} from "./types/Tagline";
 export type {TaglineId} from "./types/TaglineId";
 export type {TagsView} from "./types/TagsView";
 export type {UpdateCategoryTag} from "./types/UpdateCategoryTag";
-export type {UploadImageResponse} from "./types/UploadImageResponse";
+export type {LinkImageResponse} from "./types/LinkImageResponse";
 export type {VerifyEmail} from "./types/VerifyEmail";
 export type {VoteShow} from "./types/VoteShow";
 export {JobType} from "./types/JobType";
