@@ -24,25 +24,16 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
     const redirectUrl = searchParams.get("redirect") || "/";
     const [apiError, setApiError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const registerSchema = z
-        .object({
-            phone: z
-                .string()
-                .min(9, t("authen.placeholderPhone"))
-                .regex(/^[0-9+() -]+$/, t("authen.placeholderPhone")),
-            password: z
-                .string()
-                .min(6, t("authen.passwordMin6")),
-            confirmPassword: z
-                .string()
-                .min(1, t("authen.placeholderPasswordVerify")),
-        })
-        .refine((data) => data.password === data.confirmPassword, {
-            message: t("authen.passwordMismatch"),
-            path: ["confirmPassword"],
-        });
+    const registerSchema = z.object({
+        phone: z
+            .string()
+            .min(9, t("authen.placeholderPhone"))
+            .regex(/^[0-9+() -]+$/, t("authen.placeholderPhone")),
+        password: z
+            .string()
+            .min(6, t("authen.passwordMin6")),
+    });
 
     type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -52,7 +43,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
         defaultValues: {
             phone: "",
             password: "",
-            confirmPassword: "",
         },
     });
 
@@ -63,7 +53,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
         const res = await register({
             phone: data.phone.trim(),
             password: data.password,
-            passwordVerify: data.confirmPassword,
         });
 
         if (res.state === REQUEST_STATE.FAILED) {
@@ -72,7 +61,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
                     knownCodes: {
                         identityPlatformPhoneTaken: t("authen.phoneTaken") || "Phone number already exists",
                         identityPlatformPhoneRequired: t("authen.placeholderPhone"),
-                        passwordsDoNotMatch: t("authen.passwordMismatch"),
                     },
                     fallback: t("authen.apiErrorState"),
                 })
@@ -116,19 +104,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({onSwitchToOtp}) => {
                 error={errors.password?.message}
                 showPassword={showPassword}
                 toggleShowPassword={() => setShowPassword((prev) => !prev)}
-                required
-            />
-
-            <CustomInput
-                label={t("authen.labelPasswordVerify")}
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                autoComplete="new-password"
-                placeholder={t("authen.placeholderPasswordVerify")}
-                register={form.register("confirmPassword")}
-                error={errors.confirmPassword?.message}
-                showPassword={showConfirmPassword}
-                toggleShowPassword={() => setShowConfirmPassword((prev) => !prev)}
                 required
             />
 
