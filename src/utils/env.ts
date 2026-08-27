@@ -88,10 +88,7 @@ export function getApiHost(): string {
  * server/browser split here the way getApiBase() has one.
  */
 export function getIdentityBase(): string {
-  return (
-    ensureAbsoluteUrl(process.env.NEXT_PUBLIC_IDENTITY_BASE_URL)
-      || "https://identity.108plaza.net"
-  );
+  return ensureAbsoluteUrl(process.env.NEXT_PUBLIC_IDENTITY_BASE_URL);
 }
 
 /**
