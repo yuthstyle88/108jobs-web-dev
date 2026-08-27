@@ -102,7 +102,7 @@ export default function SiteAppearancePage() {
 
         const res = await execute({ image: file });
 
-        if (isSuccess(res) && res.data?.images?.[0]?.imageUrl) {
+        if (isSuccess(res) && res.data?.url) {
             toast.success(type === "icon" ? t("admin.picture.logoUpdated") : t("admin.picture.bannerUpdated"));
             // Refresh the shared store with the canonical site data now that
             // it actually changed -- everywhere else that reads useSiteStore
