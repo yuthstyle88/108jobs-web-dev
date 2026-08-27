@@ -37,7 +37,7 @@ export default function Home() {
         <ChatLanguageProvider>
                 <div className="min-h-[100vh] bg-gray-50">
                     <div className="hidden sm:block">
-                        <Header type="transparent"/>
+                        <Header type="primary"/>
                     </div>
                     <div className="block sm:hidden">
                         {/* Mobile Header */}
