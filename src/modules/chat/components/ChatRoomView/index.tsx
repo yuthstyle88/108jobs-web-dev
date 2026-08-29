@@ -39,6 +39,7 @@ import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
 import ChatRoomMessages from "../ChatRoomMessages";
 import ChatSearchPanel from "@/modules/chat/components/ChatSearchPanel";
+import ChatRoomTabs from "@/modules/chat/components/ChatRoomTabs";
 import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 import {useRoomsStore} from '@/modules/chat/store/roomsStore';
 import FreelanceChatFlow, {FlowActions, StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
@@ -482,9 +483,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // Provide the workflow-only Orders tab and the Media tab to the global sidebar.
-    useLayoutEffect(() => {
-        setContent(
+    // The Orders + Media panel. Built once per meaningful change rather than
+    // inside the effect below, because it now has two consumers: the desktop
+    // sidebar (via context) and the mobile Order pane, which renders it
+    // inline. Same dependency list the effect carried before.
+    const sidebarContent = useMemo(
+        () => (
             <ChatSidebarTabs
                 roomId={roomId}
                 partnerName={partnerName || "User"}
@@ -496,190 +500,230 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     />
                 }
             />
-        );
-
-        return () => setContent(null);
+        ),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        currentRoom,
-        setContent,
-        isEmployer,
-        isEmployerKnown,
-        hasStarted,
-        selectedFile,
-        isDeletingFile,
-        statusBeforeCancel,
-        availableBalance,
-        latestQuoteAmount,
-        currentStatus,
-        roomId,
-        partnerName,
-        roomPostId,
-        lang,
-    ]);
+        [
+            currentRoom,
+            isEmployer,
+            isEmployerKnown,
+            hasStarted,
+            selectedFile,
+            isDeletingFile,
+            statusBeforeCancel,
+            availableBalance,
+            latestQuoteAmount,
+            currentStatus,
+            roomId,
+            partnerName,
+            roomPostId,
+            lang,
+        ],
+    );
+
+    useLayoutEffect(() => {
+        setContent(sidebarContent);
+        return () => setContent(null);
+    }, [sidebarContent, setContent]);
 
     return (
         <>
             <div className="relative flex-1 min-w-0 flex flex-col md:flex-row h-full">
                 <div className="flex-1 min-w-0 flex flex-col h-full w-full">
-                    {/* Header: partner presence, typing indicator, and toggle for workflow side panel */}
+                    {/* Header: partner presence and typing indicator */}
                     <ChatHeader
                         avatarUrl={partnerAvatar}
                         displayName={partnerName || "User"}
                         typingText={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
-                        onToggleFlow={() => setIsFlowOpen(!isFlowOpen)}
-                        isFlowOpen={isFlowOpen}
                         partnerId={partnerId}
                         onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
                         isSearchOpen={isSearchOpen}
                     />
-                    <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
-                        {isSearchOpen && (
-                            <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
-                        )}
-                        <ChatRoomMessages
-                            key={roomId}
-                            messages={messages}
-                            partnerAvatar={partnerAvatar || ProfileImage.avatar}
-                            onTopReached={handleOnTopReached}
-                            hasMore={hasMore}
-                            isFetching={isFetching}
-                            partnerId={partnerId}
-                        />
-                    </div>
-                    <div ref={inputContainerRef} className="border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white">
-                        <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                                {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-                                {attachmentPreview && (
-                                    <div
-                                        className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                                        {attachmentPreview.kind === "file" || thumbLoadFailed ? (
-                                            <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
-                                        ) : (
+
+                    {/* Mobile only; desktop shows both panes side by side. */}
+                    <ChatRoomTabs
+                        activeTab={isFlowOpen ? "order" : "chat"}
+                        onSelect={(tab) => setIsFlowOpen(tab === "order")}
+                    />
+
+                    <div
+                        id="chat-room-panel-chat"
+                        role="tabpanel"
+                        aria-labelledby="chat-room-tab-chat"
+                        className={`${isFlowOpen ? "hidden md:flex" : "flex"} min-h-0 flex-1 flex-col`}
+                    >
+                        <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
+                            {isSearchOpen && (
+                                <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
+                            )}
+                            <ChatRoomMessages
+                                key={roomId}
+                                messages={messages}
+                                partnerAvatar={partnerAvatar || ProfileImage.avatar}
+                                onTopReached={handleOnTopReached}
+                                hasMore={hasMore}
+                                isFetching={isFetching}
+                                partnerId={partnerId}
+                            />
+                        </div>
+                        {/* The inset is the notch/home-indicator gap and resolves to
+                            0 everywhere else, so this is inert on desktop. Applied
+                            to a wrapper rather than the padded element itself
+                            because an inline paddingBottom would override the
+                            responsive `py-2 sm:py-3` below instead of adding to it. */}
+                        <div
+                            className="border-t bg-white"
+                            style={{paddingBottom: "env(safe-area-inset-bottom)"}}
+                        >
+                            <div ref={inputContainerRef} className="px-3 py-2 sm:px-4 sm:py-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1">
+                                        {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+                                        {attachmentPreview && (
                                             <div
-                                                className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/5 ring-1 ring-black/5">
-                                                {attachmentPreview.kind === "image" ? (
-                                                    <img
-                                                        src={attachmentPreview.url}
-                                                        alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
-                                                    />
+                                                className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                                                {attachmentPreview.kind === "file" || thumbLoadFailed ? (
+                                                    <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
                                                 ) : (
-                                                    // No `controls`: this is a static pick-time preview, not a
-                                                    // player, and it must never autoplay -- omitting `autoPlay`
-                                                    // (rather than setting it false) is what guarantees that.
-                                                    <video
-                                                        src={attachmentPreview.url}
-                                                        muted
-                                                        playsInline
-                                                        preload="metadata"
-                                                        aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
-                                                    />
-                                                )}
-                                                {isUploading && (
-                                                    uploadPercent != null ? (
-                                                        <div
-                                                            role="progressbar"
-                                                            aria-label={t("profileChat.uploadingLabel") || "Uploading"}
-                                                            aria-valuemin={0}
-                                                            aria-valuemax={100}
-                                                            aria-valuenow={uploadPercent}
-                                                            aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
-                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
-                                                        >
-                                                            <span aria-hidden className="text-xs font-semibold text-white">
-                                                                {uploadPercent}%
-                                                            </span>
-                                                        </div>
-                                                    ) : (
-                                                        <div
-                                                            role="status"
-                                                            aria-live="polite"
-                                                            aria-busy="true"
-                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
-                                                        >
-                                                            <span
-                                                                aria-hidden
-                                                                className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                                    <div
+                                                        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/5 ring-1 ring-black/5">
+                                                        {attachmentPreview.kind === "image" ? (
+                                                            <img
+                                                                src={attachmentPreview.url}
+                                                                alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                                className="h-full w-full object-cover"
+                                                                onError={() => setFailedPreviewUrl(attachmentPreview.url)}
                                                             />
-                                                            <span className="sr-only">
-                                                                {t("profileChat.uploadingLabel") || "Uploading"}
-                                                            </span>
-                                                        </div>
-                                                    )
+                                                        ) : (
+                                                            // No `controls`: this is a static pick-time preview, not a
+                                                            // player, and it must never autoplay -- omitting `autoPlay`
+                                                            // (rather than setting it false) is what guarantees that.
+                                                            <video
+                                                                src={attachmentPreview.url}
+                                                                muted
+                                                                playsInline
+                                                                preload="metadata"
+                                                                aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                                className="h-full w-full object-cover"
+                                                                onError={() => setFailedPreviewUrl(attachmentPreview.url)}
+                                                            />
+                                                        )}
+                                                        {isUploading && (
+                                                            uploadPercent != null ? (
+                                                                <div
+                                                                    role="progressbar"
+                                                                    aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                                    aria-valuemin={0}
+                                                                    aria-valuemax={100}
+                                                                    aria-valuenow={uploadPercent}
+                                                                    aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                                    className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                                >
+                                                                    <span aria-hidden className="text-xs font-semibold text-white">
+                                                                        {uploadPercent}%
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    role="status"
+                                                                    aria-live="polite"
+                                                                    aria-busy="true"
+                                                                    className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                                >
+                                                                    <span
+                                                                        aria-hidden
+                                                                        className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                                                    />
+                                                                    <span className="sr-only">
+                                                                        {t("profileChat.uploadingLabel") || "Uploading"}
+                                                                    </span>
+                                                                </div>
+                                                            )
+                                                        )}
+                                                    </div>
                                                 )}
+
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-blue-900 truncate">
+                                                        {attachmentPreview.name}
+                                                    </p>
+                                                    {isUploading && (attachmentPreview.kind === "file" || thumbLoadFailed) && (
+                                                        uploadPercent != null ? (
+                                                            <div
+                                                                role="progressbar"
+                                                                aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                                aria-valuemin={0}
+                                                                aria-valuemax={100}
+                                                                aria-valuenow={uploadPercent}
+                                                                aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                                className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
+                                                            >
+                                                                <div
+                                                                    className="h-full rounded-full bg-blue-500 transition-[width]"
+                                                                    style={{width: `${uploadPercent}%`}}
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div
+                                                                role="status"
+                                                                aria-live="polite"
+                                                                aria-busy="true"
+                                                                className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
+                                                            >
+                                                                <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-400"/>
+                                                                <span className="sr-only">
+                                                                    {t("profileChat.uploadingLabel") || "Uploading"}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    )}
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRemoveSelectedFile}
+                                                    disabled={isDeletingFile}
+                                                    className={`ml-2 shrink-0 self-start p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
+                                                    aria-label={t("profileChat.removeAttachment") || "Remove attachment"}
+                                                >
+                                                    <Trash2 className={`h-4 w-4 ${isDeletingFile ? 'animate-spin' : ''}`}/>
+                                                </button>
                                             </div>
                                         )}
-
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-blue-900 truncate">
-                                                {attachmentPreview.name}
-                                            </p>
-                                            {isUploading && (attachmentPreview.kind === "file" || thumbLoadFailed) && (
-                                                uploadPercent != null ? (
-                                                    <div
-                                                        role="progressbar"
-                                                        aria-label={t("profileChat.uploadingLabel") || "Uploading"}
-                                                        aria-valuemin={0}
-                                                        aria-valuemax={100}
-                                                        aria-valuenow={uploadPercent}
-                                                        aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
-                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
-                                                    >
-                                                        <div
-                                                            className="h-full rounded-full bg-blue-500 transition-[width]"
-                                                            style={{width: `${uploadPercent}%`}}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div
-                                                        role="status"
-                                                        aria-live="polite"
-                                                        aria-busy="true"
-                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
-                                                    >
-                                                        <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-400"/>
-                                                        <span className="sr-only">
-                                                            {t("profileChat.uploadingLabel") || "Uploading"}
-                                                        </span>
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveSelectedFile}
-                                            disabled={isDeletingFile}
-                                            className={`ml-2 shrink-0 self-start p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
-                                            aria-label={t("profileChat.removeAttachment") || "Remove attachment"}
-                                        >
-                                            <Trash2 className={`h-4 w-4 ${isDeletingFile ? 'animate-spin' : ''}`}/>
-                                        </button>
+                                        <ChatInput
+                                            onSubmit={onSubmit}
+                                            disabledHint=""
+                                            hasAttachment={!!selectedFile}
+                                            isUploading={isUploading}
+                                            onFileUpload={(ev: any) => handleFileUpload(ev as any)}
+                                            onTyping={(v) => {
+                                                try {
+                                                    sendTyping?.(v);
+                                                } catch {
+                                                }
+                                            }}
+                                            typingHint={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
+                                            sendLatestRead={sendLatestRead}
+                                        />
                                     </div>
-                                )}
-                                <ChatInput
-                                    onSubmit={onSubmit}
-                                    disabledHint=""
-                                    hasAttachment={!!selectedFile}
-                                    isUploading={isUploading}
-                                    onFileUpload={(ev: any) => handleFileUpload(ev as any)}
-                                    onTyping={(v) => {
-                                        try {
-                                            sendTyping?.(v);
-                                        } catch {
-                                        }
-                                    }}
-                                    typingHint={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
-                                    sendLatestRead={sendLatestRead}
-                                />
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Order pane. Mobile only -- on desktop this same element is
+                        rendered by JobFlowSidebar as a permanent side panel, and
+                        mounting it twice there would be two live copies of the
+                        workflow. */}
+                    {isFlowOpen && (
+                        <div
+                            id="chat-room-panel-order"
+                            role="tabpanel"
+                            aria-labelledby="chat-room-tab-order"
+                            className="flex min-h-0 flex-1 flex-col md:hidden"
+                        >
+                            {sidebarContent}
+                        </div>
+                    )}
                 </div>
             </div>
             {/* Delivery review modal (employer review of delivered work) */}

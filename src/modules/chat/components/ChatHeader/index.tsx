@@ -13,8 +13,6 @@ interface ChatHeaderProps {
     displayName: string;
     partnerId: LocalUserId;
     typingText?: string;
-    onToggleFlow?: () => void;
-    isFlowOpen?: boolean;
     onToggleSearch?: () => void;
     isSearchOpen?: boolean;
 }
@@ -24,8 +22,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                                                    displayName,
                                                    typingText,
                                                    partnerId,
-                                                   onToggleFlow,
-                                                   isFlowOpen,
                                                    onToggleSearch,
                                                    isSearchOpen,
                                                }) => {
@@ -79,14 +75,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                     }`}
                 >
                     <Search className="h-5 w-5" />
-                </button>
-                {/* Show Flow Button — only visible on mobile */}
-                <button
-                    onClick={onToggleFlow}
-                    className="sm:hidden whitespace-nowrap rounded-md bg-primary hover:bg-[#063a68] text-white text-xs px-3 py-2"
-                    aria-label={isFlowOpen ? "Hide Flow" : "Show Flow"}
-                >
-                    {isFlowOpen ? "Hide Flow" : "Show Flow"}
                 </button>
             </div>
         </div>
