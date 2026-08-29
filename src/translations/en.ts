@@ -39,6 +39,8 @@ export const en = {
             jobFlow: "Job Flow",
             orders: "Orders",
             media: "Media",
+            tabChat: "Chat",
+            tabOrder: "Order",
             closeDrawer: "Close",
             howToHire: {
                 promptTitle: "Not sure where to start?",

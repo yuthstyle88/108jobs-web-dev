@@ -39,6 +39,8 @@ export const vi = {
             jobFlow: "Quy trình công việc",
             orders: "Đơn hàng",
             media: "Phương tiện",
+            tabChat: "Trò chuyện",
+            tabOrder: "Đơn hàng",
             closeDrawer: "Đóng",
             howToHire: {
                 promptTitle: "Bạn chưa biết bắt đầu từ đâu?",

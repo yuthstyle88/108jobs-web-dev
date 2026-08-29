@@ -39,6 +39,8 @@ export const th = {
             jobFlow: "ลำดับงาน",
             orders: "คำสั่งงาน",
             media: "สื่อ",
+            tabChat: "แชท",
+            tabOrder: "คำสั่งงาน",
             closeDrawer: "ปิด",
             howToHire: {
                 promptTitle: "ยังไม่แน่ใจว่าจะเริ่มอย่างไร?",
