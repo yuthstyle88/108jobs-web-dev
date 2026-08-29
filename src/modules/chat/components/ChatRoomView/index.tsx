@@ -547,7 +547,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                             partnerId={partnerId}
                         />
                     </div>
-                    <div ref={inputContainerRef} className="border-t px-3 py-2 sm:px-4 sm:py-3 bg-white">
+                    <div ref={inputContainerRef} className="border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white">
                         <div className="flex items-center gap-2">
                             <div className="flex-1">
                                 {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
