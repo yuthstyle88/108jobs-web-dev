@@ -70,15 +70,18 @@ describe("ChatRoomTabs", () => {
         expect(onSelect).toHaveBeenCalledWith("order");
     });
 
-    it("is hidden from the md breakpoint up", () => {
+    it("carries the md:hidden class that keeps it off desktop", () => {
         render("chat");
 
         // The desktop layout keeps its permanent sidebar; a tab bar there
-        // would offer a choice the desktop UI does not have.
+        // would offer a choice the desktop UI does not have. jsdom has no
+        // layout/media-query engine, so this only proves the class is
+        // present -- not that it actually hides the element at the md
+        // breakpoint.
         expect(document.querySelector('[role="tablist"]')?.className).toContain("md:hidden");
     });
 
-    it("keeps a single tab stop and moves selection with the arrow keys", () => {
+    it("keeps a single tab stop and moves both selection and focus with the arrow keys", () => {
         const onSelect = render("chat");
 
         expect(tabs().map((tab) => tab.tabIndex)).toEqual([0, -1]);
@@ -88,9 +91,15 @@ describe("ChatRoomTabs", () => {
         });
 
         expect(onSelect).toHaveBeenCalledWith("order");
+        // The component is stateless, so `onSelect` alone doesn't move
+        // tabIndex -- that only happens once the caller re-renders with the
+        // new activeTab. What the handler itself is responsible for is
+        // moving the DOM focus ring to the tab it just selected (both
+        // buttons are always mounted, so that element already exists).
+        expect(document.activeElement).toBe(tabs()[1]);
     });
 
-    it("wraps around when arrowing past either end", () => {
+    it("wraps from the first tab to the last when arrowing left past the start", () => {
         const onSelect = render("chat");
 
         act(() => {
@@ -98,5 +107,15 @@ describe("ChatRoomTabs", () => {
         });
 
         expect(onSelect).toHaveBeenCalledWith("order");
+    });
+
+    it("wraps from the last tab to the first when arrowing right past the end", () => {
+        const onSelect = render("order");
+
+        act(() => {
+            tabs()[1].dispatchEvent(new KeyboardEvent("keydown", {key: "ArrowRight", bubbles: true}));
+        });
+
+        expect(onSelect).toHaveBeenCalledWith("chat");
     });
 });
