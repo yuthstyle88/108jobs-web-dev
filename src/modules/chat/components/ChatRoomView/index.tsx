@@ -225,17 +225,17 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         sendReadReceipt,
     });
 
-    // Auto-collapse the workflow panel on narrow viewports to preserve space for the conversation.
+    // Landing on a conversation should show the conversation. The tab bar owns
+    // the Chat/Order choice from then on.
+    //
+    // This replaces a resize listener that called setIsFlowOpen(false) on every
+    // resize below 640px. Under the old slide-over that just closed a drawer;
+    // with tabs it yanks a mobile reader off the Order tab, and iOS fires
+    // resize whenever the URL bar shows or hides. The 640 was also inconsistent
+    // with the md/768 breakpoint everything else in this feature uses.
     useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 640) {
-                setIsFlowOpen(false);
-            }
-        };
-        handleResize();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
+        setIsFlowOpen(false);
+    }, [roomId, setIsFlowOpen]);
 
     // Keep the local ` currentRoom ` in sync with server-refreshed room metadata from the channel.
     useLayoutEffect(() => {
