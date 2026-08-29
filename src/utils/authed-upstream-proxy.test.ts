@@ -21,7 +21,7 @@ function req(opts?: {
   if (opts?.method) init.method = opts.method;
   if (opts?.body !== undefined) init.body = opts.body;
 
-  return new NextRequest(opts?.url ?? "http://localhost:3000/api/rider-documents/1/face", init);
+  return new NextRequest(opts?.url ?? "http://localhost:3000/api/media/asset-1", init);
 }
 
 afterEach(() => {
