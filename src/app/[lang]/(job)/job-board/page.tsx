@@ -193,7 +193,7 @@ const JobBoard = () => {
 
     useEffect(() => {
         pager.resetPagination();
-    }, [filters.category, filters.sort, filters.budgetMin, filters.budgetMax, filters.jobType, filters.intendedUse, pager]);
+    }, [filters.category, filters.sort, filters.budgetMin, filters.budgetMax, filters.jobType, filters.intendedUse, pager.resetPagination]);
 
     if (searchState.state === REQUEST_STATE.FAILED) {
         return (
