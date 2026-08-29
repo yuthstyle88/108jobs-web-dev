@@ -17,6 +17,18 @@ export interface UseCursorPaginationReturn {
     setCurrentCursor: (cursor: string | undefined) => void;
 }
 
+/**
+ * The cursor history after a reset.
+ *
+ * Returns `prev` itself when there is nothing to reset, so React's `Object.is`
+ * check sees no change and schedules no render. Exported because the identity,
+ * not the contents, is the whole point: a version returning a fresh `[]` is
+ * indistinguishable by value and re-renders every time.
+ */
+export function resetCursorHistory(prev: string[]): string[] {
+    return prev.length === 0 ? prev : [];
+}
+
 export function useCursorPagination(options?: UseCursorPaginationOptions): UseCursorPaginationReturn {
     const [currentCursor, setCurrentCursor] = useState<string | undefined>(options?.initialCursor);
     const [cursorHistory, setCursorHistory] = useState<string[]>([]);
@@ -44,8 +56,30 @@ export function useCursorPagination(options?: UseCursorPaginationOptions): UseCu
     }, [cursorHistory]);
 
     const resetPagination = useCallback(() => {
+        // Every setter here has to be able to do nothing.
+        //
+        // `setCurrentCursor(undefined)` and `setIsGoingBack(false)` already
+        // bail out on their own: React compares with `Object.is`, and passing
+        // the value a piece of state already holds schedules no render. The
+        // history did not, because `[]` is a fresh array every time and is
+        // never equal to the empty array already in state. So resetting a
+        // pager that was already on page one still re-rendered.
+        //
+        // That is only a wasted render until somebody calls this from an
+        // effect keyed on `resetPagination`'s identity -- which the job board
+        // does. A function identity is stable in steady state and is NOT
+        // stable across a Fast Refresh or a remount, and each re-run then
+        // produced a guaranteed render, which produced another re-run:
+        //
+        //   Maximum update depth exceeded
+        //     at useCursorPagination[resetPagination]
+        //     at commitHookEffectListMount
+        //
+        // reproducible on a cold `next dev` compile of /en/job-board. Making
+        // the reset idempotent removes the whole class: an extra call is now
+        // free, whatever caused it.
         setCurrentCursor(undefined);
-        setCursorHistory([]);
+        setCursorHistory(resetCursorHistory);
         setIsGoingBack(false);
     }, []);
 
