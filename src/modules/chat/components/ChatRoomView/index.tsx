@@ -535,7 +535,18 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         displayName={partnerName || "User"}
                         typingText={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
                         partnerId={partnerId}
-                        onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
+                        onToggleSearch={() => {
+                            if (isSearchOpen) {
+                                closeSearch();
+                                return;
+                            }
+                            // Search renders inside the Chat pane, which is
+                            // display:none on the Order tab -- opening it there
+                            // would flip aria-expanded and show nothing.
+                            // Searching is a request to look at the conversation.
+                            setIsFlowOpen(false);
+                            openSearch();
+                        }}
                         isSearchOpen={isSearchOpen}
                     />
 
@@ -710,10 +721,17 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         </div>
                     </div>
 
-                    {/* Order pane. Mobile only -- on desktop this same element is
-                        rendered by JobFlowSidebar as a permanent side panel, and
-                        mounting it twice there would be two live copies of the
-                        workflow. */}
+                    {/* Order pane. `md:hidden` buys visual exclusivity only --
+                        it is display:none, not an unmount. Whenever isFlowOpen
+                        is true at >=768px this mounts a second live copy of
+                        `sidebarContent` alongside the one JobFlowSidebar's
+                        permanent aside already renders: two ChatSidebarTabs,
+                        two ChatMediaPanel backfills, two FreelanceChatFlow
+                        instances. Reachable by selecting Order below 768px and
+                        then widening -- rotation, iPad split view, dragging a
+                        desktop window narrow and back. This is not new: the
+                        slide-over this replaced was also `{isOpen && ...}` with
+                        `md:hidden` and behaved identically. */}
                     {isFlowOpen && (
                         <div
                             id="chat-room-panel-order"
