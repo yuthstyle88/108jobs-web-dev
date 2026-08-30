@@ -43,13 +43,15 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
 
     const [viewing, setViewing] = React.useState<AttachmentItem | null>(null);
 
-    // Suffixes every id this panel renders. JobFlowSidebar mounts both a
-    // desktop `<aside>` (`hidden md:flex`, so still present in the DOM) and,
-    // while open, a mobile one -- each carrying its own copy of `content`, so
-    // without a per-instance suffix the two ChatMediaPanel instances would
-    // render identical `media-tab-*`/`media-panel-*` ids, and id-based
-    // resolution (`aria-controls`/`aria-labelledby`) would always pick the
-    // first (hidden) one (Finding 4, FINAL-findings.md).
+    // Suffixes every id this panel renders. This component is mounted twice
+    // at once: once inside JobFlowSidebar's permanent desktop `<aside>`
+    // (`hidden md:flex`, so still present in the DOM below `md`), and again
+    // inside ChatRoomView's inline `md:hidden` Order pane -- both rendering
+    // the same `sidebarContent`, so both mount a copy of this component.
+    // Without a per-instance suffix the two instances would render identical
+    // `media-tab-*`/`media-panel-*` ids, and id-based resolution
+    // (`aria-controls`/`aria-labelledby`) would always pick the first
+    // (hidden) one (Finding 4, FINAL-findings.md).
     const uid = React.useId();
 
     // Roving-tabindex focus targets -- see ChatSidebarTabs for why a ref map
@@ -94,16 +96,16 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
             setViewing(null);
             requestJump(messageId);
             // Spec: "On mobile, jumping closes the drawer or search overlay."
-            // Media lives inside JobFlowSidebar's slide-over, so without this
-            // the drawer stayed open over the conversation and tapping
-            // "Go to message" looked like it had done nothing (Finding 3,
-            // FINAL-findings.md). 768, not 640: this has to match the
-            // breakpoint JobFlowSidebar itself switches on (`md:hidden` on
-            // the mobile <aside>, `hidden md:flex` on the desktop one), not
-            // ChatSearchPanel's -- Search's overlay is `sm:`-scoped, so its
-            // own 640 check is correct for Search but wrong here. Do not
-            // "helpfully" realign this to 640; between 640-767px the drawer
-            // is still the visible one.
+            // Media lives in the mobile Order pane, so without this the pane
+            // stayed over the conversation and tapping "Go to message" looked
+            // like it had done nothing (Finding 3, FINAL-findings.md). Setting
+            // isOpen false is now what selects the Chat tab, which is the same
+            // outcome by a different mechanism.
+            // 768, not 640: this has to match the breakpoint the Order pane
+            // itself switches on (`md:hidden`), not ChatSearchPanel's --
+            // Search's overlay is `sm:`-scoped, so its own 640 check is correct
+            // for Search but wrong here. Do not "helpfully" realign this to
+            // 640; between 640-767px the Order pane is still the visible one.
             if (typeof window !== "undefined" && window.innerWidth < 768) setOpen(false);
         },
         [requestJump, setOpen],

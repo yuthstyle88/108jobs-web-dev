@@ -32,11 +32,12 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
     // key is about to select already exists by the time the handler runs.
     const tabRefs = React.useRef<Map<SidebarTab, HTMLButtonElement>>(new Map());
 
-    // JobFlowSidebar mounts a desktop `<aside>` (`hidden md:flex`, so still
-    // present in the DOM even when only the mobile one is visible) and,
-    // while open, a mobile `<aside>` too -- both rendering the same `content`,
-    // so both mount a copy of this component at once. Without a per-instance
-    // suffix, `sidebar-tab-*`/`sidebar-panel-*` collide between the two, and
+    // This component is mounted twice at once: once inside JobFlowSidebar's
+    // permanent desktop `<aside>` (`hidden md:flex`, so still present in the
+    // DOM below `md`), and again inside ChatRoomView's inline `md:hidden`
+    // Order pane -- both rendering the same `sidebarContent`, so both mount a
+    // copy of this component. Without a per-instance suffix,
+    // `sidebar-tab-*`/`sidebar-panel-*` collide between the two, and
     // id-based resolution (`aria-controls`/`aria-labelledby`) always picks
     // the first (hidden) one (Finding 4, FINAL-findings.md).
     const uid = React.useId();
