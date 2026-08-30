@@ -156,8 +156,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const {execute: approveWorkApi} = useHttpPost("approveWork");
     const {execute: submitReviewApi} = useHttpPost("submitUserReview");
 
-    const inputContainerRef = useRef<HTMLDivElement>(null);
-
     const {
         selectedFile,
         setSelectedFile,
@@ -233,7 +231,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // with tabs it yanks a mobile reader off the Order tab, and iOS fires
     // resize whenever the URL bar shows or hides. The 640 was also inconsistent
     // with the md/768 breakpoint everything else in this feature uses.
-    useEffect(() => {
+    //
+    // Must be a layout effect, not a passive one: App Router does not remount
+    // this component across roomId, so a reader sitting on the Order tab who
+    // opens a different room would otherwise have the new room's Order pane
+    // painted for one frame before a passive effect's reset had a chance to run.
+    useLayoutEffect(() => {
         setIsFlowOpen(false);
     }, [roomId, setIsFlowOpen]);
 
@@ -553,7 +556,15 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     {/* Mobile only; desktop shows both panes side by side. */}
                     <ChatRoomTabs
                         activeTab={isFlowOpen ? "order" : "chat"}
-                        onSelect={(tab) => setIsFlowOpen(tab === "order")}
+                        onSelect={(tab) => {
+                            setIsFlowOpen(tab === "order");
+                            // Search renders inside the Chat pane, which goes
+                            // display:none on the Order tab -- leaving it open
+                            // would strand the header's search button showing
+                            // aria-expanded="true" with nothing search-related
+                            // visible.
+                            if (tab === "order") closeSearch();
+                        }}
                     />
 
                     <div
@@ -581,7 +592,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                             and the `,0px` fallback keeps it inert everywhere the
                             inset does not exist. Landed on main as the fix for
                             #125; kept verbatim here so the two do not drift. */}
-                        <div ref={inputContainerRef} className="border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white">
+                        <div className="border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white">
                             <div className="flex items-center gap-2">
                                 <div className="flex-1">
                                     {error && <p className="text-sm text-red-600 mb-2">{error}</p>}

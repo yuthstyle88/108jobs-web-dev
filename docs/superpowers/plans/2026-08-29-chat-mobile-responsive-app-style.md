@@ -1029,6 +1029,8 @@ Click the **Chat** tab and confirm the conversation returns.
 
 - [ ] **Step 4: Check the emoji picker at both edges**
 
+**No longer applicable:** the emoji picker clamp (Task 1) was dropped from this branch, superseded by PR #126 on main -- skip this step.
+
 Back on the Chat tab at 375px wide, click the emoji (smiley) button in the composer.
 
 Run in `javascript_tool`:

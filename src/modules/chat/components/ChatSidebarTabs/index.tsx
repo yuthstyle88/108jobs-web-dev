@@ -32,14 +32,15 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
     // key is about to select already exists by the time the handler runs.
     const tabRefs = React.useRef<Map<SidebarTab, HTMLButtonElement>>(new Map());
 
-    // This component is mounted twice at once: once inside JobFlowSidebar's
-    // permanent desktop `<aside>` (`hidden md:flex`, so still present in the
-    // DOM below `md`), and again inside ChatRoomView's inline `md:hidden`
-    // Order pane -- both rendering the same `sidebarContent`, so both mount a
-    // copy of this component. Without a per-instance suffix,
+    // JobFlowSidebar's permanent desktop `<aside>` (`hidden md:flex`, so
+    // still present in the DOM below `md`) always mounts this component.
+    // While the Order tab is selected, ChatRoomView's inline `md:hidden`
+    // Order pane additionally mounts a second copy -- both rendering the
+    // same `sidebarContent`. Without a per-instance suffix,
     // `sidebar-tab-*`/`sidebar-panel-*` collide between the two, and
     // id-based resolution (`aria-controls`/`aria-labelledby`) always picks
-    // the first (hidden) one (Finding 4, FINAL-findings.md).
+    // the first (hidden) one (Finding 4, FINAL-findings.md). Do not delete
+    // `uid` on the assumption only one copy is ever mounted.
     const uid = React.useId();
 
     const onKeyDown = (e: React.KeyboardEvent) => {

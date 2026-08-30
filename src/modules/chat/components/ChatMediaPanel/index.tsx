@@ -43,15 +43,16 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
 
     const [viewing, setViewing] = React.useState<AttachmentItem | null>(null);
 
-    // Suffixes every id this panel renders. This component is mounted twice
-    // at once: once inside JobFlowSidebar's permanent desktop `<aside>`
-    // (`hidden md:flex`, so still present in the DOM below `md`), and again
-    // inside ChatRoomView's inline `md:hidden` Order pane -- both rendering
-    // the same `sidebarContent`, so both mount a copy of this component.
-    // Without a per-instance suffix the two instances would render identical
+    // Suffixes every id this panel renders. JobFlowSidebar's permanent
+    // desktop `<aside>` (`hidden md:flex`, so still present in the DOM below
+    // `md`) always mounts this component. While the Order tab is selected,
+    // ChatRoomView's inline `md:hidden` Order pane additionally mounts a
+    // second copy -- both rendering the same `sidebarContent`. Without a
+    // per-instance suffix the two instances would render identical
     // `media-tab-*`/`media-panel-*` ids, and id-based resolution
     // (`aria-controls`/`aria-labelledby`) would always pick the first
-    // (hidden) one (Finding 4, FINAL-findings.md).
+    // (hidden) one (Finding 4, FINAL-findings.md). Do not delete `uid` on
+    // the assumption only one copy is ever mounted.
     const uid = React.useId();
 
     // Roving-tabindex focus targets -- see ChatSidebarTabs for why a ref map
@@ -96,11 +97,12 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
             setViewing(null);
             requestJump(messageId);
             // Spec: "On mobile, jumping closes the drawer or search overlay."
-            // Media lives in the mobile Order pane, so without this the pane
-            // stayed over the conversation and tapping "Go to message" looked
-            // like it had done nothing (Finding 3, FINAL-findings.md). Setting
-            // isOpen false is now what selects the Chat tab, which is the same
-            // outcome by a different mechanism.
+            // Media lives in the mobile Order pane, so without this the Order
+            // pane stayed showing instead of the conversation, and tapping
+            // "Go to message" looked like it had done nothing (Finding 3,
+            // FINAL-findings.md). Setting isOpen false is now what selects
+            // the Chat tab, which is the same outcome by a different
+            // mechanism.
             // 768, not 640: this has to match the breakpoint the Order pane
             // itself switches on (`md:hidden`), not ChatSearchPanel's --
             // Search's overlay is `sm:`-scoped, so its own 640 check is correct

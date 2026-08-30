@@ -41,7 +41,7 @@ export const en = {
             media: "Media",
             tabChat: "Chat",
             tabOrder: "Order",
-            closeDrawer: "Close",
+            tabsLabel: "Chat or Order",
             howToHire: {
                 promptTitle: "Not sure where to start?",
                 promptSubtitle: "Don't worry, here's a quick guide.",

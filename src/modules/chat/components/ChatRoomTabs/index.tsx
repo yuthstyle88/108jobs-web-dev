@@ -52,7 +52,7 @@ const ChatRoomTabs: React.FC<ChatRoomTabsProps> = ({activeTab, onSelect}) => {
     return (
         <div
             role="tablist"
-            aria-label={t("profileChat.jobFlow")}
+            aria-label={t("profileChat.tabsLabel")}
             onKeyDown={onKeyDown}
             className="flex flex-shrink-0 border-b border-gray-200 bg-white md:hidden"
         >
