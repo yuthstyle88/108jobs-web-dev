@@ -1,8 +1,18 @@
-# Build + publish the 108heros Web image to GHCR, then roll it out on K3s.
+# Build + publish the 108jobs Web image to GHCR, then roll it out on K3s.
 # Companion to ci.yml (which tests but builds no image).
 #
 #   deploy/staging  →  staging/jobs-web
-#   release/prod    →  prod/jobs-web      ← 108heros.com, REAL USERS
+#   release/prod    →  prod/jobs-web      ← REAL USERS
+#
+# The image is ghcr.io/108-plaza/108jobs-web and nothing else publishes into it.
+# It used to be ghcr.io/108-plaza/108heros-web -- the name this repo carried before
+# the 2026-08-27 rename -- which the ride app's repo inherited when it was seeded
+# from this history, so both products were building into one package and patching
+# one Deployment (#110). That package is left to its history; do not publish here.
+#
+# NOTE: prod/jobs-web is what 108heros.com serves TODAY, through an nginx hop that
+# still points the ride domain at this app. Fixing that is an edge change on the
+# Dell host, not a change this repo can make.
 
 name: release-image
 
@@ -46,7 +56,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/108-plaza/108heros-web
+          images: ghcr.io/108-plaza/108jobs-web
           tags: |
             type=sha
 
@@ -71,11 +81,11 @@ jobs:
       - name: Resolve image tag
         id: tag
         run: echo "tag=sha-$(echo ${GITHUB_SHA} | cut -c1-7)" >> "$GITHUB_OUTPUT"
-      - name: 108heros Web → k3s (staging)
+      - name: 108jobs Web → k3s (staging)
         run: |
           set -euo pipefail
           kubectl -n staging set image deploy/jobs-web \
-            ting-service=ghcr.io/108-plaza/108heros-web:${{ steps.tag.outputs.tag }}
+            ting-service=ghcr.io/108-plaza/108jobs-web:${{ steps.tag.outputs.tag }}
           kubectl -n staging rollout status deploy/jobs-web --timeout=180s
 
   deploy-prod:
@@ -87,9 +97,9 @@ jobs:
       - name: Resolve image tag
         id: tag
         run: echo "tag=sha-$(echo ${GITHUB_SHA} | cut -c1-7)" >> "$GITHUB_OUTPUT"
-      - name: 108heros Web → k3s (PRODUCTION)
+      - name: 108jobs Web → k3s (PRODUCTION)
         run: |
           set -euo pipefail
           kubectl -n prod set image deploy/jobs-web \
-            ting-service=ghcr.io/108-plaza/108heros-web:${{ steps.tag.outputs.tag }}
+            ting-service=ghcr.io/108-plaza/108jobs-web:${{ steps.tag.outputs.tag }}
           kubectl -n prod rollout status deploy/jobs-web --timeout=180s
