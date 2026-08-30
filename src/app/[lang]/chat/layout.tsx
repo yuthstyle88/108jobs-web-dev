@@ -77,8 +77,8 @@ export default function ProfileLayout({children}: LayoutProps) {
                     ${!activeRoomId ? "top-16" : "top-0"}
                     sm:top-20 
                     left-0 right-0 
-                    ${!activeRoomId ? "h-[calc(100vh-56px)]" : "h-screen"}
-                    sm:h-[calc(100vh-80px)] 
+                    ${!activeRoomId ? "h-[calc(100dvh-56px)]" : "h-dvh"}
+                    sm:h-[calc(100dvh-80px)] 
                     overflow-hidden
                `}
             >
