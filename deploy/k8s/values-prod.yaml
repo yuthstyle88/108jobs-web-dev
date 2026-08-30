@@ -1,11 +1,11 @@
-# Helm values for the 108heros-web application on the ting-service chart, PROD namespace.
+# Helm values for the 108jobs-web application on the ting-service chart, PROD namespace.
 #   helm upgrade --install jobs-web charts/ting-service -n prod \
 #     -f deploy/k8s/values-prod.yaml --set image.tag=sha-<short>
 
 replicaCount: 1
 
 image:
-  repository: ghcr.io/108-plaza/108heros-web
+  repository: ghcr.io/108-plaza/108jobs-web
   tag: latest
   pullPolicy: IfNotPresent
 
