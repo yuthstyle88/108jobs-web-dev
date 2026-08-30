@@ -41,6 +41,7 @@ export const th = {
             media: "สื่อ",
             tabChat: "แชท",
             tabOrder: "คำสั่งงาน",
+            closeDrawer: "ปิด",
             tabsLabel: "แชทหรือคำสั่งงาน",
             howToHire: {
                 promptTitle: "ยังไม่แน่ใจว่าจะเริ่มอย่างไร?",

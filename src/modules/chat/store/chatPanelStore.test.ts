@@ -12,6 +12,7 @@ const reset = () =>
     sidebarTab: "orders",
     mediaTab: "imageVideo",
     isSearchOpen: false,
+    isMediaOpen: false,
     backfillByRoom: {},
     pendingJumpMessageId: null,
     jumpToken: 0,
@@ -39,6 +40,26 @@ describe("chatPanelStore", () => {
     expect(useChatPanelStore.getState().isSearchOpen).toBe(true);
     useChatPanelStore.getState().closeSearch();
     expect(useChatPanelStore.getState().isSearchOpen).toBe(false);
+  });
+
+  it("opens and closes the mobile media drawer", () => {
+    useChatPanelStore.getState().openMedia();
+    expect(useChatPanelStore.getState().isMediaOpen).toBe(true);
+    useChatPanelStore.getState().closeMedia();
+    expect(useChatPanelStore.getState().isMediaOpen).toBe(false);
+  });
+
+  it("keeps the media drawer independent of search and the sidebar tab", () => {
+    // The drawer overlays whatever is behind it rather than replacing it, so
+    // opening it must not disturb the pane or the search box underneath --
+    // closing it has to put the reader back exactly where they were.
+    useChatPanelStore.getState().openSearch();
+    useChatPanelStore.getState().setSidebarTab("orders");
+
+    useChatPanelStore.getState().openMedia();
+
+    expect(useChatPanelStore.getState().isSearchOpen).toBe(true);
+    expect(useChatPanelStore.getState().sidebarTab).toBe("orders");
   });
 
   it("tracks backfill per room, merging partial updates", () => {

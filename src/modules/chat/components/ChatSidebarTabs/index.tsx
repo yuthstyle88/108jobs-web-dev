@@ -32,15 +32,16 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
     // key is about to select already exists by the time the handler runs.
     const tabRefs = React.useRef<Map<SidebarTab, HTMLButtonElement>>(new Map());
 
-    // JobFlowSidebar's permanent desktop `<aside>` (`hidden md:flex`, so
-    // still present in the DOM below `md`) always mounts this component.
-    // While the Order tab is selected, ChatRoomView's inline `md:hidden`
-    // Order pane additionally mounts a second copy -- both rendering the
-    // same `sidebarContent`. Without a per-instance suffix,
-    // `sidebar-tab-*`/`sidebar-panel-*` collide between the two, and
-    // id-based resolution (`aria-controls`/`aria-labelledby`) always picks
-    // the first (hidden) one (Finding 4, FINAL-findings.md). Do not delete
-    // `uid` on the assumption only one copy is ever mounted.
+    // One mount, as things stand: JobFlowSidebar's permanent desktop
+    // `<aside>` (`hidden md:flex`, so still present in the DOM below `md`)
+    // is the only place that renders this component. ChatRoomView's mobile
+    // Order pane used to render a second copy, and the two collided on
+    // `sidebar-tab-*`/`sidebar-panel-*`, sending id-based resolution
+    // (`aria-controls`/`aria-labelledby`) to the first (hidden) one
+    // (Finding 4, FINAL-findings.md); that pane renders the bare job
+    // workflow now, so the pairing is gone. `uid` is retained as a
+    // safeguard -- it costs one string, and it is what keeps a second mount
+    // harmless if this component is ever placed somewhere else.
     const uid = React.useId();
 
     const onKeyDown = (e: React.KeyboardEvent) => {

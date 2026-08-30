@@ -52,6 +52,7 @@ import {Trash2} from "lucide-react";
 import {ReviewDeliveryModal} from "@/modules/chat/components/Modal/ReviewDeliveryModal";
 import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
 import ChatSidebarTabs from "@/modules/chat/components/ChatSidebarTabs";
+import ChatMediaDrawer from "@/modules/chat/components/ChatMediaDrawer";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
@@ -126,6 +127,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const isSearchOpen = useChatPanelStore((s) => s.isSearchOpen);
     const openSearch = useChatPanelStore((s) => s.openSearch);
     const closeSearch = useChatPanelStore((s) => s.closeSearch);
+    const openMedia = useChatPanelStore((s) => s.openMedia);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const roomPostId = post?.id ?? currentRoom.room.postId;
@@ -486,22 +488,18 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // The Orders + Media panel. Built once per meaningful change rather than
-    // inside the effect below, because it now has two consumers: the desktop
-    // sidebar (via context) and the mobile Order pane, which renders it
-    // inline. Same dependency list the effect carried before.
-    const sidebarContent = useMemo(
+    // The job workflow on its own, memoized separately from the sidebar that
+    // wraps it because it now has two consumers that want *different* things:
+    // the desktop sidebar takes it as the Orders tab's content, while the
+    // mobile Order pane wants only this and nothing around it -- no Media
+    // tab, because on mobile Media is the header's drawer instead. Same
+    // dependency list the effect originally carried.
+    const ordersContent = useMemo(
         () => (
-            <ChatSidebarTabs
-                roomId={roomId}
-                partnerName={partnerName || "User"}
-                orders={
-                    <JobFlowContent
-                        renderFlowContent={renderFlowContent}
-                        jobId={roomPostId}
-                        lang={lang}
-                    />
-                }
+            <JobFlowContent
+                renderFlowContent={renderFlowContent}
+                jobId={roomPostId}
+                lang={lang}
             />
         ),
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -521,6 +519,19 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             roomPostId,
             lang,
         ],
+    );
+
+    // The desktop sidebar's Orders + Media tabs. Sole consumer is
+    // `setContent` below, i.e. JobFlowSidebar's permanent `<aside>`.
+    const sidebarContent = useMemo(
+        () => (
+            <ChatSidebarTabs
+                roomId={roomId}
+                partnerName={partnerName || "User"}
+                orders={ordersContent}
+            />
+        ),
+        [roomId, partnerName, ordersContent],
     );
 
     useLayoutEffect(() => {
@@ -551,6 +562,13 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                             openSearch();
                         }}
                         isSearchOpen={isSearchOpen}
+                        // No `setIsFlowOpen(false)` and no `closeSearch()`
+                        // here, unlike the search button above. The drawer
+                        // overlays whatever is behind it rather than
+                        // replacing it, so the Chat/Order selection (and an
+                        // open search box) must survive untouched and still
+                        // be there when the drawer closes.
+                        onOpenMedia={openMedia}
                     />
 
                     {/* Mobile only; desktop shows both panes side by side. */}
@@ -727,12 +745,17 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         </div>
                     </div>
 
-                    {/* Order pane. `md:hidden` buys visual exclusivity only --
-                        it is display:none, not an unmount. Whenever isFlowOpen
-                        is true at >=768px this mounts a second live copy of
-                        `sidebarContent` alongside the one JobFlowSidebar's
-                        permanent aside already renders: two ChatSidebarTabs,
-                        two ChatMediaPanel backfills, two FreelanceChatFlow
+                    {/* Order pane. `ordersContent`, not `sidebarContent`:
+                        the app's Order area is the job workflow and only the
+                        job workflow. Media is not a tab inside it here either
+                        -- it is the header's drawer, the way the app's app bar
+                        opens it.
+
+                        `md:hidden` buys visual exclusivity only -- it is
+                        display:none, not an unmount. Whenever isFlowOpen is
+                        true at >=768px this mounts a second live copy of the
+                        workflow alongside the one JobFlowSidebar's permanent
+                        aside already renders, i.e. two FreelanceChatFlow
                         instances. Reachable by selecting Order below 768px and
                         then widening -- rotation, iPad split view, dragging a
                         desktop window narrow and back. This is not new: the
@@ -745,7 +768,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                             aria-labelledby="chat-room-tab-order"
                             className="flex min-h-0 flex-1 flex-col md:hidden"
                         >
-                            {sidebarContent}
+                            {ordersContent}
                         </div>
                     )}
                 </div>
@@ -771,6 +794,13 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     submitReview={submitReview}
                 />
             )}
+            {/* Media drawer (mobile only; desktop uses the sidebar's Media tab) */}
+            <ChatMediaDrawer
+                roomId={roomId}
+                partnerName={partnerName || "User"}
+                partnerAvatar={partnerAvatar}
+                partnerId={partnerId}
+            />
             {/* Quotation modal (propose/approve quotation for current job) */}
             <QuotationModal
                 isOpen={showQuotationModal}

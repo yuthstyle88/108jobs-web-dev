@@ -23,6 +23,16 @@ interface ChatPanelState {
   sidebarTab: SidebarTab;
   mediaTab: MediaTab;
   isSearchOpen: boolean;
+  /**
+   * The mobile media drawer: a right-side slide-over the chat header's media
+   * button opens, mirroring the mobile app's app-bar action.
+   *
+   * Mobile-only, and deliberately independent of `sidebarTab`. Desktop keeps
+   * Media as a tab beside Orders in its permanent sidebar and never opens
+   * this; on mobile the drawer overlays whatever pane is behind it, so
+   * opening it must not disturb the Chat/Order selection underneath.
+   */
+  isMediaOpen: boolean;
   backfillByRoom: Record<string, BackfillState>;
   /** A jump the message list has not acted on yet. */
   pendingJumpMessageId: string | null;
@@ -60,6 +70,8 @@ interface ChatPanelActions {
   setMediaTab: (tab: MediaTab) => void;
   openSearch: () => void;
   closeSearch: () => void;
+  openMedia: () => void;
+  closeMedia: () => void;
   setBackfill: (roomId: string, patch: Partial<BackfillState>) => void;
   requestJump: (messageId: string) => void;
   /** Takes the pending jump and clears it, so it fires once. */
@@ -76,12 +88,15 @@ interface ChatPanelActions {
  * `ChatRoomView` -- a provider mounted there is simply not an ancestor of the
  * component that would consume it. The jump channel has the same shape of
  * problem: the media panel asks, and the virtualized list on the other side of
- * that boundary answers.
+ * that boundary answers. `isMediaOpen` is a third instance of it: the media
+ * panel inside that `<aside>` and the mobile drawer's copy are the same
+ * component reading the same flag from opposite sides of the boundary.
  */
 export const useChatPanelStore = create<ChatPanelState & ChatPanelActions>((set, get) => ({
   sidebarTab: 'orders',
   mediaTab: 'imageVideo',
   isSearchOpen: false,
+  isMediaOpen: false,
   backfillByRoom: {},
   pendingJumpMessageId: null,
   jumpToken: 0,
@@ -92,6 +107,8 @@ export const useChatPanelStore = create<ChatPanelState & ChatPanelActions>((set,
   setMediaTab: (mediaTab) => set({mediaTab}),
   openSearch: () => set({isSearchOpen: true}),
   closeSearch: () => set({isSearchOpen: false}),
+  openMedia: () => set({isMediaOpen: true}),
+  closeMedia: () => set({isMediaOpen: false}),
 
   setBackfill: (roomId, patch) =>
     set((s) => ({

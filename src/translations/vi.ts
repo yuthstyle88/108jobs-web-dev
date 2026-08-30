@@ -41,6 +41,7 @@ export const vi = {
             media: "Phương tiện",
             tabChat: "Trò chuyện",
             tabOrder: "Đơn hàng",
+            closeDrawer: "Đóng",
             tabsLabel: "Trò chuyện hoặc Đơn hàng",
             howToHire: {
                 promptTitle: "Bạn chưa biết bắt đầu từ đâu?",

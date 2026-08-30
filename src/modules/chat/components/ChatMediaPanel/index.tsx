@@ -38,21 +38,26 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
     const mediaTab = useChatPanelStore((s) => s.mediaTab);
     const setMediaTab = useChatPanelStore((s) => s.setMediaTab);
     const requestJump = useChatPanelStore((s) => s.requestJump);
+    const closeMedia = useChatPanelStore((s) => s.closeMedia);
     const backfill = useChatPanelStore(selectBackfill(roomId));
     const {setOpen} = useJobFlowSidebar();
 
     const [viewing, setViewing] = React.useState<AttachmentItem | null>(null);
 
-    // Suffixes every id this panel renders. JobFlowSidebar's permanent
-    // desktop `<aside>` (`hidden md:flex`, so still present in the DOM below
-    // `md`) always mounts this component. While the Order tab is selected,
-    // ChatRoomView's inline `md:hidden` Order pane additionally mounts a
-    // second copy -- both rendering the same `sidebarContent`. Without a
-    // per-instance suffix the two instances would render identical
-    // `media-tab-*`/`media-panel-*` ids, and id-based resolution
-    // (`aria-controls`/`aria-labelledby`) would always pick the first
-    // (hidden) one (Finding 4, FINAL-findings.md). Do not delete `uid` on
-    // the assumption only one copy is ever mounted.
+    // Suffixes every id this panel renders. Two live copies are still
+    // reachable, though no longer for the reason they once were. The mobile
+    // Order pane does not render this any more -- it renders the bare job
+    // workflow, and Media is the header's drawer instead. What can still
+    // pair up is JobFlowSidebar's permanent desktop `<aside>` (`hidden
+    // md:flex`, so still present in the DOM below `md`), which mounts this
+    // whenever the sidebar's Media tab is selected, and ChatMediaDrawer,
+    // which mounts its own copy while the mobile drawer is open. `sidebarTab`
+    // is a single global, so a desktop window left on Media and then dragged
+    // narrow has both at once. Without a per-instance suffix the two would
+    // render identical `media-tab-*`/`media-panel-*` ids, and id-based
+    // resolution (`aria-controls`/`aria-labelledby`) would always pick the
+    // first (hidden) one (Finding 4, FINAL-findings.md). `uid` is retained
+    // as the safeguard against exactly that.
     const uid = React.useId();
 
     // Roving-tabindex focus targets -- see ChatSidebarTabs for why a ref map
@@ -97,20 +102,26 @@ export const ChatMediaPanel: React.FC<Props> = ({roomId, partnerName}) => {
             setViewing(null);
             requestJump(messageId);
             // Spec: "On mobile, jumping closes the drawer or search overlay."
-            // Media lives in the mobile Order pane, so without this the Order
-            // pane stayed showing instead of the conversation, and tapping
-            // "Go to message" looked like it had done nothing (Finding 3,
-            // FINAL-findings.md). Setting isOpen false is now what selects
-            // the Chat tab, which is the same outcome by a different
-            // mechanism.
+            // On mobile this panel is inside ChatMediaDrawer, sitting over the
+            // conversation, so `closeMedia` is what actually gets out of the
+            // way -- without it "Go to message" looks like it did nothing,
+            // because the drawer is still covering the message it scrolled to
+            // (Finding 3, FINAL-findings.md, in its current form).
+            // `setOpen(false)` stays alongside it: the drawer overlays
+            // whichever pane was selected, and if that was Order, dismissing
+            // the drawer alone would land the reader on the workflow rather
+            // than on the message. Setting isOpen false selects the Chat tab.
             // 768, not 640: this has to match the breakpoint the Order pane
             // itself switches on (`md:hidden`), not ChatSearchPanel's --
             // Search's overlay is `sm:`-scoped, so its own 640 check is correct
             // for Search but wrong here. Do not "helpfully" realign this to
             // 640; between 640-767px the Order pane is still the visible one.
-            if (typeof window !== "undefined" && window.innerWidth < 768) setOpen(false);
+            if (typeof window !== "undefined" && window.innerWidth < 768) {
+                closeMedia();
+                setOpen(false);
+            }
         },
-        [requestJump, setOpen],
+        [requestJump, setOpen, closeMedia],
     );
 
     const onTabKeyDown = (e: React.KeyboardEvent) => {
