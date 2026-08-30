@@ -3,32 +3,26 @@
 import React from "react";
 import {useJobFlowSidebar} from "@/modules/chat/contexts/JobFlowSidebarContext";
 
+/**
+ * The permanent Order/Media sidebar, desktop only.
+ *
+ * Mobile used to get a second copy of this as a fixed slide-over with a
+ * backdrop, toggled from the header. It is now an in-flow pane inside
+ * `ChatRoomView`, selected by `ChatRoomTabs` -- see that component for why.
+ * The context's `isOpen` still exists and still means "the mobile Order pane
+ * is showing"; this component simply no longer has an opinion about it, which
+ * is what makes the desktop sidebar unconditional.
+ */
 export default function JobFlowSidebar() {
-  const {isOpen, setOpen, content} = useJobFlowSidebar();
-
-  const desktop = "hidden md:flex md:static md:order-last h-full md:w-64 lg:w-80 xl:w-96 max-w-[360px] border-l bg-gray-50 shadow-none flex-col";
-  const mobile = `md:hidden fixed top-16 sm:top-20 right-0 h-[calc(100dvh-64px)] sm:h-[calc(100dvh-80px)] w-[80vw] sm:w-[70vw] max-w-[360px] bg-white border-l shadow-xl z-40 flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'}`;
+  const {content} = useJobFlowSidebar();
 
   return (
-    <>
-      {/* Desktop static sidebar */}
-      <aside className={desktop} role="complementary" aria-label="Job Flow Sidebar">
-        {content}
-      </aside>
-      {/* Mobile slide-over */}
-      {isOpen && (
-        <aside className={mobile} role="dialog" aria-modal="true" aria-label="Job Flow Sidebar">
-          {content}
-        </aside>
-      )}
-      {/* Backdrop for mobile */}
-      {isOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={() => setOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-    </>
+    <aside
+      className="hidden md:flex md:static md:order-last h-full md:w-64 lg:w-80 xl:w-96 max-w-[360px] border-l bg-gray-50 shadow-none flex-col"
+      role="complementary"
+      aria-label="Job Flow Sidebar"
+    >
+      {content}
+    </aside>
   );
 }

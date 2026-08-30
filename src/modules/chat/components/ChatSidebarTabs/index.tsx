@@ -2,10 +2,8 @@
 
 import React from "react";
 import {useTranslation} from "react-i18next";
-import {X} from "lucide-react";
 
 import ChatMediaPanel from "@/modules/chat/components/ChatMediaPanel";
-import {useJobFlowSidebar} from "@/modules/chat/contexts/JobFlowSidebarContext";
 import {useChatPanelStore, type SidebarTab} from "@/modules/chat/store/chatPanelStore";
 
 const TABS: Array<{id: SidebarTab; labelKey: string}> = [
@@ -28,26 +26,22 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
     const {t} = useTranslation();
     const sidebarTab = useChatPanelStore((s) => s.sidebarTab);
     const setSidebarTab = useChatPanelStore((s) => s.setSidebarTab);
-    // The mobile drawer's only dismiss control used to live inside
-    // JobFlowContent's own header, so it only existed while Orders was the
-    // selected tab -- switching to Media left the slide-over with no visible,
-    // keyboard-reachable way to close it (the backdrop tap in JobFlowSidebar
-    // is pointer-only). Hoisting it here, next to the tabs both levels share,
-    // keeps it available regardless of which tab is active.
-    const {setOpen} = useJobFlowSidebar();
 
     // Roving-tabindex focus targets: both tab buttons are always mounted (only
     // their tabIndex/aria-selected differ), so the ref for the tab an arrow
     // key is about to select already exists by the time the handler runs.
     const tabRefs = React.useRef<Map<SidebarTab, HTMLButtonElement>>(new Map());
 
-    // JobFlowSidebar mounts a desktop `<aside>` (`hidden md:flex`, so still
-    // present in the DOM even when only the mobile one is visible) and,
-    // while open, a mobile `<aside>` too -- both rendering the same `content`,
-    // so both mount a copy of this component at once. Without a per-instance
-    // suffix, `sidebar-tab-*`/`sidebar-panel-*` collide between the two, and
-    // id-based resolution (`aria-controls`/`aria-labelledby`) always picks
-    // the first (hidden) one (Finding 4, FINAL-findings.md).
+    // One mount, as things stand: JobFlowSidebar's permanent desktop
+    // `<aside>` (`hidden md:flex`, so still present in the DOM below `md`)
+    // is the only place that renders this component. ChatRoomView's mobile
+    // Order pane used to render a second copy, and the two collided on
+    // `sidebar-tab-*`/`sidebar-panel-*`, sending id-based resolution
+    // (`aria-controls`/`aria-labelledby`) to the first (hidden) one
+    // (Finding 4, FINAL-findings.md); that pane renders the bare job
+    // workflow now, so the pairing is gone. `uid` is retained as a
+    // safeguard -- it costs one string, and it is what keeps a second mount
+    // harmless if this component is ever placed somewhere else.
     const uid = React.useId();
 
     const onKeyDown = (e: React.KeyboardEvent) => {
@@ -99,23 +93,6 @@ export const ChatSidebarTabs: React.FC<Props> = ({roomId, partnerName, orders}) 
                         );
                     })}
                 </div>
-
-                {/* Mobile-only: the slide-over's one dismiss control (besides
-                    tapping the backdrop, which a keyboard/screen-reader user
-                    cannot reach). Not part of the tablist above -- it isn't a
-                    tab, and a stray non-tab child would confuse the tablist's
-                    own roving-tabindex/arrow-key semantics for assistive
-                    tech. Same label the old JobFlowContent header button
-                    used; left untranslated exactly as it was there, since
-                    fixing that is a separate, pre-existing issue. */}
-                <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    aria-label={t("profileChat.closeDrawer")}
-                    className="ml-2 flex-shrink-0 rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden"
-                >
-                    <X className="h-4 w-4" />
-                </button>
             </div>
 
             <div

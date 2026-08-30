@@ -3,7 +3,7 @@
 import React from "react";
 import AvatarBadge from "@/components/AvatarBadge";
 import { LocalUserId } from "108jobs-client";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, FileText, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { usePeerOnline } from "@/modules/chat/store/presenceStore";
 import { useRouter, useParams } from "next/navigation";
@@ -13,10 +13,15 @@ interface ChatHeaderProps {
     displayName: string;
     partnerId: LocalUserId;
     typingText?: string;
-    onToggleFlow?: () => void;
-    isFlowOpen?: boolean;
     onToggleSearch?: () => void;
     isSearchOpen?: boolean;
+    /**
+     * Opens the mobile media drawer. Mobile-only, and absent on desktop by
+     * design: the permanent sidebar there already shows Media as a tab
+     * beside Orders, so a header button for it would be a second route to
+     * something already on screen.
+     */
+    onOpenMedia?: () => void;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -24,10 +29,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                                                    displayName,
                                                    typingText,
                                                    partnerId,
-                                                   onToggleFlow,
-                                                   isFlowOpen,
                                                    onToggleSearch,
                                                    isSearchOpen,
+                                                   onOpenMedia,
                                                }) => {
     const {t} = useTranslation();
     const online = usePeerOnline(Number(partnerId) ?? 0);
@@ -80,13 +84,16 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
                 >
                     <Search className="h-5 w-5" />
                 </button>
-                {/* Show Flow Button — only visible on mobile */}
+                {/* Search then media, mirroring the app bar's ordering.
+                    `md:hidden` because desktop reaches Media through the
+                    sidebar tab instead. */}
                 <button
-                    onClick={onToggleFlow}
-                    className="sm:hidden whitespace-nowrap rounded-md bg-primary hover:bg-[#063a68] text-white text-xs px-3 py-2"
-                    aria-label={isFlowOpen ? "Hide Flow" : "Show Flow"}
+                    type="button"
+                    onClick={onOpenMedia}
+                    aria-label={t("profileChat.media")}
+                    className="rounded-md p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden"
                 >
-                    {isFlowOpen ? "Hide Flow" : "Show Flow"}
+                    <FileText className="h-5 w-5" />
                 </button>
             </div>
         </div>

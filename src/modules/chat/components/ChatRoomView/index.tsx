@@ -39,6 +39,7 @@ import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
 import ChatRoomMessages from "../ChatRoomMessages";
 import ChatSearchPanel from "@/modules/chat/components/ChatSearchPanel";
+import ChatRoomTabs from "@/modules/chat/components/ChatRoomTabs";
 import {useChatPanelStore} from "@/modules/chat/store/chatPanelStore";
 import {useRoomsStore} from '@/modules/chat/store/roomsStore';
 import FreelanceChatFlow, {FlowActions, StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
@@ -51,6 +52,7 @@ import {Trash2} from "lucide-react";
 import {ReviewDeliveryModal} from "@/modules/chat/components/Modal/ReviewDeliveryModal";
 import {JobFlowContent} from "@/modules/chat/components/JobFlowContent";
 import ChatSidebarTabs from "@/modules/chat/components/ChatSidebarTabs";
+import ChatMediaDrawer from "@/modules/chat/components/ChatMediaDrawer";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
@@ -125,6 +127,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const isSearchOpen = useChatPanelStore((s) => s.isSearchOpen);
     const openSearch = useChatPanelStore((s) => s.openSearch);
     const closeSearch = useChatPanelStore((s) => s.closeSearch);
+    const openMedia = useChatPanelStore((s) => s.openMedia);
     const initialFetchRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const roomPostId = post?.id ?? currentRoom.room.postId;
@@ -154,8 +157,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const {execute: submitStartWorkApi} = useHttpPost("submitStartWork");
     const {execute: approveWorkApi} = useHttpPost("approveWork");
     const {execute: submitReviewApi} = useHttpPost("submitUserReview");
-
-    const inputContainerRef = useRef<HTMLDivElement>(null);
 
     const {
         selectedFile,
@@ -224,17 +225,22 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         sendReadReceipt,
     });
 
-    // Auto-collapse the workflow panel on narrow viewports to preserve space for the conversation.
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 640) {
-                setIsFlowOpen(false);
-            }
-        };
-        handleResize();
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-    }, []);
+    // Landing on a conversation should show the conversation. The tab bar owns
+    // the Chat/Order choice from then on.
+    //
+    // This replaces a resize listener that called setIsFlowOpen(false) on every
+    // resize below 640px. Under the old slide-over that just closed a drawer;
+    // with tabs it yanks a mobile reader off the Order tab, and iOS fires
+    // resize whenever the URL bar shows or hides. The 640 was also inconsistent
+    // with the md/768 breakpoint everything else in this feature uses.
+    //
+    // Must be a layout effect, not a passive one: App Router does not remount
+    // this component across roomId, so a reader sitting on the Order tab who
+    // opens a different room would otherwise have the new room's Order pane
+    // painted for one frame before a passive effect's reset had a chance to run.
+    useLayoutEffect(() => {
+        setIsFlowOpen(false);
+    }, [roomId, setIsFlowOpen]);
 
     // Keep the local ` currentRoom ` in sync with server-refreshed room metadata from the channel.
     useLayoutEffect(() => {
@@ -482,105 +488,201 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         </>
     );
 
-    // Provide the workflow-only Orders tab and the Media tab to the global sidebar.
-    useLayoutEffect(() => {
-        setContent(
+    // The job workflow on its own, memoized separately from the sidebar that
+    // wraps it because it now has two consumers that want *different* things:
+    // the desktop sidebar takes it as the Orders tab's content, while the
+    // mobile Order pane wants only this and nothing around it -- no Media
+    // tab, because on mobile Media is the header's drawer instead. Same
+    // dependency list the effect originally carried.
+    const ordersContent = useMemo(
+        () => (
+            <JobFlowContent
+                renderFlowContent={renderFlowContent}
+                jobId={roomPostId}
+                lang={lang}
+            />
+        ),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [
+            currentRoom,
+            isEmployer,
+            isEmployerKnown,
+            hasStarted,
+            selectedFile,
+            isDeletingFile,
+            statusBeforeCancel,
+            availableBalance,
+            latestQuoteAmount,
+            currentStatus,
+            roomId,
+            partnerName,
+            roomPostId,
+            lang,
+        ],
+    );
+
+    // The desktop sidebar's Orders + Media tabs. Sole consumer is
+    // `setContent` below, i.e. JobFlowSidebar's permanent `<aside>`.
+    const sidebarContent = useMemo(
+        () => (
             <ChatSidebarTabs
                 roomId={roomId}
                 partnerName={partnerName || "User"}
-                orders={
-                    <JobFlowContent
-                        renderFlowContent={renderFlowContent}
-                        jobId={roomPostId}
-                        lang={lang}
-                    />
-                }
+                orders={ordersContent}
             />
-        );
+        ),
+        [roomId, partnerName, ordersContent],
+    );
 
+    useLayoutEffect(() => {
+        setContent(sidebarContent);
         return () => setContent(null);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        currentRoom,
-        setContent,
-        isEmployer,
-        isEmployerKnown,
-        hasStarted,
-        selectedFile,
-        isDeletingFile,
-        statusBeforeCancel,
-        availableBalance,
-        latestQuoteAmount,
-        currentStatus,
-        roomId,
-        partnerName,
-        roomPostId,
-        lang,
-    ]);
+    }, [sidebarContent, setContent]);
 
     return (
         <>
             <div className="relative flex-1 min-w-0 flex flex-col md:flex-row h-full">
                 <div className="flex-1 min-w-0 flex flex-col h-full w-full">
-                    {/* Header: partner presence, typing indicator, and toggle for workflow side panel */}
+                    {/* Header: partner presence and typing indicator */}
                     <ChatHeader
                         avatarUrl={partnerAvatar}
                         displayName={partnerName || "User"}
                         typingText={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
-                        onToggleFlow={() => setIsFlowOpen(!isFlowOpen)}
-                        isFlowOpen={isFlowOpen}
                         partnerId={partnerId}
-                        onToggleSearch={() => (isSearchOpen ? closeSearch() : openSearch())}
+                        onToggleSearch={() => {
+                            if (isSearchOpen) {
+                                closeSearch();
+                                return;
+                            }
+                            // Search renders inside the Chat pane, which is
+                            // display:none on the Order tab -- opening it there
+                            // would flip aria-expanded and show nothing.
+                            // Searching is a request to look at the conversation.
+                            setIsFlowOpen(false);
+                            openSearch();
+                        }}
                         isSearchOpen={isSearchOpen}
+                        // No `setIsFlowOpen(false)` and no `closeSearch()`
+                        // here, unlike the search button above. The drawer
+                        // overlays whatever is behind it rather than
+                        // replacing it, so the Chat/Order selection (and an
+                        // open search box) must survive untouched and still
+                        // be there when the drawer closes.
+                        onOpenMedia={openMedia}
                     />
-                    <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
-                        {isSearchOpen && (
-                            <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
-                        )}
-                        <ChatRoomMessages
-                            key={roomId}
-                            messages={messages}
-                            partnerAvatar={partnerAvatar || ProfileImage.avatar}
-                            onTopReached={handleOnTopReached}
-                            hasMore={hasMore}
-                            isFetching={isFetching}
-                            partnerId={partnerId}
-                        />
-                    </div>
-                    <div ref={inputContainerRef} className="border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white">
-                        <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                                {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
-                                {attachmentPreview && (
-                                    <div
-                                        className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
-                                        {attachmentPreview.kind === "file" || thumbLoadFailed ? (
-                                            <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
-                                        ) : (
-                                            <div
-                                                className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/5 ring-1 ring-black/5">
-                                                {attachmentPreview.kind === "image" ? (
-                                                    <img
-                                                        src={attachmentPreview.url}
-                                                        alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
-                                                    />
-                                                ) : (
-                                                    // No `controls`: this is a static pick-time preview, not a
-                                                    // player, and it must never autoplay -- omitting `autoPlay`
-                                                    // (rather than setting it false) is what guarantees that.
-                                                    <video
-                                                        src={attachmentPreview.url}
-                                                        muted
-                                                        playsInline
-                                                        preload="metadata"
-                                                        aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
-                                                        className="h-full w-full object-cover"
-                                                        onError={() => setFailedPreviewUrl(attachmentPreview.url)}
-                                                    />
-                                                )}
-                                                {isUploading && (
+
+                    {/* Mobile only; desktop shows both panes side by side. */}
+                    <ChatRoomTabs
+                        activeTab={isFlowOpen ? "order" : "chat"}
+                        onSelect={(tab) => {
+                            setIsFlowOpen(tab === "order");
+                            // Search renders inside the Chat pane, which goes
+                            // display:none on the Order tab -- leaving it open
+                            // would strand the header's search button showing
+                            // aria-expanded="true" with nothing search-related
+                            // visible.
+                            if (tab === "order") closeSearch();
+                        }}
+                    />
+
+                    <div
+                        id="chat-room-panel-chat"
+                        role="tabpanel"
+                        aria-labelledby="chat-room-tab-chat"
+                        className={`${isFlowOpen ? "hidden md:flex" : "flex"} min-h-0 flex-1 flex-col`}
+                    >
+                        <div className="relative flex min-h-0 flex-1 flex-col bg-slate-50">
+                            {isSearchOpen && (
+                                <ChatSearchPanel roomId={roomId} partnerName={partnerName || "User"} />
+                            )}
+                            <ChatRoomMessages
+                                key={roomId}
+                                messages={messages}
+                                partnerAvatar={partnerAvatar || ProfileImage.avatar}
+                                onTopReached={handleOnTopReached}
+                                hasMore={hasMore}
+                                isFetching={isFetching}
+                                partnerId={partnerId}
+                            />
+                        </div>
+                        {/* The bottom padding folds the notch/home-indicator inset
+                            into the responsive padding rather than replacing it,
+                            and the `,0px` fallback keeps it inert everywhere the
+                            inset does not exist. Landed on main as the fix for
+                            #125; kept verbatim here so the two do not drift. */}
+                        <div className="border-t px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] sm:px-4 sm:pt-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white">
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1">
+                                    {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+                                    {attachmentPreview && (
+                                        <div
+                                            className="mb-2 flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                                            {attachmentPreview.kind === "file" || thumbLoadFailed ? (
+                                                <span aria-hidden className="shrink-0 text-lg text-blue-600">📎</span>
+                                            ) : (
+                                                <div
+                                                    className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-black/5 ring-1 ring-black/5">
+                                                    {attachmentPreview.kind === "image" ? (
+                                                        <img
+                                                            src={attachmentPreview.url}
+                                                            alt={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                            className="h-full w-full object-cover"
+                                                            onError={() => setFailedPreviewUrl(attachmentPreview.url)}
+                                                        />
+                                                    ) : (
+                                                        // No `controls`: this is a static pick-time preview, not a
+                                                        // player, and it must never autoplay -- omitting `autoPlay`
+                                                        // (rather than setting it false) is what guarantees that.
+                                                        <video
+                                                            src={attachmentPreview.url}
+                                                            muted
+                                                            playsInline
+                                                            preload="metadata"
+                                                            aria-label={t("profileChat.attachmentPreviewAlt", {name: attachmentPreview.name}) || `Preview of ${attachmentPreview.name}`}
+                                                            className="h-full w-full object-cover"
+                                                            onError={() => setFailedPreviewUrl(attachmentPreview.url)}
+                                                        />
+                                                    )}
+                                                    {isUploading && (
+                                                        uploadPercent != null ? (
+                                                            <div
+                                                                role="progressbar"
+                                                                aria-label={t("profileChat.uploadingLabel") || "Uploading"}
+                                                                aria-valuemin={0}
+                                                                aria-valuemax={100}
+                                                                aria-valuenow={uploadPercent}
+                                                                aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
+                                                                className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                            >
+                                                                <span aria-hidden className="text-xs font-semibold text-white">
+                                                                    {uploadPercent}%
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <div
+                                                                role="status"
+                                                                aria-live="polite"
+                                                                aria-busy="true"
+                                                                className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                            >
+                                                                <span
+                                                                    aria-hidden
+                                                                    className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+                                                                />
+                                                                <span className="sr-only">
+                                                                    {t("profileChat.uploadingLabel") || "Uploading"}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium text-blue-900 truncate">
+                                                    {attachmentPreview.name}
+                                                </p>
+                                                {isUploading && (attachmentPreview.kind === "file" || thumbLoadFailed) && (
                                                     uploadPercent != null ? (
                                                         <div
                                                             role="progressbar"
@@ -589,23 +691,21 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                                             aria-valuemax={100}
                                                             aria-valuenow={uploadPercent}
                                                             aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
-                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                            className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
                                                         >
-                                                            <span aria-hidden className="text-xs font-semibold text-white">
-                                                                {uploadPercent}%
-                                                            </span>
+                                                            <div
+                                                                className="h-full rounded-full bg-blue-500 transition-[width]"
+                                                                style={{width: `${uploadPercent}%`}}
+                                                            />
                                                         </div>
                                                     ) : (
                                                         <div
                                                             role="status"
                                                             aria-live="polite"
                                                             aria-busy="true"
-                                                            className="absolute inset-0 flex items-center justify-center bg-black/50"
+                                                            className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
                                                         >
-                                                            <span
-                                                                aria-hidden
-                                                                className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-                                                            />
+                                                            <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-400"/>
                                                             <span className="sr-only">
                                                                 {t("profileChat.uploadingLabel") || "Uploading"}
                                                             </span>
@@ -613,73 +713,64 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                                     )
                                                 )}
                                             </div>
-                                        )}
 
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-blue-900 truncate">
-                                                {attachmentPreview.name}
-                                            </p>
-                                            {isUploading && (attachmentPreview.kind === "file" || thumbLoadFailed) && (
-                                                uploadPercent != null ? (
-                                                    <div
-                                                        role="progressbar"
-                                                        aria-label={t("profileChat.uploadingLabel") || "Uploading"}
-                                                        aria-valuemin={0}
-                                                        aria-valuemax={100}
-                                                        aria-valuenow={uploadPercent}
-                                                        aria-valuetext={t("profileChat.uploadingPercent", {percent: uploadPercent}) || `Uploading ${uploadPercent}%`}
-                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
-                                                    >
-                                                        <div
-                                                            className="h-full rounded-full bg-blue-500 transition-[width]"
-                                                            style={{width: `${uploadPercent}%`}}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div
-                                                        role="status"
-                                                        aria-live="polite"
-                                                        aria-busy="true"
-                                                        className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-blue-100"
-                                                    >
-                                                        <div className="h-full w-1/3 animate-pulse rounded-full bg-blue-400"/>
-                                                        <span className="sr-only">
-                                                            {t("profileChat.uploadingLabel") || "Uploading"}
-                                                        </span>
-                                                    </div>
-                                                )
-                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveSelectedFile}
+                                                disabled={isDeletingFile}
+                                                className={`ml-2 shrink-0 self-start p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
+                                                aria-label={t("profileChat.removeAttachment") || "Remove attachment"}
+                                            >
+                                                <Trash2 className={`h-4 w-4 ${isDeletingFile ? 'animate-spin' : ''}`}/>
+                                            </button>
                                         </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={handleRemoveSelectedFile}
-                                            disabled={isDeletingFile}
-                                            className={`ml-2 shrink-0 self-start p-1 rounded-full hover:bg-blue-100 transition-colors ${isDeletingFile ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-800'}`}
-                                            aria-label={t("profileChat.removeAttachment") || "Remove attachment"}
-                                        >
-                                            <Trash2 className={`h-4 w-4 ${isDeletingFile ? 'animate-spin' : ''}`}/>
-                                        </button>
-                                    </div>
-                                )}
-                                <ChatInput
-                                    onSubmit={onSubmit}
-                                    disabledHint=""
-                                    hasAttachment={!!selectedFile}
-                                    isUploading={isUploading}
-                                    onFileUpload={(ev: any) => handleFileUpload(ev as any)}
-                                    onTyping={(v) => {
-                                        try {
-                                            sendTyping?.(v);
-                                        } catch {
-                                        }
-                                    }}
-                                    typingHint={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
-                                    sendLatestRead={sendLatestRead}
-                                />
+                                    )}
+                                    <ChatInput
+                                        onSubmit={onSubmit}
+                                        disabledHint=""
+                                        hasAttachment={!!selectedFile}
+                                        isUploading={isUploading}
+                                        onFileUpload={(ev: any) => handleFileUpload(ev as any)}
+                                        onTyping={(v) => {
+                                            try {
+                                                sendTyping?.(v);
+                                            } catch {
+                                            }
+                                        }}
+                                        typingHint={isPartnerTyping ? (t("profileChat.typing") || "กำลังพิมพ์...") : undefined}
+                                        sendLatestRead={sendLatestRead}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* Order pane. `ordersContent`, not `sidebarContent`:
+                        the app's Order area is the job workflow and only the
+                        job workflow. Media is not a tab inside it here either
+                        -- it is the header's drawer, the way the app's app bar
+                        opens it.
+
+                        `md:hidden` buys visual exclusivity only -- it is
+                        display:none, not an unmount. Whenever isFlowOpen is
+                        true at >=768px this mounts a second live copy of the
+                        workflow alongside the one JobFlowSidebar's permanent
+                        aside already renders, i.e. two FreelanceChatFlow
+                        instances. Reachable by selecting Order below 768px and
+                        then widening -- rotation, iPad split view, dragging a
+                        desktop window narrow and back. This is not new: the
+                        slide-over this replaced was also `{isOpen && ...}` with
+                        `md:hidden` and behaved identically. */}
+                    {isFlowOpen && (
+                        <div
+                            id="chat-room-panel-order"
+                            role="tabpanel"
+                            aria-labelledby="chat-room-tab-order"
+                            className="flex min-h-0 flex-1 flex-col md:hidden"
+                        >
+                            {ordersContent}
+                        </div>
+                    )}
                 </div>
             </div>
             {/* Delivery review modal (employer review of delivered work) */}
@@ -703,6 +794,13 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                     submitReview={submitReview}
                 />
             )}
+            {/* Media drawer (mobile only; desktop uses the sidebar's Media tab) */}
+            <ChatMediaDrawer
+                roomId={roomId}
+                partnerName={partnerName || "User"}
+                partnerAvatar={partnerAvatar}
+                partnerId={partnerId}
+            />
             {/* Quotation modal (propose/approve quotation for current job) */}
             <QuotationModal
                 isOpen={showQuotationModal}
