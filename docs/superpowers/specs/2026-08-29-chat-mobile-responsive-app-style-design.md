@@ -1,5 +1,26 @@
 # Chat Mobile Responsive: App-Style Tabs
 
+## Status (2026-08-30): three of the four changes shipped separately
+
+While this was being implemented, fixes for items 2, 3 and 4 below were written
+independently and merged to `main` as PRs #126, #127 and #128, closing issues #123, #124
+and #125. **Only item 1 — the Chat | Order tab bar — is still delivered by this work.**
+
+- Item 2 (emoji picker clamp) → superseded by #126.
+- Item 3 (`100dvh`) → superseded by #127.
+- Item 4 (composer safe-area padding) → superseded by #128, whose implementation is
+  better than the one designed here: it folds the inset into the existing responsive
+  padding with `pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]` instead of adding a
+  wrapper element. This branch adopts main's version verbatim.
+
+One caveat recorded during that work and still open: `env(safe-area-inset-bottom)`
+resolves to `0` on iOS unless the viewport declares `viewportFit: "cover"`, which this
+repo does nowhere. #125 is closed, but its symptom likely still reproduces. See the
+comment on that issue.
+
+The rest of this document is the design as originally approved, kept as the record of
+why the tab bar is shaped the way it is.
+
 ## Scope
 
 Make the job-board chat's mobile web layout (`/[lang]/chat/message/[roomId]`) behave more like the

@@ -1,5 +1,25 @@
 # Chat Mobile Responsive: App-Style Tabs — Implementation Plan
 
+## Status (2026-08-30): executed, with Tasks 1 and 5 dropped
+
+Tasks 2, 3, 4, 6 and 7 were executed. **Tasks 1 and 5 were dropped mid-execution**, and
+Task 4's safe-area step was replaced, because equivalent fixes were written independently
+and merged to `main` while this plan was running:
+
+| Task | Outcome |
+|---|---|
+| 1 — emoji picker clamp | **Dropped.** Superseded by #126 (closes #123). |
+| 2 — tab labels in en/th/vi | Done. |
+| 3 — `ChatRoomTabs` component | Done. |
+| 4 — slide-over → tab pane | Done. Its safe-area wrapper was replaced by main's better one-line padding from #128. |
+| 5 — `100vh` → `100dvh` | **Dropped.** Superseded by #127 (closes #124). |
+| 6 — comments + `JobFlowSidebar` test | Done. |
+| 7 — browser verification | See the branch's PR. |
+
+The branch was rebased onto the post-merge `main` and the two superseded commits were left
+behind rather than replayed. The task text below is unchanged, so Tasks 1 and 5 describe
+work that is no longer part of this branch.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the job-board chat room's mobile web layout behave like the 108Heros mobile app's chat screen — a persistent Chat | Order tab bar instead of a "Show Flow" toggle and slide-over drawer — plus three smaller mobile-web fixes.
