@@ -8,7 +8,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV CI=true
 ENV API_INTERNAL_URL="https://api.108heros.com"
 ENV NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com"
-ENV NEXT_PUBLIC_APP_URL="https://108heros.com"
+ENV APP_NAME="108jobs.com"
+ENV APP_URL="https://108jobs.com"
+ENV NEXT_PUBLIC_APP_NAME="108jobs.com"
+ENV NEXT_PUBLIC_APP_URL="https://108jobs.com"
 # Needed in the BUILDER stage, not only the runner. Next inlines NEXT_PUBLIC_*
 # into the browser bundle at build time, and next.config.ts reads this same
 # variable then to put the Identity origin into the CSP `connect-src`. Set only
@@ -43,7 +46,10 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     API_INTERNAL_URL="https://api.108heros.com" \
     NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com" \
-    NEXT_PUBLIC_APP_URL="https://108heros.com" \
+    APP_NAME="108jobs.com" \
+    APP_URL="https://108jobs.com" \
+    NEXT_PUBLIC_APP_NAME="108jobs.com" \
+    NEXT_PUBLIC_APP_URL="https://108jobs.com" \
     NEXT_PUBLIC_IDENTITY_BASE_URL="https://identity.108plaza.net"
 RUN useradd -u 10001 -m app
 
