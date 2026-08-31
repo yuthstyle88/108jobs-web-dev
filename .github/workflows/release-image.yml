@@ -57,9 +57,26 @@ jobs:
           password: ${{ secrets.GH_PAT_DEPLOY }}
           logout: false
 
+      # ⚠️ PINNED to v5.9.0 on purpose. Do NOT restore `@v5`.
+      #
+      # `@v5` resolves to v5.10.0, sha c299e40c, and GitHub refuses to serve that
+      # one archive: codeload answers `400 Bad Request` with a 16-byte body, every
+      # time. The runner downloads actions by resolved sha, so `@v5`, `@v5.10.0`
+      # and the bare sha all request the identical URL and all fail the same way
+      # -- the job dies in "Set up job" before a single step runs, and the deploy
+      # jobs are skipped. (#114, which killed both attempts of run 33370910202.)
+      #
+      # Measured from the runner host rather than guessed: that sha 400s while
+      # v5.9.0 (318604b9), v6.0.0, v6.2.0, the same commit fetched by TAG, and
+      # every other action in this job all return 200. It is one archive, not the
+      # network and not this repo.
+      #
+      # v5.9.0 is the previous release of the same major, so `tags: type=sha`
+      # behaves identically. When GitHub serves c299e40c again, moving back to
+      # `@v5` is safe -- but check it, do not assume it.
       - name: Image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v5.9.0
         with:
           images: ghcr.io/108-plaza/108jobs-web
           tags: |
