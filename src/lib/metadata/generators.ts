@@ -1,6 +1,6 @@
 import type {Metadata} from "next";
 import {seoTranslations, SupportedLang} from "./translations";
-import {getAppName} from "@/utils/appConfig";
+import {getAppName, getAppUrl} from "@/utils/appConfig";
 import {getLangCookies} from "@/utils/getLangCookies";
 
 type PageContent = {title: string; description: string};
@@ -26,7 +26,7 @@ export async function generateLocalizedMetadata(
     throw new Error(`Page content missing or invalid for key: ${pageKeyOrContent}`);
   }
 
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || `https://${getAppName()}`;
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || getAppUrl();
 
   const APP_NAME = getAppName();
 

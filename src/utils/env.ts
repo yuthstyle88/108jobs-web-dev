@@ -65,7 +65,7 @@ export function getAppUrl(): string {
   }
   return (
     ensureAbsoluteUrl(process.env.NEXT_PUBLIC_APP_URL)
-      || "https://108heros.com"
+      || "https://108jobs.com"
   );
 }
 
