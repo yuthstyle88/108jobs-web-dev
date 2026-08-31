@@ -6,7 +6,12 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/108-plaza/108jobs-web
-  tag: latest
+  # No `tag:` on purpose. This package publishes `sha-<short>` and nothing
+  # else -- release-image.yml's metadata step emits `type=sha` only -- so a
+  # tag written here would be a tag that does not exist. Writing `latest`
+  # here is what put `latest` into the live release and left it unable to be
+  # upgraded at all (#112). Always pass the sha on the command line:
+  #   --set image.tag=sha-<short>
   pullPolicy: IfNotPresent
 
 imagePullSecrets:

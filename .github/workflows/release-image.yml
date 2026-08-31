@@ -10,6 +10,11 @@
 # from this history, so both products were building into one package and patching
 # one Deployment (#110). That package is left to its history; do not publish here.
 #
+# The rollout goes through `helm upgrade`, not `kubectl set image`. The release
+# was installed pointing at `ghcr.io/108-plaza/108heros-web:latest`, a tag that
+# was never published, and `kubectl set image` writes around helm so nothing ever
+# corrected it -- see the comment on the deploy steps and #112.
+#
 # NOTE: prod/jobs-web is what 108heros.com serves TODAY, through an nginx hop that
 # still points the ride domain at this app. Fixing that is an edge change on the
 # Dell host, not a change this repo can make.
@@ -81,11 +86,59 @@ jobs:
       - name: Resolve image tag
         id: tag
         run: echo "tag=sha-$(echo ${GITHUB_SHA} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+      # Deploy THROUGH helm, not around it.
+      #
+      # This was `kubectl set image`, which writes the Deployment directly and
+      # never touches the helm release. The release therefore kept believing in
+      # whatever it was installed with on 2026-08-27 -- and what it was installed
+      # with is `ghcr.io/108-plaza/108heros-web:latest`: the package this repo
+      # published into before the rename, at a tag that was NEVER pushed. The
+      # metadata step above emits `type=sha` and nothing else, so no `latest` has
+      # ever existed in either package.
+      #
+      # Both releases are still at revision 1 because of that, and any
+      # `helm upgrade jobs-web` -- to change a probe, a nodePort, a resource
+      # limit -- would render an image that cannot be pulled. It fails safe
+      # (`maxUnavailable: 0` keeps the old pod serving and stalls the rollout)
+      # which is exactly why nobody would notice: the change simply would not
+      # take effect. (#112.)
+      #
+      # Passing repository AND tag explicitly on every deploy makes the release
+      # self-correcting: this run overwrites whatever stale value is stored, so
+      # the release and the running pod cannot drift apart again. jh-api#375 is
+      # the same change on the API side.
+      #
+      # `--reuse-values` keeps everything else the release already holds --
+      # probes, strategy, resources, nodePort, securityContext. Measured on
+      # 2026-08-31 rather than assumed: rendering this exact upgrade with
+      # `--dry-run` and running `kubectl diff` against the live cluster produced
+      # **no diff at all** in both namespaces, so correcting the image is a no-op
+      # to everything except the image.
+      #
+      # `--wait` fails the job on a rollout that never becomes ready.
+      # `kubectl rollout status` is kept after it because helm's timeout says
+      # only that the release failed, while rollout status names the pod and its
+      # condition.
+      #
+      # WARNING the first run of this after #112 merges is the one that repairs
+      # the stored values, and it repairs them to a `108jobs-web` image that must
+      # exist. It will, because the image job above builds and pushes it in the
+      # same run -- but that is also why the repository must be set here and not
+      # left to `--reuse-values`.
+      #
+      # CHART_PATH is a path on the RUNNER, which is the K3s node itself.
+      # Override with the repo variable TING_SERVICE_CHART_PATH if the chart
+      # moves, rather than editing it in two places.
       - name: 108jobs Web → k3s (staging)
+        env:
+          CHART_PATH: ${{ vars.TING_SERVICE_CHART_PATH || '/home/yuth/108-deploy/charts/ting-service' }}
         run: |
           set -euo pipefail
-          kubectl -n staging set image deploy/jobs-web \
-            ting-service=ghcr.io/108-plaza/108jobs-web:${{ steps.tag.outputs.tag }}
+          helm upgrade jobs-web "$CHART_PATH" \
+            -n staging --reuse-values \
+            --set image.repository=ghcr.io/108-plaza/108jobs-web \
+            --set image.tag=${{ steps.tag.outputs.tag }} \
+            --wait --timeout 3m
           kubectl -n staging rollout status deploy/jobs-web --timeout=180s
 
   deploy-prod:
@@ -97,9 +150,57 @@ jobs:
       - name: Resolve image tag
         id: tag
         run: echo "tag=sha-$(echo ${GITHUB_SHA} | cut -c1-7)" >> "$GITHUB_OUTPUT"
+      # Deploy THROUGH helm, not around it.
+      #
+      # This was `kubectl set image`, which writes the Deployment directly and
+      # never touches the helm release. The release therefore kept believing in
+      # whatever it was installed with on 2026-08-27 -- and what it was installed
+      # with is `ghcr.io/108-plaza/108heros-web:latest`: the package this repo
+      # published into before the rename, at a tag that was NEVER pushed. The
+      # metadata step above emits `type=sha` and nothing else, so no `latest` has
+      # ever existed in either package.
+      #
+      # Both releases are still at revision 1 because of that, and any
+      # `helm upgrade jobs-web` -- to change a probe, a nodePort, a resource
+      # limit -- would render an image that cannot be pulled. It fails safe
+      # (`maxUnavailable: 0` keeps the old pod serving and stalls the rollout)
+      # which is exactly why nobody would notice: the change simply would not
+      # take effect. (#112.)
+      #
+      # Passing repository AND tag explicitly on every deploy makes the release
+      # self-correcting: this run overwrites whatever stale value is stored, so
+      # the release and the running pod cannot drift apart again. jh-api#375 is
+      # the same change on the API side.
+      #
+      # `--reuse-values` keeps everything else the release already holds --
+      # probes, strategy, resources, nodePort, securityContext. Measured on
+      # 2026-08-31 rather than assumed: rendering this exact upgrade with
+      # `--dry-run` and running `kubectl diff` against the live cluster produced
+      # **no diff at all** in both namespaces, so correcting the image is a no-op
+      # to everything except the image.
+      #
+      # `--wait` fails the job on a rollout that never becomes ready.
+      # `kubectl rollout status` is kept after it because helm's timeout says
+      # only that the release failed, while rollout status names the pod and its
+      # condition.
+      #
+      # WARNING the first run of this after #112 merges is the one that repairs
+      # the stored values, and it repairs them to a `108jobs-web` image that must
+      # exist. It will, because the image job above builds and pushes it in the
+      # same run -- but that is also why the repository must be set here and not
+      # left to `--reuse-values`.
+      #
+      # CHART_PATH is a path on the RUNNER, which is the K3s node itself.
+      # Override with the repo variable TING_SERVICE_CHART_PATH if the chart
+      # moves, rather than editing it in two places.
       - name: 108jobs Web → k3s (PRODUCTION)
+        env:
+          CHART_PATH: ${{ vars.TING_SERVICE_CHART_PATH || '/home/yuth/108-deploy/charts/ting-service' }}
         run: |
           set -euo pipefail
-          kubectl -n prod set image deploy/jobs-web \
-            ting-service=ghcr.io/108-plaza/108jobs-web:${{ steps.tag.outputs.tag }}
+          helm upgrade jobs-web "$CHART_PATH" \
+            -n prod --reuse-values \
+            --set image.repository=ghcr.io/108-plaza/108jobs-web \
+            --set image.tag=${{ steps.tag.outputs.tag }} \
+            --wait --timeout 3m
           kubectl -n prod rollout status deploy/jobs-web --timeout=180s
