@@ -15,7 +15,7 @@ import {useTranslation} from "react-i18next";
 import LoadingMultiCircle from "@/components/Common/Loading/LoadingMultiCircle";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
-import {REQUEST_STATE} from "@/services/HttpService";
+import {isFailed, REQUEST_STATE} from "@/services/HttpService";
 import {RoomView} from "@/modules/chat/types";
 import {useUserStore} from "@/store/useUserStore";
 
@@ -29,10 +29,11 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
     const pager = useCursorPagination();
     const [startingChatFor, setStartingChatFor] = useState<number | null>(null);
     const {upsertRoom} = useRoomsStore();
-    const {data: proposals, pagination, isMutating: isLoading} = useHttpGet("getProposals", {
+    const {data: proposals, pagination, isMutating: isLoading, state, execute: refetch} = useHttpGet("getProposals", {
         pageCursor: pager.currentCursor,
         ...(postId ? {postId} : {}),
     });
+    const isFetchFailed = isFailed(state);
     const {execute: createChatRoom} = useHttpPost("createChatRoom");
     const {person: currentUser} = useUserStore();
     const route = useRouter();
@@ -77,8 +78,24 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
 
     return (
         <main className="mt-6 md:mt-10 max-w-4xl mx-auto px-4 md:px-0">
+            {/* Error State */}
+            {!isLoading && isFetchFailed && (
+                <div className="text-center py-12 bg-red-50 border border-red-100 rounded-xl">
+                    <p className="text-lg font-medium text-red-600 mb-3">
+                        {t("error.serverError", "Failed to load proposals")}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => refetch()}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors"
+                    >
+                        {t("global.buttonRetry", "Retry")}
+                    </button>
+                </div>
+            )}
+
             {/* Empty State */}
-            {!isLoading && (!proposals?.proposals || proposals.proposals.length === 0) && (
+            {!isLoading && !isFetchFailed && (!proposals?.proposals || proposals.proposals.length === 0) && (
                 <div className="text-center py-12 bg-gray-50 rounded-xl">
                     <p className="text-lg font-medium text-text-secondary">
                         {t("jobBoardDetail.noProposal")}
@@ -87,7 +104,7 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
             )}
 
             {/* Proposals List */}
-            {proposals?.proposals && proposals.proposals.length > 0 && (
+            {!isFetchFailed && proposals?.proposals && proposals.proposals.length > 0 && (
                 <div className="space-y-6">
                     {proposals.proposals.map((cv: ProposalView) => (
                         <div

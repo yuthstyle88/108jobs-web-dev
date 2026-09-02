@@ -27,7 +27,13 @@ const BankAccount = () => {
 
     const [error, setError] = useState<string | null>(null);
 
-    const {data: bankListRes, isMutating: isBankListLoading} = useHttpGet("listBanks");
+    const {
+        data: bankListRes,
+        isMutating: isBankListLoading,
+        state: bankListState,
+        execute: refetchBankList,
+    } = useHttpGet("listBanks");
+    const isBankListFailed = isFailed(bankListState);
     const {execute: createBankAccount} = useHttpPost("createBankAccount");
     const {execute: updateBankAccount} = useHttpPut("updateBankAccount");
     const {execute: setDefaultBankAccount} = useHttpPut("setDefaultBankAccount");
@@ -300,6 +306,9 @@ const BankAccount = () => {
                 initialData={editingAccount}
                 onSubmit={handleSubmit}
                 bankList={bankList}
+                isBankListLoading={isBankListLoading}
+                isBankListFailed={isBankListFailed}
+                onRetryBankList={refetchBankList}
                 error={error || (!canAddMore && !editingAccount ? t("sellerBankAccount.maxAccountsLimit", {max: MAX_ACCOUNTS}) : null)}
             />
 
