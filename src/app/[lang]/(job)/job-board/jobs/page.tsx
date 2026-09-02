@@ -94,7 +94,7 @@ const MyJobs = () => {
                                             {t("error.serverError", "Failed to load jobs")}
                                         </p>
                                         <p className="text-sm text-gray-500 mb-6">
-                                            {t("error.limitSendEmail", "An error occurred while connecting to the server. Please try again.")}
+                                            {t("error.loadFailed", "An error occurred while connecting to the server. Please try again.")}
                                         </p>
                                         <button
                                             type="button"
@@ -229,7 +229,7 @@ const MyJobs = () => {
                                             {t("error.serverError", "Failed to load jobs")}
                                         </p>
                                         <p className="text-sm text-gray-500 mb-6">
-                                            {t("error.limitSendEmail", "An error occurred while connecting to the server. Please try again.")}
+                                            {t("error.loadFailed", "An error occurred while connecting to the server. Please try again.")}
                                         </p>
                                         <button
                                             type="button"

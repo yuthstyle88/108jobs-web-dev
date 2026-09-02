@@ -57,7 +57,7 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
                             {t("error.serverError", "Failed to load chat room")}
                         </h2>
                         <p className="text-sm text-gray-500 mb-6">
-                            {t("error.limitSendEmail", "An error occurred while connecting to the chat room. Please try again.")}
+                            {t("error.loadFailed", "An error occurred while connecting to the chat room. Please try again.")}
                         </p>
                         <Button
                             type="button"
