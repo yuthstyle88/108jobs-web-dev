@@ -33,3 +33,12 @@ not fixing yet still gets an issue; deferred work with no issue is invisible wor
 Narrow exceptions: something you broke and fixed inside your own unmerged branch, or a
 typo in code being written this minute. Anything already merged, deployed, or reported by
 the owner is a bug → issue first.
+
+## `AGENTS.md` — the same file, for Codex (2026-09-02)
+
+`AGENTS.md` beside this file is a **symlink to this file**, so Codex / ChatGPT —
+which looks for `AGENTS.md` and never loads `CLAUDE.md` — starts with the same
+control document Claude Code does. A symlink rather than a copy on purpose: a
+copy drifts the day one side is edited. Keep it a symlink; edit only this file.
+Rolled out across the ecosystem 2026-09-02; `CLAUDE.md` stays the canonical name
+because the control-doc standard names it (`108-ting-ecosystem-docs/CONTROL_DOC_COVERAGE.md`).
