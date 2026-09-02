@@ -51,6 +51,12 @@ export function isBrowser() {
   return typeof window !== "undefined";
 }
 
+export function navigateToExternal(url: string) {
+  if (isBrowser()) {
+    window.location.assign(url);
+  }
+}
+
 export function isDark() {
   return (
     isBrowser() && window.matchMedia("(prefers-color-scheme: dark)").matches
