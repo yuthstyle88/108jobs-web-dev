@@ -77,7 +77,7 @@ const JobBoardDetail = ({jobId}: Props) => {
                         {t("error.serverError", "Failed to load job post")}
                     </h2>
                     <p className="text-sm text-gray-500 mb-6">
-                        {t("error.limitSendEmail", "An error occurred while loading the job details. Please try again.")}
+                        {t("error.loadFailed", "An error occurred while loading the job details. Please try again.")}
                     </p>
                     <Button
                         type="button"
