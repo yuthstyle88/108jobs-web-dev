@@ -16,6 +16,10 @@ import {useTranslation} from "react-i18next";
 import {toCamelCaseLastSegment} from "@/utils/helpers";
 import {getLocale} from "@/utils/date";
 import {useUserStore} from "@/store/useUserStore";
+import {isFailed} from "@/services/HttpService";
+import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
+import NotFound from "@/components/Common/NotFound";
+import {AlertCircle, RefreshCw} from "lucide-react";
 
 type Props = {
     jobId: PostId;
@@ -27,14 +31,20 @@ const JobBoardDetail = ({jobId}: Props) => {
     const isGuest = !isLoggedIn;
 
     const route = useRouter();
-    const {data: jobDetailData} = useHttpGet("getPost", {id: jobId});
+    const {
+        data: jobDetailData,
+        isLoading,
+        isMutating,
+        state,
+        execute: refetch,
+    } = useHttpGet("getPost", {id: jobId});
     const {person} = useUserStore();
 
     const isVerify = person?.isVerified;
-    // Show proposal button only for logged-in users who are NOT the job creator
-    const canShowProposalButton = !isGuest && (!!person?.id && person?.id !== jobDetailData?.postView?.creator?.id);
+    const showLoading = isLoading || isMutating;
+
     const params = useParams();
-    const locale = params.lang as string
+    const locale = params.lang as string;
     const currentLocale = getLocale(locale);
     const calculateDaysUntil = (dateString: string) => {
         const targetDate = new Date(dateString);
@@ -51,6 +61,43 @@ const JobBoardDetail = ({jobId}: Props) => {
         }
         route.push(`${jobId}/proposal`);
     };
+
+    if (showLoading && !jobDetailData) {
+        return <LoadingBlur text="" />;
+    }
+
+    if (isFailed(state)) {
+        return (
+            <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="bg-white rounded-xl shadow-sm p-8 border border-red-100 text-center max-w-md mx-auto">
+                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">
+                        {t("error.serverError", "Failed to load job post")}
+                    </h2>
+                    <p className="text-sm text-gray-500 mb-6">
+                        {t("error.limitSendEmail", "An error occurred while loading the job details. Please try again.")}
+                    </p>
+                    <Button
+                        type="button"
+                        onClick={() => refetch()}
+                        className="inline-flex items-center gap-2"
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        {t("global.buttonRetry", "Retry")}
+                    </Button>
+                </div>
+            </section>
+        );
+    }
+
+    if (!jobDetailData?.postView) {
+        return <NotFound />;
+    }
+
+    // Show proposal button only for logged-in users who are NOT the job creator
+    const canShowProposalButton = !isGuest && (!!person?.id && person?.id !== jobDetailData.postView.creator?.id);
 
     return (
         <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

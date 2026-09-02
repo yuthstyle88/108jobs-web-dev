@@ -14,6 +14,8 @@ import {getJobTypeLabel} from "@/utils/helpers";
 import {JobType} from "108heros-client";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
+import {isFailed} from "@/services/HttpService";
+import {AlertCircle, RefreshCw} from "lucide-react";
 import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
@@ -28,12 +30,15 @@ const MyJobs = () => {
     const {
         data: response,
         isMutating: isJobsLoading,
+        state,
+        execute: refetch,
     } = useHttpGet("listPersonCreated", {
         pageCursor: pager.currentCursor,
         pageBack: pager.isGoingBack,
         limit: ITEMS_PER_PAGE,
     });
 
+    const isFetchFailed = isFailed(state);
     const jobPosts = response?.created || [];
     const [selectedJob, setSelectedJob] = useState<{ id: string } | null>(null);
 
@@ -78,6 +83,28 @@ const MyJobs = () => {
                             {isJobsLoading ? (
                                 <div className="py-32 text-center">
                                     <LoadingBlur text={t("profileJob.loadingJobs")}/>
+                                </div>
+                            ) : isFetchFailed ? (
+                                <div className="text-center py-24">
+                                    <div className="bg-red-50 border border-red-100 rounded-2xl py-12 px-6 max-w-md mx-auto">
+                                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <AlertCircle className="w-6 h-6" />
+                                        </div>
+                                        <p className="text-xl font-bold text-red-600 mb-2">
+                                            {t("error.serverError", "Failed to load jobs")}
+                                        </p>
+                                        <p className="text-sm text-gray-500 mb-6">
+                                            {t("error.limitSendEmail", "An error occurred while connecting to the server. Please try again.")}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => refetch()}
+                                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
+                                        >
+                                            <RefreshCw className="w-4 h-4" />
+                                            {t("global.buttonRetry", "Retry")}
+                                        </button>
+                                    </div>
                                 </div>
                             ) : jobPosts.length > 0 ? (
                                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -191,6 +218,28 @@ const MyJobs = () => {
                             {isJobsLoading ? (
                                 <div className="py-32 text-center">
                                     <LoadingBlur text={t("profileJob.loadingJobs")}/>
+                                </div>
+                            ) : isFetchFailed ? (
+                                <div className="text-center py-24">
+                                    <div className="bg-red-50 border border-red-100 rounded-2xl py-12 px-6 max-w-md mx-auto">
+                                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <AlertCircle className="w-6 h-6" />
+                                        </div>
+                                        <p className="text-xl font-bold text-red-600 mb-2">
+                                            {t("error.serverError", "Failed to load jobs")}
+                                        </p>
+                                        <p className="text-sm text-gray-500 mb-6">
+                                            {t("error.limitSendEmail", "An error occurred while connecting to the server. Please try again.")}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => refetch()}
+                                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
+                                        >
+                                            <RefreshCw className="w-4 h-4" />
+                                            {t("global.buttonRetry", "Retry")}
+                                        </button>
+                                    </div>
                                 </div>
                             ) : jobPosts.length > 0 ? (
                                 jobPosts.map((job: any) => (

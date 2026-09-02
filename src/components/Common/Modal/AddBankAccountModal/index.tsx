@@ -45,7 +45,10 @@ interface BankAccountModalProps {
     onSubmit: (data: BankAccountFormValues & { id?: number }) => void; // Change to number
     initialData?: BankAccountFormValues & { id?: number } | null; // Change to number
     bankList?: Bank[];
-    error: string | null
+    isBankListLoading?: boolean;
+    isBankListFailed?: boolean;
+    onRetryBankList?: () => void;
+    error: string | null;
 }
 
 const BankAccountModal: React.FC<BankAccountModalProps> = ({
@@ -54,6 +57,9 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                                                                onSubmit,
                                                                initialData,
                                                                bankList = [],
+                                                               isBankListLoading = false,
+                                                               isBankListFailed = false,
+                                                               onRetryBankList,
                                                                error
                                                            }) => {
     const {t} = useTranslation();
@@ -134,22 +140,40 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                     <label className="block text-sm font-medium mb-1">
                         {t("sellerBankAccount.bankNameLabel")}
                     </label>
-                    <select
-                        value={bankId}
-                        onChange={(e) => {
-                            setValue("bankId", e.target.value, {shouldValidate: true});
-                            console.log("bankId changed:", e.target.value); // Debug
-                        }}
-                        className="w-full border rounded-md px-3 py-2 text-text-primary"
-                        aria-describedby={errors.bankId ? "bankId-error" : undefined}
-                    >
-                        <option value="">{t("sellerBankAccount.bankNamePlaceholder")}</option>
-                        {bankList.map((bank) => (
-                            <option key={String(bank.id)} value={String(bank.id)}>
-                                {bank.name} {bank.bankCode && `(${bank.bankCode})`}
-                            </option>
-                        ))}
-                    </select>
+                    {isBankListFailed ? (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-center justify-between">
+                            <span className="text-sm text-red-600">
+                                {t("error.serverError", "Failed to load banks")}
+                            </span>
+                            {onRetryBankList && (
+                                <button
+                                    type="button"
+                                    onClick={onRetryBankList}
+                                    className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline ml-2"
+                                >
+                                    {t("global.buttonRetry", "Retry")}
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <select
+                            value={bankId}
+                            disabled={isBankListLoading}
+                            onChange={(e) => {
+                                setValue("bankId", e.target.value, {shouldValidate: true});
+                                console.log("bankId changed:", e.target.value); // Debug
+                            }}
+                            className="w-full border rounded-md px-3 py-2 text-text-primary"
+                            aria-describedby={errors.bankId ? "bankId-error" : undefined}
+                        >
+                            <option value="">{t("sellerBankAccount.bankNamePlaceholder")}</option>
+                            {bankList.map((bank) => (
+                                <option key={String(bank.id)} value={String(bank.id)}>
+                                    {bank.name} {bank.bankCode && `(${bank.bankCode})`}
+                                </option>
+                            ))}
+                        </select>
+                    )}
                     {errors.bankId && (
                         <p id="bankId-error" className="text-red-500 text-sm mt-1">
                             {errors.bankId.message}
