@@ -159,8 +159,19 @@ describe("i18n keys", () => {
     it("proves the guard reads i18next's rules, not a restatement of them", () => {
         // ถ้าเทสต์นี้ล้ม แปลว่ากติกาที่ guard พึ่งอยู่เปลี่ยนไป — ซึ่งเป็นสิ่งที่อยากรู้
         expect(instances.en.options.defaultNS).toContain("translation");
+
+        // จุดไม่ใช่ตัวคั่น namespace — นี่คือบั๊ก #146
         expect(instances.en.exists("terms.title")).toBe(false);
         expect(instances.en.exists("terms:title")).toBe(true);
+
+        // แต่จุด *ใน ชื่อคีย์เอง* i18next หาเจอ (`deepFind`) และไฟล์ภาษาเก็บ
+        // `termsEmployer` ไว้แบบนั้นจริง — resolver ที่เขียนเองพลาดข้อนี้ ทำให้เคยรายงาน
+        // ผิดว่าหน้าเงื่อนไขสาธารณะพัง 21 คีย์ (ถอนแล้ว ดู #147)
+        expect(instances.en.exists("termsEmployer.dispute.title")).toBe(true);
+        expect(instances.en.t("termsEmployer.dispute.title")).toBe("User Dispute Resolution");
+        for (const lng of ["th", "vi"]) {
+            expect(instances[lng].exists("termsEmployer.dispute.title")).toBe(true);
+        }
     });
 
     it("keeps the #147 list honest: every entry is still missing somewhere", () => {
