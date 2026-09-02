@@ -6,65 +6,22 @@ import {useState} from "react";
 import {useTranslation} from "react-i18next";
 import TopUpModal from "@/components/Common/Modal/TopUpModal";
 import {useUserStore} from "@/store/useUserStore";
-import WithdrawalModal from "@/components/Common/Modal/WithdrawalModal";
-import {useBankAccountsStore} from "@/store/useBankAccountStore";
-import {BankAccountId, SubmitWithdrawRequest} from "108heros-client";
-import {useHttpPost} from "@/hooks/api/http/useHttpPost";
-import {isSuccess} from "@/services/HttpService";
-import {toast} from "sonner";
-import WithdrawHistory from "@/components/WithdrawHistory";
 
 const Coins108Heros = () => {
     const {t} = useTranslation();
     const {userInfo} = useUserStore();
-    const {bankAccounts} = useBankAccountsStore();
-    const [activeTab, setActiveTab] = useState<"top-up" | "withdraw">("top-up");
     const [amount, setAmount] = useState<string>("");
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-    // Withdrawal Modal States
-    const [isIsWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
-    const [withdrawAmount, setWithdrawAmount] = useState<string>("");
-    const [withdrawReason, setWithdrawReason] = useState<string>("");
-
-    const {execute: submitWithdraw} = useHttpPost("submitWithdraw");
 
     const wallet = userInfo?.wallet;
-    const banks = bankAccounts || [];
-
-    // Default bank (first one if exists). Not stored in state since nothing
-    // in this component lets the user pick a different bank independently.
-    const selectedBank: BankAccountId = banks[0]?.userBankAccount.id ?? 0;
 
     // Check if amount is valid
     const isValidAmount = !isNaN(parseFloat(amount)) && amount.trim() !== "";
-    const isValidWithdrawAmount = !isNaN(parseFloat(withdrawAmount)) && parseFloat(withdrawAmount) > 0 && parseFloat(withdrawAmount) <= (wallet?.balanceTotal || 0);
 
     const handleTopUpClick = (amt: number | string) => {
         setSelectedAmount(typeof amt === "string" ? parseFloat(amt) || null : amt);
         setIsModalOpen(true);
-    };
-
-    const handleWithdrawSubmit = async () => {
-        if (!isValidWithdrawAmount || !selectedBank) return;
-
-        const payload: SubmitWithdrawRequest = {
-            walletId: wallet?.id ?? 0,
-            bankAccountId: selectedBank,
-            amount: parseFloat(withdrawAmount),
-            // TODO: source currencyId from wallet/default-currency endpoint once
-            // multi-currency wallet schema is wired. Hard-coded to THB (id 1) until then.
-            currencyId: 1,
-            reason: withdrawReason ?? t("profileCoins.withdrawRequest"),
-        };
-
-        const res = await submitWithdraw(payload);
-        if (isSuccess(res)) {
-            toast(t("profileCoins.withdrawalRequestSent"));
-            setIsWithdrawOpen(false);
-            setWithdrawAmount("");
-            setWithdrawReason("");
-        }
     };
 
     return (
@@ -94,14 +51,6 @@ const Coins108Heros = () => {
                             <p className="text-5xl font-bold text-center mt-2">
                                 {wallet?.balanceTotal?.toLocaleString() || 0}
                             </p>
-
-                            {/* Withdraw Button */}
-                            <button
-                                onClick={() => setIsWithdrawOpen(true)}
-                                className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 rounded-lg transition-all hover:scale-105 focus:ring-2 focus:ring-red-500"
-                            >
-                                {t("profileCoins.buttonWithdraw") || "Withdraw Coins"}
-                            </button>
                         </div>
                     </div>
 
@@ -183,36 +132,16 @@ const Coins108Heros = () => {
                 </div>
             </div>
 
-            {/* ---------- Tabs: Top-Up & Withdraw History ---------- */}
+            {/* Top-Up History Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
                 <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-                    {/* Tab Headers */}
-                    <div className="flex border-b border-gray-200">
-                        <button
-                            onClick={() => setActiveTab("top-up")}
-                            className={`flex-1 py-4 px-6 font-medium text-sm transition-all ${
-                                activeTab === "top-up"
-                                    ? "text-primary border-b-2 border-primary"
-                                    : "text-gray-500 hover:text-gray-700"
-                            }`}
-                        >
+                    <div className="border-b border-gray-200 px-6 py-4">
+                        <h2 className="text-lg font-semibold text-gray-800">
                             {t("profileCoins.sectionTopUpHistory")}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("withdraw")}
-                            className={`flex-1 py-4 px-6 font-medium text-sm transition-all ${
-                                activeTab === "withdraw"
-                                    ? "text-red-600 border-b-2 border-red-600"
-                                    : "text-gray-500 hover:text-gray-700"
-                            }`}
-                        >
-                            {t("profileCoins.sectionWithdrawHistory")}
-                        </button>
+                        </h2>
                     </div>
-
-                    {/* Tab Content */}
                     <div className="p-6">
-                        {activeTab === "top-up" ? <TopUpHistory /> : <WithdrawHistory />}
+                        <TopUpHistory />
                     </div>
                 </div>
             </div>
@@ -222,19 +151,6 @@ const Coins108Heros = () => {
                 isModalOpen={isModalOpen}
                 setIsModalOpen={setIsModalOpen}
                 selectedAmount={selectedAmount}
-            />
-
-            {/* Withdrawal Request Modal */}
-            <WithdrawalModal
-                isOpen={isIsWithdrawOpen}
-                onClose={() => setIsWithdrawOpen(false)}
-                balance={wallet?.balanceAvailable ?? 0}
-                banks={banks}
-                withdrawAmount={withdrawAmount}
-                setWithdrawAmount={setWithdrawAmount}
-                withdrawReason={withdrawReason}
-                setWithdrawReason={setWithdrawReason}
-                onSubmit={handleWithdrawSubmit}
             />
 
             {/* Custom CSS for Animations */}
