@@ -327,7 +327,7 @@ export default async function fetchIsoData(url: string, incomingHeaders: Incomin
             bankAccounts,
             routeData,
             errorPageData,
-            appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "https://staging.108heros.com",
+            appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "https://staging.108jobs.com",
         };
     }
 }

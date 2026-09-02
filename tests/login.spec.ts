@@ -51,5 +51,12 @@ test.describe('Login flow', () => {
     await page.getByRole('button', { name: /create an account/i }).click();
     await expect(page).toHaveURL(new RegExp(`/${LOCALE}/register`));
   });
+
+  test('login page has correct 108jobs.com document title and not 108heros.com', async ({ page }) => {
+    await page.goto(`/${LOCALE}/login`);
+    await expect(page).toHaveTitle(/108jobs\.com/);
+    const title = await page.title();
+    expect(title).not.toContain('108heros.com');
+  });
 });
 

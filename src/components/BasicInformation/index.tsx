@@ -9,6 +9,7 @@ import { useProfileForm } from '@/hooks/forms/useProfileForm';
 import { CustomInput } from '@/components/ui/InputField';
 import {useImagePicker} from "@/hooks/ui/useImagePicker";
 import {useUserStore} from "@/store/useUserStore";
+import {getProfilePrefix} from "@/config/product";
 
 export default function BasicInformation() {
     const { t } = useTranslation();
@@ -113,7 +114,7 @@ export default function BasicInformation() {
                             label={t('profileInfo.labelUsername')}
                             placeholder={t('profileInfo.labelUsername') || 'Enter username'}
                             error={errors.username}
-                            prefix="108heros.com/profile/"
+                            prefix={getProfilePrefix()}
                             aria-describedby={errors.username ? 'username-error' : undefined}
                         />
                     </div>
