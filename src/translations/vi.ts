@@ -1136,6 +1136,8 @@ export const vi = {
             labelSignUpButton: "Đăng ký",
             labelContinue: "Tiếp tục",
             failedToLoad: "Tải không thành công",
+            loadFailedHint:
+                "Không thể tải danh sách. Điều đó không có nghĩa là danh sách trống — vui lòng thử lại.",
             retry: "Tải lại",
             cancel: "Hủy",
             open: "Mở",
@@ -1966,6 +1968,7 @@ export const vi = {
             available: "Sẵn có",
             sectionWithdrawHistory: "Lịch sử rút tiền",
             noWithdrawHistory: "Chưa có lịch sử rút tiền.",
+            noTopUpHistory: "Chưa có lịch sử nạp tiền.",
             noteWithdrawProcess: "Yêu cầu rút tiền được xử lý trong vòng 1-3 ngày làm việc. Các yêu cầu được duyệt sẽ được chuyển vào tài khoản ngân hàng của bạn.",
             Completed: "Đã hoàn tất",
             Rejected: "Bị từ chối",

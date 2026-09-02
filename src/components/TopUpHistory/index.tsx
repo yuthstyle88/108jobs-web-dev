@@ -10,6 +10,8 @@ import {formatMinor} from "@/utils/format/money";
 
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {PaginationControls} from "@/components/PaginationControls";
+import {FetchErrorRow} from "@/components/FetchErrorState";
+import {isFailed} from "@/services/HttpService";
 
 const TopUpHistory = () => {
     const {t} = useTranslation();
@@ -24,12 +26,15 @@ const TopUpHistory = () => {
 
     const pager = useCursorPagination();
 
-    const {data, isLoading, execute: refetch} = useHttpGet("listTopUpRequests", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("listTopUpRequests", {
         ...filters,
         pageCursor: pager.currentCursor,
     });
 
     const topUps: TopUpRequestView[] = data?.topUpRequests ?? [];
+    // `useHttpGet` ไม่ throw — ความล้มมาถึงเราในรูป `state === "failed"` และ `data === null`
+    // ⇒ ถ้าไม่อ่าน `state` ตรงนี้ 401/500/timeout จะถูกเรนเดอร์เป็น "ไม่มีประวัติเติมเงิน"
+    const isFetchFailed = isFailed(state);
 
     const handleFilterChange = (key: keyof ListTopUpRequestQuery, value: any) => {
         setFilters((prev: ListTopUpRequestQuery) => ({...prev, [key]: value}));
@@ -281,6 +286,12 @@ const TopUpHistory = () => {
                                     <p className="mt-3 text-sm text-gray-500">{t("profileCoins.Loading")}</p>
                                 </td>
                             </tr>
+                        ) : isFetchFailed ? (
+                            <FetchErrorRow
+                                colSpan={4}
+                                onRetry={refetch}
+                                isRetrying={isMutating}
+                            />
                         ) : topUps.length === 0 ? (
                             <tr>
                                 <td colSpan={4} className="text-center py-16">
@@ -298,8 +309,8 @@ const TopUpHistory = () => {
                                                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                                             />
                                         </svg>
-                                        <p className="mt-3 text-sm font-medium text-gray-600">{t("No topups found")}</p>
-                                        <p className="mt-1 text-xs text-gray-500">{t("Try adjusting your filters")}</p>
+                                        <p className="mt-3 text-sm font-medium text-gray-600">{t("profileCoins.noTopUpHistory")}</p>
+                                        <p className="mt-1 text-xs text-gray-500">{t("profileCoins.TryAdjustingFilters")}</p>
                                     </div>
                                 </td>
                             </tr>

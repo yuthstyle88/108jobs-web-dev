@@ -1141,6 +1141,8 @@ export const en = {
             labelSignInButton: "Login",
             labelSignUpButton: "Sign Up",
             failedToLoad: "Failed to load",
+            loadFailedHint:
+                "We could not load this list. That does not mean it is empty — please try again.",
             tryRefreshingPage: "Please try refreshing the page",
             labelContinue: "Continue",
             retry: "Retry",
@@ -1972,6 +1974,7 @@ export const en = {
             available: "Available",
             sectionWithdrawHistory: "Withdraw History",
             noWithdrawHistory: "No withdrawal history yet.",
+            noTopUpHistory: "No top-up history yet.",
             noteWithdrawProcess: "Withdrawal requests are processed within 1-3 business days. Approved requests will be transferred to your bank account.",
             Completed: "Completed",
             Rejected: "Rejected",

@@ -15,6 +15,8 @@ import type {
 
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {PaginationControls} from "@/components/PaginationControls";
+import {FetchErrorRow} from "@/components/FetchErrorState";
+import {isFailed} from "@/services/HttpService";
 
 const WithdrawHistory = () => {
     const {t} = useTranslation();
@@ -36,13 +38,17 @@ const WithdrawHistory = () => {
         data: bankListRes,
     } = useHttpGet("listBanks");
     const bankList = bankListRes?.banks ?? [];
-    const {data, isLoading, execute: refetch} = useHttpGet("listWithdrawRequests", {
+    const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("listWithdrawRequests", {
         ...filters,
         pageCursor: pager.currentCursor,
         pageBack: pager.isGoingBack,
     });
 
     const withdraws: WithdrawRequestView[] = data?.withdrawRequests ?? [];
+    // `useHttpGet` ไม่ throw — ความล้มมาถึงเราในรูป `state === "failed"` และ `data === null`
+    // ⇒ ถ้าไม่อ่าน `state` ตรงนี้ 401/500/timeout จะถูกเรนเดอร์เป็น "ยังไม่มีประวัติการถอนเงิน"
+    // ซึ่งบอกเจ้าของเงินว่าคำขอถอนของเขาไม่มีอยู่
+    const isFetchFailed = isFailed(state);
 
     // === Handlers ===
     const handleFilterChange = <K extends keyof ListWithdrawRequestQuery>(
@@ -308,6 +314,12 @@ const WithdrawHistory = () => {
                                     <p className="mt-3 text-sm text-gray-500">{t("profileCoins.Loading")}</p>
                                 </td>
                             </tr>
+                        ) : isFetchFailed ? (
+                            <FetchErrorRow
+                                colSpan={5}
+                                onRetry={refetch}
+                                isRetrying={isMutating}
+                            />
                         ) : withdraws.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="text-center py-16">
@@ -324,7 +336,7 @@ const WithdrawHistory = () => {
                                         <p className="mt-3 text-sm font-medium text-gray-600">
                                             {t("profileCoins.noWithdrawHistory")}
                                         </p>
-                                        <p className="mt-1 text-xs text-gray-500">{t("Try adjusting your filters")}</p>
+                                        <p className="mt-1 text-xs text-gray-500">{t("profileCoins.TryAdjustingFilters")}</p>
                                     </div>
                                 </td>
                             </tr>

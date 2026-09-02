@@ -1118,6 +1118,8 @@ export const th = {
             labelSignUpButton: "ลงทะเบียน",
             labelContinue: "ดำเนินการต่อ",
             failedToLoad: "โหลดไม่สำเร็จ",
+            loadFailedHint:
+                "โหลดรายการไม่สำเร็จ ไม่ได้แปลว่าไม่มีรายการ กรุณาลองใหม่อีกครั้ง",
             retry: "ลองใหม่",
             cancel: "ยกเลิก",
             open: "เปิด",
@@ -1914,6 +1916,7 @@ export const th = {
             available: "พร้อมใช้งาน",
             sectionWithdrawHistory: "ประวัติการถอนเงิน",
             noWithdrawHistory: "ยังไม่มีประวัติการถอนเงิน",
+            noTopUpHistory: "ยังไม่มีประวัติการเติมเงิน",
             noteWithdrawProcess: "คำขอถอนเงินจะดำเนินการภายใน 1-3 วันทำการ คำขอที่ได้รับการอนุมัติจะโอนเข้าบัญชีธนาคารของคุณ",
             Completed: "เสร็จสิ้น",
             Rejected: "ถูกปฏิเสธ",
