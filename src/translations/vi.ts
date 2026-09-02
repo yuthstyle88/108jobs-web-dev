@@ -4001,6 +4001,9 @@ export const vi = {
                 approveFailed: "Phê duyệt thất bại",
                 rejectFailed: "Từ chối thất bại",
                 noteRequired: "Cần nhập ghi chú của admin",
+                bankListLoadFailed:
+                    "Không tải được danh sách ngân hàng. Các yêu cầu bên dưới vẫn đầy đủ và chính xác.",
+                bankNameUnavailable: "Không tải được tên ngân hàng",
                 unknownBank: "Không rõ ngân hàng",
                 status: {
                     pending: "Đang chờ",

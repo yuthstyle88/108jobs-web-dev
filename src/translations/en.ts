@@ -3972,6 +3972,9 @@ export const en = {
                 approveFailed: "Failed to approve",
                 rejectFailed: "Failed to reject",
                 noteRequired: "Admin note is required",
+                bankListLoadFailed:
+                    "Bank names could not be loaded. The requests below are unaffected.",
+                bankNameUnavailable: "Bank name unavailable",
                 unknownBank: "Unknown Bank",
                 status: {
                     pending: "Pending",
