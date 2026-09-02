@@ -21,9 +21,10 @@
  * the client bundle, the SSR bundle and the middleware, and `next build` dies
  * on its `node:fs` imports while the unit suite stays green.
  */
-import {describe, expect, it} from "vitest";
+import {beforeAll, describe, expect, it} from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import i18next, {type i18n as I18n} from "i18next";
 
 import {en} from "@/translations/en";
 import {th} from "@/translations/th";
@@ -32,8 +33,7 @@ import {vi as viTranslation} from "@/translations/vi";
 const SRC = path.join(process.cwd(), "src");
 
 /**
- * Keys the sweep found already missing when this guard was written, tracked as
- * #147. The point of listing them is that the list must SHRINK: delete an entry
+ * Keys that resolve to nothing in any locale, tracked as #147. The point of listing them is that the list must SHRINK: delete an entry
  * when the key is added or the call site is fixed. Adding an entry to make this
  * test pass is the one thing that defeats it.
  */
@@ -70,27 +70,6 @@ const KNOWN_MISSING: ReadonlySet<string> = new Set<string>([
     "profileInfo.previousSamples",
     "profileInfo.updateAvailableFail",
     "sellerBankAccount.maxAccountsLimit",
-    "termsEmployer.coinAndBonus.title",
-    "termsEmployer.contact.title",
-    "termsEmployer.dispute.complaint",
-    "termsEmployer.dispute.escalation",
-    "termsEmployer.dispute.intro",
-    "termsEmployer.dispute.title",
-    "termsEmployer.fee.title",
-    "termsEmployer.liabilityClaim.companyLiability",
-    "termsEmployer.liabilityClaim.intro",
-    "termsEmployer.liabilityClaim.legalAction",
-    "termsEmployer.liabilityClaim.title",
-    "termsEmployer.liabilityClaim.toCompany",
-    "termsEmployer.liabilityClaim.toEachOther",
-    "termsEmployer.limitation.disclaimer",
-    "termsEmployer.limitation.exclusions",
-    "termsEmployer.limitation.intro",
-    "termsEmployer.limitation.noGuarantee",
-    "termsEmployer.limitation.title",
-    "termsEmployer.orderChange.title",
-    "termsEmployer.review.title",
-    "termsEmployer.work.title",
     "validation.deadlineMin",
 ]);
 
@@ -122,51 +101,74 @@ const collectKeys = () => {
     return used;
 };
 
-/**
- * Resolve the way i18next does: `ns:key` reads that namespace, a bare key reads
- * `translation` (the default namespace, because "translation" is one of the
- * names passed as `ns`).
- */
-const resolve = (tree: Record<string, unknown>, key: string): unknown => {
-    const [ns, rest] = key.includes(":")
-        ? [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)]
-        : ["translation", key];
-    return rest.split(".").reduce<unknown>(
-        (node, part) =>
-            node && typeof node === "object" ? (node as Record<string, unknown>)[part] : undefined,
-        tree[ns],
-    );
-};
-
-/** `returnObjects` is used for list copy, so an array of strings is a valid value. */
-const isRenderable = (value: unknown): boolean =>
-    (typeof value === "string" && value.length > 0) ||
-    (Array.isArray(value) && value.length > 0 && value.every((v) => typeof v === "string"));
-
 const LOCALES = {en, th, vi: viTranslation} as const;
 
+/**
+ * One real i18next per locale, initialised the way `I18NextService` does — every
+ * exported top-level key as a namespace, no explicit `defaultNS`, i18next's own
+ * separators.
+ *
+ * Deliberately NOT a hand-written walk of the objects. A guard that
+ * reimplements the rules it is guarding can agree with the next bug the same
+ * way it would have agreed with #146: the defect there was in the separator
+ * rules, exactly the part a hand-rolled resolver has to restate. Asking the
+ * library moves this test with the library.
+ *
+ * One deliberate difference from the app: `fallbackLng: false`, so th and vi
+ * answer for themselves. A key present only in `en.ts` silently rendering
+ * English to a Thai user is the other half of what this guard is for.
+ */
+const instances: Record<string, I18n> = {};
+
+beforeAll(async () => {
+    for (const [lng, resource] of Object.entries(LOCALES)) {
+        const i18n = i18next.createInstance();
+        await i18n.init({
+            compatibilityJSON: "v4",
+            lng,
+            fallbackLng: false,
+            ns: Object.keys(en),
+            resources: {[lng]: resource} as never,
+        });
+        instances[lng] = i18n;
+    }
+});
+
+/** `returnObjects` is used for list copy, so an array of strings is a valid value. */
+const isRenderable = (i18n: I18n, key: string): boolean => {
+    if (!i18n.exists(key)) return false;
+    const value = i18n.t(key, {returnObjects: true}) as unknown;
+    if (Array.isArray(value)) return value.length > 0 && value.every((v) => typeof v === "string");
+    if (typeof value !== "string") return false;
+    // คีย์ที่หาไม่เจอถูกเรนเดอร์เป็นชื่อคีย์เอง — นั่นคืออาการของ #146 ไม่ใช่ข้อความ
+    return value.length > 0 && value !== key;
+};
+
 describe("i18n keys", () => {
-    for (const [name, tree] of Object.entries(LOCALES)) {
+    for (const name of Object.keys(LOCALES)) {
         it(`resolves every literal t() key used in src/ against ${name}.ts`, () => {
             const missing: string[] = [];
             for (const [key, file] of collectKeys()) {
                 if (KNOWN_MISSING.has(key)) continue;
-                if (!isRenderable(resolve(tree as Record<string, unknown>, key))) {
-                    missing.push(`${key} (used in ${file})`);
-                }
+                if (!isRenderable(instances[name], key)) missing.push(`${key} (used in ${file})`);
             }
             expect(missing).toEqual([]);
         });
     }
+
+    it("proves the guard reads i18next's rules, not a restatement of them", () => {
+        // ถ้าเทสต์นี้ล้ม แปลว่ากติกาที่ guard พึ่งอยู่เปลี่ยนไป — ซึ่งเป็นสิ่งที่อยากรู้
+        expect(instances.en.options.defaultNS).toContain("translation");
+        expect(instances.en.exists("terms.title")).toBe(false);
+        expect(instances.en.exists("terms:title")).toBe(true);
+    });
 
     it("keeps the #147 list honest: every entry is still missing somewhere", () => {
         const used = collectKeys();
         const stale = [...KNOWN_MISSING].filter(
             (key) =>
                 !used.has(key) ||
-                Object.values(LOCALES).every((tree) =>
-                    isRenderable(resolve(tree as unknown as Record<string, unknown>, key)),
-                ),
+                Object.keys(LOCALES).every((lng) => isRenderable(instances[lng], key)),
         );
         // เมื่อคีย์ถูกเติมครบสามภาษาแล้ว (หรือ call site หายไป) ต้องลบออกจากลิสต์
         // ไม่งั้นลิสต์จะกลายเป็นที่ซ่อนของ แทนที่จะเป็นหนี้ที่หดลง
