@@ -23,7 +23,7 @@ import {vi} from "@/translations/vi";
 // forgotten.
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const srcRoot = path.resolve(here, "..");
+const srcRoot = path.resolve(here, "..", "src");
 
 const FAILURE_BRANCH_SOURCES = [
     "app/[lang]/(job)/job-board/edit/[jobId]/page.tsx",
