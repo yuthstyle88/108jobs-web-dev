@@ -310,7 +310,7 @@ const PrivacyPolicy = () => {
                                                     href="/content/support-center"
                                                     aria-label="Support Center"
                                                 >
-                                                    https://108heros.com/contents/support-center
+                                                    https://108jobs.com/content/support-center
                                                 </Link>
                                             </p>
                                         )}
@@ -384,7 +384,7 @@ const PrivacyPolicy = () => {
                                       href="/content/support-center"
                                       aria-label="Support Center"
                                   >
-                                    https://108heros.com/contents/support-center
+                                    https://108jobs.com/content/support-center
                                   </Link>
                                   <br/>
                                                                     {t("termsEmployer.privacyPage.rights_complaintDesc2_end")}
@@ -491,7 +491,7 @@ const PrivacyPolicy = () => {
                                                 {t("termsEmployer.privacyPage.cookiesMoreInfo")}{" "}
                                                 <a
                                                     className="text-blue-500 hover:text-blue-600 underline transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                                    href="https://108heros.com/blog/cookie-policy/"
+                                                    href="https://108jobs.com/blog/cookie-policy/"
                                                     aria-label={t("termsEmployer.privacyPage.cookiesPolicyLinkText")}
                                                 >
                                                     {t("termsEmployer.privacyPage.cookiesPolicyLinkText")}
@@ -561,7 +561,7 @@ const PrivacyPolicy = () => {
                                                                                     href="/content/support-center"
                                                                                     aria-label="Support Center"
                                                                                 >
-                                                                                    https://108heros.com/contents/support-center
+                                                                                    https://108jobs.com/content/support-center
                                                                                 </Link>
                                                                             </>
                                                                         ) : sub === "contact_emailLabel" ? (
