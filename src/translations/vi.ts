@@ -1977,6 +1977,10 @@ export const vi = {
             Rejected: "Bị từ chối",
             RequestID: "Mã yêu cầu",
             Bank: "Ngân hàng",
+            bankListLoadFailed:
+                "Không tải được danh sách ngân hàng. Các yêu cầu rút tiền bên dưới vẫn đầy đủ và chính xác.",
+            bankNameUnavailable: "Không tải được tên ngân hàng",
+            unknownBank: "Ngân hàng không xác định",
             bankVerificationNotice: {
                 title: "Cần xác minh tài khoản",
                 description: "Chỉ tài khoản ngân hàng đã xác minh mới được nhận tiền rút. Vui lòng chờ duyệt hoặc thêm tài khoản mới.",
