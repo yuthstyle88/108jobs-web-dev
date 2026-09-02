@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (key: string, defaultValue?: string) => defaultValue || key,
+        t: (key: string) => key,
         i18n: {language: "en"},
     }),
 }));
@@ -75,8 +75,8 @@ describe("JobBoardDetail", () => {
         });
 
         expect(container.querySelector("#not-found")).toBeNull();
-        expect(container.textContent).toContain("Failed to load job post");
-        expect(container.textContent).toContain("Retry");
+        expect(container.textContent).toContain("error.loadJobPostFailed");
+        expect(container.textContent).toContain("global.buttonRetry");
 
         const retryBtn = container.querySelector("button");
         expect(retryBtn).not.toBeNull();

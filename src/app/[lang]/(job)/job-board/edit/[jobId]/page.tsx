@@ -34,10 +34,10 @@ export default function EditPostPage() {
                         <AlertCircle className="w-6 h-6" />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">
-                        {t("error.serverError", "Failed to load job post")}
+                        {t("error.loadJobPostFailed")}
                     </h2>
                     <p className="text-sm text-gray-500 mb-6">
-                        {t("error.loadFailed", "An error occurred while loading the job details. Please try again.")}
+                        {t("error.loadJobPostFailedDetail")}
                     </p>
                     <Button
                         type="button"
@@ -45,7 +45,7 @@ export default function EditPostPage() {
                         className="inline-flex items-center gap-2"
                     >
                         <RefreshCw className="w-4 h-4" />
-                        {t("global.buttonRetry", "Retry")}
+                        {t("global.buttonRetry")}
                     </Button>
                 </div>
             </main>

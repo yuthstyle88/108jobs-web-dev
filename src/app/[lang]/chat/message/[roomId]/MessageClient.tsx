@@ -54,10 +54,10 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
                             <AlertCircle className="w-6 h-6" />
                         </div>
                         <h2 className="text-xl font-bold text-gray-800 mb-2">
-                            {t("error.serverError", "Failed to load chat room")}
+                            {t("error.loadChatRoomFailed")}
                         </h2>
                         <p className="text-sm text-gray-500 mb-6">
-                            {t("error.loadFailed", "An error occurred while connecting to the chat room. Please try again.")}
+                            {t("error.loadChatRoomFailedDetail")}
                         </p>
                         <Button
                             type="button"
@@ -65,7 +65,7 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
                             className="inline-flex items-center gap-2"
                         >
                             <RefreshCw className="w-4 h-4" />
-                            {t("global.buttonRetry", "Retry")}
+                            {t("global.buttonRetry")}
                         </Button>
                     </div>
                 </div>
