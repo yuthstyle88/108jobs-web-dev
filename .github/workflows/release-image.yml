@@ -82,6 +82,26 @@ jobs:
           tags: |
             type=sha
 
+      # What this image will say it is (VERSIONING_STANDARD.md §3), read back
+      # from GET /api/version on the running pod. `build` is the SAME string as
+      # the image tag the deploy jobs below pass to helm, so the app and
+      # `kubectl get pod` agree to the character. `channel` comes from the branch
+      # this run is for -- there are two lanes and each builds its own image --
+      # and is set again per lane at deploy time, which wins over this default.
+      - name: Resolve build identity
+        id: identity
+        run: |
+          set -euo pipefail
+          echo "build=sha-$(echo "${GITHUB_SHA}" | cut -c1-7)" >> "$GITHUB_OUTPUT"
+          echo "built_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+          case "${GITHUB_REF_NAME}" in
+            deploy/staging) channel=staging ;;
+            release/prod)   channel=release ;;
+            *)              channel=unknown ;;
+          esac
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+          echo "build=sha-$(echo "${GITHUB_SHA}" | cut -c1-7) channel=$channel"
+
       - name: Build and push
         env:
           DOCKER_CONFIG: ${{ runner.temp }}/.docker
@@ -92,6 +112,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_BUILD=${{ steps.identity.outputs.build }}
+            APP_BUILT_AT=${{ steps.identity.outputs.built_at }}
+            APP_CHANNEL=${{ steps.identity.outputs.channel }}
           provenance: false
 
   deploy-staging:
@@ -143,6 +167,14 @@ jobs:
       # same run -- but that is also why the repository must be set here and not
       # left to `--reuse-values`.
       #
+      # `config.APP_CHANNEL` is the lane /api/version reports as `channel`. It
+      # is set HERE, on the release, and not only baked into the image, because
+      # the image's own value is a default: the same commit pushed to both
+      # branches builds the same `sha-<short>` tag twice, and the pod must say
+      # which namespace it is in regardless of which build won. The chart puts
+      # `config` into a ConfigMap injected via envFrom, and --reuse-values keeps
+      # it for every later upgrade. 108heros-web#18 is the bug this prevents.
+      #
       # CHART_PATH is a path on the RUNNER, which is the K3s node itself.
       # Override with the repo variable TING_SERVICE_CHART_PATH if the chart
       # moves, rather than editing it in two places.
@@ -155,6 +187,7 @@ jobs:
             -n staging --reuse-values \
             --set image.repository=ghcr.io/108-plaza/108jobs-web \
             --set image.tag=${{ steps.tag.outputs.tag }} \
+            --set config.APP_CHANNEL=staging \
             --wait --timeout 3m
           kubectl -n staging rollout status deploy/jobs-web --timeout=180s
 
@@ -219,5 +252,6 @@ jobs:
             -n prod --reuse-values \
             --set image.repository=ghcr.io/108-plaza/108jobs-web \
             --set image.tag=${{ steps.tag.outputs.tag }} \
+            --set config.APP_CHANNEL=release \
             --wait --timeout 3m
           kubectl -n prod rollout status deploy/jobs-web --timeout=180s

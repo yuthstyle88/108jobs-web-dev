@@ -7,6 +7,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import Link from "next/link";
 import {getAppName} from "@/utils/appConfig";
+import {APP_VERSION} from "@/utils/version";
 import React from "react";
 import {useTranslation} from "react-i18next";
 import {useCategories} from "@/hooks/api/categories/useCategories";
@@ -163,10 +164,12 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* Copyright */}
-                    <p className="text-xs font-sans text-white/70">
-                        © {new Date().getFullYear()} {getAppName()}
-                    </p>
+                    {/* Copyright & version -- the human-readable half of /api/version */}
+                    <div className="flex items-center gap-2 text-xs font-sans text-white/70">
+                        <p>© {new Date().getFullYear()} {getAppName()}</p>
+                        <span className="text-white/30">•</span>
+                        <span className="font-mono text-white/60 text-[11px]">v{APP_VERSION}</span>
+                    </div>
                 </div>
             </div>
         </footer>

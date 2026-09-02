@@ -39,11 +39,23 @@ RUN --mount=type=cache,target=/app/.next/cache \
     corepack pnpm run build
 
 FROM node:22-bookworm-slim AS runner
+# Identity of this image (VERSIONING_STANDARD.md §3), passed as build-args by
+# release-image.yml: the short sha that is also the image tag, the UTC build
+# time, and the lane the branch maps to. Deliberately "unknown" when built by
+# hand -- /api/version reports what it does not know rather than inventing it.
+# APP_CHANNEL is also set per lane at deploy (helm --set config.APP_CHANNEL),
+# and the pod env wins over this default.
+ARG APP_BUILD=unknown
+ARG APP_BUILT_AT=unknown
+ARG APP_CHANNEL=unknown
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
+    APP_BUILD=$APP_BUILD \
+    APP_BUILT_AT=$APP_BUILT_AT \
+    APP_CHANNEL=$APP_CHANNEL \
     API_INTERNAL_URL="https://api.108heros.com" \
     NEXT_PUBLIC_API_BASE_URL="https://api.108heros.com" \
     APP_NAME="108jobs.com" \
