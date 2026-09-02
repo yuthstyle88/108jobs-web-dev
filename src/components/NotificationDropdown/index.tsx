@@ -6,6 +6,9 @@ import {useTranslation} from "react-i18next";
 import {useNotificationStore} from "@/store/useNotificationStore";
 import {ServerNotificationItem} from "@/services/NotificationService";
 import {useRouter} from "next/navigation";
+import {getRideAppUrl} from "@/utils/env";
+import {withLocalePrefix} from "@/utils/localeHref";
+import {navigateToExternal} from "@/utils/browser";
 import {
     Bell,
     CheckCheck,
@@ -83,7 +86,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({className = 
             item.kind === "RiderApplicationResubmitted" ||
             item.kind === "RiderResubmissionReceived"
         ) {
-            router.push("/rider/apply");
+            const rideUrl = `${getRideAppUrl()}${withLocalePrefix("/rider/apply", i18n.language)}`;
+            navigateToExternal(rideUrl);
         }
     };
 

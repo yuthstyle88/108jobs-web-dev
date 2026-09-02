@@ -69,6 +69,16 @@ export function getAppUrl(): string {
   );
 }
 
+/**
+ * Public Ride App URL used for generating absolute links to 108heros ride platform.
+ */
+export function getRideAppUrl(): string {
+  return (
+    ensureAbsoluteUrl(process.env.NEXT_PUBLIC_RIDE_APP_URL)
+      || "https://108heros.com"
+  );
+}
+
 /** Convenient host helpers (rarely needed) **/
 // export function getUiExternalHost(): string {
 //   const app = getAppUrl();
