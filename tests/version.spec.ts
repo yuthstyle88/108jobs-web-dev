@@ -35,4 +35,17 @@ test.describe('GET /api/version (versioning standard)', () => {
     expect(body.builtAt).toMatch(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z|unknown)$/);
     expect(['staging', 'release', 'unknown']).toContain(body.channel);
   });
+
+  test('GET /health/ready answers 200 and is not swallowed by the locale proxy', async ({
+    request,
+    baseURL,
+  }) => {
+    const root = baseURL ?? 'http://localhost:3001';
+    const res = await request.get(`${root}/health/ready`, { maxRedirects: 0 });
+
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe('ok');
+    expect(body.version).toBe(manifest.version);
+  });
 });

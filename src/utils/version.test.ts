@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import packageJson from '../../package.json';
 import { APP_VERSION, getVersionInfo } from './version';
 import { GET as getVersionRoute } from '@/app/api/version/route';
+import { GET as getReadyRoute } from '@/app/health/ready/route';
 
 const VERSION_ENV = [
   'APP_BUILD',
@@ -86,5 +87,22 @@ describe('versioning standard', () => {
       channel: 'staging',
     });
     expect(typeof json.backend?.apiBaseUrl).toBe('string');
+  });
+
+  it('GET /health/ready answers 200 with status ok and the same version fields', async () => {
+    process.env.APP_BUILD = 'sha-1234567';
+    process.env.APP_BUILT_AT = '2026-09-02T05:31:00Z';
+    process.env.APP_CHANNEL = 'release';
+
+    const res = await getReadyRoute();
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    const json = await res.json();
+    expect(json.status).toBe('ok');
+    expect(json).toMatchObject({
+      version: packageJson.version,
+      build: 'sha-1234567',
+      channel: 'release',
+    });
   });
 });
