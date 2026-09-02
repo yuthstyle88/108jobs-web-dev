@@ -7,6 +7,17 @@ interface NotificationStore {
     unreadCount: number;
     loading: boolean;
     hasFetched: boolean;
+    /**
+     * The last list fetch came back FAILED.
+     *
+     * NotificationService never throws -- a 401, a 500 and a dead network all
+     * resolve to `{state: FAILED}` (NotificationService.ts:82-86, :100-109) --
+     * so without this flag an empty `notifications` array is the store's only
+     * report of a failure, and it is the same array a genuinely empty inbox
+     * produces. That is what made the dropdown answer every outage with "no
+     * notifications yet" (#140).
+     */
+    loadFailed: boolean;
     fetchNotifications: () => Promise<void>;
     fetchUnreadCount: () => Promise<void>;
     markAsRead: (id: number) => Promise<void>;
@@ -18,6 +29,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     unreadCount: 0,
     loading: false,
     hasFetched: false,
+    loadFailed: false,
 
     fetchNotifications: async () => {
         set({loading: true});
@@ -30,9 +42,14 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
                 unreadCount: unread,
                 loading: false,
                 hasFetched: true,
+                loadFailed: false,
             });
         } else {
-            set({loading: false, hasFetched: true});
+            // Deliberately keeps whatever `notifications` already held: a
+            // failed refresh is no reason to throw away rows that did arrive.
+            // `loadFailed` is what the dropdown branches on, so the failure is
+            // reported instead of being mistaken for an empty inbox.
+            set({loading: false, hasFetched: true, loadFailed: true});
         }
     },
 

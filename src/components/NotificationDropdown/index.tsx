@@ -49,6 +49,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({className = 
         unreadCount,
         loading,
         hasFetched,
+        loadFailed,
         fetchNotifications,
         fetchUnreadCount,
         markAsRead,
@@ -216,7 +217,26 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({className = 
                     {loading && !hasFetched ? (
                         <div className="py-16 flex flex-col items-center justify-center text-gray-400 gap-2">
                             <Loader2 className="w-7 h-7 animate-spin text-blue-600" />
-                            <p className="text-xs">{t("notifications.emptyState")}</p>
+                            <p className="text-xs">{t("notifications.loading")}</p>
+                        </div>
+                    ) : loadFailed && notifications.length === 0 ? (
+                        <div className="py-12 px-6 flex flex-col items-center justify-center text-center">
+                            <div className="w-12 h-12 mb-3 rounded-full bg-rose-50 flex items-center justify-center text-rose-500">
+                                <AlertCircle className="w-6 h-6" />
+                            </div>
+                            <p className="text-xs text-gray-600 max-w-[260px] mb-3 leading-relaxed">
+                                {t("notifications.loadErrorTitle")}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => fetchNotifications()}
+                                disabled={loading}
+                                className="mt-1 px-4 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+                            >
+                                {loading
+                                    ? t("notifications.loadErrorRetrying")
+                                    : t("notifications.loadErrorRetry")}
+                            </button>
                         </div>
                     ) : notifications.length === 0 ? (
                         /* Empty state matching user's image exactly */
