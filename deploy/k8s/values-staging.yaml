@@ -43,3 +43,10 @@ resources:
 
 securityContext:
   readOnlyRootFilesystem: false
+
+# Non-secret runtime config -> ConfigMap (envFrom). The lane /api/version
+# reports as `channel`. release-image.yml also sets this on every deploy
+# (`--set config.APP_CHANNEL=...`), so a release upgraded only with
+# --reuse-values still carries it.
+config:
+  APP_CHANNEL: staging

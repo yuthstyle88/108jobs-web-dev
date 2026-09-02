@@ -116,6 +116,6 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next|static|fonts|images|favicon|robots|sitemap|lottie|api|uploads).*)',
+        '/((?!_next|static|fonts|images|favicon|robots|sitemap|lottie|api|uploads|health).*)',
     ],
 };
