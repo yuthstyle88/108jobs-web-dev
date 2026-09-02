@@ -66,8 +66,14 @@ export function getVersionInfo(): VersionInfo {
     // The API this bundle talks to (§3: "a web app must not report only its own
     // version"). Its version is not readable yet -- api.108heros.com serves no
     // /health/ready -- so the binding is reported, not a number nobody can get.
+    // Only the PUBLIC names are read here. API_INTERNAL_URL is documented as
+    // server-only (src/utils/env.ts:5) and this route is unauthenticated, so
+    // publishing it would hand out a cluster-internal address the moment
+    // anyone uses that variable for what its name says. Unset reads
+    // "unknown", which is the honest answer -- see 108heros-web#28, where the
+    // same block reads two names nothing sets and reports "" forever.
     backend: {
-      apiBaseUrl: firstSet(process.env.NEXT_PUBLIC_API_BASE_URL, process.env.API_INTERNAL_URL),
+      apiBaseUrl: firstSet(process.env.NEXT_PUBLIC_API_BASE_URL),
       identityBaseUrl: firstSet(process.env.NEXT_PUBLIC_IDENTITY_BASE_URL),
     },
   };

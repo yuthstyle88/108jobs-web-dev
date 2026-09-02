@@ -105,4 +105,24 @@ describe('versioning standard', () => {
       channel: 'release',
     });
   });
+
+  it('never publishes API_INTERNAL_URL, the server-only address (108heros-web#28)', () => {
+    process.env.API_INTERNAL_URL = 'http://jobs-api.prod.svc.cluster.local:8536';
+    delete process.env.NEXT_PUBLIC_API_BASE_URL;
+    delete process.env.NEXT_PUBLIC_IDENTITY_BASE_URL;
+
+    const info = getVersionInfo();
+    expect(info.backend.apiBaseUrl).toBe('unknown');
+    expect(JSON.stringify(info)).not.toContain('cluster.local');
+  });
+
+  it('reports the public backend names the image actually sets', () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = 'https://api.108heros.com';
+    process.env.NEXT_PUBLIC_IDENTITY_BASE_URL = 'https://identity.108plaza.net';
+
+    expect(getVersionInfo().backend).toEqual({
+      apiBaseUrl: 'https://api.108heros.com',
+      identityBaseUrl: 'https://identity.108plaza.net',
+    });
+  });
 });
