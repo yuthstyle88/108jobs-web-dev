@@ -124,7 +124,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                         </div>
                         <div className="text-sm text-amber-900 leading-relaxed">
                             <p className="font-medium mb-1">
-                                {t("sellerBankAccount.verificationWarningTitle", "Yêu cầu xác minh tài khoản")}
+                                {t("sellerBankAccount.verificationWarningTitle")}
                             </p>
                             <p>
                                 {initialData
@@ -143,7 +143,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                     {isBankListFailed ? (
                         <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-center justify-between">
                             <span className="text-sm text-red-600">
-                                {t("error.serverError", "Failed to load banks")}
+                                {t("error.loadBanksFailed")}
                             </span>
                             {onRetryBankList && (
                                 <button
@@ -151,7 +151,7 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                                     onClick={onRetryBankList}
                                     className="text-xs font-semibold text-blue-600 hover:text-blue-800 underline ml-2"
                                 >
-                                    {t("global.buttonRetry", "Retry")}
+                                    {t("global.buttonRetry")}
                                 </button>
                             )}
                         </div>
@@ -200,9 +200,9 @@ const BankAccountModal: React.FC<BankAccountModalProps> = ({
                     {selectedBank && (
                         <p className="text-xs text-gray-600 mt-1">
                             {selectedBank.countryId === "VN"
-                                ? t("profileInfo.accountNumberHelperVN", "9-15 digits or letters")
+                                ? t("profileInfo.accountNumberHelperVN")
                                 : selectedBank.countryId === "TH"
-                                    ? t("profileInfo.accountNumberHelperTH", "Exactly 10 digits")
+                                    ? t("profileInfo.accountNumberHelperTH")
                                     : ""}
                         </p>
                     )}

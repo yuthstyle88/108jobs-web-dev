@@ -960,6 +960,14 @@ export const en = {
             loadFailed: "An error occurred while loading data. Please try again.",
             resendFailed: "Resending email failed",
             limitSendEmail: "Please wait a moment before trying again",
+            loadJobPostFailed: "Failed to load job post",
+            loadJobPostFailedDetail: "An error occurred while loading the job details. Please try again.",
+            loadJobsFailed: "Failed to load jobs",
+            loadJobsFailedDetail: "An error occurred while connecting to the server. Please try again.",
+            loadChatRoomFailed: "Failed to load chat room",
+            loadChatRoomFailedDetail: "An error occurred while connecting to the chat room. Please try again.",
+            loadProposalsFailed: "Failed to load proposals",
+            loadBanksFailed: "Failed to load banks",
             emailNotExist: "Invalid email, please check and try again",
             invalidPassword: "Incorrect password",
             invalidOldPassword: "Incorrect old password",
@@ -1986,6 +1994,10 @@ export const en = {
             Rejected: "Rejected",
             RequestID: "Request ID",
             Bank: "Bank",
+            bankListLoadFailed:
+                "Bank names could not be loaded. Your withdrawal records below are unaffected.",
+            bankNameUnavailable: "Bank name unavailable",
+            unknownBank: "Unknown bank",
             bankVerificationNotice: {
                 title: "Verification Required",
                 description: "Only verified bank accounts can receive withdrawals. Please wait for verification or add a new one.",
@@ -2299,6 +2311,8 @@ export const en = {
                 "For issuing documents related to personal hiring",
         },
         profileInfo: {
+            accountNumberHelperVN: "9-15 digits or letters",
+            accountNumberHelperTH: "Exactly 10 digits",
             sectionAccountInfo: "Account Information",
             subtitleAccountInfo: "Update your profile details to make your account stand out.",
             labelUsername: "Username",
@@ -3972,6 +3986,9 @@ export const en = {
                 approveFailed: "Failed to approve",
                 rejectFailed: "Failed to reject",
                 noteRequired: "Admin note is required",
+                bankListLoadFailed:
+                    "Bank names could not be loaded. The requests below are unaffected.",
+                bankNameUnavailable: "Bank name unavailable",
                 unknownBank: "Unknown Bank",
                 status: {
                     pending: "Pending",

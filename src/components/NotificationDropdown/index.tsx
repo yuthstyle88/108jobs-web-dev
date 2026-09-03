@@ -220,7 +220,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({className = 
                             <p className="text-xs">{t("notifications.loading")}</p>
                         </div>
                     ) : loadFailed && notifications.length === 0 ? (
-                        <div className="py-12 px-6 flex flex-col items-center justify-center text-center">
+                        /* `data-testid` ไม่ใช่ของประดับ: เทสต์ของ #140 ยืนยันว่าแถบนี้
+                           หายไปในกรณีกล่องว่างจริง ถ้าไม่มี attribute นี้ assertion นั้น
+                           จะผ่านเสมอไม่ว่าจะเรนเดอร์อะไรออกมา (#144) */
+                        <div
+                            data-testid="notification-load-error"
+                            className="py-12 px-6 flex flex-col items-center justify-center text-center"
+                        >
                             <div className="w-12 h-12 mb-3 rounded-full bg-rose-50 flex items-center justify-center text-rose-500">
                                 <AlertCircle className="w-6 h-6" />
                             </div>

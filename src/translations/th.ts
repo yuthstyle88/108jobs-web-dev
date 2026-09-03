@@ -943,6 +943,14 @@ export const th = {
             loadFailed: "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง",
             resendFailed: "ส่งอีเมลอีกครั้งไม่สำเร็จ",
             limitSendEmail: "กรุณารอสักครู่ก่อนลองอีกครั้ง",
+            loadJobPostFailed: "โหลดประกาศงานไม่สำเร็จ",
+            loadJobPostFailedDetail: "เกิดข้อผิดพลาดขณะโหลดรายละเอียดงาน กรุณาลองใหม่อีกครั้ง",
+            loadJobsFailed: "โหลดรายการงานไม่สำเร็จ",
+            loadJobsFailedDetail: "เกิดข้อผิดพลาดขณะเชื่อมต่อกับเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง",
+            loadChatRoomFailed: "โหลดห้องแชทไม่สำเร็จ",
+            loadChatRoomFailedDetail: "เกิดข้อผิดพลาดขณะเชื่อมต่อกับห้องแชท กรุณาลองใหม่อีกครั้ง",
+            loadProposalsFailed: "โหลดข้อเสนอไม่สำเร็จ",
+            loadBanksFailed: "โหลดรายชื่อธนาคารไม่สำเร็จ",
             emailNotExist: "อีเมลไม่ถูกต้อง, กรุณาตรวจสอบและลองอีกครั้ง",
             invalidPassword: "รหัสผ่านไม่ถูกต้อง",
             invalidOldPassword: "รหัสผ่านเก่าไม่ถูกต้อง",
@@ -1929,6 +1937,10 @@ export const th = {
             Rejected: "ถูกปฏิเสธ",
             RequestID: "รหัสคำขอ",
             Bank: "ธนาคาร",
+            bankListLoadFailed:
+                "โหลดรายชื่อธนาคารไม่สำเร็จ รายการถอนเงินด้านล่างยังถูกต้องครบถ้วน",
+            bankNameUnavailable: "โหลดชื่อธนาคารไม่สำเร็จ",
+            unknownBank: "ไม่ทราบธนาคาร",
             bankVerificationNotice: {
                 title: "ต้องยืนยันตัวตน",
                 description: "เฉพาะบัญชีธนาคารที่ยืนยันแล้วเท่านั้นที่สามารถรับเงินได้ กรุณารอการตรวจสอบหรือเพิ่มบัญชีใหม่",
@@ -2235,6 +2247,8 @@ export const th = {
             subtitleIndividualHiring: "สำหรับออกเอกสาร การจ้างแบบบุคคลธรรมดา",
         },
         profileInfo: {
+            accountNumberHelperVN: "ตัวเลขหรือตัวอักษร 9-15 หลัก",
+            accountNumberHelperTH: "ตัวเลข 10 หลักเท่านั้น",
             sectionAccountInfo: "ข้อมูลบัญชี",
             subtitleAccountInfo: "อัปเดตข้อมูลโปรไฟล์ของคุณเพื่อทำให้บัญชีของคุณโดดเด่น",
             labelUsername: "ชื่อผู้ใช้",
@@ -3891,6 +3905,9 @@ export const th = {
                 approveFailed: "อนุมัติล้มเหลว",
                 rejectFailed: "ปฏิเสธล้มเหลว",
                 noteRequired: "ต้องระบุหมายเหตุแอดมิน",
+                bankListLoadFailed:
+                    "โหลดรายชื่อธนาคารไม่สำเร็จ รายการคำขอด้านล่างยังถูกต้องครบถ้วน",
+                bankNameUnavailable: "โหลดชื่อธนาคารไม่สำเร็จ",
                 unknownBank: "ไม่ทราบธนาคาร",
                 status: {
                     pending: "รอดำเนินการ",

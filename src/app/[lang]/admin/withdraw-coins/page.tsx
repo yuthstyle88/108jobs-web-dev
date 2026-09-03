@@ -33,8 +33,16 @@ const WithdrawCoins = () => {
     const [adminNote, setAdminNote] = useState("");
     const [showFilters, setShowFilters] = useState(false);
 
-    const {data: bankListRes} = useHttpGet("listBanks");
+    const {
+        data: bankListRes,
+        state: bankListState,
+        isMutating: isBankListRetrying,
+        execute: refetchBankList,
+    } = useHttpGet("listBanks");
     const bankList = bankListRes?.banks ?? [];
+    // เช่นเดียวกับ #137 ฝั่งผู้ใช้: `listBanks` ล้มเงียบ ⇒ ลิสต์ว่าง ⇒ ทุกใบขึ้นว่าไม่รู้จักธนาคาร
+    // ซึ่งแอดมินใช้เป็นข้อมูลตัดสินใจอนุมัติ/ปฏิเสธการโอนเงินจริง (#139)
+    const isBankListFailed = isFailed(bankListState);
 
     const debouncedFilters = useDebounce(filters, 500);
 
@@ -103,7 +111,14 @@ const WithdrawCoins = () => {
         return config[status] ?? { color: "bg-gray-500/15 text-gray-600", icon: Minus, label: status };
     };
 
-    const getBankName = (bankId: number) => bankList.find((b) => b.id === bankId)?.name ?? t("admin.withdraw.unknownBank");
+    const getBankName = (bankId: number) => {
+        const name = bankList.find((b) => b.id === bankId)?.name;
+        if (name) return name;
+        // แยก "โหลดรายชื่อไม่สำเร็จ" ออกจาก "ไม่มี id นี้ในรายชื่อ" — คนละข้อเท็จจริงกัน
+        return isBankListFailed
+            ? t("admin.withdraw.bankNameUnavailable")
+            : t("admin.withdraw.unknownBank");
+    };
 
     const handleFilterChange = (key: keyof ListWithdrawRequestQuery, value: any) => {
         setFilters((prev: ListWithdrawRequestQuery) => ({...prev, [key]: value}));
@@ -282,6 +297,25 @@ const WithdrawCoins = () => {
                             </Card>
                         ))}
                     </div>
+
+                    {isBankListFailed && (
+                        <div
+                            role="alert"
+                            data-testid="bank-list-error"
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4"
+                        >
+                            <p className="text-sm text-red-700">{t("admin.withdraw.bankListLoadFailed")}</p>
+                            <Button
+                                type="button"
+                                onClick={() => refetchBankList()}
+                                disabled={isBankListRetrying}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                {isBankListRetrying && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}
+                                {t("global.buttonRetry")}
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Main Content: List + Side Panel */}
                     <div className="grid gap-6 lg:grid-cols-3">

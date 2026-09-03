@@ -955,6 +955,14 @@ export const vi = {
             loadFailed: "Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.",
             resendFailed: "Gửi lại email không thành công",
             limitSendEmail: "Vui lòng đợi một lát trước khi thử lại",
+            loadJobPostFailed: "Không thể tải tin tuyển dụng",
+            loadJobPostFailedDetail: "Đã xảy ra lỗi khi tải chi tiết công việc. Vui lòng thử lại.",
+            loadJobsFailed: "Không thể tải danh sách công việc",
+            loadJobsFailedDetail: "Đã xảy ra lỗi khi kết nối với máy chủ. Vui lòng thử lại.",
+            loadChatRoomFailed: "Không thể tải phòng trò chuyện",
+            loadChatRoomFailedDetail: "Đã xảy ra lỗi khi kết nối với phòng trò chuyện. Vui lòng thử lại.",
+            loadProposalsFailed: "Không thể tải đề xuất",
+            loadBanksFailed: "Không thể tải danh sách ngân hàng",
             emailNotExist: "Email không hợp lệ, vui lòng kiểm tra và thử lại",
             invalidPassword: "Mật khẩu không đúng",
             invalidOldPassword: "Mật khẩu cũ không đúng",
@@ -1981,6 +1989,10 @@ export const vi = {
             Rejected: "Bị từ chối",
             RequestID: "Mã yêu cầu",
             Bank: "Ngân hàng",
+            bankListLoadFailed:
+                "Không tải được danh sách ngân hàng. Các yêu cầu rút tiền bên dưới vẫn đầy đủ và chính xác.",
+            bankNameUnavailable: "Không tải được tên ngân hàng",
+            unknownBank: "Ngân hàng không xác định",
             bankVerificationNotice: {
                 title: "Cần xác minh tài khoản",
                 description: "Chỉ tài khoản ngân hàng đã xác minh mới được nhận tiền rút. Vui lòng chờ duyệt hoặc thêm tài khoản mới.",
@@ -2287,6 +2299,8 @@ export const vi = {
             subtitleIndividualHiring: "Dùng để phát hành tài liệu tuyển dụng cá nhân",
         },
         profileInfo: {
+            accountNumberHelperVN: "9-15 chữ số hoặc chữ cái",
+            accountNumberHelperTH: "Chính xác 10 chữ số",
             sectionAccountInfo: "Thông tin tài khoản",
             subtitleAccountInfo: "Cập nhật chi tiết hồ sơ của bạn để làm nổi bật tài khoản.",
             labelUsername: "Tên người dùng",
@@ -4001,6 +4015,9 @@ export const vi = {
                 approveFailed: "Phê duyệt thất bại",
                 rejectFailed: "Từ chối thất bại",
                 noteRequired: "Cần nhập ghi chú của admin",
+                bankListLoadFailed:
+                    "Không tải được danh sách ngân hàng. Các yêu cầu bên dưới vẫn đầy đủ và chính xác.",
+                bankNameUnavailable: "Không tải được tên ngân hàng",
                 unknownBank: "Không rõ ngân hàng",
                 status: {
                     pending: "Đang chờ",

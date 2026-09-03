@@ -91,10 +91,10 @@ const MyJobs = () => {
                                             <AlertCircle className="w-6 h-6" />
                                         </div>
                                         <p className="text-xl font-bold text-red-600 mb-2">
-                                            {t("error.serverError", "Failed to load jobs")}
+                                            {t("error.loadJobsFailed")}
                                         </p>
                                         <p className="text-sm text-gray-500 mb-6">
-                                            {t("error.loadFailed", "An error occurred while connecting to the server. Please try again.")}
+                                            {t("error.loadJobsFailedDetail")}
                                         </p>
                                         <button
                                             type="button"
@@ -102,7 +102,7 @@ const MyJobs = () => {
                                             className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
                                         >
                                             <RefreshCw className="w-4 h-4" />
-                                            {t("global.buttonRetry", "Retry")}
+                                            {t("global.buttonRetry")}
                                         </button>
                                     </div>
                                 </div>
@@ -226,10 +226,10 @@ const MyJobs = () => {
                                             <AlertCircle className="w-6 h-6" />
                                         </div>
                                         <p className="text-xl font-bold text-red-600 mb-2">
-                                            {t("error.serverError", "Failed to load jobs")}
+                                            {t("error.loadJobsFailed")}
                                         </p>
                                         <p className="text-sm text-gray-500 mb-6">
-                                            {t("error.loadFailed", "An error occurred while connecting to the server. Please try again.")}
+                                            {t("error.loadJobsFailedDetail")}
                                         </p>
                                         <button
                                             type="button"
@@ -237,7 +237,7 @@ const MyJobs = () => {
                                             className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
                                         >
                                             <RefreshCw className="w-4 h-4" />
-                                            {t("global.buttonRetry", "Retry")}
+                                            {t("global.buttonRetry")}
                                         </button>
                                     </div>
                                 </div>
