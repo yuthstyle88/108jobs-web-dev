@@ -1756,6 +1756,7 @@ export const en = {
             loadErrorRetry: "Try again",
             loadErrorRetrying: "Trying again...",
             markAllRead: "Mark all as read",
+            unreadCountStale: "Last checked a while ago — this number may be out of date.",
             noReasonGiven: "No reason was given.",
             riderApprovedTitle: "Your rider application was approved",
             riderApprovedBody: "You can start accepting rides.",

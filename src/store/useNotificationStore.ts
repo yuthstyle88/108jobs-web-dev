@@ -18,6 +18,18 @@ interface NotificationStore {
      * notifications yet" (#140).
      */
     loadFailed: boolean;
+    /**
+     * The last unread-count refresh came back FAILED, so `unreadCount` is
+     * whatever the previous successful poll said.
+     *
+     * The count is deliberately NOT reset on failure: zeroing it would hide
+     * rows that really are unread, and this poll runs every 45 seconds, so one
+     * flake would blank a badge that was telling the truth. Freezing the number
+     * is the least wrong answer -- but a frozen number that looks live is still
+     * a claim the app cannot support, so the badge renders it differently and
+     * says so (#142).
+     */
+    unreadCountStale: boolean;
     fetchNotifications: () => Promise<void>;
     fetchUnreadCount: () => Promise<void>;
     markAsRead: (id: number) => Promise<void>;
@@ -30,6 +42,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     loading: false,
     hasFetched: false,
     loadFailed: false,
+    unreadCountStale: false,
 
     fetchNotifications: async () => {
         set({loading: true});
@@ -37,12 +50,16 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
         if (res.state === REQUEST_STATE.SUCCESS) {
             const list = res.data.notifications || [];
             const unread = list.filter((n) => !n.readAt).length;
+            // The list is authoritative for the count -- it was just counted
+            // from the rows themselves -- so a successful list clears the
+            // staleness the count poll may have set.
             set({
                 notifications: list,
                 unreadCount: unread,
                 loading: false,
                 hasFetched: true,
                 loadFailed: false,
+                unreadCountStale: false,
             });
         } else {
             // Deliberately keeps whatever `notifications` already held: a
@@ -56,7 +73,12 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     fetchUnreadCount: async () => {
         const res = await NotificationService.unreadCount();
         if (res.state === REQUEST_STATE.SUCCESS) {
-            set({unreadCount: Number(res.data.count) || 0});
+            set({unreadCount: Number(res.data.count) || 0, unreadCountStale: false});
+        } else {
+            // Keep the number, flag it. `NotificationService` never throws, so
+            // without this the failure was simply dropped and a badge could sit
+            // for hours asserting a count nobody had confirmed since (#142).
+            set({unreadCountStale: true});
         }
     },
 

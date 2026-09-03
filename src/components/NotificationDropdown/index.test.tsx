@@ -55,6 +55,55 @@ describe("NotificationDropdown", () => {
         (window as any).location = originalLocation;
     });
 
+    /**
+     * #142: the count poll runs every 45 seconds and its failures used to be
+     * dropped, so the badge could assert a number nobody had confirmed for
+     * hours. The number is kept on purpose — zeroing it would hide unread rows
+     * — so the badge has to say that it is old instead.
+     */
+    it("marks the badge stale instead of dropping or zeroing the number", () => {
+        useNotificationStore.setState({
+            notifications: [],
+            unreadCount: 4,
+            unreadCountStale: true,
+            loading: false,
+            hasFetched: true,
+        });
+
+        act(() => {
+            root.render(createElement(NotificationDropdown));
+        });
+
+        const badge = document.body.querySelector("[data-testid='unread-badge']") as HTMLElement;
+        expect(badge).not.toBeNull();
+        // The last confirmed number is still shown.
+        expect(badge.textContent).toBe("4");
+        expect(badge.getAttribute("data-stale")).toBe("true");
+        // And it stops wearing the live colour.
+        expect(badge.className).toContain("bg-slate-400");
+        expect(badge.className).not.toContain("bg-red-500");
+        expect(badge.getAttribute("title")).toBe("notifications.unreadCountStale");
+    });
+
+    it("keeps the live badge when the count is fresh", () => {
+        useNotificationStore.setState({
+            notifications: [],
+            unreadCount: 4,
+            unreadCountStale: false,
+            loading: false,
+            hasFetched: true,
+        });
+
+        act(() => {
+            root.render(createElement(NotificationDropdown));
+        });
+
+        const badge = document.body.querySelector("[data-testid='unread-badge']") as HTMLElement;
+        expect(badge.className).toContain("bg-red-500");
+        expect(badge.getAttribute("data-stale")).toBeNull();
+        expect(badge.getAttribute("title")).toBeNull();
+    });
+
     it("navigates to ride app URL with locale prefix on rider application notification click", async () => {
         const markAsReadMock = vi.fn().mockResolvedValue(undefined);
         useNotificationStore.setState({
