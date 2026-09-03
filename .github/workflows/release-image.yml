@@ -112,6 +112,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # The Dockerfile installs @108-plaza/jh-client from the org's private
+          # registry, so the build needs a token. A SECRET, not a build-arg:
+          # build-args are baked into the image history. GH_PAT_DEPLOY is the
+          # same token this workflow already uses for GHCR; a workflow
+          # GITHUB_TOKEN gets 403 from the npm registry.
+          secrets: |
+            gh_token=${{ secrets.GH_PAT_DEPLOY }}
           build-args: |
             APP_BUILD=${{ steps.identity.outputs.build }}
             APP_BUILT_AT=${{ steps.identity.outputs.built_at }}

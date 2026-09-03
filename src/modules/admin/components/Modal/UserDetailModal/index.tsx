@@ -1,7 +1,7 @@
 import {useEffect} from "react";
 import {User, Mail, Calendar, FileText, X} from "lucide-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/Avatar";
-import {LocalUserView} from "108heros-client";
+import {LocalUserView} from "@108-plaza/jh-client";
 
 interface UserDetailModalProps {
     isOpen: boolean;

@@ -1,4 +1,4 @@
-import {LocalUser, Person} from "108heros-client";
+import {LocalUser, Person} from "@108-plaza/jh-client";
 
 /**
  * Utility functions for working with ProfileData

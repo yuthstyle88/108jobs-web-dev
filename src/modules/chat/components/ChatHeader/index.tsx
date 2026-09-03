@@ -2,7 +2,7 @@
 
 import React from "react";
 import AvatarBadge from "@/components/AvatarBadge";
-import { LocalUserId } from "108heros-client";
+import { LocalUserId } from "@108-plaza/jh-client";
 import { ArrowLeft, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { usePeerOnline } from "@/modules/chat/store/presenceStore";

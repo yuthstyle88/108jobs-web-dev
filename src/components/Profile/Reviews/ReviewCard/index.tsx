@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import Image from "next/image";
-import { UserReviewView } from "108heros-client";
+import { UserReviewView } from "@108-plaza/jh-client";
 import {Stars} from "@/components/RatingDisplay";
 
 // Define interface for props

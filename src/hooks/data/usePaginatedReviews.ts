@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
 import { useHttpGet } from "@/hooks/api/http/useHttpGet";
 import { REQUEST_STATE } from "@/services/HttpService";
-import { PersonId } from "108heros-client";
+import { PersonId } from "@108-plaza/jh-client";
 import { useCursorPagination } from "@/hooks/data/useCursorPagination";
 
 interface UsePaginatedReviewsProps {

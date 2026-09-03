@@ -1,4 +1,4 @@
-import type {ChatMessage} from '108heros-client';
+import type {ChatMessage} from '@108-plaza/jh-client';
 
 /**
  * ChatSenderAdapter

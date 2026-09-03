@@ -4,7 +4,7 @@ import { faCoins, faUniversity, faPlus, faShieldAlt, faShield } from "@fortaweso
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 import { Dispatch, SetStateAction, useState } from "react";
-import { BankAccountId, BankAccountView } from "108heros-client";
+import { BankAccountId, BankAccountView } from "@108-plaza/jh-client";
 import { useRouter } from "next/navigation";
 
 type Props = {

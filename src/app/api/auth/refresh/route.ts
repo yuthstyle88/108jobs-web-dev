@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Api108Heros } from "108heros-client";
+import { Api108Heros } from "@108-plaza/jh-client";
 import { authCookieName, REFRESH_TOKEN_COOKIE } from "@/utils/config";
 import { getApiBase, isHttps } from "@/utils/env";
 

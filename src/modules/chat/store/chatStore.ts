@@ -1,6 +1,6 @@
 // src/modules/chat/store/chatStore.ts
 import {create} from 'zustand'
-import {ChatMessage, ChatStatus} from '108heros-client'
+import {ChatMessage, ChatStatus} from '@108-plaza/jh-client'
 import {normRoom} from "@/utils/helpers";
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";

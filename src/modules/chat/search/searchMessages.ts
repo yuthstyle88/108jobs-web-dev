@@ -1,4 +1,4 @@
-import type {ChatMessage} from "108heros-client";
+import type {ChatMessage} from "@108-plaza/jh-client";
 
 import {parseAttachment} from "@/modules/chat/attachments";
 import {compareNewestFirst} from "@/modules/chat/utils/ordering";

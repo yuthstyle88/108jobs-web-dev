@@ -1,5 +1,5 @@
 import {create} from "zustand";
-import type {BankAccountId, BankAccountView} from "108heros-client";
+import type {BankAccountId, BankAccountView} from "@108-plaza/jh-client";
 
 export type BankAccountsStore = {
     bankAccounts: BankAccountView[] | null;

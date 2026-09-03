@@ -1,4 +1,4 @@
-import type {WorkflowStatus} from "108heros-client";
+import type {WorkflowStatus} from "@108-plaza/jh-client";
 import {TransitionMap} from "@/modules/chat/store/stateMachineStore";
 
 export const ORDER = [

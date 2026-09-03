@@ -1,6 +1,6 @@
 import {clearAuthCookie, getAuthJWTCookie, isBrowser, setAuthJWTCookie, setLangCookie} from "@/utils/browser";
 import {jwtDecode} from "jwt-decode";
-import {MyUserInfo} from "108heros-client";
+import {MyUserInfo} from "@108-plaza/jh-client";
 import {HttpService} from "./index";
 import {isSuccess} from "./HttpService";
 import {toast} from "sonner";

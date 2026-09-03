@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import {useTranslation} from "react-i18next";
 import {BadgeCheck} from "lucide-react";
-import {Person, PersonId} from "108heros-client";
+import {Person, PersonId} from "@108-plaza/jh-client";
 import {AssetIcon} from "@/constants/icons";
 import {ProfileImage} from "@/constants/images";
 import EditButton from "@/components/Profile/EditButton";

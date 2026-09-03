@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ListCategoriesResponse } from "108heros-client";
+import type { ListCategoriesResponse } from "@108-plaza/jh-client";
 
 export type CategoriesStore = {
   categories: ListCategoriesResponse | null;

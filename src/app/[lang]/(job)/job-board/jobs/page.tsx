@@ -11,7 +11,7 @@ import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useTranslation} from "react-i18next";
 import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {getJobTypeLabel} from "@/utils/helpers";
-import {JobType} from "108heros-client";
+import {JobType} from "@108-plaza/jh-client";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {isFailed} from "@/services/HttpService";

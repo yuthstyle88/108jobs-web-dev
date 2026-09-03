@@ -11,7 +11,7 @@ import {
     sendDeliveryAck,
 } from "@/modules/chat/events/sendEvents";
 import {useTypingIndicator} from '@/modules/chat/hooks/useTypingIndicator';
-import {ChatRoomView, LocalUser, LocalUserId} from "108heros-client";
+import {ChatRoomView, LocalUser, LocalUserId} from "@108-plaza/jh-client";
 import {useChatStore} from "@/modules/chat/store/chatStore"
 import {makeReadAckEmitter} from "@/modules/chat/utils/socket-emitter";
 import {emitWsReconnected} from "@/modules/chat/events";

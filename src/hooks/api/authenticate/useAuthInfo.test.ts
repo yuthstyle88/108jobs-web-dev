@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import type { LocalUser, LocalUserView, MyUserInfo, Person } from "108heros-client";
+import type { LocalUser, LocalUserView, MyUserInfo, Person } from "@108-plaza/jh-client";
 import { UserService, JOBS_ADMIN_ROLE, type Claims } from "@/services/UserService";
 
 interface MockStoreState {

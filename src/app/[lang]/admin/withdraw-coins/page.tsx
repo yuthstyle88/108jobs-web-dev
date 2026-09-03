@@ -13,7 +13,7 @@ import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useTranslation} from "react-i18next";
-import type {ListWithdrawRequestQuery, WithdrawRequestView, WithdrawStatus} from "108heros-client";
+import type {ListWithdrawRequestQuery, WithdrawRequestView, WithdrawStatus} from "@108-plaza/jh-client";
 import {Skeleton} from "@/components/ui/Skeleton";
 import {cn} from "@/lib/utils";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";

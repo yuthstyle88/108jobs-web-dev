@@ -1,4 +1,4 @@
-import {ChatMessage, LocalUserId} from "108heros-client";
+import {ChatMessage, LocalUserId} from "@108-plaza/jh-client";
 import { WS_EVENT, type WsEventValue } from "@/modules/chat/protocol/wireEvents";
 
 export type WsMessageSender = (data: MessagePayload) => void | Promise<void>;

@@ -1,6 +1,6 @@
 "use client";
 
-import type {ChatMessage} from "108heros-client";
+import type {ChatMessage} from "@108-plaza/jh-client";
 import React from "react";
 import {useTranslation} from "react-i18next";
 import {LoaderCircle} from "lucide-react";

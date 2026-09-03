@@ -2,7 +2,7 @@
 
 import React, {useState, useMemo, useEffect} from "react";
 import {buildCategoriesTree} from "@/utils/helpers";
-import {CategoryNodeView, Tag} from "108heros-client";
+import {CategoryNodeView, Tag} from "@108-plaza/jh-client";
 import {toast} from "sonner";
 import {useTranslation} from "react-i18next";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";

@@ -1,7 +1,7 @@
 "use client";
 import {useState, useCallback} from "react";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
-import {ListTopUpRequestQuery, TopUpRequestView} from "108heros-client";
+import {ListTopUpRequestQuery, TopUpRequestView} from "@108-plaza/jh-client";
 import {format} from "date-fns";
 import {toast} from "sonner";
 import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
@@ -14,7 +14,7 @@ import {
 import {TransferConfirmModal} from "@/modules/admin/components/Modal/TransferConfirmModal";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
-import {AdminTopUpWallet} from "108heros-client";
+import {AdminTopUpWallet} from "@108-plaza/jh-client";
 import {REQUEST_STATE, isFailed} from "@/services/HttpService";
 import {TopupGuide} from "@/modules/admin/components/TopupGuide";
 import {useTranslation} from "react-i18next";

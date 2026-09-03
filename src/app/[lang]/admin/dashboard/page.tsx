@@ -8,7 +8,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useSiteStore} from "@/store/useSiteStore";
 import {format} from "date-fns";
 import {useTranslation} from "react-i18next";
-import {RegistrationMode} from "108heros-client";
+import {RegistrationMode} from "@108-plaza/jh-client";
 import {callHttp, isSuccess} from "@/services/HttpService";
 
 const DashboardPage = () => {

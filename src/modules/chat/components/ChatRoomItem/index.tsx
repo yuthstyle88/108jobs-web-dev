@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import type {LocalUser} from "108heros-client";
+import type {LocalUser} from "@108-plaza/jh-client";
 import Link from "next/link";
 import AvatarBadge from "@/components/AvatarBadge";
 import {usePeerOnline} from "@/modules/chat/store/presenceStore";

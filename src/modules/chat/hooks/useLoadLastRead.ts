@@ -1,6 +1,6 @@
 import {useEffect} from "react";
 import {isSuccess} from "@/services/HttpService";
-import {ChatRoomId, LocalUserId} from "108heros-client";
+import {ChatRoomId, LocalUserId} from "@108-plaza/jh-client";
 import {useReadLastIdStore} from "@/modules/chat/store/readStore";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 

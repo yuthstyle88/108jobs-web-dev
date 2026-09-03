@@ -1,5 +1,5 @@
 import {authCookieName} from "@/utils/config";
-import {GetSiteResponse, MyUserInfo} from "108heros-client";
+import {GetSiteResponse, MyUserInfo} from "@108-plaza/jh-client";
 import {isHttps} from "@/utils/env";
 import {LANGUAGE_COOKIE} from "@/constants/language";
 import {invalidateClientLanguageCache} from "@/utils/getClientCurrentLanguage";
