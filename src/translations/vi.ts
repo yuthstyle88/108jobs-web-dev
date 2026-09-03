@@ -1768,6 +1768,7 @@ export const vi = {
             loadErrorRetry: "Thử lại",
             loadErrorRetrying: "Đang thử lại...",
             markAllRead: "Đánh dấu tất cả đã đọc",
+            unreadCountStale: "Số này có thể chưa được cập nhật.",
             noReasonGiven: "Không có lý do được đưa ra.",
             riderApprovedTitle: "Đơn đăng ký tài xế của bạn đã được duyệt",
             riderApprovedBody: "Bạn có thể bắt đầu nhận chuyến.",

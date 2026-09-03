@@ -1714,6 +1714,7 @@ export const th = {
             loadErrorRetry: "ลองใหม่",
             loadErrorRetrying: "กำลังลองใหม่...",
             markAllRead: "อ่านทั้งหมด",
+            unreadCountStale: "ตรวจครั้งล่าสุดเมื่อสักครู่ ตัวเลขนี้อาจไม่เป็นปัจจุบัน",
             noReasonGiven: "ไม่ได้ระบุเหตุผล",
             riderApprovedTitle: "ใบสมัครไรเดอร์ของคุณได้รับการอนุมัติแล้ว",
             riderApprovedBody: "คุณสามารถเริ่มรับงานได้แล้ว",

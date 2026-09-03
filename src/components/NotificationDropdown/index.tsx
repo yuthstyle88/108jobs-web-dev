@@ -50,6 +50,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({className = 
         loading,
         hasFetched,
         loadFailed,
+        unreadCountStale,
         fetchNotifications,
         fetchUnreadCount,
         markAsRead,
@@ -181,7 +182,25 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({className = 
             >
                 <Bell className="w-[22px] h-[22px] text-white" />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-0.5 min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-[18px] text-white bg-red-500 rounded-full flex items-center justify-center shadow-sm">
+                    // Slate rather than red when the count could not be
+                    // refreshed. The number is the last one the server
+                    // confirmed and is kept on purpose -- zeroing it would hide
+                    // real unread rows -- but a stale number wearing the live
+                    // colour is a claim the app cannot support, so it stops
+                    // looking urgent and says why on hover (#142).
+                    <span
+                        data-testid="unread-badge"
+                        data-stale={unreadCountStale ? "true" : undefined}
+                        title={unreadCountStale ? t("notifications.unreadCountStale") : undefined}
+                        aria-label={
+                            unreadCountStale
+                                ? t("notifications.unreadCountStale")
+                                : undefined
+                        }
+                        className={`absolute -top-1 -right-0.5 min-w-[18px] h-[18px] px-1 text-[11px] font-bold leading-[18px] text-white rounded-full flex items-center justify-center shadow-sm ${
+                            unreadCountStale ? "bg-slate-400" : "bg-red-500"
+                        }`}
+                    >
                         {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                 )}
