@@ -82,14 +82,14 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
             {!isLoading && isFetchFailed && (
                 <div className="text-center py-12 bg-red-50 border border-red-100 rounded-xl">
                     <p className="text-lg font-medium text-red-600 mb-3">
-                        {t("error.serverError", "Failed to load proposals")}
+                        {t("error.loadProposalsFailed")}
                     </p>
                     <button
                         type="button"
                         onClick={() => refetch()}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors"
                     >
-                        {t("global.buttonRetry", "Retry")}
+                        {t("global.buttonRetry")}
                     </button>
                 </div>
             )}

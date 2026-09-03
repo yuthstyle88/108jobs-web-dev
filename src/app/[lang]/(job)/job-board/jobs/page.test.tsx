@@ -24,7 +24,7 @@ vi.mock("next/image", () => ({
 
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (key: string, defaultValue?: string) => defaultValue || key,
+        t: (key: string) => key,
         i18n: {language: "en"},
     }),
 }));
@@ -66,8 +66,8 @@ describe("MyJobs Page", () => {
         });
 
         expect(container.textContent).not.toContain("Your posted jobs will appear here");
-        expect(container.textContent).toContain("Failed to load jobs");
-        expect(container.textContent).toContain("Retry");
+        expect(container.textContent).toContain("error.loadJobsFailed");
+        expect(container.textContent).toContain("global.buttonRetry");
 
         const retryBtn = container.querySelector("button");
         expect(retryBtn).not.toBeNull();
@@ -90,6 +90,6 @@ describe("MyJobs Page", () => {
         });
 
         expect(container.textContent).toContain("profileJob.noJob");
-        expect(container.textContent).not.toContain("Failed to load jobs");
+        expect(container.textContent).not.toContain("error.loadJobsFailed");
     });
 });

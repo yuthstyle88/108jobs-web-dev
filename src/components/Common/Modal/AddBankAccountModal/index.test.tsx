@@ -7,7 +7,7 @@ import BankAccountModal from "@/components/Common/Modal/AddBankAccountModal";
 
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (key: string, defaultValue?: string) => defaultValue || key,
+        t: (key: string) => key,
         i18n: {language: "en"},
     }),
 }));
@@ -46,11 +46,11 @@ describe("BankAccountModal", () => {
             }));
         });
 
-        expect(document.body.textContent).toContain("Failed to load banks");
-        expect(document.body.textContent).toContain("Retry");
+        expect(document.body.textContent).toContain("error.loadBanksFailed");
+        expect(document.body.textContent).toContain("global.buttonRetry");
 
         const retryButton = Array.from(document.body.querySelectorAll("button")).find(
-            (b) => b.textContent?.includes("Retry")
+            (b) => b.textContent?.includes("global.buttonRetry")
         );
         expect(retryButton).toBeDefined();
         act(() => {

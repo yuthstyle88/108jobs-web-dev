@@ -16,7 +16,7 @@ vi.mock("@/hooks/api/http/useHttpGet", () => ({
 
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (key: string, defaultValue?: string) => defaultValue || key,
+        t: (key: string) => key,
         i18n: {language: "en"},
     }),
 }));
@@ -79,8 +79,8 @@ describe("MessageClient", () => {
         });
 
         expect(container.querySelector("#room-not-found")).toBeNull();
-        expect(container.textContent).toContain("Failed to load chat room");
-        expect(container.textContent).toContain("Retry");
+        expect(container.textContent).toContain("error.loadChatRoomFailed");
+        expect(container.textContent).toContain("global.buttonRetry");
 
         const retryButton = container.querySelector("button");
         expect(retryButton).not.toBeNull();
