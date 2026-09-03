@@ -44,6 +44,14 @@ describe("resolveApiErrorMessage", () => {
         expect(msg).toBe("Something went wrong. (totally_unknown_code)");
     });
 
+    it("does not expose a browser exception name in the generic fallback", () => {
+        const msg = resolveApiErrorMessage(
+            {name: "TypeError", message: "Failed to fetch"}, t,
+            {fallback: "An error occurred. Please try again."},
+        );
+        expect(msg).toBe("An error occurred. Please try again.");
+    });
+
     it("does not duplicate the code if a custom fallback already contains it", () => {
         const msg = resolveApiErrorMessage(
             {error: "rate_limited"}, t, {fallback: "Too many requests (rate_limited), slow down."},

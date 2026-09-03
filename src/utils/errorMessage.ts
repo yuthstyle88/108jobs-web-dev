@@ -5,7 +5,8 @@
 // known code -> mapped message; else a plain 4xx's own server-provided
 // `message` is shown verbatim (it's the difference between "it broke" and
 // something a user or support can act on); else a generic fallback with the
-// raw code appended in parens so it's at least searchable.
+// raw server code appended in parens so it's at least searchable. Browser
+// exception names are implementation details and must never reach customers.
 import {ApiError} from "@/services/HttpService";
 
 export interface ResolveErrorMessageOptions {
@@ -39,7 +40,7 @@ export function resolveApiErrorMessage(
     }
 
     const fallback = options.fallback ?? t("error.serverError");
-    if (code && !fallback.includes(code)) {
+    if (err?.error && code && !fallback.includes(code)) {
         return `${fallback} (${code})`;
     }
     return fallback;
