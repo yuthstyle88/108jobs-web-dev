@@ -63,8 +63,6 @@ const KNOWN_MISSING: ReadonlySet<string> = new Set<string>([
     "profileCoins.transferModal.confirm",
     "profileCoins.transferModal.description",
     "profileCoins.transferModal.title",
-    "profileInfo.accountNumberHelperTH",
-    "profileInfo.accountNumberHelperVN",
     "profileInfo.deleteWorkSample",
     "profileInfo.nextSamples",
     "profileInfo.previousSamples",
