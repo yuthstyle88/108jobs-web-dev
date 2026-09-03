@@ -36,6 +36,10 @@ export const en = {
         contactUs: "Contact us",
     },
     translation: {
+        common: {
+            errorOccurred: "An error occurred. Please try again.",
+            processing: "Processing…",
+        },
         validation: {
             categoryIdPositive: "Category ID must be a positive number",
             jobTitleMinLength: "Job title must be at least 5 characters",
@@ -44,6 +48,7 @@ export const en = {
             budgetRequired: "Budget is required",
             urlInvalid: "URL is invalid",
             tagsMax: "You can select up to 5 tags",
+            deadlineMin: "Deadline must be at least tomorrow",
         },
         profileChat: {
             price: "Budget",
@@ -107,6 +112,7 @@ export const en = {
                 retry: "Try again",
                 hint: "Type to search this conversation.",
                 noResults: "No messages match “{{query}}”.",
+                resultCount: "{{count}} results",
                 resultCount_one: "{{count}} result",
                 resultCount_other: "{{count}} results",
                 results: "Search results",
@@ -169,6 +175,9 @@ export const en = {
             step6Sub: "Employer approved work, money released to freelancer",
             step7: "Cancelled",
             step7Sub: "Quotation/order cancelled before payment",
+            attachFileFirst: "Please attach a file before submitting delivery.",
+            dropFiles: "Drop files",
+            missingBillingId: "Missing billing id. Create/approve a quotation first.",
             validation: {
                 workSteps: "At least one work step is required",
                 deliverables: "At least one deliverable is required",
@@ -180,6 +189,7 @@ export const en = {
                 totalAmount: "Total amount must match the sum of work steps",
                 invalidForm: "Invalid form data",
                 startDateNotPast: "Start date cannot be earlier than today",
+                workStepSeq: "Sequence must be at least 1",
             },
             quotationTitle: "Create Quotation",
             quotationDesc: "Fill in the details to send a quotation to the employer",
@@ -1008,6 +1018,7 @@ export const en = {
             bankInfo: "Bank Information",
             businessServiceDescription: `Freelancer sourcing service for business (${getAppName()} for Business)`,
             businessServiceTitle: `Freelancer sourcing service for business (${getAppName()} for Business)`,
+            buttonBack: "Back",
             buttonCancel: "Cancel",
             buttonChange: "Change",
             buttonConfirm: "Confirm",
@@ -1019,6 +1030,10 @@ export const en = {
             buttonSave: "Save",
             buttonSubmit: "Submit",
             buttonVerify: "Verify",
+            delete: "Delete",
+            serverError: "Server error occurred. Please try again.",
+            submissionFailed: "Submission failed. Please try again.",
+            view: "View",
             chatToHireButton: `Add LINE @${getAppName()}`,
             chatToHireDescription:
                 "Chat to Hire or assistant via LINE – just share your needs, and our admin will find a freelancer for you",
@@ -1752,6 +1767,10 @@ export const en = {
             riderResubmissionReceivedBody: "An admin will review it shortly.",
         },
         profile: {
+            addWorkSamples: "Add work samples",
+            editWorkSamples: "Edit work samples",
+            loading: "Loading…",
+            update: "Profile updated successfully!",
             verified: "Verified",
             notVerified: "Not verified",
             editProfile: "Edit profile",
@@ -2313,6 +2332,10 @@ export const en = {
         profileInfo: {
             accountNumberHelperVN: "9-15 digits or letters",
             accountNumberHelperTH: "Exactly 10 digits",
+            deleteWorkSample: "Delete work sample",
+            nextSamples: "Next work samples",
+            previousSamples: "Previous work samples",
+            updateAvailableFail: "Failed to update job availability status",
             sectionAccountInfo: "Account Information",
             subtitleAccountInfo: "Update your profile details to make your account stand out.",
             labelUsername: "Username",
@@ -2582,6 +2605,7 @@ export const en = {
             startSellingButton: "Start Selling",
         },
         sellerBankAccount: {
+            maxAccountsLimit: "You can link up to {{max}} bank accounts.",
             bankAccountNumberLabel: "Bank Account Number",
             bankAccountName: "Account Holder Name",
             bankAccountNumberPlaceholder: "Enter account number",
@@ -3823,6 +3847,7 @@ export const en = {
                 edit: "Edit category",
                 delete: "Delete category",
                 rootLabel: "— Root Category —",
+                subcategoryCount: "{{count}} subcategories",
                 subcategoryCount_one: "{{count}} subcategory",
                 subcategoryCount_other: "{{count}} subcategories",
                 noBanner: "No banner image",

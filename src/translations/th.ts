@@ -36,6 +36,10 @@ export const th = {
         contactUs: "ปรึกษาเรา",
     },
     translation: {
+        common: {
+            errorOccurred: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+            processing: "กำลังดำเนินการ…",
+        },
         validation: {
             categoryIdPositive: "Category ID ต้องเป็นเลขบวก",
             jobTitleMinLength: "Job title ต้องมีอย่างน้อย 5 ตัวอักษร",
@@ -44,6 +48,7 @@ export const th = {
             budgetRequired: "จำเป็นต้องระบุงบประมาณ",
             urlInvalid: "Url ไม่ถูกต้อง",
             tagsMax: "เลือกได้สูงสุด 5 แท็ก",
+            deadlineMin: "กำหนดส่งงานต้องเป็นวันพรุ่งนี้เป็นอย่างน้อย",
         },
         profileChat: {
             price: "งบประมาณ",
@@ -107,6 +112,7 @@ export const th = {
                 retry: "ลองอีกครั้ง",
                 hint: "พิมพ์เพื่อค้นหาในการสนทนานี้",
                 noResults: "ไม่พบข้อความที่ตรงกับ “{{query}}”",
+                resultCount: "{{count}} รายการ",
                 resultCount_other: "{{count}} รายการ",
                 results: "ผลการค้นหา",
             },
@@ -138,6 +144,7 @@ export const th = {
             confirmCancelJobTitle: "ยกเลิกงานนี้หรือไม่?",
             confirmCancelJobMessage: "การกระทำนี้จะยกเลิกขั้นตอนงานปัจจุบัน และไม่สามารถย้อนกลับได้",
             cancelledJobMsg: "งานนี้ถูกยกเลิกแล้ว",
+            cancelledJobHint: "การดำเนินการทั้งหมดที่กำลังดำเนินอยู่จะหยุดลง คุณสามารถเริ่มการสนทนาใหม่เพื่อพูดคุยอีกครั้ง",
             reviewDeliveryTitle: "ตรวจสอบงานที่ส่ง",
             reviewDeliveryDesc: "ฟรีแลนซ์ได้ส่งงานแล้ว คุณต้องการรับงานหรือขอแก้ไข?",
             deliveryAccepted: "ยอมรับงานแล้ว ดำเนินการชำระเงิน",
@@ -167,6 +174,9 @@ export const th = {
             step6Sub: "ผู้ว่าจ้างอนุมัติงาน เงินถูกปล่อยให้ฟรีแลนซ์",
             step7: "ยกเลิก",
             step7Sub: "ใบเสนอราคา/คำสั่งซื้อถูกยกเลิกก่อนการชำระเงิน",
+            attachFileFirst: "กรุณาแนบไฟล์ก่อนส่งมอบงาน",
+            dropFiles: "วางไฟล์ที่นี่",
+            missingBillingId: "ไม่พบรหัสการเรียกเก็บเงิน กรุณาสร้างหรืออนุมัติใบเสนอราคาก่อน",
             validation: {
                 workSteps: "ต้องมีอย่างน้อย 1 ขั้นตอน",
                 deliverables: "ต้องมีสิ่งที่จะส่งมอบอย่างน้อย 1 รายการ",
@@ -178,6 +188,7 @@ export const th = {
                 totalAmount: "ยอดรวมต้องตรงกับผลรวมของขั้นตอนงาน",
                 invalidForm: "ข้อมูลแบบฟอร์มไม่ถูกต้อง",
                 startDateNotPast: "วันเริ่มต้นต้องไม่ก่อนวันนี้",
+                workStepSeq: "ลำดับขั้นตอนต้องมีค่าอย่างน้อย 1",
             },
             quotationTitle: "สร้างใบเสนอราคา",
             quotationDesc: "กรอกข้อมูลเพื่อส่งใบเสนอราคาไปยังผู้ว่าจ้าง",
@@ -990,6 +1001,7 @@ export const th = {
             bankInfo: "ข้อมูลธนาคาร",
             businessServiceDescription: `บริการจัดหาฟรีแลนซ์เพื่อธุรกิจ (${getAppName()} for Business)`,
             businessServiceTitle: `บริการจัดหาฟรีแลนซ์เพื่อธุรกิจ (${getAppName()} for Business)`,
+            buttonBack: "ย้อนกลับ",
             buttonCancel: "ยกเลิก",
             buttonChange: "เปลี่ยน",
             buttonConfirm: "ยืนยัน",
@@ -1001,6 +1013,11 @@ export const th = {
             buttonSave: "บันทึก",
             buttonSubmit: "บันทึก",
             buttonVerify: "ยืนยัน",
+            delete: "ลบ",
+            serverError: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง",
+            submissionFailed: "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+            tryRefreshingPage: "ลองรีเฟรชหน้านี้",
+            view: "ดู",
             chatToHireButton: `แอดไลน์ @${getAppName()}`,
             chatToHireDescription:
                 "Chat to Hire หรือผู้ช่วยค้นหาฟรีแลนซ์ผ่านไลน์ เพียงแค่บอกรายละเอียด แอดมินก็พร้อมค้นหาฟรีแลนซ์ให้กับคุณ",
@@ -1708,6 +1725,10 @@ export const th = {
             riderResubmissionReceivedBody: "ผู้ดูแลระบบจะตรวจสอบในเร็ว ๆ นี้",
         },
         profile: {
+            addWorkSamples: "เพิ่มตัวอย่างผลงาน",
+            editWorkSamples: "แก้ไขตัวอย่างผลงาน",
+            loading: "กำลังโหลด…",
+            update: "อัปเดตโปรไฟล์สำเร็จ!",
             verified: "ยืนยันแล้ว",
             notVerified: "ยังไม่ได้ยืนยัน",
             editProfile: "แก้ไขโปรไฟล์",
@@ -1921,6 +1942,12 @@ export const th = {
 
             Refresh: "รีเฟรช",
             Loading: "กำลังโหลด...",
+            transferModal: {
+                title: "ยืนยันการโอนเหรียญ",
+                description: "โอนเหรียญจากการเติมเงินนี้เข้ากระเป๋าเงินของผู้ใช้",
+                confirm: "ยืนยันการโอน",
+            },
+            processing: "กำลังดำเนินการ...",
             buttonWithdraw: "ถอนเงิน",
             withdrawRequest: "คำขอถอนเงิน",
             amount: "จำนวนเงิน",
@@ -2249,6 +2276,10 @@ export const th = {
         profileInfo: {
             accountNumberHelperVN: "ตัวเลขหรือตัวอักษร 9-15 หลัก",
             accountNumberHelperTH: "ตัวเลข 10 หลักเท่านั้น",
+            deleteWorkSample: "ลบตัวอย่างผลงาน",
+            nextSamples: "ตัวอย่างผลงานถัดไป",
+            previousSamples: "ตัวอย่างผลงานก่อนหน้า",
+            updateAvailableFail: "อัปเดตสถานะการรับงานไม่สำเร็จ",
             sectionAccountInfo: "ข้อมูลบัญชี",
             subtitleAccountInfo: "อัปเดตข้อมูลโปรไฟล์ของคุณเพื่อทำให้บัญชีของคุณโดดเด่น",
             labelUsername: "ชื่อผู้ใช้",
@@ -2523,6 +2554,7 @@ export const th = {
             startSellingButton: "เริ่มขาย",
         },
         sellerBankAccount: {
+            maxAccountsLimit: "คุณสามารถเชื่อมต่อบัญชีธนาคารได้สูงสุด {{max}} บัญชี",
             bankAccountNumberLabel: "หมายเลขบัญชีธนาคาร",
             bankAccountName: "ชื่อเจ้าของบัญชี",
             bankAccountNumberPlaceholder: "กรอกหมายเลขบัญชี",
@@ -3742,6 +3774,7 @@ export const th = {
                 edit: "แก้ไขหมวดหมู่",
                 delete: "ลบหมวดหมู่",
                 rootLabel: "— หมวดหมู่หลัก —",
+                subcategoryCount: "{{count}} หมวดหมู่ย่อย",
                 subcategoryCount_one: "{{count}} หมวดหมู่ย่อย",
                 subcategoryCount_other: "{{count}} หมวดหมู่ย่อย",
                 noBanner: "ไม่มีรูปแบนเนอร์",
