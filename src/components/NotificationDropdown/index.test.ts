@@ -105,6 +105,25 @@ describe("NotificationDropdown: a failed fetch is not an empty inbox", () => {
         expect(store.fetchNotifications).toHaveBeenCalledTimes(1);
     });
 
+    it("marks the failure block with the testid the empty-state case asserts is absent", () => {
+        // ถ้าไม่มี attribute นี้ assertion ในเคสถัดไปจะผ่านเสมอไม่ว่าจะเรนเดอร์อะไร (#144)
+        store.current = {...store.current, loadFailed: true};
+
+        render();
+
+        expect(container.querySelector('[data-testid="notification-load-error"]')).not.toBeNull();
+    });
+
+    it("does not caption the spinner with the empty-inbox copy", () => {
+        // แคปชั่นตอนกำลังโหลดเคยเป็นคีย์ `emptyState` = บอกว่าไม่มีอะไร ระหว่างที่ยังโหลดอยู่
+        store.current = {...store.current, loading: true, hasFetched: false};
+
+        render();
+
+        expect(container.textContent).toContain("notifications.loading");
+        expect(container.textContent).not.toContain(EMPTY);
+    });
+
     it("shows the empty-state copy, and no retry, when the server returned no rows", () => {
         render();
 
