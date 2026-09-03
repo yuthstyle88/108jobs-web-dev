@@ -7,7 +7,7 @@ import {
     ListUserChatRoomsResponse,
     MyUserInfo,
     PersonView,
-} from "108heros-client";
+} from "@108-plaza/jh-client";
 import {RequestState} from "@/services/HttpService";
 import {Match} from "@/utils/router"
 

@@ -1,7 +1,7 @@
 import {useTranslation} from 'react-i18next';
 import {v4 as uuidv4} from 'uuid';
 import {StatusKey} from "@/modules/chat/components/FreelanceChatFlow";
-import {LocalUserId} from "108heros-client";
+import {LocalUserId} from "@108-plaza/jh-client";
 import React from "react";
 
 interface ReviewDeliveryModalProps {

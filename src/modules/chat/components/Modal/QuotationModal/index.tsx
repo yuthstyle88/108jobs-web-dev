@@ -5,7 +5,7 @@ import {useTranslation} from 'react-i18next';
 import {z} from 'zod';
 import {addDaysYMD, isBeforeToday} from '@/utils/helpers';
 import {CustomInput} from "@/components/ui/InputField";
-import {ProposalId, LocalUserId, PostId} from "108heros-client";
+import {ProposalId, LocalUserId, PostId} from "@108-plaza/jh-client";
 
 export interface ProposedQuotePayload {
     partnerId: number;

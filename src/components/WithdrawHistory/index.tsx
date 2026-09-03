@@ -11,7 +11,7 @@ import type {
     ListWithdrawRequestQuery,
     WithdrawRequestView,
     WithdrawStatus,
-} from "108heros-client";
+} from "@108-plaza/jh-client";
 
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {PaginationControls} from "@/components/PaginationControls";

@@ -1,7 +1,7 @@
 "use client";
 import React, {useEffect, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
-import {Person} from "108heros-client";
+import {Person} from "@108-plaza/jh-client";
 import {NotebookPen} from "lucide-react";
 import EditButton from "@/components/Profile/EditButton";
 import EmptyState from "@/components/Profile/EmptyState";

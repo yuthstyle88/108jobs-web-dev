@@ -11,7 +11,7 @@ import {
     faSignOut,
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {Person} from "108heros-client";
+import {Person} from "@108-plaza/jh-client";
 import Image from "next/image";
 import Link from "next/link";
 import {UserService} from "@/services";

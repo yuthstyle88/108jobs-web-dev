@@ -1,4 +1,4 @@
-import {ChatRoomView} from "108heros-client";
+import {ChatRoomView} from "@108-plaza/jh-client";
 
 // Each Room represents a 1-to-1 conversation, so it has exactly one participant besides the current user.
 export type RoomView = ChatRoomView & {

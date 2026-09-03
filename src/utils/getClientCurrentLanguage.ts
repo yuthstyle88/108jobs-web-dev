@@ -2,7 +2,7 @@
 import {LANGUAGE_COOKIE, LANGUAGES, VALID_LANGUAGES} from "@/constants/language";
 import {SupportedLang} from "@/lib/metadata";
 import {isBrowser} from "@/utils/browser";
-import {LanguageId} from "108heros-client";
+import {LanguageId} from "@108-plaza/jh-client";
 
 // Micro-cache keyed only by meaningful bits (URL prefix, cookie lang, LS lang, navigator hint)
 let cachedClientLang: SupportedLang | undefined;

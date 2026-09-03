@@ -19,16 +19,24 @@ ENV NEXT_PUBLIC_APP_URL="https://108jobs.com"
 # were made anyway, blocked by the page's own CSP.
 ENV NEXT_PUBLIC_IDENTITY_BASE_URL="https://identity.108plaza.net"
 
-COPY package.json pnpm-lock.yaml ./
-COPY src/lib/108heros-client/package.json src/lib/108heros-client/pnpm-lock.yaml ./src/lib/108heros-client/
-COPY src/lib/108heros-client ./src/lib/108heros-client
+COPY package.json pnpm-lock.yaml .npmrc ./
 
-# Install 108heros-client dependencies and compile it to dist/
+# Install dependencies, including @108-plaza/jh-client from the org's private
+# registry (Gate 3 -- it used to be a folder in this repo).
+#
+# The token arrives as a buildkit SECRET, never a build-arg: a build-arg is
+# baked into the image history and `docker history` hands it to anyone who can
+# pull the image. It is exported for the length of this one RUN and read by
+# .npmrc's ${NODE_AUTH_TOKEN}, so it never reaches a layer.
+#
+# GH_PAT_DEPLOY, the same token this repo already uses for GHCR: the npm
+# registry answers 403 to a workflow's GITHUB_TOKEN even when the package
+# grants the repository access, so it wants a personal token with
+# `read:packages`. A local build passes its own:
+# `--secret id=gh_token,env=GITHUB_TOKEN`.
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    cd src/lib/108heros-client && corepack pnpm install --frozen-lockfile && corepack pnpm run build
-
-# Install root dependencies (including devDependencies for Next.js build)
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    --mount=type=secret,id=gh_token,required=true \
+    NODE_AUTH_TOKEN="$(cat /run/secrets/gh_token)" \
     corepack pnpm install --frozen-lockfile
 
 # Copy all source files

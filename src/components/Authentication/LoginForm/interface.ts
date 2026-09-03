@@ -1,6 +1,6 @@
 import React from "react";
 import {RequestState} from "@/services/HttpService";
-import {GetSiteResponse, IdentityPlatformLoginResponse, PublicOAuthProvider,} from "108heros-client";
+import {GetSiteResponse, IdentityPlatformLoginResponse, PublicOAuthProvider,} from "@108-plaza/jh-client";
 import {RouteData} from "@/utils/types"
 import {IRoutePropsWithFetch} from "@/utils/routes";
 

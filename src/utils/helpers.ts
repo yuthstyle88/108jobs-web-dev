@@ -6,7 +6,7 @@ import {
     JobType, ListCategoriesResponse,
     PaginationCursor,
     PersonId
-} from "108heros-client";
+} from "@108-plaza/jh-client";
 
 import {Match} from "@/utils/router";
 import {ErrorPageData} from "@/utils/types";
@@ -445,7 +445,7 @@ async function toBlob(src: string | File | Blob): Promise<Blob> {
  */
 export async function uploadSelectedImage(
     selectedImage: File | string,
-    uploadImage?: (payload: { image: File }) => Promise<RequestState<import("108heros-client").LinkImageResponse>>
+    uploadImage?: (payload: { image: File }) => Promise<RequestState<import("@108-plaza/jh-client").LinkImageResponse>>
 ): Promise<string> {
     let file: File;
 

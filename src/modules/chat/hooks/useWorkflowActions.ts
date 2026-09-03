@@ -7,7 +7,7 @@ import type {
     CreateInvoiceForm,
     LocalUser,
     PostId
-} from '108heros-client';
+} from '@108-plaza/jh-client';
 import type {WsMessageSender} from '@/modules/chat/types';
 import type {StatusKey} from '@/modules/chat/components/FreelanceChatFlow';
 import type {UploadedFile} from '@/modules/chat/hooks/useFileUpload';

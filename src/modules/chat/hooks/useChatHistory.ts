@@ -2,7 +2,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import {fetchHistoryPage} from '@/modules/chat/utils/chatSocketUtils';
 import {runBackfill, type BackfillOutcome} from '@/modules/chat/hooks/historyBackfill';
 import {createHistoryPager, type HistoryPager} from '@/modules/chat/hooks/historyPager';
-import {ChatMessage} from "108heros-client";
+import {ChatMessage} from "@108-plaza/jh-client";
 
 export type UseChatHistoryOptions = {
     roomId: string;

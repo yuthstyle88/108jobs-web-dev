@@ -1,7 +1,7 @@
 "use client";
 
 import Image, {StaticImageData} from "next/image";
-import type {ChatMessage, LocalUserId} from "108heros-client";
+import type {ChatMessage, LocalUserId} from "@108-plaza/jh-client";
 import {MessageImage} from "@/constants/images";
 import {useTranslation} from "react-i18next";
 import React, {useMemo, useEffect, useState, useCallback} from "react";

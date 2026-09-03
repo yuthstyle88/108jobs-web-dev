@@ -1,4 +1,4 @@
-import {Api108Heros} from "108heros-client";
+import {Api108Heros} from "@108-plaza/jh-client";
 import {getHttpBase} from "@/utils/env";
 import {UserService} from "@/services/UserService";
 import {isBrowser} from "@/utils";

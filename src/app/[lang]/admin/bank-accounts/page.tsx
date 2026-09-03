@@ -12,7 +12,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useState, useEffect} from "react";
 import {cn} from "@/lib/utils";
-import {BankAccountId, BankAccountView} from "108heros-client";
+import {BankAccountId, BankAccountView} from "@108-plaza/jh-client";
 import {isSuccess, isFailed} from "@/services/HttpService";
 
 type ViewMode = "unverified" | "verified";

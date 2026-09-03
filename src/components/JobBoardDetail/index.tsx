@@ -1,7 +1,7 @@
 "use client";
 
 import {ProfileImage} from "@/constants/images";
-import {PostId} from "108heros-client";
+import {PostId} from "@108-plaza/jh-client";
 import {formatDateToLong} from "@/utils";
 import {ArrowLeft, Coins} from "lucide-react";
 import Image from "next/image";

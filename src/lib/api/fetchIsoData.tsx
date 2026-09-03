@@ -24,7 +24,7 @@ import {
     ListCategoriesResponse,
     ListUserChatRoomsResponse,
     MyUserInfo
-} from "108heros-client";
+} from "@108-plaza/jh-client";
 import {getHttpBase} from "@/utils";
 import {getJwtCookieFromServer, setForwardedHeaders} from "@/utils/helper-server";
 

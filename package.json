@@ -12,12 +12,11 @@
     "test:e2e:headed": "PLAYWRIGHT_HEADLESS=1 playwright test",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "prepare": "cd src/lib/108heros-client && npm run prepare || true",
     "test:e2e:ui": "playwright test --ui"
   },
   "packageManager": "pnpm@8.15.4",
   "dependencies": {
-    "108heros-client": "file:./src/lib/108heros-client",
+    "@108-plaza/jh-client": "^1.0.0",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",

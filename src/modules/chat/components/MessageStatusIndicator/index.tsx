@@ -1,5 +1,5 @@
 import React from "react";
-import {ChatStatus} from "108heros-client";
+import {ChatStatus} from "@108-plaza/jh-client";
 
 interface Props {
     isOwner: boolean | undefined;

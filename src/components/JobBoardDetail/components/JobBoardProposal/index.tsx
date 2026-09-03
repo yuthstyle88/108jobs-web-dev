@@ -4,7 +4,7 @@ import {ProfileImage} from "@/constants/images";
 import {PaginationControls} from "@/components/PaginationControls";
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
-import type {ProposalView} from "108heros-client";
+import type {ProposalView} from "@108-plaza/jh-client";
 import Image from "next/image";
 import React, {useState} from "react";
 import {useParams, useRouter} from "next/navigation";

@@ -11,7 +11,7 @@ import {
     JobType,
     PostSortType,
     SearchCombinedView,
-} from "108heros-client";
+} from "@108-plaza/jh-client";
 import {useTranslation} from "react-i18next";
 import {
     formatBudget,

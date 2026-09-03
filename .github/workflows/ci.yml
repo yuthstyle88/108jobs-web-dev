@@ -95,47 +95,21 @@ jobs:
         with:
           node-version: 22
 
-      # src/lib/108heros-client is a standalone package (own package.json/
-      # pnpm-lock.yaml/node_modules, not a pnpm workspace member) that the
-      # root install links via a file: dependency but does NOT install the
-      # dependencies of. Its own `prepare` script (triggered by the root
-      # install below) needs those already in place to build successfully --
-      # confirmed directly: without this step, the root install's dist/
-      # output for 108heros-client never gets produced on a fresh checkout,
-      # and every file importing it fails with "Cannot find module".
-      # This is a real gate (no continue-on-error): a genuine failure of the
-      # generated client to install or build must fail CI. It used to be
-      # non-blocking only because `prepare`'s tsc build compiled the package's
-      # own src/http.test.ts, which imports `vitest` (not a declared dep of
-      # this package) -- that build error is now avoided at the source by
-      # excluding test files from the package's build tsconfig, so nothing
-      # here needs vitest.
-      # This sub-package pins its OWN pnpm version (pnpm 10, vs. the root's
-      # pnpm 8) via its package.json's packageManager field -- its lockfile
-      # (lockfileVersion '9.0') is unreadable by the job-wide pnpm from
-      # pnpm/action-setup above, which silently discards it as "not
-      # compatible" and then fails as if no lockfile existed at all. So it
-      # must NOT use the job's pnpm on PATH.
-      #
-      # Bare `corepack pnpm` (no @version) resolves packageManager from the
-      # nearest package.json, which `working-directory` makes the sub-package's
-      # own -- so the version lives only in that file. Spelling it out here
-      # instead would put the same number in three steps across two jobs, each
-      # free to drift from the package.json that actually governs the lockfile.
-      - name: Install 108heros-client sub-package dependencies
-        working-directory: src/lib/108heros-client
-        run: corepack pnpm install --frozen-lockfile
+      # The API client used to be a folder in this repo, installed as a
+      # `file:` dependency whose own `prepare` had to be run by hand before the
+      # root install would work. It is a published package now (Gate 3), so
+      # `pnpm install` is the whole story again -- it just needs a token,
+      # below, because the registry is private.
 
-      # The sub-package owns a vitest suite (src/http.test.ts) asserting the
-      # generated client's identity-platform method surface. The root vitest
-      # run below deliberately excludes src/lib/108heros-client/**, so this is
-      # the only place that suite runs -- invoke it with the sub-package's own
-      # pinned pnpm/vitest (installed by the step above).
-      - name: Test 108heros-client sub-package
-        working-directory: src/lib/108heros-client
-        run: corepack pnpm run test
-
-      - run: pnpm install --frozen-lockfile
+      - name: Install
+        env:
+          # @108-plaza/jh-client lives in the org's private registry (Gate 3).
+          # GH_PAT_DEPLOY, not GITHUB_TOKEN: the npm registry answers 403 to the
+          # workflow token even though the package grants this repository
+          # access -- that grant governs the API and GHCR. Same secret
+          # release-image.yml already uses for GHCR login.
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT_DEPLOY }}
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
         run: npx eslint src
@@ -184,11 +158,16 @@ jobs:
 
       # See the equivalent step in the lint-typecheck-test job -- same reason,
       # and likewise a real gate (no continue-on-error).
-      - name: Install 108heros-client sub-package dependencies
-        working-directory: src/lib/108heros-client
-        run: corepack pnpm install --frozen-lockfile
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install
+        env:
+          # @108-plaza/jh-client lives in the org's private registry (Gate 3).
+          # GH_PAT_DEPLOY, not GITHUB_TOKEN: the npm registry answers 403 to the
+          # workflow token even though the package grants this repository
+          # access -- that grant governs the API and GHCR. Same secret
+          # release-image.yml already uses for GHCR login.
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT_DEPLOY }}
+        run: pnpm install --frozen-lockfile
 
       # No `--with-deps`: that runs apt-get on the runner, which needs sudo and
       # mutates a machine shared with every other repo in the fleet. The system

@@ -11,7 +11,7 @@ import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {maybeHandlePresenceUpdate} from "@/modules/chat/utils";
 import {usePresenceStore} from "@/modules/chat/store/presenceStore";
 import {WS_EVENT} from "@/modules/chat/protocol/wireEvents";
-import {PresenceSnapshotItem, PresenceStatus} from "108heros-client";
+import {PresenceSnapshotItem, PresenceStatus} from "@108-plaza/jh-client";
 
 interface UserEventsContextValue {
     status: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error';

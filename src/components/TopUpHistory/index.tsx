@@ -4,7 +4,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTranslation} from "react-i18next";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import {useMemo, useState} from "react";
-import {CategoryNodeView, ListTopUpRequestQuery, TopUpRequestView} from "108heros-client";
+import {CategoryNodeView, ListTopUpRequestQuery, TopUpRequestView} from "@108-plaza/jh-client";
 import {format} from "date-fns";
 import {formatMinor} from "@/utils/format/money";
 

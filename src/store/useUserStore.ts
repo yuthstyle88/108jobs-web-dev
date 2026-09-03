@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import {LocalUser, MyUserInfo, Person} from "108heros-client";
+import {LocalUser, MyUserInfo, Person} from "@108-plaza/jh-client";
 import type { Claims } from "@/services/UserService";
 
 type UserStore = {

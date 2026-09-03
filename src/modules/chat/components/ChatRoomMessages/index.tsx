@@ -1,6 +1,6 @@
 "use client";
 
-import type {ChatMessage, LocalUserId} from "108heros-client";
+import type {ChatMessage, LocalUserId} from "@108-plaza/jh-client";
 import ChatMessageItem from "../ChatMessageBubble";
 import {StaticImageData} from "next/image";
 import {Virtuoso, VirtuosoHandle} from "react-virtuoso";

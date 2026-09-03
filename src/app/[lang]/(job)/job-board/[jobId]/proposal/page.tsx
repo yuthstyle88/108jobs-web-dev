@@ -10,7 +10,7 @@ import * as z from "zod";
 import {useTranslation} from "react-i18next";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {useCallback} from "react";
-import {CreateProposal, PostId} from "108heros-client";
+import {CreateProposal, PostId} from "@108-plaza/jh-client";
 import {REQUEST_STATE} from "@/services/HttpService";
 import useNotification from "@/hooks/ui/useNotification";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";

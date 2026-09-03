@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  108heros-client:
-    specifier: file:./src/lib/108heros-client
-    version: file:src/lib/108heros-client
+  '@108-plaza/jh-client':
+    specifier: ^1.0.0
+    version: 1.0.0
   '@fortawesome/fontawesome-svg-core':
     specifier: ^7.1.0
     version: 7.1.0
@@ -249,6 +249,14 @@ devDependencies:
     version: 3.2.6(@types/node@20.19.24)(jsdom@29.1.1)(tsx@4.20.6)
 
 packages:
+
+  /@108-plaza/jh-client@1.0.0:
+    resolution: {integrity: sha512-TAXSKSW8YkWNFuyIYfOhgGkQqZmVNhxSDiMd9sGN5Ysu/1wauyMhpN130pRXifKjwqOmrDC/xZaxxy2BjfjV5Q==, tarball: https://npm.pkg.github.com/download/@108-plaza/jh-client/1.0.0/19aa12b6262f9bf49e66b3f22390e6077e14ee82}
+    dependencies:
+      '@tsoa/runtime': 6.6.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
 
   /@alloc/quick-lru@5.2.0:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -9072,13 +9080,4 @@ packages:
     dependencies:
       '@types/react': 19.2.2
       react: 19.2.0
-    dev: false
-
-  file:src/lib/108heros-client:
-    resolution: {directory: src/lib/108heros-client, type: directory}
-    name: 108heros-client
-    dependencies:
-      '@tsoa/runtime': 6.6.0
-    transitivePeerDependencies:
-      - supports-color
     dev: false

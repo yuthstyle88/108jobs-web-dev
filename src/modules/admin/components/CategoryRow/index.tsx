@@ -12,7 +12,7 @@ import {
     faEdit,
     faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import {CategoryNodeView, Tag} from "108heros-client";
+import {CategoryNodeView, Tag} from "@108-plaza/jh-client";
 import {useTranslation} from "react-i18next";
 import {toCamelCaseLastSegment} from "@/utils/helpers";
 

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { GetSiteResponse, PublicOAuthProvider, SiteView, PersonView, Tagline, OAuthProvider, PluginMetadata } from "108heros-client";
+import type { GetSiteResponse, PublicOAuthProvider, SiteView, PersonView, Tagline, OAuthProvider, PluginMetadata } from "@108-plaza/jh-client";
 
 export type SiteStore = {
   siteRes: GetSiteResponse | null;

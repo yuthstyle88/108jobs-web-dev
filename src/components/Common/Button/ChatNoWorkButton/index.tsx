@@ -1,5 +1,5 @@
 import React from "react";
-import {Person, PersonId} from "108heros-client";
+import {Person, PersonId} from "@108-plaza/jh-client";
 import {useTranslation} from "react-i18next";
 import {useRouter} from "next/navigation";
 import {dmRoomId} from "@/utils/helpers";
