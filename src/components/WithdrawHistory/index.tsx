@@ -36,8 +36,14 @@ const WithdrawHistory = () => {
 
     const {
         data: bankListRes,
+        state: bankListState,
+        isMutating: isBankListRetrying,
+        execute: refetchBankList,
     } = useHttpGet("listBanks");
     const bankList = bankListRes?.banks ?? [];
+    // `listBanks` ล้มเงียบเหมือนทุก `useHttpGet` — ถ้าไม่อ่าน `state` ตรงนี้ ลิสต์จะว่าง
+    // แล้วทุกแถวจะถูกป้ายว่าไม่รู้จักธนาคาร ทั้งที่รายการถอนถูกต้องและแค่ชื่อธนาคารโหลดไม่มา (#137)
+    const isBankListFailed = isFailed(bankListState);
     const {data, isLoading, isMutating, state, execute: refetch} = useHttpGet("listWithdrawRequests", {
         ...filters,
         pageCursor: pager.currentCursor,
@@ -115,7 +121,12 @@ const WithdrawHistory = () => {
     };
 
     const getBankName = (bankId: BankId) => {
-        return bankList.find((b) => b.id === bankId)?.name ?? "Unknown Bank";
+        const name = bankList.find((b) => b.id === bankId)?.name;
+        if (name) return name;
+        // แยกสองกรณีให้ขาดจากกัน: โหลดรายชื่อธนาคารไม่สำเร็จ ≠ ธนาคารนี้ไม่อยู่ในรายชื่อ
+        return isBankListFailed
+            ? t("profileCoins.bankNameUnavailable")
+            : t("profileCoins.unknownBank");
     };
 
     return (
@@ -286,6 +297,28 @@ const WithdrawHistory = () => {
                     {t("profileCoins.noteWithdrawProcess")}
                 </p>
             </div>
+
+            {isBankListFailed && (
+                <div
+                    role="alert"
+                    data-testid="bank-list-error"
+                    className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                >
+                    <p className="text-sm text-red-700">{t("profileCoins.bankListLoadFailed")}</p>
+                    <button
+                        type="button"
+                        onClick={() => refetchBankList()}
+                        disabled={isBankListRetrying}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        <FontAwesomeIcon
+                            icon={faSync}
+                            className={`text-sm ${isBankListRetrying ? "animate-spin" : ""}`}
+                        />
+                        {t("global.buttonRetry")}
+                    </button>
+                </div>
+            )}
 
             {/* Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">

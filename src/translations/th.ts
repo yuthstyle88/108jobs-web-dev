@@ -1937,6 +1937,10 @@ export const th = {
             Rejected: "ถูกปฏิเสธ",
             RequestID: "รหัสคำขอ",
             Bank: "ธนาคาร",
+            bankListLoadFailed:
+                "โหลดรายชื่อธนาคารไม่สำเร็จ รายการถอนเงินด้านล่างยังถูกต้องครบถ้วน",
+            bankNameUnavailable: "โหลดชื่อธนาคารไม่สำเร็จ",
+            unknownBank: "ไม่ทราบธนาคาร",
             bankVerificationNotice: {
                 title: "ต้องยืนยันตัวตน",
                 description: "เฉพาะบัญชีธนาคารที่ยืนยันแล้วเท่านั้นที่สามารถรับเงินได้ กรุณารอการตรวจสอบหรือเพิ่มบัญชีใหม่",
@@ -3901,6 +3905,9 @@ export const th = {
                 approveFailed: "อนุมัติล้มเหลว",
                 rejectFailed: "ปฏิเสธล้มเหลว",
                 noteRequired: "ต้องระบุหมายเหตุแอดมิน",
+                bankListLoadFailed:
+                    "โหลดรายชื่อธนาคารไม่สำเร็จ รายการคำขอด้านล่างยังถูกต้องครบถ้วน",
+                bankNameUnavailable: "โหลดชื่อธนาคารไม่สำเร็จ",
                 unknownBank: "ไม่ทราบธนาคาร",
                 status: {
                     pending: "รอดำเนินการ",

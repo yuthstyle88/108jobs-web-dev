@@ -1994,6 +1994,10 @@ export const en = {
             Rejected: "Rejected",
             RequestID: "Request ID",
             Bank: "Bank",
+            bankListLoadFailed:
+                "Bank names could not be loaded. Your withdrawal records below are unaffected.",
+            bankNameUnavailable: "Bank name unavailable",
+            unknownBank: "Unknown bank",
             bankVerificationNotice: {
                 title: "Verification Required",
                 description: "Only verified bank accounts can receive withdrawals. Please wait for verification or add a new one.",
@@ -3982,6 +3986,9 @@ export const en = {
                 approveFailed: "Failed to approve",
                 rejectFailed: "Failed to reject",
                 noteRequired: "Admin note is required",
+                bankListLoadFailed:
+                    "Bank names could not be loaded. The requests below are unaffected.",
+                bankNameUnavailable: "Bank name unavailable",
                 unknownBank: "Unknown Bank",
                 status: {
                     pending: "Pending",
