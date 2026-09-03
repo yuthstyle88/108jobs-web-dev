@@ -37,39 +37,7 @@ const SRC = path.join(process.cwd(), "src");
  * when the key is added or the call site is fixed. Adding an entry to make this
  * test pass is the one thing that defeats it.
  */
-const KNOWN_MISSING: ReadonlySet<string> = new Set<string>([
-    "admin.category.subcategoryCount",
-    "common.errorOccurred",
-    "common.processing",
-    "global.buttonBack",
-    "global.delete",
-    "global.serverError",
-    "global.submissionFailed",
-    "global.tryRefreshingPage",
-    "global.view",
-    "profile.addWorkSamples",
-    "profile.editWorkSamples",
-    "profile.loading",
-    "profile.update",
-    "profileChat.attachFileFirst",
-    "profileChat.cancelledJobHint",
-    "profileChat.dropFiles",
-    "profileChat.missingBillingId",
-    "profileChat.retrying",
-    "profileChat.roomSearch.resultCount",
-    "profileChat.validation.workStepSeq",
-    "profileCoins.processing",
-    "profileCoins.topUpSuccessMessage",
-    "profileCoins.transferModal.confirm",
-    "profileCoins.transferModal.description",
-    "profileCoins.transferModal.title",
-    "profileInfo.deleteWorkSample",
-    "profileInfo.nextSamples",
-    "profileInfo.previousSamples",
-    "profileInfo.updateAvailableFail",
-    "sellerBankAccount.maxAccountsLimit",
-    "validation.deadlineMin",
-]);
+const KNOWN_MISSING: ReadonlySet<string> = new Set<string>();
 
 const sourceFiles = (): string[] => {
     const out: string[] = [];
