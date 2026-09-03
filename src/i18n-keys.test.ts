@@ -8,7 +8,7 @@
  *    English to Thai and Vietnamese users instead of the loud key name, so a
  *    screenshot in one language looks perfect (#132, #144).
  * 2. A key is written with a dot where a namespace needs a colon. `en.ts`
- *    exports THREE namespaces — `terms`, `business`, `translation` — and
+ *    exports namespaces — `terms`, `translation` — and
  *    `I18NextService` passes all of them as `ns`. i18next keeps
  *    `defaultNS: "translation"` because that name is in the list, and `.` is a
  *    key separator, not a namespace separator, so `t("terms.title")` looks up
