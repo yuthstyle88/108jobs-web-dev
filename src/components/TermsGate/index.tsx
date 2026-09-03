@@ -23,6 +23,11 @@ import {getAppName} from "@/utils/appConfig";
  */
 const TermsGate = () => {
   const {needsAcceptance, version, accepting, accept} = useJobsTerms();
+  // `terms:` ไม่ใช่จุด: คีย์ชุดนี้อยู่ใน namespace ของตัวเอง (`en.ts` export `terms`
+  // `business` และ `translation` แล้ว `I18NextService` ส่งทั้งหมดเป็น `ns`) ส่วน
+  // defaultNS ของ i18next ยังเป็น `translation` เพราะชื่อนั้นอยู่ในลิสต์ — เขียน
+  // การเขียนคีย์ด้วยจุด (`terms` จุด `title`) จึงไปหา `translation.terms.title`
+  // ซึ่งไม่มี แล้วเรนเดอร์ชื่อคีย์ออกมาเป็นข้อความในกล่องยอมรับเงื่อนไข (#146)
   const {t} = useTranslation();
   const [dismissed, setDismissed] = useState(false);
 
@@ -34,10 +39,10 @@ const TermsGate = () => {
       // Stay open. The request did not land, or the server moved to a version
       // this dialog was not showing -- dismissing now would leave the user
       // believing they had accepted something they had not.
-      toast.error(t("terms.acceptFailed"));
+      toast.error(t("terms:acceptFailed"));
       return;
     }
-    toast.success(t("terms.accepted"));
+    toast.success(t("terms:accepted"));
   };
 
   return (
@@ -45,12 +50,12 @@ const TermsGate = () => {
       isOpen
       onClose={() => setDismissed(true)}
       closeOnOutsideClick={false}
-      title={t("terms.title", {appName: getAppName()})}
+      title={t("terms:title", {appName: getAppName()})}
     >
       <div className="flex flex-col gap-4 text-sm text-text-secondary">
-        <p>{t("terms.body", {appName: getAppName()})}</p>
+        <p>{t("terms:body", {appName: getAppName()})}</p>
         <p className="text-xs text-gray-500">
-          {t("terms.versionLabel")}: <span data-testid="terms-version">{version}</span>
+          {t("terms:versionLabel")}: <span data-testid="terms-version">{version}</span>
         </p>
         <div className="flex gap-3 justify-end pt-2">
           <button
@@ -59,7 +64,7 @@ const TermsGate = () => {
             disabled={accepting}
             className="px-4 py-2 rounded-md border border-gray-300 text-text-secondary disabled:opacity-50"
           >
-            {t("terms.later")}
+            {t("terms:later")}
           </button>
           <button
             type="button"
@@ -67,7 +72,7 @@ const TermsGate = () => {
             disabled={accepting}
             className="px-4 py-2 rounded-md bg-primary text-white disabled:opacity-50"
           >
-            {accepting ? t("terms.accepting") : t("terms.accept")}
+            {accepting ? t("terms:accepting") : t("terms:accept")}
           </button>
         </div>
       </div>
