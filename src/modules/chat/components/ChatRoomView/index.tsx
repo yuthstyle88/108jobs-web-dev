@@ -111,7 +111,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // Partner here
     const partnerId = partner.id;
     const partnerPersonId = partner.personId;
-    const partnerName = partner.name;
+    // `name` is the actor name, which for anyone provisioned through
+    // Identity-Platform is an auto-generated `user_<8 hex>` -- unreadable, and
+    // not what the job board or the proposal list show. The room payload
+    // already carries `displayName` beside it; fall back only when it is
+    // absent. (#138)
+    const partnerName = partner.displayName || partner.name;
     const partnerAvatar = partner.avatar;
     // Hydrate UI from the local store (messages + pending) so leftover local data shows immediately
     const {send, canGo, ORDER} = useWorkflowStepper();

@@ -1875,8 +1875,8 @@ export const en = {
             noteBalanceUpdate:
                 "In some cases, it may take up to 5 minutes for the balance to be updated. Please wait a moment.",
             noteCoinTerms: `- ${getAppName()} Coin can be used without expiration date and can be used together with other account Coupons.- ${getAppName()} Coin cannot be redeemed for cash or transferred to other ${getAppName()} accounts.- When you top up ${getAppName()} Coin into the system, it will be considered as acceptance of its terms and conditions.- If you encounter any problems in topping up ${getAppName()} Coin or making payments, please contact the Support Center.`,
-            noteMinMax: "Minimum 100 baht and maximum 500,000 baht.",
-            placeholderSpecifyAmount: "Specify the amount 100-500,000 baht",
+            noteMinMax: "Minimum 20 baht and maximum 50,000 baht.",
+            placeholderSpecifyAmount: "Specify the amount 20-50,000 baht",
             sectionTopUpHistory: "Top-up history",
             statusWaiting: "Waiting for payment",
             subtitleFastworkCoin:

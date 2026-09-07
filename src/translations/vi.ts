@@ -1878,8 +1878,8 @@ export const vi = {
             noteBalanceUpdate:
                 "Trong một số trường hợp, có thể mất đến 5 phút để cập nhật số dư. Vui lòng đợi trong giây lát.",
             noteCoinTerms: `• ${getAppName()} Coin có thể được sử dụng mà không có ngày hết hạn và có thể được sử dụng cùng với các Coupon tài khoản khác.• ${getAppName()} Coin không thể quy đổi thành tiền mặt hoặc chuyển sang tài khoản ${getAppName()} khác.• Khi bạn nạp ${getAppName()} Coin vào hệ thống, điều đó có nghĩa là bạn chấp nhận các điều khoản và điều kiện.• Nếu bạn gặp bất kỳ vấn đề nào khi nạp ${getAppName()} Coin hoặc thanh toán, vui lòng liên hệ Trung tâm hỗ trợ.`,
-            noteMinMax: "Tối thiểu 100 baht và tối đa 500.000 baht.",
-            placeholderSpecifyAmount: "Nhập số tiền 100-500.000 baht",
+            noteMinMax: "Tối thiểu 20 baht và tối đa 50.000 baht.",
+            placeholderSpecifyAmount: "Nhập số tiền 20-50.000 baht",
             sectionTopUpHistory: "Lịch sử nạp tiền",
             statusWaiting: "Đang chờ thanh toán",
             subtitleFastworkCoin:
