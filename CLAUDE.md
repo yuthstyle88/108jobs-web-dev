@@ -53,6 +53,23 @@ written, with no error on either side. `MessageClient` decoded its own copy
 inline, so the message list and the socket disagreed about which room was open.
 Fixed in #134; the helper is now the single spelling for both.
 
+## Two things that read as text but are configuration (2026-09-07)
+
+**Category names come from the server, not only the catalogue.** Labels are
+keyed off the ltree path (`0.logo_design` → `catalogs.logoDesign`), and `t()`
+**echoes the key back** when there is no entry — so `|| "-"` never fires and
+the raw string `catalogs.0` reaches the screen for any category added after the
+translation files were written. Use `categoryLabel(t, category)`
+(`src/utils/categoryLabel.ts`), which defaults to the server's `title`/`name`.
+Several call sites already passed `{defaultValue: …name}` by hand; the helper
+makes that uniform. Fixed in #139.
+
+**`NEXT_PUBLIC_APP_NAME` is a display name, nothing more.** It is *not* the
+auth cookie name any more — that is the fixed literal `"108_auth"` in
+`src/utils/config.ts`, with `legacyAuthCookieNames` migrated on read. The
+`.env` comment claiming otherwise was stale and had kept the browser tab
+reading "108Heros" on the jobs app. Changing it logs nobody out. Fixed in #140.
+
 ## `AGENTS.md` — the same file, for Codex (2026-09-02)
 
 `AGENTS.md` beside this file is a **symlink to this file**, so Codex / ChatGPT —

@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
-import {getAppDomain} from "@/utils/appConfig";
+import {getAppDomain, getAppName} from "@/utils/appConfig";
 
 // Regression coverage for getAppDomain() (Task 3.5 of the web rebrand). The
 // fallback/override precedence mirrors getAppName()/getAppUrl(), but getAppDomain()
@@ -100,5 +100,41 @@ describe("getAppDomain", () => {
       expect(result).not.toMatch(/:\/\//);
       expect(result.endsWith("/")).toBe(false);
     }
+  });
+});
+
+// This is the 108jobs web app, but `getAppName()` fell back to the RIDER
+// product's name -- both the committed `.env.example` and the hard-coded
+// fallback said "108Heros", and `getAppName()` feeds `document.title` through
+// `global.labelProductFastwork`, so the browser tab read 108Heros (#140).
+//
+// The `.env` comment claimed the variable could not be changed because it was
+// also the auth cookie name. That coupling is gone: `authCookieName` in
+// src/utils/config.ts is the fixed literal "108_auth", with legacy names
+// migrated on read. The value is safe to correct, and these keep it corrected.
+describe("getAppName", () => {
+  const original = process.env.NEXT_PUBLIC_APP_NAME;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.NEXT_PUBLIC_APP_NAME;
+    else process.env.NEXT_PUBLIC_APP_NAME = original;
+  });
+
+  it("does not fall back to the rider product's name", () => {
+    delete process.env.NEXT_PUBLIC_APP_NAME;
+
+    expect(getAppName()).not.toMatch(/heros/i);
+  });
+
+  it("names this app when nothing is configured", () => {
+    delete process.env.NEXT_PUBLIC_APP_NAME;
+
+    expect(getAppName()).toBe("108jobs");
+  });
+
+  it("prefers a configured name", () => {
+    process.env.NEXT_PUBLIC_APP_NAME = "Staging 108jobs";
+
+    expect(getAppName()).toBe("Staging 108jobs");
   });
 });

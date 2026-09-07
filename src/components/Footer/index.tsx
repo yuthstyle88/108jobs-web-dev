@@ -12,6 +12,7 @@ import {useTranslation} from "react-i18next";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {getCategoriesAtLevel, toCamelCaseLastSegment} from "@/utils/helpers";
 import {useLanguage} from "@/contexts/LanguageContext";
+import {categoryLabel} from "@/utils/categoryLabel";
 
 const Footer = () => {
     const {lang} = useLanguage();
@@ -36,7 +37,7 @@ const Footer = () => {
                             >
                                 <li key={index}>
                                     <span className="cursor-default opacity-80 hover:opacity-100 transition-opacity duration-200">
-                                        {t(`catalogs.${toCamelCaseLastSegment(item.category.path)}`)}
+                                        {categoryLabel(t, item.category)}
                                     </span>
                                 </li>
                             </Link>

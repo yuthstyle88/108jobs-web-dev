@@ -27,6 +27,7 @@ import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {formatBudgetCompact} from "@/utils";
 import {Badge} from "@/components/ui/Badge";
+import {categoryLabel} from "@/utils/categoryLabel";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -264,7 +265,7 @@ const JobBoard = () => {
                                     <option value="">{t("profileJob.dropdownSearchCategory")}</option>
                                     {catalogData.map((category) => (
                                         <option key={category.category.id} value={category.category.id}>
-                                            {t(`catalogs.${toCamelCaseLastSegment(category.category.path)}`)}
+                                            {categoryLabel(t, category.category)}
                                         </option>
                                     ))}
                                 </select>
@@ -469,7 +470,7 @@ const JobBoard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
-                                                        {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
+                                                        {categoryLabel(t, job.category)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
                                                         {getJobTypeLabel(job.post.jobType, t)}
@@ -582,7 +583,7 @@ const JobBoard = () => {
                                                         <div>
                                                             <p className="text-xs text-gray-500 uppercase tracking-wider">{t("profileJob.tableHeaderCategory")}</p>
                                                             <p className="font-medium text-gray-900 truncate mt-0.5">
-                                                                {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
+                                                                {categoryLabel(t, job.category)}
                                                             </p>
                                                         </div>
 
