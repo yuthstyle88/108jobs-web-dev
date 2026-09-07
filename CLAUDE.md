@@ -64,6 +64,14 @@ translation files were written. Use `categoryLabel(t, category)`
 Several call sites already passed `{defaultValue: …name}` by hand; the helper
 makes that uniform. Fixed in #139.
 
+**Name a chat participant with `participantDisplayName`, never `.name`.**
+`name` is the actor name, generated as `user_<8 hex>` for everyone provisioned
+through Identity — i.e. everyone who signs in by phone. `displayName` rides in
+the same payload. This was fixed twice (the room header in #138, then the room
+list in #144, missed the first time and leaving one screen naming a person two
+ways), so the rule now lives in `src/modules/chat/utils/participantName.ts`
+rather than in each component's memory.
+
 **`NEXT_PUBLIC_APP_NAME` is a display name, nothing more.** It is *not* the
 auth cookie name any more — that is the fixed literal `"108_auth"` in
 `src/utils/config.ts`, with `legacyAuthCookieNames` migrated on read. The

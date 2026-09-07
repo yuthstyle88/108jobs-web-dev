@@ -7,6 +7,7 @@ import {usePeerOnline} from "@/modules/chat/store/presenceStore";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
 import {RoomView} from "@/modules/chat/types";
 import {RoomNotFound} from "@/components/RoomNotFound";
+import {participantDisplayName} from "@/modules/chat/utils/participantName";
 
 interface ChatRoomListProps {
     room: RoomView;
@@ -26,7 +27,7 @@ const ChatRoomItem = ({room, currentLang, localUser}: ChatRoomListProps) => {
 
     if (!partner) return <RoomNotFound/>;
 
-    const partnerName = partner.name || "Unknown";
+    const partnerName = participantDisplayName(partner);
     const handleClick = () => {
         markRoomRead(room.room.id);
     };
@@ -37,7 +38,7 @@ const ChatRoomItem = ({room, currentLang, localUser}: ChatRoomListProps) => {
             key={room.room.id}
             href={`/${currentLang || "th"}/chat/message/${room.room.id}`}
             className="block mx-2 my-1 transition-colors duration-200 focus:outline-none focus:bg-gray-100"
-            aria-label={`Open chat with ${partner?.name} about Job ${jobId}`}
+            aria-label={`Open chat with ${partnerName} about Job ${jobId}`}
             onClick={handleClick}
         >
             <div
