@@ -11,6 +11,8 @@ import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {RoomView} from "@/modules/chat/types";
 import {decodeRoomIdParam} from "@/modules/chat/utils/roomId";
+import {hydratableWorkflowStatus} from "@/modules/chat/utils/hydrateWorkflow";
+import {useStateMachineStore} from "@/modules/chat/store/stateMachineStore";
 
 export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
     const isLoggedIn = UserService.Instance.isLoggedIn;
@@ -34,6 +36,20 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
             upsertRoom({...data.room, isActive: false} as RoomView, false);
         }
     }, [data, upsertRoom]);
+
+    // Adopt the server's workflow stage.
+    //
+    // The stepper's store is client-only: it starts at
+    // WaitForFreelancerQuotation and is advanced by local clicks, so a
+    // reopened room showed a finished job as not started and the Orders tab
+    // rendered no stage at all. The room payload has always carried the
+    // answer -- `workflow` comes straight from the server -- it was simply
+    // never read. See hydratableWorkflowStatus for when adopting is refused.
+    const setWorkflowState = useStateMachineStore(s => s.set);
+    const serverStatus = hydratableWorkflowStatus(data?.room);
+    useEffect(() => {
+        if (serverStatus) setWorkflowState(serverStatus);
+    }, [serverStatus, setWorkflowState]);
 
     if (!room) {
         if (isLoading) {
