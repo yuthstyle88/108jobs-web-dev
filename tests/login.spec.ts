@@ -20,6 +20,48 @@ test.afterEach(async () => {
 // mode="login") -- mirrors 108jobs-flutter, which dropped password auth
 // entirely. See register.spec.ts for the shared mock helper.
 test.describe('Login (phone + OTP, mocked)', () => {
+  // The offer itself (#146). Enrolment used to be raised the moment verify
+  // succeeded, with no question and no way to decline except dismissing an OS
+  // prompt that appeared for no stated reason -- and on a browser with no
+  // usable authenticator the redirect then waited on it for the full timeout.
+  //
+  // Two things must hold: the question names the account it is about, and
+  // declining redirects immediately, because declining starts nothing.
+  test('offers a passkey before raising one, and declining signs in at once', async ({ page }) => {
+    await enableMockOtp(page);
+
+    // Fail any enrolment attempt loudly: declining must not reach the network
+    // at all, so a request here means the offer was bypassed.
+    let enrolmentAttempted = false;
+    await page.route('**/auth/passkey/register/**', async (route) => {
+      enrolmentAttempted = true;
+      await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto(`/${LOCALE}/login`);
+    await page.getByPlaceholder(/phone/i).fill('0812345678');
+    await page.getByRole('button', { name: /send verification code/i }).click();
+    await page.getByPlaceholder(/otp/i).fill('123456');
+    await page.getByRole('button', { name: /verify otp/i }).click();
+
+    // The question is asked, and it names the number that just signed in.
+    await expect(page.getByText(/skip the sms code next time/i)).toBeVisible();
+    // The number appears twice on screen -- the code step still shows "we
+    // sent a code to ...". Match the dialog's own sentence so this asserts the
+    // offer names the account, not that the number is somewhere on the page.
+    await expect(
+      page.getByText(/create a passkey for \+66812345678/i),
+    ).toBeVisible();
+
+    // Still on the login page: verifying alone does not sign you in any more.
+    expect(new URL(page.url()).pathname).toContain('/login');
+
+    await page.getByRole('button', { name: /not now/i }).click();
+
+    await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
+    expect(enrolmentAttempted).toBe(false);
+  });
+
   test('requests a code, then verifies it and lands authenticated', async ({ page }) => {
     await enableMockOtp(page);
 
@@ -32,6 +74,12 @@ test.describe('Login (phone + OTP, mocked)', () => {
 
     await page.getByPlaceholder(/otp/i).fill('123456');
     await page.getByRole('button', { name: /verify otp/i }).click();
+
+    // Verifying no longer redirects on its own: it asks whether to create a
+    // passkey first, and only an explicit yes raises the platform
+    // authenticator. Declining is the fast path and must redirect at once --
+    // nothing was started, so there is nothing to wait for. (#146)
+    await page.getByRole('button', { name: /not now/i }).click();
 
     await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });

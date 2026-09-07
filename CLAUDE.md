@@ -64,6 +64,16 @@ translation files were written. Use `categoryLabel(t, category)`
 Several call sites already passed `{defaultValue: …name}` by hand; the helper
 makes that uniform. Fixed in #139.
 
+**Ask before raising the platform authenticator.** Passkey enrolment is
+offered by a dialog (`shouldOfferPasskey` + `ConfirmActionModal`), and only an
+explicit yes calls `enrollPasskey`. It used to be raised the instant OTP verify
+succeeded, holding the redirect until the OS prompt resolved — so a browser
+with no usable authenticator left an already-authenticated person on a disabled
+button for the full 60s deadline. Declining now redirects immediately, because
+nothing was started. Same shape as 108jobs-flutter's `askToCreatePasskey`.
+Fixed in #146; the 60s deadline from #137 remains as a backstop for people who
+say yes.
+
 **Name a chat participant with `participantDisplayName`, never `.name`.**
 `name` is the actor name, generated as `user_<8 hex>` for everyone provisioned
 through Identity — i.e. everyone who signs in by phone. `displayName` rides in
