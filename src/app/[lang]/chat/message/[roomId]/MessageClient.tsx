@@ -10,6 +10,7 @@ import {useUserStore} from "@/store/useUserStore";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
 import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {RoomView} from "@/modules/chat/types";
+import {decodeRoomIdParam} from "@/modules/chat/utils/roomId";
 
 export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
     const isLoggedIn = UserService.Instance.isLoggedIn;
@@ -18,12 +19,9 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
     const findPartner = useRoomsStore(s => s.findPartner);
     const upsertRoom = useRoomsStore(s => s.upsertRoom);
 
-    // Next.js does not decode dynamic route segments, and room ids contain
-    // colons (e.g. "dm:4233:4238"), which the browser percent-encodes on
-    // navigation (both a <Link> click and a hard refresh/direct URL). Every
-    // room id elsewhere (the rooms store, API responses) is the decoded
-    // form, so comparing against the raw param here always failed to match.
-    const roomId = decodeURIComponent(rawRoomId);
+    // Shared with the chat layout, which uses the same value to open the
+    // socket -- see decodeRoomIdParam for why the raw param cannot be used.
+    const roomId = decodeRoomIdParam(rawRoomId);
     const room = rooms.find(r => r.room.id === roomId);
 
     // Zustand's rooms store resets on hard refresh / direct navigation, so when
