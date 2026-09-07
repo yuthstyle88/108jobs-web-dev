@@ -67,6 +67,7 @@ import {REQUEST_STATE} from "@/services/HttpService";
 import {useUserStore} from "@/store/useUserStore";
 import {useJobFlowSidebar} from "@/modules/chat/contexts/JobFlowSidebarContext";
 import {SubmitReviewModal} from "@/modules/chat/components/Modal/SubmitReviewModal";
+import {participantDisplayName} from "@/modules/chat/utils/participantName";
 
 /** Shape of the form submitted by ChatInput. */
 type MessageForm = { message: string };
@@ -116,7 +117,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // not what the job board or the proposal list show. The room payload
     // already carries `displayName` beside it; fall back only when it is
     // absent. (#138)
-    const partnerName = partner.displayName || partner.name;
+    const partnerName = participantDisplayName(partner);
     const partnerAvatar = partner.avatar;
     // Hydrate UI from the local store (messages + pending) so leftover local data shows immediately
     const {send, canGo, ORDER} = useWorkflowStepper();
