@@ -214,6 +214,7 @@ export const ChatBridgeProvider: React.FC<WebSocketProviderProps> = ({children, 
                 ws.off?.("close", onClose);
             } catch {
             }
+            servicesRef.current.resend?.destroy();
             servicesRef.current = {sender: null, resend: null};
             wiredWsRef.current = null;
         };

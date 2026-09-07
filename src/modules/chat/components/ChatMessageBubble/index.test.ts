@@ -15,6 +15,20 @@ vi.mock("react-i18next", () => ({
     }),
 }));
 
+const mockRetryNow = vi.fn();
+vi.mock("@/modules/chat/contexts/ChatBridgeProvider", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/modules/chat/contexts/ChatBridgeProvider")>();
+    return {
+        ...actual,
+        useChatServices: () => ({
+            sender: null,
+            resend: {
+                retryNow: mockRetryNow,
+            },
+        }),
+    };
+});
+
 const actEnvironment = globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT: boolean};
 const partnerId = 7;
 const roomId = "room-1";
@@ -93,4 +107,37 @@ describe("ChatMessageBubble read receipt", () => {
 
         expect(container.textContent).toContain("Read");
     });
+
+    it("renders a retry button for failed outgoing messages and triggers resend.retryNow when clicked", () => {
+        mockRetryNow.mockClear();
+        useReadLastIdStore.getState().clearAll();
+        const failedMessage = {
+            id: "msg-failed-btn",
+            roomId,
+            senderId: 11,
+            content: "Failed to send message",
+            createdAt: "2026-08-20T10:00:00.000Z",
+            status: "failed",
+            isOwner: true,
+            secure: false,
+        } as never;
+
+        act(() => {
+            root.render(createElement(ChatMessageBubble, {
+                message: failedMessage,
+                partnerId: partnerId as never,
+            }));
+        });
+
+        const retryButton = container.querySelector("button");
+        expect(retryButton).not.toBeNull();
+        expect(retryButton?.textContent).toContain("profileChat.retry");
+
+        act(() => {
+            retryButton?.click();
+        });
+
+        expect(mockRetryNow).toHaveBeenCalledWith(roomId, "msg-failed-btn");
+    });
 });
+

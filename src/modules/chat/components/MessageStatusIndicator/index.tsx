@@ -8,7 +8,7 @@ interface Props {
     isRead: boolean | undefined;
     readTime: string | null
     t: any;
-    onRetry?: () => void; // <- allow parent to wire resend.flushActive(roomId)
+    onRetry?: () => void; // <- allow parent to wire resend.retryNow(roomId, messageId)
 }
 
 const SentIcon = () => (

@@ -35,6 +35,7 @@ export interface ChatStorePort {
 export class ResendManager {
     private isResendingAll = false
     private isResendingActive = false
+    private isDestroyed = false
     private inFlight = new Set<string>()
 
     // delay ตารางพื้นฐาน (ms)
@@ -44,6 +45,10 @@ export class ResendManager {
         private readonly store: ChatStorePort,
         private readonly sender: ChatSenderAdapter,
     ) {
+    }
+
+    destroy() {
+        this.isDestroyed = true
     }
 
     /**
@@ -89,6 +94,71 @@ export class ResendManager {
             await this.flush((m) => String(m.roomId) === String(roomId))
         } finally {
             this.isResendingActive = false
+        }
+    }
+
+    /**
+     * สั่งลองส่งข้อความใหม่โดยตรงจากผู้ใช้ (Manual Retry)
+     * แยกเส้นทางจาก auto-retry ชัดเจน: ข้ามเพดาน retry < 3
+     * แต่ยังคงป้องกันการส่งซ้ำซ้อนด้วย inFlight mutex
+     */
+    async retryNow(roomId: string, messageId?: string): Promise<void> {
+        if (this.isDestroyed) return
+        const {failedMessages} = this.store.getState()
+        const targets = failedMessages.filter((m) => {
+            const isRoom = String(m.roomId) === String(roomId)
+            const isMsg = messageId ? String(m.id) === String(messageId) : true
+            return isRoom && isMsg && !this.inFlight.has(m.id)
+        })
+
+        for (const msg of targets) {
+            this.inFlight.add(msg.id)
+            try {
+                const draft: SendDraft = {
+                    roomId: msg.roomId,
+                    senderId: msg.senderId,
+                    secure: msg.secure,
+                    content: msg.content,
+                    createdAt: msg.createdAt,
+                    status: 'retrying',
+                    id: msg.id,
+                }
+
+                const serverId = await this.sender.sendMessage(WS_EVENT.Message, draft)
+
+                // ตรวจสอบว่าห้อง/ข้อความยังเปิดอยู่หรือไม่ (Edge case 5: ไม่ตั้ง state ของห้องที่ปิดแล้ว)
+                if (this.isDestroyed) return
+                const {failedMessages: currentFailed} = this.store.getState()
+                const stillExists = currentFailed.some(
+                    (m) => String(m.id) === String(msg.id) && String(m.roomId) === String(msg.roomId)
+                )
+                if (!stillExists) return
+
+                if (typeof serverId === 'string' && serverId.length > 0) {
+                    // ส่งสำเร็จ → promote และล้าง retry meta (Edge case 6)
+                    this.store.promoteToSent(msg.roomId, msg.id)
+                    this.store.dropRetryMeta(msg.id)
+                } else {
+                    // ส่งไม่สำเร็จ → กลับเป็น failed และไม่ล็อกปุ่ม (ผู้ใช้กดใหม่ได้อีก)
+                    // รักษาเพดาน auto-retry ไว้ที่ 3 เพื่อไม่ให้ auto-retry วนยิงเอง
+                    const now = Date.now()
+                    this.store.markFailed(msg.roomId, msg.id)
+                    this.store.upsertRetryMeta(msg.id, {retry: 3, next: now + this.backoffDelay(3)})
+                }
+            } catch {
+                if (this.isDestroyed) return
+                const {failedMessages: currentFailed} = this.store.getState()
+                const stillExists = currentFailed.some(
+                    (m) => String(m.id) === String(msg.id) && String(m.roomId) === String(msg.roomId)
+                )
+                if (!stillExists) return
+
+                const now = Date.now()
+                this.store.markFailed(msg.roomId, msg.id)
+                this.store.upsertRetryMeta(msg.id, {retry: 3, next: now + this.backoffDelay(3)})
+            } finally {
+                this.inFlight.delete(msg.id)
+            }
         }
     }
 
@@ -145,6 +215,14 @@ export class ResendManager {
                 }
 
                 const serverId = await this.sender.sendMessage(WS_EVENT.Message, draft)
+
+                if (this.isDestroyed) return
+                const {failedMessages: currentFailed} = this.store.getState()
+                const stillExists = currentFailed.some(
+                    (m) => String(m.id) === String(msg.id) && String(m.roomId) === String(msg.roomId)
+                )
+                if (!stillExists) return
+
                 if (typeof serverId === 'string' && serverId.length > 0) {
                     // ส่งสำเร็จ → promote และล้าง retry meta
                     this.store.promoteToSent(msg.roomId, msg.id)
@@ -164,6 +242,13 @@ export class ResendManager {
                     }
                 }
             } catch {
+                if (this.isDestroyed) return
+                const {failedMessages: currentFailed} = this.store.getState()
+                const stillExists = currentFailed.some(
+                    (m) => String(m.id) === String(msg.id) && String(m.roomId) === String(msg.roomId)
+                )
+                if (!stillExists) return
+
                 // treat as failure with backoff
                 const {retryMeta: metaNow} = this.store.getState()
                 const prev = metaNow[msg.id] ?? {retry: 0, next: now}

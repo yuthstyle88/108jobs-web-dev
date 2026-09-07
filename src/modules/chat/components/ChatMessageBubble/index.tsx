@@ -298,9 +298,10 @@ const ChatMessageItem: React.FC<ChatMessageItemProps> = ({
                             message.isOwner
                                 ? () => {
                                     const rid = String((message as any)?.roomId ?? "");
+                                    const mid = String(message.id ?? "");
                                     if (rid) {
                                         try {
-                                            resend?.flushActive(rid);
+                                            resend?.retryNow(rid, mid);
                                         } catch {
                                         }
                                     }
