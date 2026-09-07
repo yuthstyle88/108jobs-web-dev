@@ -34,6 +34,25 @@ Narrow exceptions: something you broke and fixed inside your own unmerged branch
 typo in code being written this minute. Anything already merged, deployed, or reported by
 the owner is a bug → issue first.
 
+## Chat room ids arrive percent-encoded (2026-09-07)
+
+A room id is `dm:<luid>:<luid>:post:<postId>`. **Next.js does not decode dynamic
+route segments**, so the `[roomId]` param arrives as
+`dm%3A8051%3A8052%3Apost%3A1305938` — from a `<Link>` click, a hard refresh and a
+typed URL alike. Everything else in the app (the rooms store, API responses, the
+`chat_message.room_id` column) uses the decoded form.
+
+Always read it through `decodeRoomIdParam` (`src/modules/chat/utils/roomId.ts`),
+never `params.roomId` directly.
+
+Getting this wrong is silent, which is why it survived: the chat layout passed
+the raw param to `WebSocketProvider`, so the client joined a room id matching
+nothing. The join was accepted, heartbeats flowed, and every message was
+addressed to a room nobody read — the UI showed "Sent" and no row was ever
+written, with no error on either side. `MessageClient` decoded its own copy
+inline, so the message list and the socket disagreed about which room was open.
+Fixed in #134; the helper is now the single spelling for both.
+
 ## `AGENTS.md` — the same file, for Codex (2026-09-02)
 
 `AGENTS.md` beside this file is a **symlink to this file**, so Codex / ChatGPT —
