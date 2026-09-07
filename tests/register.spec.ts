@@ -33,6 +33,10 @@ test.describe('Register (phone + OTP, mocked)', () => {
     await codeInput.fill('123456');
     await page.getByRole('button', { name: /verify otp/i }).click();
 
+    // The passkey offer stands between verify and the redirect now -- see the
+    // note in login.spec.ts. (#146)
+    await page.getByRole('button', { name: /not now/i }).click();
+
     await page.waitForURL((url) => !/\/register(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 

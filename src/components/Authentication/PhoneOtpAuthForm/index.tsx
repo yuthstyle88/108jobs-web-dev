@@ -8,6 +8,8 @@ import * as z from "zod";
 import {useTranslation} from "react-i18next";
 import {useRouter, useSearchParams} from "next/navigation";
 import {completeSignIn} from "@/services/authRedirect";
+import ConfirmActionModal from "@/components/Common/Modal/ConfirmActionModal";
+import {shouldOfferPasskey} from "@/services/passkeyOffer";
 import {ApiError, REQUEST_STATE} from "@/services/HttpService";
 import {normalizeThaiPhone, OtpChallenge, requestOtp, verifyOtp} from "@/services/IdentityOtpService";
 import {
@@ -66,6 +68,24 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
     const [cooldown, setCooldown] = useState(0);
     const [passkeyIdentifier, setPasskeyIdentifier] = useState<string | null>(null);
     const [passkeyBusy, setPasskeyBusy] = useState(false);
+    // The passkey offer. `resolveOffer` is the other half of the promise the
+    // submit handler awaits, so a click on either button is what advances the
+    // sign-in -- see the dialog below.
+    const [offerOpen, setOfferOpen] = useState(false);
+    const resolveOffer = React.useRef<((accepted: boolean) => void) | null>(null);
+
+    const askToCreatePasskey = useCallback((): Promise<boolean> => {
+        setOfferOpen(true);
+        return new Promise<boolean>((resolve) => {
+            resolveOffer.current = resolve;
+        });
+    }, []);
+
+    const answerOffer = useCallback((accepted: boolean) => {
+        setOfferOpen(false);
+        resolveOffer.current?.(accepted);
+        resolveOffer.current = null;
+    }, []);
 
     useEffect(() => {
         if (cooldown <= 0) return;
@@ -179,12 +199,32 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
             return;
         }
         const {login} = res.data;
-        // Offered, not required: awaited so the OS prompt gets a chance to
-        // show and resolve before the redirect below tears down the page
-        // (a hard navigation kills any WebAuthn ceremony still in flight).
-        // Skipped when this device already has a passkey for this identifier.
-        if (rememberedPasskeyIdentifier() !== phone) {
-            await enrollPasskey(login.identityId, login.accessToken, phone);
+        // Offered, and now actually offered.
+        //
+        // This used to raise the platform authenticator the moment verify
+        // succeeded, and hold the redirect until it resolved -- so a browser
+        // with no usable authenticator left an already-authenticated person on
+        // a disabled button for the full 60s deadline (#137, #146). A sheet
+        // nobody announced is not a choice either: the only way to decline was
+        // to dismiss an OS prompt that had appeared for no stated reason.
+        //
+        // Now the question is asked in the page, where it costs a click, and
+        // only an explicit yes raises anything. Declining redirects
+        // immediately, because nothing was ever started. Same shape as
+        // 108jobs-flutter's askToCreatePasskey, for the same reasons.
+        if (shouldOfferPasskey({
+            supported: isPasskeySupported(),
+            rememberedIdentifier: rememberedPasskeyIdentifier(),
+            identifier: phone,
+        })) {
+            const accepted = await askToCreatePasskey();
+            if (accepted) {
+                setPasskeyBusy(true);
+                // Still bounded: the user asked for this, but an OS prompt
+                // that never answers must not strand them here either.
+                await enrollPasskey(login.identityId, login.accessToken, phone);
+                setPasskeyBusy(false);
+            }
         }
         await finishSignIn(login.accessToken, login.refreshToken);
     });
@@ -278,7 +318,25 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
     }
 
     return (
-        // Keyed apart from the phone step -- see the comment there.
+        <>
+        {/* The passkey offer. Rendered beside the code step because that is the
+            only place it can be raised, and deliberately NOT dismissible by
+            clicking away: the two buttons are the only two outcomes, so a stray
+            click cannot read as a decision. Declining is not recorded -- the
+            offer returns at the next sign-in, since this is the only place in
+            the app that can create a passkey. */}
+        <ConfirmActionModal
+            isOpen={offerOpen}
+            onClose={() => answerOffer(false)}
+            onConfirm={() => answerOffer(true)}
+            title={t("authen.passkeyOfferTitle")}
+            message={t("authen.passkeyOfferBody", {identifier: phone})}
+            confirmText={t("authen.passkeyOfferAccept")}
+            cancelText={t("authen.passkeyOfferDecline")}
+            icon="info"
+            variant="primary"
+        />
+        {/* Keyed apart from the phone step -- see the comment there. */}
         <form key="code" onSubmit={onSubmitCode} className="space-y-5" noValidate>
             {apiError && (
                 <p className="text-red-500 text-sm text-center mb-4">
@@ -325,5 +383,6 @@ export const PhoneOtpAuthForm: React.FC<PhoneOtpAuthFormProps> = ({mode, onSwitc
                 </div>
             </div>
         </form>
+        </>
     );
 };
