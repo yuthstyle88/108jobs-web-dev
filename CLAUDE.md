@@ -70,6 +70,29 @@ auth cookie name any more — that is the fixed literal `"108_auth"` in
 `.env` comment claiming otherwise was stale and had kept the browser tab
 reading "108Heros" on the jobs app. Changing it logs nobody out. Fixed in #140.
 
+## The chat room payload already carries the workflow (2026-09-07)
+
+`GET /chat/rooms/{id}` returns `workflow` beside `room`, `participants`, `post`
+and `lastMessage` — it comes from `Workflow::get_current_by_room_id`, and its
+`status` uses the **same union** as the stepper's `StatusKey`, so there is no
+mapping to write.
+
+That field went unread for a long time. The workflow stepper is a client-only
+Zustand store (`stateMachineStore`) that starts at
+`WaitForFreelancerQuotation` and is advanced by local clicks, so reopening a
+room showed a finished job as not started and the Orders tab rendered no stage
+at all (#136). `MessageClient` now adopts the server's status through
+`hydratableWorkflowStatus`, which refuses three cases: no workflow yet, a
+workflow the server marked inactive, and a status this client does not know
+(the server's enum can gain a variant first, and an unknown key renders a blank
+panel).
+
+**Do not reach for `getBillingByRoom` for this.** It returns only the billing
+row — never `workflow.status`, a different and shorter lifecycle — and filters
+on a `billingStatus` the caller must already know, defaulting to
+`QuotePendingReview`, so it 404s for any job past the quote stage. It has no
+callers in this app and is not the right tool.
+
 ## `AGENTS.md` — the same file, for Codex (2026-09-02)
 
 `AGENTS.md` beside this file is a **symlink to this file**, so Codex / ChatGPT —
