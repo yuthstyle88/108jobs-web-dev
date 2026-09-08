@@ -19,6 +19,14 @@ export interface ResolveErrorMessageOptions {
 
 const SERVER_MESSAGE_MAX_LENGTH = 160;
 
+// JavaScript runtime / browser exception names that must not be treated as
+// domain error codes (e.g. TypeError from fetch() network failure, Error from
+// client timeouts, AbortError / DOMException).
+const JS_BUILTIN_ERROR_NAMES = new Set([
+    "Error", "TypeError", "RangeError", "ReferenceError", "SyntaxError",
+    "URIError", "EvalError", "AggregateError", "AbortError", "DOMException",
+]);
+
 export function resolveApiErrorMessage(
     err: ApiError | undefined,
     t: (key: string, options?: Record<string, unknown>) => string,
@@ -28,7 +36,8 @@ export function resolveApiErrorMessage(
         return options.notAvailableYetMessage ?? t("error.notAvailableYet");
     }
 
-    const code = err?.error ?? err?.name;
+    const domainName = err?.name && !JS_BUILTIN_ERROR_NAMES.has(err.name) ? err.name : undefined;
+    const code = err?.error ?? domainName;
     if (code && options.knownCodes?.[code]) {
         return options.knownCodes[code];
     }

@@ -56,6 +56,30 @@ describe("resolveApiErrorMessage", () => {
         expect(msg).toBe("Something went wrong.");
     });
 
+    it("does not leak JavaScript TypeError into fallback when fetch fails at network boundary", () => {
+        const fetchError = new TypeError("Failed to fetch");
+        const msg = resolveApiErrorMessage(fetchError, t, {
+            fallback: "ลองใหม่อีกครั้ง",
+        });
+        expect(msg).toBe("ลองใหม่อีกครั้ง");
+    });
+
+    it("does not leak generic Error or AbortError into fallback", () => {
+        const timeoutError = new Error("timeout");
+        expect(resolveApiErrorMessage(timeoutError, t)).toBe("Something went wrong.");
+
+        const abortError = new DOMException("aborted", "AbortError");
+        expect(resolveApiErrorMessage(abortError, t)).toBe("Something went wrong.");
+    });
+
+    it("preserves non-built-in domain error names from ApiRequestError", () => {
+        const apiError = {name: "identityPlatformLoginFailed"};
+        const msg = resolveApiErrorMessage(apiError, t, {
+            knownCodes: {identityPlatformLoginFailed: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"},
+        });
+        expect(msg).toBe("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+    });
+
     it("special-cases 501 before anything else, even a known code or message", () => {
         const msg = resolveApiErrorMessage(
             {error: "invalid_code", message: "ignored", status: 501}, t,
