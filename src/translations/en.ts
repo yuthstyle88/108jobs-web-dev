@@ -2590,6 +2590,8 @@ export const en = {
             bankInfoDescription: "To receive payments when hired",
             bankInfoTitle: "Bank Information",
             bankNameLabel: "Bank Name",
+            bankNameUnavailable: "Bank name unavailable",
+            unknownBank: "Unknown bank",
             bankNamePlaceholder: "Select a bank",
             setAsDefault: "Set as default",
             edit: "Edit",

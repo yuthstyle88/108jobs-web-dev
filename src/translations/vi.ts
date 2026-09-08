@@ -2593,6 +2593,8 @@ export const vi = {
             bankInfoDescription: "Để nhận tiền khi có việc được thuê",
             bankInfoTitle: "Thông tin ngân hàng",
             bankNameLabel: "Tên ngân hàng",
+            bankNameUnavailable: "Không tải được tên ngân hàng",
+            unknownBank: "Ngân hàng không xác định",
             bankNamePlaceholder: "Chọn ngân hàng",
             setAsDefault: "Đặt làm mặc định",
             edit: "Chỉnh sửa",

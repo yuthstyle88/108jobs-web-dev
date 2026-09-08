@@ -2539,6 +2539,8 @@ export const th = {
             bankInfoDescription: "สำหรับรับเงินเมื่อได้รับการจ้างงาน",
             bankInfoTitle: "ข้อมูลบัญชีธนาคาร",
             bankNameLabel: "ชื่อธนาคาร",
+            bankNameUnavailable: "โหลดชื่อธนาคารไม่สำเร็จ",
+            unknownBank: "ไม่ทราบธนาคาร",
             bankNamePlaceholder: "เลือกธนาคาร",
             setAsDefault: "ตั้งเป็นค่าเริ่มต้น",
             edit: "แก้ไข",

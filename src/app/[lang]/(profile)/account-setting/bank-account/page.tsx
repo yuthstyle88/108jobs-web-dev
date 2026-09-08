@@ -248,7 +248,11 @@ const BankAccount = () => {
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <div>
                                             <h3 className="font-bold text-gray-900 text-lg">
-                                                {acc.bank?.name ?? "Unknown Bank"}
+                                                {acc.bank?.name
+                                                    ?? bankList.find((b: any) => String(b.id) === String(acc.userBankAccount.bankId))?.name
+                                                    ?? (isBankListFailed
+                                                        ? t("sellerBankAccount.bankNameUnavailable")
+                                                        : t("sellerBankAccount.unknownBank"))}
                                             </h3>
                                             <div className="mt-2 space-y-1">
                                                 <p className="text-gray-700 font-mono text-base">
