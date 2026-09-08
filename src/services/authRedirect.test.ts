@@ -19,6 +19,25 @@ describe("sanitizeRedirect (open-redirect guard for ?redirect=)", () => {
         expect(sanitizeRedirect("//evil.example")).toBe("/");
     });
 
+    it("falls back to the site root for backslash protocol-relative URLs", () => {
+        expect(sanitizeRedirect("/\\evil.example")).toBe("/");
+        expect(sanitizeRedirect("/\\/evil.example")).toBe("/");
+    });
+
+    it("falls back to the site root for control characters (TAB, LF, CR) protocol-relative URLs", () => {
+        expect(sanitizeRedirect("/\tevil.example")).toBe("/");
+        expect(sanitizeRedirect("/\t/evil.example")).toBe("/");
+        expect(sanitizeRedirect("/\n/evil.example")).toBe("/");
+        expect(sanitizeRedirect("/\r\n/evil.example")).toBe("/");
+    });
+
+    it("preserves valid paths in control cases", () => {
+        expect(sanitizeRedirect("/")).toBe("/");
+        expect(sanitizeRedirect("/%5Cevil.example")).toBe("/%5Cevil.example");
+        expect(sanitizeRedirect("/th/admin/dashboard?tab=pending&q=a b")).toBe("/th/admin/dashboard?tab=pending&q=a b");
+        expect(sanitizeRedirect("/a\\b")).toBe("/a\\b");
+    });
+
     it("falls back to the site root for a non-path string", () => {
         expect(sanitizeRedirect("evil.example")).toBe("/");
         expect(sanitizeRedirect("")).toBe("/");

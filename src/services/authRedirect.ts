@@ -7,10 +7,19 @@ import {isAdminClaims, Claims} from "@/services/UserService";
 // safe to send a freshly-authenticated user to -- an absolute URL
 // (https://evil.example) or a protocol-relative one (//evil.example, which
 // browsers still resolve as absolute, inheriting the current scheme) would
-// be an open redirect. Anything that doesn't look like a safe relative path
-// falls back to the site root instead.
+// be an open redirect. Browsers also normalize `\` to `/` for http/https
+// schemes (e.g. `/\evil.example`) and strip control characters (\t, \n, \r)
+// during URL parsing (e.g. `/<TAB>/evil.example`).
+// Anything that doesn't look like a safe relative path falls back to the
+// site root instead.
 export function sanitizeRedirect(redirectUrl: string): string {
-    return redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "/";
+    const cleaned = redirectUrl.replace(/[\t\n\r]/g, "");
+    return cleaned.startsWith("/") &&
+        !cleaned.startsWith("//") &&
+        !cleaned.startsWith("/\\") &&
+        !/^\/[\t\n\r]/.test(redirectUrl)
+        ? cleaned
+        : "/";
 }
 
 // Shared by every login form: persist the session, then route based on
