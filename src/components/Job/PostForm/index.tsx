@@ -15,6 +15,7 @@ import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {useCategories} from "@/hooks/api/categories/useCategories";
 import {useUserStore} from "@/store/useUserStore";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
+import {categoryLabel} from "@/utils/categoryLabel";
 
 
 interface PostFormProps {
@@ -446,7 +447,7 @@ export const PostForm: React.FC<PostFormProps> = ({
                                     {catalogData
                                         .map((catalog) => (
                                             <option key={catalog.category.id} value={catalog.category.id}>
-                                                {t(`catalogs.${toCamelCaseLastSegment(catalog.category.path)}`)}
+                                                {categoryLabel(t, catalog.category)}
                                             </option>
                                         ))}
                                 </select>

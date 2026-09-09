@@ -27,6 +27,7 @@ import {faCoins} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {formatBudgetCompact} from "@/utils";
 import {Badge} from "@/components/ui/Badge";
+import {categoryLabel} from "@/utils/categoryLabel";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -57,9 +58,24 @@ const JobBoard = () => {
     });
 
     const pager = useCursorPagination();
+    // Pulled out so the callbacks below can depend on the FUNCTION rather than
+    // on `pager`, which the hook rebuilds as a fresh object literal every
+    // render. Reading it through `pager.` inside a callback does not work:
+    // exhaustive-deps (and the React Compiler, which makes it an error) then
+    // require the whole `pager`, which is the churn being removed.
+    const {resetPagination} = pager;
     const [budgetError, setBudgetError] = useState<string | null>(null);
     const categoriesResponse = useCategories();
-    const catalogData = getCategoriesAtLevel(categoriesResponse.categories ?? undefined, 3);
+    // Memoised: this was recomputed on every render, so `catalogData` was a
+    // new array each time even when the categories had not moved. Measured on
+    // a Job Board mount, it was the one value that changed on all twelve
+    // renders -- it is only read by the category <select> below, so it cost
+    // renders rather than correctness, but it made every render look like it
+    // had a reason.
+    const catalogData = useMemo(
+        () => getCategoriesAtLevel(categoriesResponse.categories ?? undefined, 3),
+        [categoriesResponse.categories]
+    );
 
     const debouncedFilters = useDebounce(filters, 500);
 
@@ -84,7 +100,7 @@ const JobBoard = () => {
 
     const handleFilterChange = useCallback(
         (key: keyof FilterState, value: unknown) => {
-            pager.resetPagination();
+            resetPagination();
             const newFilters: FilterState = {
                 ...filters,
                 [key]:
@@ -123,7 +139,7 @@ const JobBoard = () => {
 
             if (key === "budgetMin") setBudgetError(null);
         },
-        [router, searchParams, filters, pager]
+        [router, searchParams, filters, resetPagination]
     );
 
 
@@ -192,8 +208,8 @@ const JobBoard = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        pager.resetPagination();
-    }, [filters.category, filters.sort, filters.budgetMin, filters.budgetMax, filters.jobType, filters.intendedUse, pager]);
+        resetPagination();
+    }, [filters.category, filters.sort, filters.budgetMin, filters.budgetMax, filters.jobType, filters.intendedUse, resetPagination]);
 
     if (searchState.state === REQUEST_STATE.FAILED) {
         return (
@@ -249,7 +265,7 @@ const JobBoard = () => {
                                     <option value="">{t("profileJob.dropdownSearchCategory")}</option>
                                     {catalogData.map((category) => (
                                         <option key={category.category.id} value={category.category.id}>
-                                            {t(`catalogs.${toCamelCaseLastSegment(category.category.path)}`)}
+                                            {categoryLabel(t, category.category)}
                                         </option>
                                     ))}
                                 </select>
@@ -454,7 +470,7 @@ const JobBoard = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
-                                                        {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
+                                                        {categoryLabel(t, job.category)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
                                                         {getJobTypeLabel(job.post.jobType, t)}
@@ -567,7 +583,7 @@ const JobBoard = () => {
                                                         <div>
                                                             <p className="text-xs text-gray-500 uppercase tracking-wider">{t("profileJob.tableHeaderCategory")}</p>
                                                             <p className="font-medium text-gray-900 truncate mt-0.5">
-                                                                {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
+                                                                {categoryLabel(t, job.category)}
                                                             </p>
                                                         </div>
 

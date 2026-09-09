@@ -1,4 +1,4 @@
-import {getAppName} from "@/utils/appConfig";
+import {getAppDomain, getAppName} from "@/utils/appConfig";
 
 export const vi = {
     terms: {
@@ -31,8 +31,22 @@ export const vi = {
             price: "ngân sách",
             jobFlow: "Quy trình công việc",
             orders: "Đơn hàng",
+            ordersActive: "Đang thực hiện",
+            ordersCompleted: "Hoàn thành",
+            ordersCancelled: "Đã hủy",
+            ordersEmpty: "Chưa có đơn hàng nào trong cuộc trò chuyện này.",
+            ordersOrderNumber: "Đơn hàng #{{n}}",
+            ordersEscrowHeld: "Đang ký quỹ",
+            ordersEscrowPaidOut: "Đã thanh toán",
+            ordersEscrowRefunded: "Đã hoàn tiền",
+            ordersFinishedApprox: "ước tính",
+            ordersHireAgain: "Thuê lại",
+            ordersPickPost: "Đơn hàng này dành cho công việc nào?",
             media: "Phương tiện",
+            tabChat: "Trò chuyện",
+            tabOrder: "Đơn hàng",
             closeDrawer: "Đóng",
+            tabsLabel: "Trò chuyện hoặc Đơn hàng",
             howToHire: {
                 promptTitle: "Bạn chưa biết bắt đầu từ đâu?",
                 promptSubtitle: "Đừng lo, đây là hướng dẫn nhanh dành cho bạn.",
@@ -47,16 +61,16 @@ export const vi = {
                 },
                 pay: {
                     title: "Duyệt báo giá và thanh toán",
-                    quotation: "Freelancer gửi báo giá qua 108heros",
-                    payment: "Duyệt báo giá và thanh toán qua 108heros",
+                    quotation: `Freelancer gửi báo giá qua ${getAppName()}`,
+                    payment: `Duyệt báo giá và thanh toán qua ${getAppName()}`,
                 },
                 review: {
                     title: "Kiểm tra và duyệt bàn giao",
                     delivery: "Freelancer gửi sản phẩm trong cuộc trò chuyện",
                     approval: "Kiểm tra sản phẩm và duyệt để giải ngân",
                 },
-                hintTitle: "Trao đổi trên 108heros",
-                hint: "Hãy giữ thỏa thuận, tệp, sản phẩm bàn giao và thanh toán trong cuộc trò chuyện này để 108heros có thể hỗ trợ khi cần.",
+                hintTitle: `Trao đổi trên ${getAppName()}`,
+                hint: `Hãy giữ thỏa thuận, tệp, sản phẩm bàn giao và thanh toán trong cuộc trò chuyện này để ${getAppName()} có thể hỗ trợ khi cần.`,
             },
             mediaPanel: {
                 imageVideo: "Ảnh và video",
@@ -571,6 +585,10 @@ export const vi = {
             resendEmailSuccess: "Email đã được gửi lại thành công",
             resendVerifyCode: "Resend verification code",
             resendLimitReached: "Bạn đã gửi lại quá số lần cho phép (3 lần). Vui lòng thử lại sau.",
+            passkeyOfferTitle: "Lần sau bỏ qua mã SMS?",
+            passkeyOfferBody: "Tạo passkey cho {{identifier}}. Lần sau bạn có thể đăng nhập trên thiết bị này chỉ với một chạm, không cần chờ mã.",
+            passkeyOfferAccept: "Tạo passkey",
+            passkeyOfferDecline: "Để sau",
             emailRegistered: "Email này đã được đăng ký. Vui lòng đăng nhập bằng mật khẩu của bạn.",
             invalidPassword: "Mật khẩu không hợp lệ",
             titleVerifyingCode: "Kiểm tra hộp thư của bạn",
@@ -595,7 +613,7 @@ export const vi = {
             seoLinksFacebook: "SEO Facebook",
             seoLinksAudit: "SEO Audit",
             seoLinksMonthly: "SEO hàng tháng",
-            seoDescription2Part1: `Chất lượng giúp website của bạn hiển thị ở vị trí hàng đầu trên Google, tăng cơ hội được truy cập và nhận diện thương hiệu. Tại ${getAppName()}.com, chúng tôi có các freelancer chuyên môn cao trong việc `,
+            seoDescription2Part1: `Chất lượng giúp website của bạn hiển thị ở vị trí hàng đầu trên Google, tăng cơ hội được truy cập và nhận diện thương hiệu. Tại ${getAppName()}, chúng tôi có các freelancer chuyên môn cao trong việc `,
             seoDescription2Strong1: "cung cấp dịch vụ SEO mũ trắng",
             seoDescription2Middle:
                 " giúp website của bạn lên top Google một cách ổn định và hiệu quả, bao gồm ",
@@ -620,7 +638,7 @@ export const vi = {
                 "Tối ưu thẻ Meta (Từ khóa, Mô tả, Tiêu đề) tương ứng với nội dung.",
             seoPrinciples4:
                 "Tăng số lượng backlink chất lượng để nâng cao uy tín nội dung.",
-            seoConclusionPart1: `Chi tiết về SEO không cố định và thay đổi thường xuyên. Do đó, bạn cần cập nhật nguyên tắc SEO liên tục. Nếu bạn chưa có kinh nghiệm, kỹ năng hay kiến thức, có thể thuê freelancer chuyên SEO để bắt đầu dễ dàng hơn. ${getAppName()}.com đã tập hợp các freelancer SEO chuyên nghiệp với `,
+            seoConclusionPart1: `Chi tiết về SEO không cố định và thay đổi thường xuyên. Do đó, bạn cần cập nhật nguyên tắc SEO liên tục. Nếu bạn chưa có kinh nghiệm, kỹ năng hay kiến thức, có thể thuê freelancer chuyên SEO để bắt đầu dễ dàng hơn. ${getAppName()} đã tập hợp các freelancer SEO chuyên nghiệp với `,
             seoConclusionStrong1: "dịch vụ SEO thuê ngoài, SEO mũ trắng",
             seoConclusionMiddle:
                 " theo mọi yêu cầu của khách hàng. Dịch vụ SEO giá rẻ, giúp tiết kiệm chi phí kinh doanh nhưng vẫn đảm bảo hiệu quả theo mục tiêu mong muốn ",
@@ -1213,7 +1231,7 @@ export const vi = {
                 "Vấn đề của bạn là ưu tiên hàng đầu của chúng tôi. Bạn có thể liên hệ bộ phận hỗ trợ khách hàng của chúng tôi qua các kênh sau.",
             facebook: "Facebook",
             messenger: "Messenger",
-            supportEmail: `support@${getAppName()}.com`,
+            supportEmail: `support@${getAppDomain()}`,
             customerSupportWorkingHours:
                 "Đội ngũ của chúng tôi sẵn sàng phục vụ bạn mỗi ngày, Thứ Hai-Thứ Sáu từ 9:30 - 22:00",
             customerSupportWeekendHours: "Thứ Bảy-Chủ Nhật, ngày lễ từ 10:00 - 19:00",
@@ -1232,9 +1250,9 @@ export const vi = {
             buttonJobCategoriesViewMore: "Xem thêm",
             confidenceInFastwork:
                 "Gặp gỡ đội ngũ freelancer chất lượng, sẵn sàng đáp ứng mọi nhu cầu của mọi doanh nghiệp, bao gồm mọi lĩnh vực, ngành nghề.",
-            contentFastwork1: `${getAppName()}.com là nền tảng tập hợp các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau, bao gồm thiết kế logo, làm banner quảng cáo, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác nhằm đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ ${getAppName()}.com tập trung vào sự đơn giản và tiện lợi, giúp freelancer và khách hàng tiết kiệm thời gian, đồng thời hỗ trợ phát triển và mở rộng kinh doanh cho các doanh nghiệp lớn, nhỏ cũng như giúp freelancer dễ dàng tìm việc, tăng thu nhập và nâng cao chất lượng dịch vụ.`,
-            contentFastwork2: `${getAppName()}.com hoạt động như một nền tảng trung gian trực tuyến giữa freelancer và khách hàng, giúp họ kết nối mọi lúc, mọi nơi. Freelancer có thể đăng tải dịch vụ trên ${getAppName()}.com, trong khi khách hàng có thể tìm kiếm và thuê freelancer phù hợp. Hệ thống thanh toán an toàn của ${getAppName()}.com đảm bảo freelancer nhận được tiền công khi hoàn thành công việc, đồng thời bảo vệ quyền lợi của khách hàng khi nhận sản phẩm đúng yêu cầu.`,
-            contentFastwork3: `Hiện tại, ${getAppName()}.com có hơn 50.000 freelancer đã qua kiểm duyệt chất lượng, cung cấp hơn 15.000 dịch vụ trong 90 danh mục khác nhau. Dịch vụ phù hợp với nhiều đối tượng khách hàng, từ chủ doanh nghiệp, SME, freelancer hàng online đến cá nhân đang tìm kiếm dịch vụ chuyên nghiệp với chi phí hợp lý. ${getAppName()}.com là nền tảng freelancer chuyên nghiệp được hơn 700.000 khách hàng tin tưởng.`,
+            contentFastwork1: `${getAppName()} là nền tảng tập hợp các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau, bao gồm thiết kế logo, làm banner quảng cáo, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác nhằm đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ ${getAppName()} tập trung vào sự đơn giản và tiện lợi, giúp freelancer và khách hàng tiết kiệm thời gian, đồng thời hỗ trợ phát triển và mở rộng kinh doanh cho các doanh nghiệp lớn, nhỏ cũng như giúp freelancer dễ dàng tìm việc, tăng thu nhập và nâng cao chất lượng dịch vụ.`,
+            contentFastwork2: `${getAppName()} hoạt động như một nền tảng trung gian trực tuyến giữa freelancer và khách hàng, giúp họ kết nối mọi lúc, mọi nơi. Freelancer có thể đăng tải dịch vụ trên ${getAppName()}, trong khi khách hàng có thể tìm kiếm và thuê freelancer phù hợp. Hệ thống thanh toán an toàn của ${getAppName()} đảm bảo freelancer nhận được tiền công khi hoàn thành công việc, đồng thời bảo vệ quyền lợi của khách hàng khi nhận sản phẩm đúng yêu cầu.`,
+            contentFastwork3: `Hiện tại, ${getAppName()} có hơn 50.000 freelancer đã qua kiểm duyệt chất lượng, cung cấp hơn 15.000 dịch vụ trong 90 danh mục khác nhau. Dịch vụ phù hợp với nhiều đối tượng khách hàng, từ chủ doanh nghiệp, SME, freelancer hàng online đến cá nhân đang tìm kiếm dịch vụ chuyên nghiệp với chi phí hợp lý. ${getAppName()} là nền tảng freelancer chuyên nghiệp được hơn 700.000 khách hàng tin tưởng.`,
             contentFreelancerVerification: `Freelancer được tuyển chọn và xác minh bởi ${getAppName()} có thể được kiểm tra.`,
             contentPaymentProtection:
                 "Tiền của bạn được bảo vệ từ khi freelancer bắt đầu làm việc cho đến khi bạn hài lòng với kết quả cuối cùng.",
@@ -1266,7 +1284,7 @@ export const vi = {
             contentStartHiringSection4:
                 "Xem xét công việc được gửi, xác nhận và để lại đánh giá.",
             freelancerQuality: `Freelancer đã qua tuyển chọn và xác minh danh tính bởi ${getAppName()} và bạn có thể kiểm tra thông tin này.`,
-            freelancerStatistics: `Hiện tại, ${getAppName()}.com có hơn 50.000 freelancer chất lượng, cung cấp dịch vụ trong hơn 90 danh mục khác nhau. Hơn 15.000 công việc đã được hoàn thành thành công, với các freelancer được lựa chọn kỹ lưỡng theo kỹ năng và kinh nghiệm để đáp ứng tốt nhất nhu cầu của khách hàng—bao gồm chủ doanh nghiệp, SME, người kinh doanh trực tuyến hoặc cá nhân đang tìm kiếm dịch vụ chuyên nghiệp. ${getAppName()} hiện đang được hơn 70.000 khách hàng tin tưởng sử dụng.`,
+            freelancerStatistics: `Hiện tại, ${getAppName()} có hơn 50.000 freelancer chất lượng, cung cấp dịch vụ trong hơn 90 danh mục khác nhau. Hơn 15.000 công việc đã được hoàn thành thành công, với các freelancer được lựa chọn kỹ lưỡng theo kỹ năng và kinh nghiệm để đáp ứng tốt nhất nhu cầu của khách hàng—bao gồm chủ doanh nghiệp, SME, người kinh doanh trực tuyến hoặc cá nhân đang tìm kiếm dịch vụ chuyên nghiệp. ${getAppName()} hiện đang được hơn 70.000 khách hàng tin tưởng sử dụng.`,
             graphicDesign: "Thiết kế đồ họa",
             graphicDesignServices:
                 "Thiết kế banner, danh thiếp, áp phích, đồ họa thông tin (infographic), hồ sơ xin việc (resume), thiết kế hình xăm, bao bì sản phẩm, nhận diện thương hiệu (CI), và nhiều hơn nữa.",
@@ -1289,8 +1307,8 @@ export const vi = {
             mediaAudio: "Truyền thông & Âm thanh",
             mediaAudioServices:
                 "Nhiếp ảnh, chụp ảnh sự kiện, tạo podcast, chỉnh sửa bài hát, biên tập video, thiết kế website động, đồ họa chuyển động, phát trực tiếp, thuê người mẫu, lồng tiếng, và nhiều hơn nữa.",
-            platformDescription: `${getAppName()}.com là nền tảng kết nối các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau tại một nơi, bao gồm thiết kế đồ họa, quảng cáo banner, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác để đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ phát triển của chúng tôi đã thiết kế ${getAppName()}.com với sự đơn giản và tiện lợi, tạo ra một nền tảng giúp freelancer và khách hàng tiết kiệm thời gian. Ngoài ra, chúng tôi còn hỗ trợ các doanh nghiệp mới khởi nghiệp, thúc đẩy tinh thần kinh doanh và giúp freelancer làm việc hiệu quả hơn, tạo thu nhập ổn định và nâng cao tiêu chuẩn của freelancer tại Thái Lan.`,
-            platformPurpose: `${getAppName()}.com đóng vai trò là nền tảng trung gian trực tuyến kết nối freelancer với khách hàng, giúp họ dễ dàng tìm thấy và hợp tác với nhau mọi lúc. Freelancer có thể đăng tin tìm việc trên ${getAppName()}.com một cách thuận tiện tại một nơi duy nhất, đồng thời khách hàng có thể dễ dàng tìm kiếm, so sánh giá cả và đánh giá chất lượng freelancer để lựa chọn dịch vụ phù hợp nhất. Hệ thống thanh toán an toàn của ${getAppName()}.com đảm bảo freelancer chỉ nhận được tiền sau khi công việc đã hoàn thành, mang lại sự an tâm cho cả hai bên.`,
+            platformDescription: `${getAppName()} là nền tảng kết nối các freelancer chuyên nghiệp từ nhiều lĩnh vực khác nhau tại một nơi, bao gồm thiết kế đồ họa, quảng cáo banner, viết bài, dịch thuật, tiếp thị trực tuyến, phát triển website và hơn 90 danh mục khác để đáp ứng nhu cầu đa dạng của doanh nghiệp và người dùng. Đội ngũ phát triển của chúng tôi đã thiết kế ${getAppName()} với sự đơn giản và tiện lợi, tạo ra một nền tảng giúp freelancer và khách hàng tiết kiệm thời gian. Ngoài ra, chúng tôi còn hỗ trợ các doanh nghiệp mới khởi nghiệp, thúc đẩy tinh thần kinh doanh và giúp freelancer làm việc hiệu quả hơn, tạo thu nhập ổn định và nâng cao tiêu chuẩn của freelancer tại Thái Lan.`,
+            platformPurpose: `${getAppName()} đóng vai trò là nền tảng trung gian trực tuyến kết nối freelancer với khách hàng, giúp họ dễ dàng tìm thấy và hợp tác với nhau mọi lúc. Freelancer có thể đăng tin tìm việc trên ${getAppName()} một cách thuận tiện tại một nơi duy nhất, đồng thời khách hàng có thể dễ dàng tìm kiếm, so sánh giá cả và đánh giá chất lượng freelancer để lựa chọn dịch vụ phù hợp nhất. Hệ thống thanh toán an toàn của ${getAppName()} đảm bảo freelancer chỉ nhận được tiền sau khi công việc đã hoàn thành, mang lại sự an tâm cho cả hai bên.`,
             subtitleBanner:
                 "Tăng trưởng doanh nghiệp nhanh chóng với freelancer phù hợp",
             subtitleDownloadApp: `Đơn giản hóa quy trình tuyển dụng của bạn với ứng dụng ${getAppName()} . Tìm kiếm, tóm tắt, thanh toán và nhận công việc liền mạch—all in one app.`,
@@ -1924,8 +1942,8 @@ export const vi = {
             noteBalanceUpdate:
                 "Trong một số trường hợp, có thể mất đến 5 phút để cập nhật số dư. Vui lòng đợi trong giây lát.",
             noteCoinTerms: `• ${getAppName()} Coin có thể được sử dụng mà không có ngày hết hạn và có thể được sử dụng cùng với các Coupon tài khoản khác.• ${getAppName()} Coin không thể quy đổi thành tiền mặt hoặc chuyển sang tài khoản ${getAppName()} khác.• Khi bạn nạp ${getAppName()} Coin vào hệ thống, điều đó có nghĩa là bạn chấp nhận các điều khoản và điều kiện.• Nếu bạn gặp bất kỳ vấn đề nào khi nạp ${getAppName()} Coin hoặc thanh toán, vui lòng liên hệ Trung tâm hỗ trợ.`,
-            noteMinMax: "Tối thiểu 100 baht và tối đa 500.000 baht.",
-            placeholderSpecifyAmount: "Nhập số tiền 100-500.000 baht",
+            noteMinMax: "Tối thiểu 20 baht và tối đa 50.000 baht.",
+            placeholderSpecifyAmount: "Nhập số tiền 20-50.000 baht",
             sectionTopUpHistory: "Lịch sử nạp tiền",
             statusWaiting: "Đang chờ thanh toán",
             subtitleFastworkCoin:
@@ -2841,11 +2859,11 @@ export const vi = {
                 "Hãy để chúng tôi giúp bạn tìm freelancer phù hợp bằng cách đơn giản là  chỉ cần thêm Line",
             addLineDescription:
                 "Dịch vụ trò chuyện để thuê freelancer hoặc nhận hỗ trợ từ trợ lý",
-            addLineButton: "Thêm @108Heros",
+            addLineButton: `Thêm @${getAppName()}`,
         },
         terms: {
             confirmFreelancerRegistrationTitle: "Xác nhận đăng ký freelancer",
-            homepageTitle: `${getAppName()}.com - Nền tảng số 1 cung cấp freelancer chất lượng được doanh nghiệp trên khắp Thái Lan lựa chọn`,
+            homepageTitle: `${getAppName()} - Nền tảng số 1 cung cấp freelancer chất lượng được doanh nghiệp trên khắp Thái Lan lựa chọn`,
             homepageSubtitle: `Thuê Freelancer trên ${getAppName()} `,
             homepageAppPrompt: "Mở ứng dụng để trải nghiệm đầy đủ",
             homepageFreelancerSectionTitle:
@@ -2890,16 +2908,16 @@ export const vi = {
                 "Đánh giá freelancer để cung cấp phản hồi và hỗ trợ họ cải thiện.",
             trustedClientsTitle: "Một số khách hàng tiêu biểu",
             trustedClientsCta: "Xem thêm",
-            termsAndConditionsTitle: `Điều khoản và Điều kiện sử dụng nền tảng ${getAppName()}.com dành cho Freelancer`,
+            termsAndConditionsTitle: `Điều khoản và Điều kiện sử dụng nền tảng ${getAppDomain()} dành cho Freelancer`,
             section1Title: "Định nghĩa",
-            definition1: `Nền tảng là website (https://${getAppName()}.com) và ứng dụng ${getAppName()} .`,
+            definition1: `Nền tảng là website (https://${getAppDomain()}) và ứng dụng ${getAppName()} .`,
             definition2:
                 "Nền tảng đóng vai trò trung gian để người dùng tạo và chia sẻ dịch vụ.",
             definition3: "Người dùng có thể mua và bán dịch vụ qua nền tảng.",
             definition4: "Thanh toán được thực hiện dựa trên giá trị dịch vụ.",
             definition5:
                 "Công việc là sản phẩm hoặc dịch vụ do khách hàng và freelancer cung cấp.",
-            definition6: `Công ty là tổ chức điều hành ${getAppName()}.com.`,
+            definition6: `Công ty là tổ chức điều hành ${getAppDomain()}.`,
             definition7: `${getAppName()} cung cấp nền tảng cho các dịch vụ bên thứ ba.`,
             definition8: "Công ty hỗ trợ tương tác giữa khách hàng và freelancer.",
             definition9: "Người dùng là cá nhân sử dụng dịch vụ của nền tảng.",
@@ -3129,7 +3147,7 @@ export const vi = {
             intellectualProperty3:
                 "Người vi phạm bồi thường cho chủ sở hữu quyền sở hữu trí tuệ.",
             section18Title: "Chính sách bảo mật",
-            privacyPolicy1: `Xem chính sách bảo mật tại https://${getAppName()}.com/seller-privacy.`,
+            privacyPolicy1: `Xem chính sách bảo mật tại https://${getAppDomain()}/seller-privacy.`,
             privacyPolicy2: "Dữ liệu cá nhân được xử lý bí mật.",
             privacyPolicy3: "Công ty có thể truy cập trò chuyện để giám sát.",
             privacyPolicy4:
@@ -3138,8 +3156,8 @@ export const vi = {
             contact1: "Liên hệ công ty trong giờ làm việc.",
             contact2: `Tên công ty: ${getAppName()} `,
             contact3: `Địa chỉ: Trụ sở ${getAppName()} `,
-            contact4: `Email: support@${getAppName()}.com`,
-            contact5: `Website: https://static.${getAppName()}.com/contents/support-center`,
+            contact4: `Email: support@${getAppDomain()}`,
+            contact5: `Website: https://static.${getAppDomain()}/contents/support-center`,
             note1: "Các điều khoản này có thể thay đổi mà không cần thông báo trước.",
             note2: "Người dùng chịu trách nhiệm xem xét cập nhật Điều khoản sử dụng.",
             note3: "Công ty có quyền sửa đổi tính năng nền tảng.",
@@ -3163,7 +3181,7 @@ export const vi = {
             pageTitle: "Điều khoản & Điều kiện",
             heading: `Điều khoản & Điều kiện sử dụng nền tảng dành cho nhà tuyển dụng của Công ty ${getAppName()} Technologies Co., Ltd.`,
             definitionTitle: "Định nghĩa",
-            definitionPlatform: `“Nền tảng” đề cập đến trang web (https://${getAppName()}.com/) hoặc ứng dụng ${getAppName()} của công ty. Đây là một kênh, không gian trung gian cho phép người dùng tạo, chia sẻ, bán và mua công việc hoặc dịch vụ với hình thức thanh toán theo giá trị đã được xác định trước cho từng công việc hoặc dịch vụ đó.`,
+            definitionPlatform: `“Nền tảng” đề cập đến trang web (https://${getAppDomain()}/) hoặc ứng dụng ${getAppName()} của công ty. Đây là một kênh, không gian trung gian cho phép người dùng tạo, chia sẻ, bán và mua công việc hoặc dịch vụ với hình thức thanh toán theo giá trị đã được xác định trước cho từng công việc hoặc dịch vụ đó.`,
             definitionWork:
                 "“Công việc” đề cập đến các sản phẩm và/hoặc dịch vụ mà nhà tuyển dụng đã thuê và freelancer đã bàn giao thông qua nền tảng.",
             definitionCompany: `“Công ty” đề cập đến Công ty ${getAppName()} Technologies Co., Ltd.`,
@@ -3432,7 +3450,7 @@ export const vi = {
             privacyPolicyTitle: "Chính sách bảo mật",
             privacyPolicyContent1:
                 "Công ty coi trọng và nhận thức được việc bảo vệ an toàn dữ liệu cá nhân của bạn theo pháp luật. Bạn có thể tìm hiểu chính sách bảo mật tại",
-            privacyPolicyLinkText: `https://${getAppName()}.com/privacy`,
+            privacyPolicyLinkText: `https://${getAppDomain()}/privacy`,
             privacyPolicyContent2:
                 "Chính sách bảo mật này là một phần của thỏa thuận sử dụng này.",
             privacyPolicyContent3:
@@ -3449,7 +3467,7 @@ export const vi = {
                 "Địa chỉ: Số 622, Tòa nhà Emporium Tower, Tầng 24/1-3,8, Đường Sukhumvit, Phường Khlong Tan, Quận Khlong Toei, Bangkok 10110",
             contactInfoEmail: "support@ibrowe.com",
             contactInfoPhone: "Số điện thoại: 02-114-7008",
-            contactInfoWebsiteLinkText: `https://static.${getAppName()}.com/contents/support-center`,
+            contactInfoWebsiteLinkText: `https://static.${getAppDomain()}/contents/support-center`,
             tableOfContents: "Mục lục",
             selectSection: "Chọn mục",
             privacyPage: {
@@ -3688,8 +3706,8 @@ export const vi = {
                 title: "Trò chuyện được mã hóa",
                 toggleLabel: "Mã hóa tin nhắn trò chuyện",
                 toggleHint: "Áp dụng cho tài khoản này trên mọi thiết bị",
-                bodyInTransit: "Tin nhắn được mã hóa giữa thiết bị của bạn và 108heros, nên không ai trên đường truyền có thể đọc được.",
-                bodyNotE2e: "Đây không phải mã hóa đầu cuối: 108heros giữ khóa và có thể đọc tin nhắn của bạn, điều này cho phép chúng tôi xử lý các báo cáo lạm dụng và lừa đảo.",
+                bodyInTransit: `Tin nhắn được mã hóa giữa thiết bị của bạn và ${getAppName()}, nên không ai trên đường truyền có thể đọc được.`,
+                bodyNotE2e: `Đây không phải mã hóa đầu cuối: ${getAppName()} giữ khóa và có thể đọc tin nhắn của bạn, điều này cho phép chúng tôi xử lý các báo cáo lạm dụng và lừa đảo.`,
                 enabled: "Đã bật mã hóa tin nhắn",
                 disabled: "Đã tắt mã hóa tin nhắn",
                 saveError: "Không thể lưu. Vui lòng thử lại.",
@@ -3852,7 +3870,7 @@ export const vi = {
                         withdrawCoins: {title: "Rút xu", description: "Duyệt yêu cầu rút xu"},
                         manageJobBoard: {title: "Quản lý bảng việc làm", description: "Quản lý bài đăng trên bảng việc làm"},
                         manageCategory: {title: "Quản lý danh mục", description: "Quản lý danh mục cho bài đăng việc làm"},
-                        managePicture: {title: "Giao diện trang web", description: "Quản lý hình ảnh cho 108heros"},
+                        managePicture: {title: "Giao diện trang web", description: `Quản lý hình ảnh cho ${getAppName()}`},
                         siteSettings: {title: "Cài Đặt Trang Web", description: "Cấu hình thông tin trang web, đăng ký và giới hạn tần suất"},
                     },
                 },
@@ -4073,7 +4091,7 @@ export const vi = {
                     errorMinOne: "Phải từ 1 trở lên",
                     name: {
                         label: "Tên Trang Web",
-                        placeholder: "ví dụ: 108Heros",
+                        placeholder: `ví dụ: ${getAppName()}`,
                         errorMin: "Vui lòng nhập tên trang web",
                         errorMax: "Tên trang web không được vượt quá 20 ký tự",
                     },
@@ -4179,6 +4197,24 @@ export const vi = {
                 actionApprove: "Duyệt",
                 verifyFailed: "Xác minh tài khoản ngân hàng thất bại",
                 fetchError: "Không thể tải danh sách tài khoản ngân hàng. Vui lòng thử lại.",
+            },
+            notifications: {
+                bellLabel: "Thông báo",
+                bellLabelWithCount: "Thông báo, {{count}} hồ sơ đang chờ duyệt",
+                panelTitle: "Đang chờ duyệt",
+                panelDescription: "Hồ sơ tài xế cần được xét duyệt",
+                pendingCount: "{{count}} đang chờ",
+                loading: "Đang tải…",
+                emptyTitle: "Đã xử lý xong",
+                empty: "Không có hồ sơ nào đang chờ. Tất cả đã được duyệt.",
+                kindSubmitted: "Hồ sơ tài xế mới",
+                kindResubmitted: "Hồ sơ được gửi lại",
+                kindUnknown: "Cập nhật hồ sơ tài xế",
+                badgeSubmitted: "Mới",
+                badgeResubmitted: "Gửi lại",
+                badgeUpdate: "Cập nhật",
+                riderRef: "Tài xế #{{id}}",
+                viewQueue: "Xem hàng đợi xét duyệt tài xế",
             },
             riders: {
                 // Page title & tabs

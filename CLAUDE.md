@@ -33,3 +33,89 @@ not fixing yet still gets an issue; deferred work with no issue is invisible wor
 Narrow exceptions: something you broke and fixed inside your own unmerged branch, or a
 typo in code being written this minute. Anything already merged, deployed, or reported by
 the owner is a bug → issue first.
+
+## Chat room ids arrive percent-encoded (2026-09-07)
+
+A room id is `dm:<luid>:<luid>:post:<postId>`. **Next.js does not decode dynamic
+route segments**, so the `[roomId]` param arrives as
+`dm%3A8051%3A8052%3Apost%3A1305938` — from a `<Link>` click, a hard refresh and a
+typed URL alike. Everything else in the app (the rooms store, API responses, the
+`chat_message.room_id` column) uses the decoded form.
+
+Always read it through `decodeRoomIdParam` (`src/modules/chat/utils/roomId.ts`),
+never `params.roomId` directly.
+
+Getting this wrong is silent, which is why it survived: the chat layout passed
+the raw param to `WebSocketProvider`, so the client joined a room id matching
+nothing. The join was accepted, heartbeats flowed, and every message was
+addressed to a room nobody read — the UI showed "Sent" and no row was ever
+written, with no error on either side. `MessageClient` decoded its own copy
+inline, so the message list and the socket disagreed about which room was open.
+Fixed in #134; the helper is now the single spelling for both.
+
+## Two things that read as text but are configuration (2026-09-07)
+
+**Category names come from the server, not only the catalogue.** Labels are
+keyed off the ltree path (`0.logo_design` → `catalogs.logoDesign`), and `t()`
+**echoes the key back** when there is no entry — so `|| "-"` never fires and
+the raw string `catalogs.0` reaches the screen for any category added after the
+translation files were written. Use `categoryLabel(t, category)`
+(`src/utils/categoryLabel.ts`), which defaults to the server's `title`/`name`.
+Several call sites already passed `{defaultValue: …name}` by hand; the helper
+makes that uniform. Fixed in #139.
+
+**Ask before raising the platform authenticator.** Passkey enrolment is
+offered by a dialog (`shouldOfferPasskey` + `ConfirmActionModal`), and only an
+explicit yes calls `enrollPasskey`. It used to be raised the instant OTP verify
+succeeded, holding the redirect until the OS prompt resolved — so a browser
+with no usable authenticator left an already-authenticated person on a disabled
+button for the full 60s deadline. Declining now redirects immediately, because
+nothing was started. Same shape as 108jobs-flutter's `askToCreatePasskey`.
+Fixed in #146; the 60s deadline from #137 remains as a backstop for people who
+say yes.
+
+**Name a chat participant with `participantDisplayName`, never `.name`.**
+`name` is the actor name, generated as `user_<8 hex>` for everyone provisioned
+through Identity — i.e. everyone who signs in by phone. `displayName` rides in
+the same payload. This was fixed twice (the room header in #138, then the room
+list in #144, missed the first time and leaving one screen naming a person two
+ways), so the rule now lives in `src/modules/chat/utils/participantName.ts`
+rather than in each component's memory.
+
+**`NEXT_PUBLIC_APP_NAME` is a display name, nothing more.** It is *not* the
+auth cookie name any more — that is the fixed literal `"108_auth"` in
+`src/utils/config.ts`, with `legacyAuthCookieNames` migrated on read. The
+`.env` comment claiming otherwise was stale and had kept the browser tab
+reading "108Heros" on the jobs app. Changing it logs nobody out. Fixed in #140.
+
+## The chat room payload already carries the workflow (2026-09-07)
+
+`GET /chat/rooms/{id}` returns `workflow` beside `room`, `participants`, `post`
+and `lastMessage` — it comes from `Workflow::get_current_by_room_id`, and its
+`status` uses the **same union** as the stepper's `StatusKey`, so there is no
+mapping to write.
+
+That field went unread for a long time. The workflow stepper is a client-only
+Zustand store (`stateMachineStore`) that starts at
+`WaitForFreelancerQuotation` and is advanced by local clicks, so reopening a
+room showed a finished job as not started and the Orders tab rendered no stage
+at all (#136). `MessageClient` now adopts the server's status through
+`hydratableWorkflowStatus`, which refuses three cases: no workflow yet, a
+workflow the server marked inactive, and a status this client does not know
+(the server's enum can gain a variant first, and an unknown key renders a blank
+panel).
+
+**Do not reach for `getBillingByRoom` for this.** It returns only the billing
+row — never `workflow.status`, a different and shorter lifecycle — and filters
+on a `billingStatus` the caller must already know, defaulting to
+`QuotePendingReview`, so it 404s for any job past the quote stage. It has no
+callers in this app and is not the right tool.
+
+## `AGENTS.md` — the same file, for Codex (2026-09-02)
+
+`AGENTS.md` beside this file is a **symlink to this file**, so Codex / ChatGPT —
+which looks for `AGENTS.md` and never loads `CLAUDE.md` — starts with the same
+control document Claude Code does. A symlink rather than a copy on purpose: a
+copy drifts the day one side is edited. Keep it a symlink; edit only this file.
+Rolled out across the ecosystem 2026-09-02; `CLAUDE.md` stays the canonical name
+because the control-doc standard names it (`108-ting-ecosystem-docs/CONTROL_DOC_COVERAGE.md`).

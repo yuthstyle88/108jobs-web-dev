@@ -35,6 +35,7 @@ import {AdminLayout} from "@/modules/admin/components/layout/AdminLayout";
 import {useDebounce} from "@/hooks/utils/useDebounce";
 import {useCursorPagination} from "@/hooks/data/useCursorPagination";
 import {PaginationControls} from "@/components/PaginationControls";
+import {categoryLabel} from "@/utils/categoryLabel";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -289,7 +290,7 @@ const AdminJobBoard = () => {
                                 <option value="">{t("profileJob.dropdownSearchCategory")}</option>
                                 {catalogData.map((cat) => (
                                     <option key={cat.category.id} value={cat.category.id}>
-                                        {t(`catalogs.${toCamelCaseLastSegment(cat.category.path)}`)}
+                                        {categoryLabel(t, cat.category)}
                                     </option>
                                 ))}
                             </select>
@@ -386,7 +387,7 @@ const AdminJobBoard = () => {
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
-                                                    {t(`catalogs.${toCamelCaseLastSegment(job.category?.path)}`) || "-"}
+                                                    {categoryLabel(t, job.category)}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">
                                                     {getJobTypeLabel(job.post.jobType, t)}

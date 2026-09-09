@@ -263,7 +263,14 @@ const nextConfig: NextConfig = {
         if (!process.env.API_INTERNAL_URL && process.env.NODE_ENV === 'production') {
             throw new Error('API_INTERNAL_URL must be set in production (refusing to fall back to the staging backend)');
         }
-        const apiBase = process.env.API_INTERNAL_URL ?? 'https://api-staging.108heros.com';
+        // `||` on a trimmed value, not `??`. `??` only catches null/undefined, and
+        // `.env.example` ships `API_INTERNAL_URL=` -- set but empty -- so the fallback
+        // never applied to the one value a new checkout actually has. apiBase became
+        // '', every rewrite destination collapsed to a relative path, and the request
+        // 404'd inside Next without ever reaching a backend or appearing in its log.
+        // The production guard above already treats blank as absent; this is the same
+        // rule for the fallback. See #112.
+        const apiBase = process.env.API_INTERNAL_URL?.trim() || 'https://api-staging.108heros.com';
         return {
             // Ensure these filesystem routes win before any proxying. This only
             // works for *non-dynamic* routes -- Next resolves static files and
@@ -306,7 +313,15 @@ const nextConfig: NextConfig = {
                 // way -- only an HTTP request through a running server shows it.
                 // See #86.
                 { source: '/api/rider-documents/:path*', destination: '/api/rider-documents/:path*' },
-                { source: '/api/:path*', destination: `${apiBase}/:path*` },
+                // `${apiBase}/api/:path*`, not `${apiBase}/:path*`. API_INTERNAL_URL is
+                // documented as an origin, and `getApiBase()` in src/utils/env.ts reads
+                // the same variable as one -- the generated client appends `/api/v4/...`
+                // to it for every server-side call. Stripping `/api` here meant no single
+                // value could satisfy both readers: an origin made getSite() work and
+                // 404'd every stored image, while a value ending in `/api` did the
+                // reverse and made SSR request `/api/api/v4/site`. Keeping the prefix
+                // lets the origin be correct for both. See #111.
+                { source: '/api/:path*', destination: `${apiBase}/api/:path*` },
                 { source: '/uploads/:path*', destination: 'https://cdn.108heros.com/uploads/:path*' },
             ],
             fallback: [],

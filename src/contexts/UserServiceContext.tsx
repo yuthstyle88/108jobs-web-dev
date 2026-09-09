@@ -5,7 +5,7 @@ import {useUserStore} from "@/store/useUserStore";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
 import {RoomView} from "@/modules/chat/types";
 import {useGlobalLoader} from "@/hooks/ui/GlobalLoaderContext";
-import {getAuthJWTCookie, IsoData} from "@/utils";
+import {getAuthJWTCookie, IsoData, retireLegacyAuthCookies} from "@/utils";
 import {useSiteStore} from "@/store/useSiteStore";
 import {useCategoriesStore} from "@/store/useCategoriesStore";
 import {useBankAccountsStore} from "@/store/useBankAccountStore";
@@ -61,6 +61,13 @@ export function UserServiceProvider({children, isoData}: UserServiceProviderProp
     useLayoutEffect(() => {
         if (seededRef.current) return;
         seededRef.current = true;
+
+        // Retire any pre-rebrand cookie regardless of whether this render's
+        // token (below) came from SSR (isoData.jwt) or from
+        // getAuthJWTCookie() on the client -- the `??` above short-circuits
+        // getAuthJWTCookie(), and therefore its own migration, whenever SSR
+        // already found a token under a legacy name.
+        retireLegacyAuthCookies();
 
         // Seed stores from ISO snapshot
         if (isoMyUser) {

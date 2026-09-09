@@ -104,6 +104,60 @@ describe("next.config rewrites() media proxy precedence", () => {
     expect(mediaIndex).toBeLessThan(catchAllIndex);
   });
 
+  // `.env.example` ships `API_INTERNAL_URL=` -- set but empty -- so the blank value
+  // is the one a fresh checkout actually has. `??` did not catch it, apiBase became
+  // '' and every destination collapsed to a relative path that 404'd inside Next.
+  // See #112.
+  it("treats a blank API_INTERNAL_URL as absent and falls back, rather than producing an empty apiBase", async () => {
+    const prev = process.env.API_INTERNAL_URL;
+    try {
+      for (const blank of ["", "   "]) {
+        process.env.API_INTERNAL_URL = blank;
+        const result = await nextConfig.rewrites!();
+        const afterFiles = Array.isArray(result) ? result : (result.afterFiles ?? []);
+        const catchAll = afterFiles.find((r) => r.source === "/api/:path*");
+
+        expect(catchAll!.destination).not.toMatch(/^\/api\/:path\*$/);
+        expect(catchAll!.destination).toMatch(/^https?:\/\//);
+      }
+    } finally {
+      if (prev === undefined) delete process.env.API_INTERNAL_URL;
+      else process.env.API_INTERNAL_URL = prev;
+    }
+  });
+
+  it("uses a configured API_INTERNAL_URL verbatim rather than the fallback", async () => {
+    const prev = process.env.API_INTERNAL_URL;
+    try {
+      process.env.API_INTERNAL_URL = "http://localhost:8536";
+      const result = await nextConfig.rewrites!();
+      const afterFiles = Array.isArray(result) ? result : (result.afterFiles ?? []);
+      const catchAll = afterFiles.find((r) => r.source === "/api/:path*");
+
+      expect(catchAll!.destination).toBe("http://localhost:8536/api/:path*");
+    } finally {
+      if (prev === undefined) delete process.env.API_INTERNAL_URL;
+      else process.env.API_INTERNAL_URL = prev;
+    }
+  });
+
+  // The catch-all must keep the `/api` prefix. `API_INTERNAL_URL` is documented as
+  // an origin and `getApiBase()` in src/utils/env.ts reads it as one -- the client
+  // appends `/api/v4/...` to it for every server-side call. A catch-all that
+  // stripped the prefix meant no single value satisfied both readers: an origin let
+  // getSite() work and 404'd every stored image, while a value ending in `/api` did
+  // the reverse and made SSR request `/api/api/v4/site`. See #111.
+  it("keeps the /api prefix when proxying to the backend, so an origin-shaped API_INTERNAL_URL works for both the rewrite and getApiBase()", async () => {
+    const result = await nextConfig.rewrites!();
+    const afterFiles = Array.isArray(result) ? result : (result.afterFiles ?? []);
+
+    const catchAll = afterFiles.find((r) => r.source === "/api/:path*");
+
+    expect(catchAll).toBeDefined();
+    expect(catchAll!.destination).toMatch(/\/api\/:path\*$/);
+    expect(catchAll!.destination).not.toMatch(/[^i]\/:path\*$/);
+  });
+
   it("does not rely on a beforeFiles self-mapping for the (dynamic) media route -- that mechanism only works for non-dynamic routes", async () => {
     const result = await nextConfig.rewrites!();
     const beforeFiles = Array.isArray(result) ? [] : (result.beforeFiles ?? []);

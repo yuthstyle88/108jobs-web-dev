@@ -1,4 +1,4 @@
-import {getAppName} from "@/utils/appConfig";
+import {getAppDomain, getAppName} from "@/utils/appConfig";
 
 export const en = {
     terms: {
@@ -31,8 +31,22 @@ export const en = {
             price: "Budget",
             jobFlow: "Job Flow",
             orders: "Orders",
+            ordersActive: "Active",
+            ordersCompleted: "Completed",
+            ordersCancelled: "Cancelled",
+            ordersEmpty: "No orders yet in this conversation.",
+            ordersOrderNumber: "Order #{{n}}",
+            ordersEscrowHeld: "In escrow",
+            ordersEscrowPaidOut: "Paid out",
+            ordersEscrowRefunded: "Refunded",
+            ordersFinishedApprox: "approximate",
+            ordersHireAgain: "Hire again",
+            ordersPickPost: "Which job is this order for?",
             media: "Media",
+            tabChat: "Chat",
+            tabOrder: "Order",
             closeDrawer: "Close",
+            tabsLabel: "Chat or Order",
             howToHire: {
                 promptTitle: "Not sure where to start?",
                 promptSubtitle: "Don't worry, here's a quick guide.",
@@ -47,16 +61,16 @@ export const en = {
                 },
                 pay: {
                     title: "Approve the quotation and pay",
-                    quotation: "The freelancer sends a quotation through 108heros",
-                    payment: "Approve it and complete payment through 108heros",
+                    quotation: `The freelancer sends a quotation through ${getAppName()}`,
+                    payment: `Approve it and complete payment through ${getAppName()}`,
                 },
                 review: {
                     title: "Review and approve delivery",
                     delivery: "The freelancer submits the work in the conversation",
                     approval: "Review the delivery and approve it to release payment",
                 },
-                hintTitle: "Keep it on 108heros",
-                hint: "Keep your agreement, files, delivery, and payment in this conversation so 108heros can help if you need support.",
+                hintTitle: `Keep it on ${getAppName()}`,
+                hint: `Keep your agreement, files, delivery, and payment in this conversation so ${getAppName()} can help if you need support.`,
             },
             mediaPanel: {
                 imageVideo: "Image & Video",
@@ -575,6 +589,10 @@ export const en = {
             resendEmailSuccess: "Email resent successfully",
             resendVerifyCode: "Resend verification code",
             resendLimitReached: "You have exceeded the allowed number of resend attempts (3 times).",
+            passkeyOfferTitle: "Skip the SMS code next time?",
+            passkeyOfferBody: "Create a passkey for {{identifier}}. Next time you can sign in on this device with a tap, without waiting for a code.",
+            passkeyOfferAccept: "Create passkey",
+            passkeyOfferDecline: "Not now",
             emailRegistered: "This email has already been registered. Please login with your password.",
             invalidPassword: "Invalid password",
             titleVerifyingCode: "Check your inbox",
@@ -1215,7 +1233,7 @@ export const en = {
                 "Your problem is our priority. You can contact our customer support by the following channels.",
             facebook: "Facebook",
             messenger: "Messenger",
-            supportEmail: `support@${getAppName()}`,
+            supportEmail: `support@${getAppDomain()}`,
             customerSupportWorkingHours:
                 "Our team is ready to serve you every day, Monday-Friday from 9:30 - 22:00",
             customerSupportWeekendHours:
@@ -1914,8 +1932,8 @@ export const en = {
             noteBalanceUpdate:
                 "In some cases, it may take up to 5 minutes for the balance to be updated. Please wait a moment.",
             noteCoinTerms: `- ${getAppName()} Coin can be used without expiration date and can be used together with other account Coupons.- ${getAppName()} Coin cannot be redeemed for cash or transferred to other ${getAppName()} accounts.- When you top up ${getAppName()} Coin into the system, it will be considered as acceptance of its terms and conditions.- If you encounter any problems in topping up ${getAppName()} Coin or making payments, please contact the Support Center.`,
-            noteMinMax: "Minimum 100 baht and maximum 500,000 baht.",
-            placeholderSpecifyAmount: "Specify the amount 100-500,000 baht",
+            noteMinMax: "Minimum 20 baht and maximum 50,000 baht.",
+            placeholderSpecifyAmount: "Specify the amount 20-50,000 baht",
             sectionTopUpHistory: "Top-up history",
             statusWaiting: "Waiting for payment",
             subtitleFastworkCoin:
@@ -2872,16 +2890,16 @@ export const en = {
                 "Rate the freelancer to provide feedback and support their improvement.",
             trustedClientsTitle: "Some of Our Trusted Clients",
             trustedClientsCta: "View More",
-            termsAndConditionsTitle: `Terms and Conditions for Using the ${getAppName()}.co Platform for Freelancers`,
+            termsAndConditionsTitle: `Terms and Conditions for Using the ${getAppDomain()} Platform for Freelancers`,
             section1Title: "Definitions",
-            definition1: `Platform refers to the website (https://${getAppName()}.com) and the ${getAppName()} app.`,
+            definition1: `Platform refers to the website (https://${getAppDomain()}) and the ${getAppName()} app.`,
             definition2:
                 "The platform acts as an intermediary for users to create and share services.",
             definition3: "Users can buy and sell services through the platform.",
             definition4: "Payments are made based on the value of services.",
             definition5:
                 "Work refers to products or services provided by clients and freelancers.",
-            definition6: `Company refers to the entity operating ${getAppName()}.co.`,
+            definition6: `Company refers to the entity operating ${getAppDomain()}.`,
             definition7: `${getAppName()} provides the platform for third-party services.`,
             definition8:
                 "The company facilitates interactions between clients and freelancers.",
@@ -3095,7 +3113,7 @@ export const en = {
             intellectualProperty3:
                 "Violators compensate intellectual property owners.",
             section18Title: "Privacy Policy",
-            privacyPolicy1: `Read our privacy policy at https://${getAppName()}.com/seller-privacy.`,
+            privacyPolicy1: `Read our privacy policy at https://${getAppDomain()}/seller-privacy.`,
             privacyPolicy2: "Personal data is treated as confidential.",
             privacyPolicy3: "The company may access chats for monitoring.",
             privacyPolicy4: "Users agree to content use for marketing.",
@@ -3103,8 +3121,8 @@ export const en = {
             contact1: "Contact the company during business hours.",
             contact2: `Company Name: ${getAppName()}`,
             contact3: `Address: ${getAppName()} Headquarters`,
-            contact4: `Email: support@${getAppName()}.com`,
-            contact5: `Website: https://static.${getAppName()}.com/contents/support-center`,
+            contact4: `Email: support@${getAppDomain()}`,
+            contact5: `Website: https://static.${getAppDomain()}/contents/support-center`,
             note1: "These terms are subject to change without prior notice.",
             note2: "Users are responsible for reviewing updates to the Terms of Use.",
             note3: "The company reserves the right to modify platform features.",
@@ -3128,7 +3146,7 @@ export const en = {
             pageTitle: "Terms & Conditions",
             heading: `Platform Terms & Conditions for Employers of ${getAppName()} Technologies Co., Ltd.`,
             definitionTitle: "Definitions",
-            definitionPlatform: `“Platform” means the Company's website (https://${getAppName()}.com/) or ${getAppName()} application, which serves as a channel and central space enabling users to create, share, sell, and purchase work or services in the form of payments based on the defined value of such work or services.`,
+            definitionPlatform: `“Platform” means the Company's website (https://${getAppDomain()}/) or ${getAppName()} application, which serves as a channel and central space enabling users to create, share, sell, and purchase work or services in the form of payments based on the defined value of such work or services.`,
             definitionWork:
                 "“Work” means the deliverables and/or various services that an Employer commissions and a Freelancer delivers via the Platform.",
             definitionCompany: `“Company” means ${getAppName()} Technologies Co., Ltd.`,
@@ -3392,7 +3410,7 @@ export const en = {
             privacyPolicyTitle: "Privacy Policy",
             privacyPolicyContent1:
                 "The Company prioritizes and acknowledges the protection and security of your personal data in accordance with the law. You can review the Privacy Policy at",
-            privacyPolicyLinkText: `https://${getAppName()}.com/privacy`,
+            privacyPolicyLinkText: `https://${getAppDomain()}/privacy`,
             privacyPolicyContent2:
                 "which this Privacy Policy is an integral part of these Terms of Use.",
             privacyPolicyContent3:
@@ -3409,7 +3427,7 @@ export const en = {
                 "Address: 622 Emporium Tower, 24/1-3,8 Sukhumvit Road, Khlong Tan, Khlong Toei, Bangkok 10110",
             contactInfoEmail: "support@ibrowe.com",
             contactInfoPhone: "Phone Number: 02-114-7008",
-            contactInfoWebsiteLinkText: `https://static.${getAppName()}.com/contents/support-center`,
+            contactInfoWebsiteLinkText: `https://static.${getAppDomain()}/contents/support-center`,
             tableOfContents: "Table of Contents",
             selectSection: "Select a section",
             privacyPage: {
@@ -3650,8 +3668,8 @@ export const en = {
                 title: "Secure Chat",
                 toggleLabel: "Encrypt chat messages",
                 toggleHint: "Applies to this account, on every device",
-                bodyInTransit: "Messages are encrypted between your device and 108heros, so nobody on the network in between can read them.",
-                bodyNotE2e: "This is not end-to-end encryption: 108heros holds the key and can read your messages, which is what lets us act on reports of abuse and scams.",
+                bodyInTransit: `Messages are encrypted between your device and ${getAppName()}, so nobody on the network in between can read them.`,
+                bodyNotE2e: `This is not end-to-end encryption: ${getAppName()} holds the key and can read your messages, which is what lets us act on reports of abuse and scams.`,
                 enabled: "Message encryption enabled",
                 disabled: "Message encryption disabled",
                 saveError: "Couldn't save that. Please try again.",
@@ -3814,7 +3832,7 @@ export const en = {
                         withdrawCoins: {title: "Withdraw Coins", description: "Approve coin withdrawal requests"},
                         manageJobBoard: {title: "Manage Job Board", description: "Manage job board posts"},
                         manageCategory: {title: "Manage Category", description: "Manage categories for job board posts"},
-                        managePicture: {title: "Site Appearance", description: "Manage picture for 108heros"},
+                        managePicture: {title: "Site Appearance", description: `Manage picture for ${getAppName()}`},
                         siteSettings: {title: "Site Settings", description: "Configure site identity, registration, and rate limits"},
                     },
                 },
@@ -4035,7 +4053,7 @@ export const en = {
                     errorMinOne: "Must be 1 or greater",
                     name: {
                         label: "Site Name",
-                        placeholder: "e.g. 108Heros",
+                        placeholder: `e.g. ${getAppName()}`,
                         errorMin: "Site name is required",
                         errorMax: "Site name must be 20 characters or fewer",
                     },
@@ -4141,6 +4159,24 @@ export const en = {
                 actionApprove: "Approve",
                 verifyFailed: "Failed to verify bank account",
                 fetchError: "Failed to load bank accounts. Please try again.",
+            },
+            notifications: {
+                bellLabel: "Notifications",
+                bellLabelWithCount: "Notifications, {{count}} waiting for a decision",
+                panelTitle: "Waiting for a decision",
+                panelDescription: "Rider applications that need review",
+                pendingCount: "{{count}} pending",
+                loading: "Loading…",
+                emptyTitle: "All caught up",
+                empty: "Nothing waiting. Every application has been decided.",
+                kindSubmitted: "New rider application",
+                kindResubmitted: "Application sent again",
+                kindUnknown: "Rider application update",
+                badgeSubmitted: "New",
+                badgeResubmitted: "Resubmitted",
+                badgeUpdate: "Update",
+                riderRef: "Rider #{{id}}",
+                viewQueue: "View rider queue",
             },
             riders: {
                 // Page title & tabs
