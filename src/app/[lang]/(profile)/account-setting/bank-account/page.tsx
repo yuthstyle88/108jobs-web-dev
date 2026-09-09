@@ -10,7 +10,7 @@ import BankAccountModal, {BankAccountFormValues} from "@/components/Common/Modal
 import ConfirmDeleteModal from "@/components/Common/Modal/DeleteBankModal";
 import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {useTranslation} from "react-i18next";
-import {isFailed, isSuccess} from "@/services/HttpService";
+import {ApiError, isFailed, isSuccess} from "@/services/HttpService";
 import {useBankAccountsStore} from "@/store/useBankAccountStore";
 import {resolveApiErrorMessage} from "@/utils/errorMessage";
 
@@ -26,6 +26,10 @@ const BankAccount = () => {
     } = useBankAccountsStore();
 
     const [error, setError] = useState<string | null>(null);
+    // Deliberately NOT the same state as `error` above: that one is piped into
+    // BankAccountModal, so a "delete failed" message stored there would surface
+    // inside the add-account box the next time it opens (#163).
+    const [actionError, setActionError] = useState<string | null>(null);
 
     const {
         data: bankListRes,
@@ -122,6 +126,11 @@ const BankAccount = () => {
         }
     };
 
+    // One formula for both actions, so the two can never drift apart — same
+    // resolver `handleSubmit` already uses for its own failures.
+    const actionErrorText = (err: ApiError | undefined): string =>
+        resolveApiErrorMessage(err, t, {fallback: t("error.serverError")});
+
     const handleSetDefault = async (id: number) => {
         const account = normalizedAccounts.find(a => a.userBankAccount.id === id);
         if (!account?.userBankAccount.isVerified) return;
@@ -129,6 +138,10 @@ const BankAccount = () => {
         const res = await setDefaultBankAccount({bankAccountId: id});
         if (isSuccess(res)) {
             setDefaultBankAccountStore(id);
+            setActionError(null);
+        }
+        if (isFailed(res)) {
+            setActionError(actionErrorText(res.err));
         }
     };
 
@@ -142,6 +155,10 @@ const BankAccount = () => {
         const res = await deleteBankAccount({bankAccountId: deletingAccountId});
         if (isSuccess(res)) {
             deleteBankAccountStore(deletingAccountId);
+            setActionError(null);
+        }
+        if (isFailed(res)) {
+            setActionError(actionErrorText(res.err));
         }
         setConfirmDeleteOpen(false);
         setDeletingAccountId(null);
@@ -188,6 +205,18 @@ const BankAccount = () => {
             {/* Account List */}
             <div className="p-6 sm:p-8 space-y-5">
                 {isBankListLoading && <LoadingBlur text=""/>}
+
+                {/* The confirm box has just closed and focus has moved, so a
+                    screen-reader user hears nothing without a live region. */}
+                {actionError && (
+                    <div
+                        data-testid="bank-action-error"
+                        role="alert"
+                        className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    >
+                        {actionError}
+                    </div>
+                )}
 
                 {normalizedAccounts.length === 0 && !isBankListLoading && (
                     <div className="text-center py-12">
