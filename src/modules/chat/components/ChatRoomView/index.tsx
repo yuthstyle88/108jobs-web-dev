@@ -314,7 +314,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // this conversation last saw -- for a consolidated room, none at all -- so
     // it may be offered as a default but never started with silently (#150).
     const {posts: hireAgainPosts, isLoading: hireAgainLoading} = useHireAgainPosts(
-        localUser?.personId as number | undefined,
         Boolean(isEmployer),
     );
     const hireAgainPreselectedPostId = useMemo(
