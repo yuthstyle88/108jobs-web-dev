@@ -16,6 +16,15 @@
 // output goes straight through.
 import {getIdentityBase} from "@/utils/env";
 import {ApiError, FailedRequestState, REQUEST_STATE, SuccessRequestState} from "@/services/HttpService";
+import {withDeadline} from "@/utils/withDeadline";
+
+/**
+ * How long to leave a passkey enrolment prompt up before giving up on it.
+ *
+ * Generous enough for someone to find their fingerprint reader, short enough
+ * that a prompt which will never answer does not hold the sign-in redirect.
+ */
+const PASSKEY_ENROLMENT_TIMEOUT_MS = 60_000;
 
 type Settled<T> = SuccessRequestState<T> | FailedRequestState;
 
@@ -100,7 +109,17 @@ export async function enrollPasskey(identityId: string, accessToken: string, ide
         if (!optionsJson) return false;
 
         const options = PublicKeyCredential.parseCreationOptionsFromJSON(optionsJson as any);
-        const credential = await navigator.credentials.create({publicKey: options}) as PublicKeyCredential | null;
+        // Bounded: this call sits between a successful OTP verify and the
+        // redirect, so a prompt that never resolves strands an already
+        // authenticated person on a disabled submit button. Declining is
+        // already handled (it rejects, and the catch below treats that as
+        // "no passkey today"); a prompt that answers nothing at all was not.
+        const controller = new AbortController();
+        const credential = await withDeadline(
+            navigator.credentials.create({publicKey: options, signal: controller.signal}) as Promise<PublicKeyCredential | null>,
+            PASSKEY_ENROLMENT_TIMEOUT_MS,
+            controller,
+        );
         if (!credential) return false;
 
         const credentialJson = (credential as any).toJSON();

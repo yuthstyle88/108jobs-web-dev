@@ -56,9 +56,11 @@ export default function Home() {
                     <main className="mt-20 sm:mt-0 sm:pt-0">
                         <section
                             className="hidden sm:block h-auto bg-cover bg-center relative pt-[6.5rem] md:pt-[4.5rem]"
-                            style={{
-                                backgroundImage: `url(${siteView?.localSite.banner})`,
-                            }}
+                            style={
+                                siteView?.localSite?.banner
+                                    ? { backgroundImage: `url(${siteView.localSite.banner})` }
+                                    : undefined
+                            }
                         >
                             <div className="absolute inset-0 bg-black/50"/>
                             <div

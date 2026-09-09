@@ -73,7 +73,7 @@ const Coins108Heros = () => {
                                 <div className="relative flex-1">
                                     <input
                                         type="text"
-                                        placeholder="Specify the amount 100-500,000"
+                                        placeholder={t("profileCoins.placeholderSpecifyAmount")}
                                         className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-gray-800 placeholder-gray-400"
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}

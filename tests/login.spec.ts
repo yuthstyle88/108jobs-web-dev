@@ -27,6 +27,47 @@ test.describe('Login flow', () => {
     await expect(page.getByRole('button', { name: /sign in with phone/i })).toBeVisible();
   });
 
+  test('offers a passkey before raising one, and declining signs in at once', async ({ page }) => {
+    await enableMockOtp(page);
+
+    // Fail any enrolment attempt loudly: declining must not reach the network
+    // at all, so a request here means the offer was bypassed.
+    let enrolmentAttempted = false;
+    await page.route('**/auth/passkey/register/**', async (route) => {
+      enrolmentAttempted = true;
+      await route.fulfill({ status: 404, contentType: 'application/json', body: '{}' });
+    });
+
+    await page.goto(`/${LOCALE}/login`);
+
+    // This page opens on password login (#54); the OTP form is one click away.
+    // The mirror wrote this test when OTP was the default, so it went straight
+    // for the phone field and timed out on a form that was not on screen.
+    await page.getByRole('button', { name: /sign in with phone/i }).click();
+
+    await page.getByPlaceholder(/phone/i).fill('0812345678');
+    await page.getByRole('button', { name: /send verification code/i }).click();
+    await page.getByPlaceholder(/otp/i).fill('123456');
+    await page.getByRole('button', { name: /verify otp/i }).click();
+
+    // The question is asked, and it names the number that just signed in.
+    await expect(page.getByText(/skip the sms code next time/i)).toBeVisible();
+    // The number appears twice on screen -- the code step still shows "we
+    // sent a code to ...". Match the dialog's own sentence so this asserts the
+    // offer names the account, not that the number is somewhere on the page.
+    await expect(
+      page.getByText(/create a passkey for \+66812345678/i),
+    ).toBeVisible();
+
+    // Still on the login page: verifying alone does not sign you in any more.
+    expect(new URL(page.url()).pathname).toContain('/login');
+
+    await page.getByRole('button', { name: /not now/i }).click();
+
+    await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
+    expect(enrolmentAttempted).toBe(false);
+  });
+
   test('can switch to phone + OTP login and verify', async ({ page }) => {
     await enableMockOtp(page);
 
@@ -42,6 +83,12 @@ test.describe('Login flow', () => {
     await page.getByPlaceholder(/otp/i).fill('123456');
     await page.getByRole('button', { name: /verify otp/i }).click();
 
+    // Verifying no longer redirects on its own: it asks whether to create a
+    // passkey first, and only an explicit yes raises the platform
+    // authenticator. Declining is the fast path and must redirect at once --
+    // nothing was started, so there is nothing to wait for. (#146)
+    await page.getByRole('button', { name: /not now/i }).click();
+
     await page.waitForURL((url) => !/\/login(\/|$)/.test(new URL(url).pathname), { timeout: 15000 });
   });
 
@@ -52,11 +99,11 @@ test.describe('Login flow', () => {
     await expect(page).toHaveURL(new RegExp(`/${LOCALE}/register`));
   });
 
-  test('login page has correct 108jobs.com document title and not 108heros.com', async ({ page }) => {
+  test('login page carries the product name in its document title', async ({ page }) => {
     await page.goto(`/${LOCALE}/login`);
-    await expect(page).toHaveTitle(/108jobs\.com/);
-    const title = await page.title();
-    expect(title).not.toContain('108heros.com');
+    // getAppName() feeds document.title. The mirror asserted 108jobs here;
+    // the org sweep (660d682) and the owner's 2026-09-09 call make it 108Heros.
+    await expect(page).toHaveTitle(/108Heros/i);
   });
 });
 

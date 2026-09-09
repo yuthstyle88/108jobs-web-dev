@@ -1,6 +1,6 @@
 import { cookies as nextCookies, headers as nextHeaders } from 'next/headers';
 import type {IncomingHttpHeaders} from "http";
-import {authCookieName, JWT} from "@/utils/config";
+import {authCookieName, JWT, legacyAuthCookieNames} from "@/utils/config";
 import {NextRequest} from "next/server";
 
 
@@ -13,9 +13,14 @@ import {NextRequest} from "next/server";
  */
 export function getJwtFromRequest(req: NextRequest): string | null {
   // อ่าน cookie โดยตรงจาก NextRequest
-  const raw =
-    req.cookies.get(JWT)?.value ??
-    (authCookieName ? req.cookies.get(authCookieName)?.value ?? null : null);
+  let raw: string | null = null;
+  for (const name of [JWT, authCookieName, ...legacyAuthCookieNames]) {
+    const value = req.cookies.get(name)?.value;
+    if (value) {
+      raw = value;
+      break;
+    }
+  }
 
   if (!raw) return null;
 
@@ -80,6 +85,7 @@ export async function getJwtCookieFromServer(
     const candidates = [
       JWT,
       authCookieName,
+      ...legacyAuthCookieNames,
     ].filter(Boolean) as string[];
 
     let token: string | null = null;
