@@ -39,6 +39,12 @@ test.describe('Login flow', () => {
     });
 
     await page.goto(`/${LOCALE}/login`);
+
+    // This page opens on password login (#54); the OTP form is one click away.
+    // The mirror wrote this test when OTP was the default, so it went straight
+    // for the phone field and timed out on a form that was not on screen.
+    await page.getByRole('button', { name: /sign in with phone/i }).click();
+
     await page.getByPlaceholder(/phone/i).fill('0812345678');
     await page.getByRole('button', { name: /send verification code/i }).click();
     await page.getByPlaceholder(/otp/i).fill('123456');
