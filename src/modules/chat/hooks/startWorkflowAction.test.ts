@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import {act, createElement} from "react";
+import {act, createElement, useEffect} from "react";
 import {createRoot, type Root} from "react-dom/client";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
@@ -44,14 +44,26 @@ function mountActions(deps: Partial<UseWorkflowActionsDeps>) {
         currentStatus: "None",
     } as unknown as UseWorkflowActionsDeps;
 
-    function Probe() {
+    // Published from an effect, not from render: the React Compiler lint
+    // (errors, not warnings, in this project) rejects writing to anything
+    // declared outside the component while rendering.
+    function Probe({onReady}: {onReady: (fn: never) => void}) {
         const actions = useWorkflowActions({...base, ...deps});
-        captured.startWorkflowAction = actions.startWorkflowAction as never;
+        const start = actions.startWorkflowAction;
+        useEffect(() => {
+            onReady(start as never);
+        }, [onReady, start]);
         return null;
     }
 
     act(() => {
-        root.render(createElement(Probe));
+        root.render(
+            createElement(Probe, {
+                onReady: fn => {
+                    captured.startWorkflowAction = fn;
+                },
+            }),
+        );
     });
     return captured;
 }
