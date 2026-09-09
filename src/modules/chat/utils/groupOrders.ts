@@ -68,3 +68,22 @@ export function canInferPostForRehire(
     const [only] = [...postIds];
     return Number.isFinite(only) ? only : null;
 }
+
+/**
+ * The job "Hire again" offers as its default -- never the one it starts with.
+ *
+ * The draft context is the post the chat was opened from, so it is the first
+ * choice to offer. Failing that, a conversation about exactly one job may offer
+ * that job. Failing that, nothing: with several jobs in the history, picking
+ * the most recent would start a real order, holding real coins, against a job
+ * the employer never chose.
+ */
+export function preselectPostForRehire(
+    draftPostId: number | null | undefined,
+    orders: readonly OrderSummary[],
+): number | null {
+    if (draftPostId != null && Number.isFinite(Number(draftPostId))) {
+        return Number(draftPostId);
+    }
+    return canInferPostForRehire(orders);
+}
