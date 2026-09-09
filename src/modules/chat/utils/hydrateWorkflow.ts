@@ -46,3 +46,71 @@ export function hydratableWorkflowStatus(
     ? (status as StatusKey)
     : null;
 }
+
+/** Just enough of a selected order to decide what the stepper should show. */
+interface SelectedOrderLike {
+  status?: string | null;
+  statusBeforeCancel?: string | null;
+}
+
+/**
+ * The status the stepper should adopt for the SELECTED order, or `null` to
+ * leave the machine alone.
+ *
+ * `hydratableWorkflowStatus` above reads the room's single workflow, and that
+ * was the whole story while a room held one order. A conversation now holds
+ * every order two people have run together, and the one on screen is whichever
+ * the reader picked in the Orders tab -- which `room.workflow` knows nothing
+ * about. Seen live: a Completed order highlighted in the list, and the panel
+ * under it still offering "Send Quotation" and "Cancel job" for a different
+ * order. The action ids already followed the selection; the displayed stage
+ * did not, so the buttons described one order and would have acted on another.
+ *
+ * Same refusal as the room path for a status this client does not know: an
+ * unknown key puts the machine in a state with no step and no actions.
+ */
+export function hydratableOrderStatus(
+  order: SelectedOrderLike | null | undefined,
+): StatusKey | null {
+  const status = order?.status;
+  if (!status) return null;
+  return Object.prototype.hasOwnProperty.call(workflowActionsMap, status)
+    ? (status as StatusKey)
+    : null;
+}
+
+/**
+ * What the stepper should show, given a selection and a room.
+ *
+ * The selection wins. `ChatRoomView` has an effect that keeps the machine
+ * equal to "the room's workflow" -- it depends on `currentStatus`, so whenever
+ * the store holds anything else it writes the room's value back. That was
+ * correct while a room held one order and is exactly wrong now: a selection
+ * wrote `Completed` and three `WaitForFreelancerQuotation` writes followed it
+ * in the same tick. So the selection is not a second writer racing that
+ * effect; it is the source the effect reads from.
+ *
+ * A selection whose status this client does not know falls through to the
+ * room rather than blanking the panel.
+ */
+export function stepperStatusFor(
+  selected: SelectedOrderLike | null | undefined,
+  room: RoomWithWorkflow | null | undefined,
+): { status: StatusKey; statusBeforeCancel: StatusKey | undefined } | null {
+  const fromSelection = hydratableOrderStatus(selected);
+  if (fromSelection) {
+    return {
+      status: fromSelection,
+      statusBeforeCancel:
+        hydratableOrderStatus({ status: selected?.statusBeforeCancel }) ?? undefined,
+    };
+  }
+  const fromRoom = hydratableWorkflowStatus(room);
+  if (!fromRoom) return null;
+  const before = (room?.workflow as { statusBeforeCancel?: string | null } | null | undefined)
+    ?.statusBeforeCancel;
+  return {
+    status: fromRoom,
+    statusBeforeCancel: hydratableOrderStatus({ status: before }) ?? undefined,
+  };
+}

@@ -604,47 +604,11 @@ export function getCategoriesAtLevel(
  * Always the same string for the same pair.
  */
 // Web-safe deterministic 64-bit FNV-1a hash -> 16-char hex (no Node deps)
-function fnv1a64Hex(input: string): string {
-    // FNV-1a 64-bit parameters
-    let hash = 0xcbf29ce484222325n; // 14695981039346656037
-    const prime = 0x100000001b3n;   // 1099511628211
-
-    // Get UTF-8 bytes of input
-    let bytes: Uint8Array;
-    if (typeof TextEncoder !== "undefined") {
-        bytes = new TextEncoder().encode(input);
-    } else {
-        // minimal fallback: encode as UTF-16 code units masked to 1 byte
-        // (rarely used in modern environments; kept to avoid Node Buffer)
-        bytes = new Uint8Array(input.length);
-        for (let i = 0; i < input.length; i++) bytes[i] = input.charCodeAt(i) & 0xff;
-    }
-
-    for (let i = 0; i < bytes.length; i++) {
-        hash ^= BigInt(bytes[i]);
-        hash = (hash * prime) & 0xffffffffffffffffn; // keep 64-bit
-    }
-
-    // Convert to 16-char hex with leading zeros
-    let hex = hash.toString(16);
-    if (hex.length < 16) hex = hex.padStart(16, "0");
-    else if (hex.length > 16) hex = hex.slice(-16);
-    return hex;
-}
-
-export function dmRoomId(userA: PersonId | undefined, userB: PersonId | undefined, postId: string | undefined): string {
-    if (userA === undefined || userB === undefined) {
-        throw new Error("Both userA and userB must be defined to generate a DM room ID");
-    }
-
-    // normalize order (smaller id first)
-    const low = Math.min(userA, userB);
-    const high = Math.max(userA, userB);
-    const input = `dm:${low}:${high}:${postId || ''}`;
-
-    // Deterministic 64-bit hash -> 16 hex chars
-    return fnv1a64Hex(input);
-}
+// `dmRoomId` lived here: an FNV-1a hash of two PersonIds and a post id, used
+// by two screens to guess a room id and navigate to it. It was never the
+// server's id -- the server mints `dm:{lo}:{hi}` from LocalUserIds -- so it
+// could not name a real room, and the screens using it navigated to nothing.
+// The server owns room identity; ask it and use what comes back.
 
 // Date helpers (timezone-safe for yyyy-MM-dd strings)
 // Exported as named functions for reuse across the app.

@@ -2,7 +2,6 @@ import React from "react";
 import {Person, PersonId} from "108jobs-client";
 import {useTranslation} from "react-i18next";
 import {useRouter} from "next/navigation";
-import {dmRoomId} from "@/utils/helpers";
 import {MessageCircle} from "lucide-react";
 import {useHttpPost} from "@/hooks/api/http/useHttpPost";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
@@ -22,22 +21,24 @@ const ChatNoWorkButton: React.FC<ChatNoWorkButtonProps> = ({profile, currentUser
     const handleChatClick = async () => {
         try {
             if (!currentUserId || !profile?.id || currentUserId === profile.id) return;
-            const roomId = dmRoomId(currentUserId, profile.id, undefined);
-            try {
-                const res = await createChatRoom({partnerPersonId: profile.id, roomId});
-                if (res.state === REQUEST_STATE.SUCCESS) {
-                    upsertRoom(res.data.room as RoomView);
-                }
-            } catch (e) {
-                // If room already exists or API fails, proceed to navigate anyway
-            }
+
+            // The server owns the room id. This used to compute an FNV-1a hash
+            // of two PersonIds and navigate to it -- a value the server has
+            // never minted, so the "fallback" below landed on a room that did
+            // not exist. There is no id to fall back TO; without a response
+            // there is nowhere correct to go.
+            const res = await createChatRoom({partnerPersonId: profile.id});
+            if (res.state !== REQUEST_STATE.SUCCESS) return;
+
+            const room = res.data.room as RoomView;
+            upsertRoom(room);
+            const roomId = room?.room?.id;
+            if (!roomId) return;
+            // Raw, per `decodeRoomIdParam` (#134): the browser encodes the
+            // colons and the reader decodes them exactly once.
             router.push(`/${i18n.language}/chat/message/${roomId}?t=${Date.now()}`);
-        } catch (err) {
-            try {
-                const fallbackId = dmRoomId(currentUserId, profile.id, undefined);
-                router.push(`/${i18n.language}/chat/message/${fallbackId}?t=${Date.now()}`);
-            } catch {
-            }
+        } catch {
+            // Nothing to navigate to: the id only exists in the response.
         }
     };
 
