@@ -43,19 +43,13 @@ export type UseWorkflowActionsDeps = {
     setShowQuotationModal: (v: boolean) => void;
     setSelectedFile: (v: any) => void;
     createInvoice: (form: CreateInvoiceForm) => Promise<any>;
-    startWorkflow: (form: { postId: number; roomId: string; proposalId?: number }) => Promise<any>;
+    startWorkflow: (form: { postId: number; seqNumber: number; roomId: string }) => Promise<any>;
     approveQuotationApi: (form: ApproveQuotationForm) => Promise<any>;
     submitStartWorkApi: (form: any) => Promise<any>;
     approveWorkApi: (form: any) => Promise<any>;
     postId?: PostId | null | undefined;
     walletId?: number | null;
     currentStatus: StatusKey;
-    /**
-     * The order the Orders tab has selected. Every mutation targets this one.
-     * Omitted, the hook falls back to the room's single active workflow, which
-     * stops naming anything useful once a conversation holds several orders.
-     */
-    selectedOrder?: {workflowId: number; billingId?: number | null} | null;
 };
 
 export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
@@ -81,7 +75,6 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
         postId,
         walletId,
         currentStatus,
-        selectedOrder,
     } = deps;
 
     const goToStatusAndBroadcast = (target: StatusKey, prevStatus?: StatusKey) => {
@@ -103,14 +96,7 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
         setWorkflowId,
         billingId,
         setBillingId
-    } = useWorkflow(roomId, roomData, {
-        resetBillingOnRoomChange: true,
-        // When the Orders tab has a selection, every action below targets THAT
-        // order. Without it `workflowId` comes from the room's single active
-        // workflow, which names nothing useful once a conversation can hold
-        // more than one order.
-        selectedOrder,
-    });
+    } = useWorkflow(roomId, roomData, {resetBillingOnRoomChange: true});
 
     // Helper function to validate workflow ID
     const validateWorkflowId = (caller?: string): number | null => {
@@ -134,11 +120,8 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
                 setError(t('profileChat.missingPostIdForQuotation') || 'This chat is not linked to a post. You cannot create a quotation.');
                 return false;
             }
-            // No `seqNumber`. The server assigns the order's position in this
-            // conversation, inside the transaction that creates it. Sending one
-            // is how a room ended up with orders numbered 1, 2, 3 and then 1
-            // nine more times: this client sent `1` every time.
-            const res = await startWorkflow({postId: pid, roomId});
+            const seqNumber = 1;
+            const res = await startWorkflow({postId: pid, seqNumber, roomId});
             if (res?.state === REQUEST_STATE.SUCCESS && res?.data?.success) {
                 setHasStarted(true);
                 const wfId = Number(res?.data?.workflowId);
@@ -406,11 +389,7 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
             if (!workflowId) return false;
 
             const seqNumber = getLatestProposedQuoteSeq(messages as any, 1);
-            // `workflowId`, not `roomData.workflow?.id`. Reading the room here
-            // cancelled whichever order the room happened to call current --
-            // with two running, not necessarily the one on screen, and a cancel
-            // releases that order's escrow.
-            const form: any = {seqNumber, workflowId, currentStatus};
+            const form: any = {seqNumber, workflowId: roomData.workflow?.id, currentStatus};
             const res = await HttpService.client.cancelJob(form as any);
             const ok = res?.state === REQUEST_STATE.SUCCESS && Boolean(res?.data?.success);
             if (!ok) {

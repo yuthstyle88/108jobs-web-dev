@@ -37,16 +37,8 @@ vi.mock("react-i18next", () => ({
     }),
 }));
 
-/**
- * The two places the Orders/Media content is mounted at once, as
- * `ChatRoomView` and `JobFlowSidebar` arrange them: the permanent desktop
- * `<aside>` (still mounted, just `hidden`, below md) and the mobile Order
- * pane. Reproduced here rather than rendering `ChatRoomView`, which would
- * drag in the websocket, workflow and store stack for a question about
- * two DOM copies.
- */
 function SidebarHarness() {
-    const {setContent, setOpen, content} = useJobFlowSidebar();
+    const {setContent, setOpen} = useJobFlowSidebar();
 
     useLayoutEffect(() => {
         setContent(createElement(HowToHireGuide));
@@ -54,12 +46,7 @@ function SidebarHarness() {
         return () => setContent(null);
     }, [setContent, setOpen]);
 
-    return createElement(
-        "div",
-        null,
-        createElement(JobFlowSidebar),
-        createElement("div", {"data-testid": "mobile-order-pane", className: "md:hidden"}, content),
-    );
+    return createElement(JobFlowSidebar);
 }
 
 describe("JobFlowSidebar hiring guide", () => {
@@ -70,8 +57,9 @@ describe("JobFlowSidebar hiring guide", () => {
         actEnvironment.IS_REACT_ACT_ENVIRONMENT = true;
         Object.defineProperty(window, "innerWidth", {configurable: true, value: 1024, writable: true});
         vi.spyOn(HTMLElement.prototype, "getClientRects").mockImplementation(function (this: HTMLElement) {
-            const inMobilePane = this.closest<HTMLElement>('[data-testid="mobile-order-pane"]') !== null;
-            const isVisible = window.innerWidth >= 768 ? !inMobilePane : inMobilePane;
+            const sidebar = this.closest<HTMLElement>('aside[aria-label="Job Flow Sidebar"]');
+            const isDesktopSidebar = sidebar?.getAttribute("role") === "complementary";
+            const isVisible = window.innerWidth >= 768 ? isDesktopSidebar : !isDesktopSidebar;
             return (isVisible ? [new DOMRect()] : []) as unknown as DOMRectList;
         });
         container = document.createElement("div");
@@ -97,8 +85,10 @@ describe("JobFlowSidebar hiring guide", () => {
         );
         const desktopTrigger = Array.from(desktopSidebar?.querySelectorAll("button") ?? [])
             .find((button) => button.textContent?.includes("How to hire"));
-        const mobilePane = document.querySelector<HTMLElement>('[data-testid="mobile-order-pane"]');
-        const mobileTrigger = Array.from(mobilePane?.querySelectorAll("button") ?? [])
+        const mobileSidebar = document.querySelector<HTMLElement>(
+            'aside[role="dialog"][aria-label="Job Flow Sidebar"]',
+        );
+        const mobileTrigger = Array.from(mobileSidebar?.querySelectorAll("button") ?? [])
             .find((button) => button.textContent?.includes("How to hire"));
         expect(desktopTrigger).toBeInstanceOf(HTMLButtonElement);
         expect(mobileTrigger).toBeInstanceOf(HTMLButtonElement);

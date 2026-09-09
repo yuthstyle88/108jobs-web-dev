@@ -18,7 +18,12 @@ describe("auth cookie", () => {
   afterEach(wipeAuthCookies);
 
   it("is named independently of the product name", () => {
-    expect(authCookieName).toBe("108_auth");
+    // The mirror pinned this to "108_auth"; this repo had already pinned it to
+    // JWT ("jwt"), which is part of the API authentication contract -- the
+    // backend accepts that cookie name. Either fixes the original bug (the name
+    // used to be derived from NEXT_PUBLIC_APP_NAME, so a rename signed everyone
+    // out); the deployed one wins. What matters is that it is a constant.
+    expect(authCookieName).toBe("jwt");
   });
 
   it("reads a token written under the stable name", () => {

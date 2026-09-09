@@ -14,9 +14,6 @@ import {isFailed} from "@/services/HttpService";
 import {useTranslation} from "react-i18next";
 import {AlertCircle, RefreshCw} from "lucide-react";
 import {Button} from "@/components/ui/Button";
-import {decodeRoomIdParam} from "@/modules/chat/utils/roomId";
-import {hydratableWorkflowStatus} from "@/modules/chat/utils/hydrateWorkflow";
-import {useStateMachineStore} from "@/modules/chat/store/stateMachineStore";
 
 export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
     const {t} = useTranslation();
@@ -26,9 +23,12 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
     const findPartner = useRoomsStore(s => s.findPartner);
     const upsertRoom = useRoomsStore(s => s.upsertRoom);
 
-    // Shared with the chat layout, which uses the same value to open the
-    // socket -- see decodeRoomIdParam for why the raw param cannot be used.
-    const roomId = decodeRoomIdParam(rawRoomId);
+    // Next.js does not decode dynamic route segments, and room ids contain
+    // colons (e.g. "dm:4233:4238"), which the browser percent-encodes on
+    // navigation (both a <Link> click and a hard refresh/direct URL). Every
+    // room id elsewhere (the rooms store, API responses) is the decoded
+    // form, so comparing against the raw param here always failed to match.
+    const roomId = decodeURIComponent(rawRoomId);
     const room = rooms.find(r => r.room.id === roomId);
 
     // Zustand's rooms store resets on hard refresh / direct navigation, so when
@@ -41,20 +41,6 @@ export default function MessageClient({roomId: rawRoomId}: { roomId: string }) {
             upsertRoom({...data.room, isActive: false} as RoomView, false);
         }
     }, [data, upsertRoom]);
-
-    // Adopt the server's workflow stage.
-    //
-    // The stepper's store is client-only: it starts at
-    // WaitForFreelancerQuotation and is advanced by local clicks, so a
-    // reopened room showed a finished job as not started and the Orders tab
-    // rendered no stage at all. The room payload has always carried the
-    // answer -- `workflow` comes straight from the server -- it was simply
-    // never read. See hydratableWorkflowStatus for when adopting is refused.
-    const setWorkflowState = useStateMachineStore(s => s.set);
-    const serverStatus = hydratableWorkflowStatus(data?.room);
-    useEffect(() => {
-        if (serverStatus) setWorkflowState(serverStatus);
-    }, [serverStatus, setWorkflowState]);
 
     if (!room) {
         if (isLoading) {

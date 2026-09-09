@@ -17,21 +17,21 @@ export const similarPostFetchLimit = 6;
 export const relTags = "noopener nofollow";
 export const emDash = "\u2014";
 /**
- * Name of the cookie holding the access token.
+ * Cookie names a browser may still hold from before `authCookieName` below was
+ * decoupled from the product name.
  *
- * Fixed and brand-independent on purpose. This used to be derived from
- * NEXT_PUBLIC_APP_NAME, which meant renaming the product renamed the cookie and
- * logged every signed-in user out -- and it did not self-heal, because a session
- * with no claims never schedules the refresh that would redeem the surviving
- * refresh_token cookie.
- */
-export const authCookieName = "108_auth";
-
-/**
- * Cookie names a browser may still hold from before the decoupling above.
- * The deployed NEXT_PUBLIC_APP_NAME was not knowable from the repository, so this
- * covers every plausible value it held. Reads migrate these on contact; add to this
- * list if an environment turns out to have used something else.
+ * The cookie used to be derived from NEXT_PUBLIC_APP_NAME, so renaming the
+ * product renamed the cookie and logged every signed-in user out -- and it did
+ * not self-heal, because a session with no claims never schedules the refresh
+ * that would redeem the surviving refresh_token cookie. The deployed value was
+ * not knowable from the repository, so this covers every plausible name it
+ * held. Reads migrate these on contact; add to this list if an environment
+ * turns out to have used something else.
+ *
+ * The mirror fixed the same bug by pinning the cookie to the literal
+ * "108_auth". This repo had already pinned it to `JWT` ("jwt") below, which is
+ * part of the API authentication contract, so that name wins and only the
+ * migration list is carried over.
  */
 export const legacyAuthCookieNames = [
   "108Jobs",

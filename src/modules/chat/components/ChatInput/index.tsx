@@ -88,48 +88,22 @@ const ChatInput: React.FC<ChatInputProps> = ({
         [getValues, setValue]
     );
 
-    // === POSITION PICKER ABOVE SMILEY BUTTON (VIEWPORT-CLAMPED) ===
+    // === POSITION PICKER ABOVE SMILEY BUTTON ===
     useEffect(() => {
         if (!showEmojiPicker || !emojiButtonRef.current || !pickerRef.current) return;
 
-        const updatePosition = () => {
-            if (!emojiButtonRef.current || !pickerRef.current) return;
-            const button = emojiButtonRef.current;
-            const picker = pickerRef.current;
-            const rect = button.getBoundingClientRect();
+        const button = emojiButtonRef.current;
+        const picker = pickerRef.current;
+        const rect = button.getBoundingClientRect();
 
-            const margin = 8;
-            const pickerWidth = picker.offsetWidth || 320;
-            const pickerHeight = picker.offsetHeight || 400;
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
+        // Position picker directly above the button
+        const top = rect.top - 410; // height + margin
+        const left = rect.left - 280; // align to right edge of button
 
-            // Try positioning directly above the button, aligned with right edge of button
-            let top = rect.top - pickerHeight - 8;
-            if (top < margin) {
-                if (rect.bottom + pickerHeight + margin <= viewportHeight) {
-                    top = rect.bottom + 8;
-                } else {
-                    top = Math.max(margin, Math.min(top, viewportHeight - pickerHeight - margin));
-                }
-            }
-
-            let left = rect.right - pickerWidth;
-            left = Math.max(margin, Math.min(left, viewportWidth - pickerWidth - margin));
-
-            picker.style.position = "fixed";
-            picker.style.top = `${top}px`;
-            picker.style.left = `${left}px`;
-            picker.style.zIndex = "50";
-        };
-
-        updatePosition();
-        window.addEventListener("resize", updatePosition);
-        window.addEventListener("scroll", updatePosition, true);
-        return () => {
-            window.removeEventListener("resize", updatePosition);
-            window.removeEventListener("scroll", updatePosition, true);
-        };
+        picker.style.position = "fixed";
+        picker.style.top = `${top}px`;
+        picker.style.left = `${left}px`;
+        picker.style.zIndex = "50";
     }, [showEmojiPicker]);
 
     // === CLOSE ON OUTSIDE CLICK ===
@@ -301,7 +275,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                             <div
                                 ref={pickerRef}
                                 className="bg-white rounded-lg shadow-xl border"
-                                style={{ width: "min(320px, calc(100vw - 16px))", height: 400, maxWidth: "calc(100vw - 16px)" }}
+                                style={{ width: 320, height: 400 }}
                             >
                                 <EmojiPicker
                                     onEmojiClick={(emojiData: EmojiClickData) => {
