@@ -119,6 +119,8 @@ import type {UserKeysResponse} from "./types/UserKeysResponse";
 import type {ChatHistoryQuery} from "./types/ChatHistoryQuery";
 import type {ChatMessagesResponse} from "./types/ChatMessagesResponse";
 import type {Billing} from "./types/Billing";
+import type {ListOrdersQuery} from "./types/ListOrdersQuery";
+import type {ListOrdersResponse} from "./types/ListOrdersResponse";
 import type {GetBillingByRoomQuery} from "./types/GetBillingByRoomQuery";
 import type {CreateTopUpRequest, TopUpResponse} from "./types/TopUp";
 import type {BillingId} from "./types/BillingId";
@@ -1537,6 +1539,27 @@ export class Api108Jobs extends Controller {
         return this.#wrapper<GetBillingByRoomQuery, Billing>(
             HttpType.Get,
             "/account/services/billing/by-room",
+            form,
+            options,
+        );
+    }
+
+    /**
+     * @summary Every order in a conversation, newest first.
+     *
+     * `getBillingByRoom` answers for one billing and cannot express a history;
+     * a 108Jobs room holds every order two people have run together.
+     */
+    @Security("bearerAuth")
+    @Get("/account/services/orders/by-room")
+    @Tags("Orders")
+    async listOrdersByRoom(
+        @Queries() form: ListOrdersQuery,
+        @Inject() options?: RequestOptions,
+    ) {
+        return this.#wrapper<ListOrdersQuery, ListOrdersResponse>(
+            HttpType.Get,
+            "/account/services/orders/by-room",
             form,
             options,
         );

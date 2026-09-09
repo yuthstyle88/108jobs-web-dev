@@ -8,7 +8,6 @@ import type {ProposalView} from "108jobs-client";
 import Image from "next/image";
 import React, {useState} from "react";
 import {useParams, useRouter} from "next/navigation";
-import {dmRoomId} from "@/utils/helpers";
 import {MessageCircleMore} from "lucide-react";
 import {getLocale} from "@/utils/date";
 import {useTranslation} from "react-i18next";
@@ -46,25 +45,37 @@ const JobBoardProposal = ({postId, jobCreatorId}: JobBoardProposalProps) => {
         if (!partnerPersonId || !currentUserId) return;
         if (partnerPersonId === currentUserId) return;
 
-        const roomId = dmRoomId(currentUserId, partnerPersonId, cv.post.id.toString());
+        // No client-computed room id.
+        //
+        // This used to send `dmRoomId(...)`, an FNV-1a hash of two *PersonId*s
+        // and the post. The server mints `dm:{lo}:{hi}` from *LocalUserId*s --
+        // two independent mismatches, so the hash could never name a real room.
+        // The server ignored it and returned its own id, and this then navigated
+        // to the hash anyway. The post still goes along: it is the draft context
+        // for an order, not the conversation's identity.
         const roomName = `${cv.post.name}`;
 
         try {
             setStartingChatFor(partnerPersonId);
-            try {
-                const res = await createChatRoom({
-                    partnerPersonId,
-                    roomId,
-                    ...(cv.post.id ? {postId: cv.post.id} : {}),
-                    ...(cv?.proposal?.id ? {currentProposalId: cv.proposal.id} : {}),
-                    roomName,
-                });
-                if (res.state === REQUEST_STATE.SUCCESS) {
-                    upsertRoom(res.data.room as RoomView);
-                }
-            } catch (e) {
-                // If room already exists or API fails, proceed to navigate anyway
-            }
+            const res = await createChatRoom({
+                partnerPersonId,
+                ...(cv.post.id ? {postId: cv.post.id} : {}),
+                ...(cv?.proposal?.id ? {currentProposalId: cv.proposal.id} : {}),
+                roomName,
+            });
+            if (res.state !== REQUEST_STATE.SUCCESS) return;
+
+            const room = res.data.room as RoomView;
+            upsertRoom(room);
+
+            // Navigate to the id the SERVER chose. Anything else is a room that
+            // does not exist -- which is what "proceed to navigate anyway" was
+            // doing, since the id it used was never the server's.
+            const roomId = room?.room?.id;
+            if (!roomId) return;
+            // Pushed raw, the way `ChatRoomItem` links it. The browser encodes the
+            // colons on navigation and `decodeRoomIdParam` decodes them once
+            // (#134); encoding here as well would arrive as `dm%253A...`.
             route.push(`/${currentLang}/chat/message/${roomId}?t=${Date.now()}`);
         } finally {
             setStartingChatFor(null);

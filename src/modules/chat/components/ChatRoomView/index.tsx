@@ -56,6 +56,8 @@ import ChatMediaDrawer from "@/modules/chat/components/ChatMediaDrawer";
 import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
+import {useOrders} from '@/modules/chat/hooks/useOrders';
+import {OrdersList} from '@/modules/chat/components/OrdersList';
 import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
 import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
 import {useChatRoom} from '@/modules/chat/hooks/useChatRoom';
@@ -326,6 +328,42 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     }, [currentRoom, currentStatus, statusBeforeCancel, setHasStarted]);
 
     // Centralize all workflow actions into a dedicated hook
+    // Orders in this conversation, and which one the panel is showing.
+    //
+    // Hydrated from the server on open and on refocus, never from local state:
+    // the workflow stepper used to be a client-only machine advanced by clicks,
+    // so reopening a room showed a finished job as not started.
+    const {
+        groups: orderGroups,
+        fallbackSelection,
+        isLoading: ordersLoading,
+        refresh: refreshOrders,
+    } = useOrders(roomId);
+
+    const [selectedOrder, setSelectedOrder] = useState<{
+        workflowId: number;
+        billingId?: number | null;
+    } | null>(null);
+
+    // Open on the running deal, or on the newest order when everything has
+    // finished. Only until the reader picks one -- after that the selection is
+    // theirs and must not be pulled back by a refresh.
+    useEffect(() => {
+        if (selectedOrder || !fallbackSelection) return;
+        setSelectedOrder({
+            workflowId: Number(fallbackSelection.workflowId),
+            billingId:
+                fallbackSelection.billingId == null
+                    ? null
+                    : Number(fallbackSelection.billingId),
+        });
+    }, [fallbackSelection, selectedOrder]);
+
+    // A conversation change is a different set of orders.
+    useEffect(() => {
+        setSelectedOrder(null);
+    }, [roomId]);
+
     const {
         startWorkflowAction,
         quotationSubmit,
@@ -357,6 +395,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         postId: roomPostId ?? null,
         walletId: wallet?.id,
         currentStatus,
+        selectedOrder,
     });
 
     // Wrap approveQuotation with additional balance guard to keep identical behavior
@@ -502,14 +541,36 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // dependency list the effect originally carried.
     const ordersContent = useMemo(
         () => (
-            <JobFlowContent
-                renderFlowContent={renderFlowContent}
-                jobId={roomPostId}
-                lang={lang}
-            />
+            <>
+                {/* Every order in this conversation, including finished ones.
+                    The panel below shows the SELECTED order's workflow; before
+                    this list there was only ever one to show, and a room whose
+                    newest order had been cancelled rendered nothing at all
+                    (#136). */}
+                <OrdersList
+                    groups={orderGroups}
+                    selectedWorkflowId={selectedOrder?.workflowId ?? null}
+                    onSelect={order =>
+                        setSelectedOrder({
+                            workflowId: Number(order.workflowId),
+                            billingId:
+                                order.billingId == null ? null : Number(order.billingId),
+                        })
+                    }
+                    isLoading={ordersLoading}
+                />
+                <JobFlowContent
+                    renderFlowContent={renderFlowContent}
+                    jobId={roomPostId}
+                    lang={lang}
+                />
+            </>
         ),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [
+            orderGroups,
+            selectedOrder,
+            ordersLoading,
             currentRoom,
             isEmployer,
             isEmployerKnown,
