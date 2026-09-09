@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hydratableWorkflowStatus } from "./hydrateWorkflow";
+import { hydratableOrderStatus, hydratableWorkflowStatus, stepperStatusFor } from "./hydrateWorkflow";
 
 // The workflow stepper is a client-only state machine that starts at
 // `WaitForFreelancerQuotation` and is advanced by local clicks. Nothing ever
@@ -52,4 +52,79 @@ describe("hydratableWorkflowStatus", () => {
       }),
     ).toBeNull();
   });
+});
+
+/**
+ * The stepper has to follow the SELECTED order, not the room.
+ *
+ * Seen live: with a Completed order highlighted in the Orders tab, the panel
+ * under it still showed "Send Quotation" / "Cancel job" -- the stage and the
+ * actions of the room's single workflow, which was a different order. Action
+ * targeting already followed the selection (the ids did); the displayed stage
+ * did not, so the buttons described one order and would have acted on another.
+ */
+describe("hydratableOrderStatus", () => {
+    const order = (status: string) => ({ status, statusBeforeCancel: undefined }) as never;
+
+    it("adopts the selected order's status", () => {
+        expect(hydratableOrderStatus(order("Completed"))).toBe("Completed");
+        expect(hydratableOrderStatus(order("InProgress"))).toBe("InProgress");
+    });
+
+    it("has nothing to adopt when no order is selected", () => {
+        expect(hydratableOrderStatus(null)).toBeNull();
+        expect(hydratableOrderStatus(undefined)).toBeNull();
+    });
+
+    it("refuses a status this client does not know, the way the room path does", () => {
+        // A newer server can add a variant first. An unknown key puts the
+        // machine in a state with no step and no actions -- a blank panel.
+        expect(hydratableOrderStatus(order("SomethingNew"))).toBeNull();
+    });
+});
+
+/**
+ * Which status the stepper adopts when both a room and a selection exist.
+ *
+ * `ChatRoomView` has an effect that keeps the machine equal to the room's
+ * single workflow: it depends on `currentStatus`, so the moment the store holds
+ * anything else it writes the room's value back. Seen live: a selection wrote
+ * `Completed`, and three `WaitForFreelancerQuotation` writes followed it in the
+ * same tick. The selection must be the source that effect reads from, not a
+ * second writer racing it.
+ */
+describe("stepperStatusFor", () => {
+    const room = { workflow: { status: "WaitForFreelancerQuotation", active: true } } as never;
+
+    it("takes the selected order's status over the room's", () => {
+        expect(
+            stepperStatusFor({ status: "Completed" } as never, room),
+        ).toEqual({ status: "Completed", statusBeforeCancel: undefined });
+    });
+
+    it("carries the selected order's statusBeforeCancel", () => {
+        expect(
+            stepperStatusFor(
+                { status: "Cancelled", statusBeforeCancel: "InProgress" } as never,
+                room,
+            ),
+        ).toEqual({ status: "Cancelled", statusBeforeCancel: "InProgress" });
+    });
+
+    it("falls back to the room when nothing is selected", () => {
+        expect(stepperStatusFor(null, room)).toEqual({
+            status: "WaitForFreelancerQuotation",
+            statusBeforeCancel: undefined,
+        });
+    });
+
+    it("falls back to the room when the selection's status is unknown", () => {
+        expect(stepperStatusFor({ status: "SomethingNew" } as never, room)?.status).toBe(
+            "WaitForFreelancerQuotation",
+        );
+    });
+
+    it("has nothing when there is neither", () => {
+        expect(stepperStatusFor(null, null)).toBeNull();
+    });
 });

@@ -57,6 +57,7 @@ import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
 import {useOrders} from '@/modules/chat/hooks/useOrders';
+import {stepperStatusFor} from '@/modules/chat/utils/hydrateWorkflow';
 import {OrdersList} from '@/modules/chat/components/OrdersList';
 import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
 import {buildAttachmentEnvelope} from "@/modules/chat/attachments";
@@ -295,39 +296,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         }
     };
 
-    const {goToStatus, handleChangeStatus} = useWorkflowStatus({
-        currentStatus,
-        setWorkflowState,
-        hasStarted,
-        setHasStarted,
-        ORDER,
-        send,
-        canGo,
-        statusBeforeCancel,
-    });
-
-    // Reflect the backend workflow state in the UI state machine. Keeps `hasStarted` and `statusBeforeCancel` coherent.
-    useEffect(() => {
-        const rd: any = currentRoom as any;
-        if (!rd) return;
-        const apiStatusRaw = rd?.workflow?.status;
-        const apiStatusBeforeCancelRaw = rd?.workflow?.statusBeforeCancel;
-        if (typeof apiStatusRaw === 'string') {
-            const uiStatus = apiToUiStatus(apiStatusRaw as any);
-            const uiStatusBeforeCancel = apiStatusBeforeCancelRaw
-                ? apiToUiStatus(apiStatusBeforeCancelRaw as any)
-                : undefined;
-            if (uiStatus) {
-                const shouldBeStarted = uiStatus !== 'Completed' && uiStatus !== 'Cancelled';
-                setHasStarted(shouldBeStarted);
-                if (uiStatus !== currentStatus || uiStatusBeforeCancel !== statusBeforeCancel) {
-                    setWorkflowState(uiStatus as StatusKey, uiStatusBeforeCancel as StatusKey | undefined, false);
-                }
-            }
-        }
-    }, [currentRoom, currentStatus, statusBeforeCancel, setHasStarted]);
-
-    // Centralize all workflow actions into a dedicated hook
     // Orders in this conversation, and which one the panel is showing.
     //
     // Hydrated from the server on open and on refocus, never from local state:
@@ -342,6 +310,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const [selectedOrder, setSelectedOrder] = useState<{
         workflowId: number;
         billingId?: number | null;
+        status?: string | null;
+        statusBeforeCancel?: string | null;
     } | null>(null);
 
     // Open on the running deal, or on the newest order when everything has
@@ -355,6 +325,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 fallbackSelection.billingId == null
                     ? null
                     : Number(fallbackSelection.billingId),
+            status: fallbackSelection.status,
+            statusBeforeCancel: fallbackSelection.statusBeforeCancel ?? null,
         });
     }, [fallbackSelection, selectedOrder]);
 
@@ -363,6 +335,41 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         setSelectedOrder(null);
     }, [roomId]);
 
+    const {goToStatus, handleChangeStatus} = useWorkflowStatus({
+        currentStatus,
+        setWorkflowState,
+        hasStarted,
+        setHasStarted,
+        ORDER,
+        send,
+        canGo,
+        statusBeforeCancel,
+    });
+
+    // Reflect the backend workflow state in the UI state machine. Keeps `hasStarted` and `statusBeforeCancel` coherent.
+    //
+    // The source is the SELECTED order when there is one, and the room's single
+    // workflow only when there is not. This effect depends on `currentStatus`
+    // and writes its source back whenever the store disagrees -- which is what
+    // keeps the panel honest, and also what erased a selection: the Orders tab
+    // wrote `Completed` and this wrote `WaitForFreelancerQuotation` straight
+    // over it, three times in one tick. One source, one writer.
+    useEffect(() => {
+        const adopt = stepperStatusFor(selectedOrder, currentRoom as any);
+        if (!adopt) return;
+        const uiStatus = apiToUiStatus(adopt.status as any);
+        const uiStatusBeforeCancel = adopt.statusBeforeCancel
+            ? apiToUiStatus(adopt.statusBeforeCancel as any)
+            : undefined;
+        if (!uiStatus) return;
+        const shouldBeStarted = uiStatus !== 'Completed' && uiStatus !== 'Cancelled';
+        setHasStarted(shouldBeStarted);
+        if (uiStatus !== currentStatus || uiStatusBeforeCancel !== statusBeforeCancel) {
+            setWorkflowState(uiStatus as StatusKey, uiStatusBeforeCancel as StatusKey | undefined, false);
+        }
+    }, [currentRoom, currentStatus, statusBeforeCancel, setHasStarted, selectedOrder?.workflowId, selectedOrder?.status, selectedOrder?.statusBeforeCancel]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Centralize all workflow actions into a dedicated hook
     const {
         startWorkflowAction,
         quotationSubmit,
@@ -554,6 +561,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                             workflowId: Number(order.workflowId),
                             billingId:
                                 order.billingId == null ? null : Number(order.billingId),
+                            status: order.status,
+                            statusBeforeCancel: order.statusBeforeCancel ?? null,
                         })
                     }
                     isLoading={ordersLoading}
