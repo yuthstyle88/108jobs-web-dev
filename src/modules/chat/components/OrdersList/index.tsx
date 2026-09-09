@@ -55,26 +55,41 @@ function OrderRow({
                         : "border-transparent hover:bg-black/5 dark:hover:bg-white/5",
                 ].join(" ")}
             >
+                {/* Every text node names its colour. `--foreground` follows the
+                    OS's prefers-color-scheme and goes near-white in dark, while
+                    this app's surfaces stay white -- so an inherited colour is
+                    rgb(237,237,237) on white for anyone whose OS is dark. That
+                    is what the first live render looked like. The rest of the
+                    sidebar sets text-gray-* explicitly; so does this. */}
                 <span className="flex items-baseline justify-between gap-2">
-                    <span className="text-sm font-medium truncate">
+                    <span
+                        className={[
+                            "text-sm font-medium truncate",
+                            selected ? "text-gray-900" : "text-gray-800",
+                        ].join(" ")}
+                    >
                         {order.postName ||
                             t("profileChat.ordersOrderNumber", {n: order.seqNumber})}
                     </span>
-                    <span className="text-xs opacity-70 shrink-0 tabular-nums">
+                    <span className="text-xs text-gray-500 shrink-0 tabular-nums">
                         #{order.seqNumber}
                     </span>
                 </span>
-                <span className="mt-0.5 flex items-center gap-2 text-xs opacity-70">
-                    <span>{order.status}</span>
+                <span className="mt-0.5 flex items-center gap-2 text-xs">
+                    <span className="text-gray-500">{order.status}</span>
                     {order.amount != null && (
-                        <span className="tabular-nums">{String(order.amount)}</span>
+                        <span className="text-gray-500 tabular-nums">
+                            {String(order.amount)}
+                        </span>
                     )}
-                    {escrowKey && <span>{t(escrowKey)}</span>}
+                    {escrowKey && <span className="text-gray-500">{t(escrowKey)}</span>}
                     {/* Says the timestamp is `updatedAt` standing in for a finish
                         time that was never recorded, rather than implying a
                         precision the server does not have. */}
                     {order.finishedAtIsApproximate && (
-                        <span>({t("profileChat.ordersFinishedApprox")})</span>
+                        <span className="text-gray-500">
+                            ({t("profileChat.ordersFinishedApprox")})
+                        </span>
                     )}
                 </span>
             </button>
@@ -97,7 +112,7 @@ function Section({
     if (orders.length === 0) return null;
     return (
         <section className="mb-3">
-            <h4 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide opacity-60">
+            <h4 className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
                 {t(titleKey)}
             </h4>
             <ul className="flex flex-col gap-1">
@@ -126,7 +141,7 @@ export const OrdersList: React.FC<OrdersListProps> = ({
 
     if (!isLoading && total === 0) {
         return (
-            <p className="px-3 py-4 text-sm opacity-70">
+            <p className="px-3 py-4 text-sm text-gray-500">
                 {t("profileChat.ordersEmpty")}
             </p>
         );

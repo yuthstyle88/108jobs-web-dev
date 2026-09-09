@@ -337,7 +337,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         groups: orderGroups,
         fallbackSelection,
         isLoading: ordersLoading,
-        refresh: refreshOrders,
     } = useOrders(roomId);
 
     const [selectedOrder, setSelectedOrder] = useState<{

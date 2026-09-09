@@ -154,4 +154,38 @@ describe("the Orders tab", () => {
         });
         expect(container.textContent).toContain("profileChat.ordersFinishedApprox");
     });
+
+    /**
+     * Seen live on the first render against the real API: every row was
+     * `rgb(237,237,237)` on a white panel. `--foreground` follows the OS's
+     * `prefers-color-scheme` and goes near-white in dark, while this app's
+     * surfaces stay white -- so text that INHERITS its colour disappears for
+     * anyone whose OS is dark. The rest of the sidebar sets `text-gray-*`
+     * explicitly on every text node, and so must these rows. jsdom cannot
+     * compute Tailwind, so this pins the classes; the computed-colour check was
+     * done in the browser.
+     */
+    it("sets an explicit text colour on every row, never inheriting one", () => {
+        renderList({
+            orders: [
+                order({workflowId: 17, seqNumber: 11, status: "InProgress", postName: "Running"}),
+                order({workflowId: 4, seqNumber: 1, postName: "Finished"}),
+            ],
+            selectedWorkflowId: 17,
+        });
+        const explicit = /\btext-(gray|neutral|slate|zinc|stone)-[0-9]{3}\b|\btext-primary\b|\btext-text-/;
+        for (const btn of buttons()) {
+            const spans = Array.from(btn.querySelectorAll("span"));
+            expect(spans.length).toBeGreaterThan(0);
+            for (const s of spans) {
+                // Only spans that carry their own text (leaf spans) must set a colour.
+                if (s.children.length === 0 && s.textContent?.trim()) {
+                    expect(
+                        s.className,
+                        `"${s.textContent?.trim()}" inherits its text colour`,
+                    ).toMatch(explicit);
+                }
+            }
+        }
+    });
 });
