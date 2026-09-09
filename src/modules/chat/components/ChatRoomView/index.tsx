@@ -308,6 +308,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         groups: orderGroups,
         fallbackSelection,
         isLoading: ordersLoading,
+        refresh: refreshOrders,
     } = useOrders(roomId);
 
     // "Hire again" asks which job. The room's own post is only whichever one
@@ -417,6 +418,20 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         currentStatus,
         selectedOrder,
     });
+
+    // The new order is on the server and nowhere else until the list is
+    // re-read: without this the employer picks a job, confirms, and the Orders
+    // tab shows exactly what it showed before -- the order is real, and
+    // invisible until the tab regains focus.
+    const hireAgainAction = useCallback(
+        async (postId: number) => {
+            const ok = await startWorkflowAction(postId);
+            if (ok) refreshOrders();
+            return ok;
+        },
+        [startWorkflowAction, refreshOrders],
+    );
+
 
     // Wrap approveQuotation with additional balance guard to keep identical behavior
     const approveQuotationWrapped = React.useCallback(async (): Promise<boolean> => {
@@ -530,7 +545,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 compact={false}
                 className="space-y-4"
                 started={hasStarted}
-                onStart={startWorkflowAction}
+                onStart={hireAgainAction}
                 hireAgainPosts={hireAgainPosts}
                 hireAgainLoading={hireAgainLoading}
                 hireAgainPreselectedPostId={hireAgainPreselectedPostId}
