@@ -127,10 +127,15 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
     };
 
 
-    const startWorkflowAction = async () => {
+    /**
+     * Starts an order against `chosenPostId` -- the job the employer picked in
+     * the "Hire again" picker. Falls back to the room's post only for callers
+     * that have no picker (a room opened from a single job's chat button).
+     */
+    const startWorkflowAction = async (chosenPostId?: number) => {
         setError(null);
         try {
-            const pid = postId;
+            const pid = chosenPostId ?? postId;
             if (!pid) {
                 setError(t('profileChat.missingPostIdForQuotation') || 'This chat is not linked to a post. You cannot create a quotation.');
                 return false;

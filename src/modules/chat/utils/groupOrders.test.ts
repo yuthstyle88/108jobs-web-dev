@@ -4,6 +4,7 @@ import {
     defaultSelectedOrder,
     groupOrders,
     isActiveOrder,
+    preselectPostForRehire,
 } from "./groupOrders";
 import type {OrderSummary} from "@/lib/108jobs-client/src";
 
@@ -122,5 +123,37 @@ describe("whether Hire Again may choose the job itself", () => {
 
     it("must ask when there is no history to infer from", () => {
         expect(canInferPostForRehire([])).toBeNull();
+    });
+});
+
+/**
+ * What "Hire again" offers as its default -- never what it starts with.
+ *
+ * The draft context is the post this chat was opened from; the spec makes it
+ * "draft context for creating a new order", so it is the first choice to offer.
+ * Failing that, a conversation about exactly one job may offer that job.
+ * Failing that, nothing is offered and the employer must pick. Whatever is
+ * offered, nothing starts until it is confirmed: "Hire Now?" used to start a
+ * real order, holding real coins, against the room's last recorded post.
+ */
+describe("what Hire again pre-selects", () => {
+    it("offers the draft context first", () => {
+        expect(
+            preselectPostForRehire(77, [order({postId: 42}), order({postId: 43})]),
+        ).toBe(77);
+    });
+
+    it("falls back to the conversation's only job", () => {
+        expect(preselectPostForRehire(null, [order({postId: 42})])).toBe(42);
+    });
+
+    it("offers nothing when the history covers several jobs", () => {
+        expect(
+            preselectPostForRehire(undefined, [order({postId: 42}), order({postId: 43})]),
+        ).toBeNull();
+    });
+
+    it("offers nothing when there is no history at all", () => {
+        expect(preselectPostForRehire(null, [])).toBeNull();
     });
 });

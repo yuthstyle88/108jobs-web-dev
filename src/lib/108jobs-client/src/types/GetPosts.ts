@@ -6,6 +6,7 @@ import type {JobType} from "./JobType";
 import type {ListingType} from "./ListingType";
 import type {PaginationCursor} from "./PaginationCursor";
 import type {PostKind} from "./PostKind";
+import type {PersonId} from "./PersonId";
 import type {PostSortType} from "./PostSortType";
 import type {TripStatus} from "./TripStatus";
 
@@ -18,7 +19,11 @@ export type GetPosts = { type?: ListingType, sort?: PostSortType,
  * IE 60 would give results for the past minute.
  * Use Zero to override the local_site and local_user time_range.
  */
-timeRangeSeconds?: number, categoryId?: CategoryId, showHidden?: boolean, 
+timeRangeSeconds?: number, categoryId?: CategoryId, 
+/**
+ * Only posts created by this person.
+ */
+creatorId?: PersonId, showHidden?: boolean, 
 /**
  * If true, then show the read posts (even if your user setting is to hide them)
  */

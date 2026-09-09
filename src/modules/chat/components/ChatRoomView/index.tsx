@@ -57,6 +57,8 @@ import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
 import {useOrders} from '@/modules/chat/hooks/useOrders';
+import {useHireAgainPosts} from '@/modules/chat/hooks/useHireAgainPosts';
+import {preselectPostForRehire} from '@/modules/chat/utils/groupOrders';
 import {stepperStatusFor} from '@/modules/chat/utils/hydrateWorkflow';
 import {OrdersList} from '@/modules/chat/components/OrdersList';
 import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
@@ -302,10 +304,23 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // the workflow stepper used to be a client-only machine advanced by clicks,
     // so reopening a room showed a finished job as not started.
     const {
+        orders,
         groups: orderGroups,
         fallbackSelection,
         isLoading: ordersLoading,
     } = useOrders(roomId);
+
+    // "Hire again" asks which job. The room's own post is only whichever one
+    // this conversation last saw -- for a consolidated room, none at all -- so
+    // it may be offered as a default but never started with silently (#150).
+    const {posts: hireAgainPosts, isLoading: hireAgainLoading} = useHireAgainPosts(
+        localUser?.personId as number | undefined,
+        Boolean(isEmployer),
+    );
+    const hireAgainPreselectedPostId = useMemo(
+        () => preselectPostForRehire(roomPostId as number | null | undefined, orders),
+        [roomPostId, orders],
+    );
 
     const [selectedOrder, setSelectedOrder] = useState<{
         workflowId: number;
@@ -517,6 +532,10 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 className="space-y-4"
                 started={hasStarted}
                 onStart={startWorkflowAction}
+                hireAgainPosts={hireAgainPosts}
+                hireAgainLoading={hireAgainLoading}
+                hireAgainPreselectedPostId={hireAgainPreselectedPostId}
+                createJobHref={`/${lang}/job-board/create-job`}
                 isEmployer={isEmployerKnown ? isEmployer : undefined}
                 onProposeQuote={flowActions.onProposeQuote}
                 onApproveQuotation={flowActions.onApproveQuotation}
