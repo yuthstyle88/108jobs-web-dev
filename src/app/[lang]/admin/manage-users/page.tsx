@@ -1,7 +1,7 @@
 "use client";
 import {useState, useCallback} from "react";
 import {useHttpGet} from "@/hooks/api/http/useHttpGet";
-import {isFailed} from "@/services/HttpService";
+import {isFailed, isSuccess} from "@/services/HttpService";
 import {Card} from "@/components/ui/Card";
 import {Button} from "@/components/ui/Button";
 import {Badge} from "@/components/ui/Badge";
@@ -71,18 +71,20 @@ const ManageUsers = () => {
             reason: banReason || undefined,
         };
 
-        try {
-            await executeBan(payload);
+        // useHttpPost.execute() ไม่ throw — ความล้มเหลวกลับมาเป็น RequestState FAILED
+        // ต้องแยกสาขาด้วย isSuccess เหมือน withdraw-coins ไม่ใช่ try/catch
+        const res = await executeBan(payload);
+        if (isSuccess(res)) {
             toast.success(
                 banReason
                     ? t("manageUsers.banConfirmationModal.successWithReason", {reason: banReason})
                     : t("manageUsers.bannedSuccess", {name: banTarget.name})
             );
             refetch(); // Refresh user list
-        } catch (error: any) {
-            toast.error(error.message || t("common.errorOccurred"));
-        } finally {
             closeBanModal();
+        } else {
+            // แบนไม่สำเร็จ: ไม่ปิด modal ไม่เคลียร์เหตุผล ไม่ refetch — แอดมินแก้เหตุผลแล้วกดยืนยันซ้ำได้
+            toast.error(t("common.errorOccurred"));
         }
     };
 
@@ -92,12 +94,12 @@ const ManageUsers = () => {
             ban: false,
         };
 
-        try {
-            await executeBan(payload);
+        const res = await executeBan(payload);
+        if (isSuccess(res)) {
             toast.success(t("manageUsers.unbannedSuccess", {name: person.name}));
             refetch();
-        } catch (error: any) {
-            toast.error(error.message || t("common.errorOccurred"));
+        } else {
+            toast.error(t("common.errorOccurred"));
         }
     };
     const openDetailModal = (user: LocalUserView) => {
