@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import packageJson from '../../package.json';
-import { APP_VERSION, getVersionInfo } from './version';
+import { APP_VERSION, fetchBackendVersion, getVersionInfo } from './version';
 import { GET as getVersionRoute } from '@/app/api/version/route';
 import { GET as getReadyRoute } from '@/app/health/ready/route';
 
@@ -126,3 +126,153 @@ describe('versioning standard', () => {
     });
   });
 });
+
+describe('backend API version (#169)', () => {
+  const fetchMock = vi.fn();
+  const identity = {
+    success: true,
+    version: '1.0.0-alpha.5',
+    appVersion: '1.0.0-alpha.5',
+    build: 'sha-d06ab00',
+    builtAt: '2026-09-05T07:25:05Z',
+    channel: 'release' as const,
+  };
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://api.example.test');
+    vi.stubEnv('NEXT_PUBLIC_IDENTITY_BASE_URL', 'https://identity.example.test');
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it('reports the backend api version when the health endpoint answers (criterion 2)', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(identity)));
+    const response = await getVersionRoute();
+    expect(response.status).toBe(200);
+    const json = await response.json();
+    expect(json.backend.api).toEqual({
+      version: identity.version,
+      build: identity.build,
+      builtAt: identity.builtAt,
+      channel: identity.channel,
+    });
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.test/api/v4/site/health', {
+      cache: 'no-store',
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it.each(['network', '500', 'missing version', 'invalid JSON', 'null', 'blank version'])(
+    'keeps the route available when backend returns %s (criterion 3 & edge cases)',
+    async (failure) => {
+      if (failure === 'network') {
+        fetchMock.mockRejectedValue(new Error('offline'));
+      } else {
+        fetchMock.mockResolvedValue(
+          new Response(
+            failure === 'invalid JSON'
+              ? '{'
+              : JSON.stringify(
+                  failure === 'null'
+                    ? null
+                    : failure === 'blank version'
+                      ? { version: ' ' }
+                      : {},
+                ),
+            { status: failure === '500' ? 500 : 200 },
+          ),
+        );
+      }
+      const local = getVersionInfo();
+      const response = await getVersionRoute();
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({
+        ...local,
+        backend: { ...local.backend, api: null },
+      });
+    },
+  );
+
+  it('bounds the optional fetch with a two-second timeout (criterion 4)', async () => {
+    const controller = new AbortController();
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(controller.signal);
+    try {
+      fetchMock.mockImplementation(
+        (_url, options) =>
+          new Promise((_resolve, reject) => {
+            options.signal.addEventListener('abort', () => reject(new Error('timeout')), {
+              once: true,
+            });
+          }),
+      );
+      const pending = getVersionRoute();
+      controller.abort();
+      const response = await pending;
+      expect(response.status).toBe(200);
+      expect((await response.json()).backend.api).toBeNull();
+      expect(timeout).toHaveBeenCalledWith(2000);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it.each(['unknown', '', 'not a URL', 'file:///tmp/test', 'javascript:alert(1)'])(
+    'does not fetch an unavailable or invalid API base: %s (criterion 5 & edge cases)',
+    async (base) => {
+      delete process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (base !== 'unknown') {
+        vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', base);
+      }
+      const res = await fetchBackendVersion(base);
+      expect(res).toBeNull();
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it('never publishes the internal cluster address from the version route (criterion 6)', async () => {
+    vi.stubEnv('API_INTERNAL_URL', 'http://internal-cluster.local:8523');
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(identity)));
+    const response = await getVersionRoute();
+    const body = await response.json();
+    expect(JSON.stringify(body)).not.toContain('internal-cluster.local');
+    expect(body.backend.apiBaseUrl).toBe('https://api.example.test');
+    expect(body.backend.identityBaseUrl).toBe('https://identity.example.test');
+  });
+
+  it('preserves all original fields in the response shape (criterion 7)', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify(identity)));
+    const response = await getVersionRoute();
+    const json = await response.json();
+    expect(json).toHaveProperty('version');
+    expect(json).toHaveProperty('appVersion');
+    expect(json).toHaveProperty('build');
+    expect(json).toHaveProperty('builtAt');
+    expect(json).toHaveProperty('channel');
+    expect(json).toHaveProperty('backend');
+    expect(json.backend).toHaveProperty('apiBaseUrl');
+    expect(json.backend).toHaveProperty('identityBaseUrl');
+  });
+
+  it('normalises unknown channels and reads camelCase builtAt', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ...identity,
+          channel: 'production',
+          built_at: 'wrong',
+        }),
+      ),
+    );
+    expect(await fetchBackendVersion('https://api.example.test/')).toEqual({
+      version: identity.version,
+      build: identity.build,
+      builtAt: identity.builtAt,
+      channel: 'unknown',
+    });
+  });
+});
+
