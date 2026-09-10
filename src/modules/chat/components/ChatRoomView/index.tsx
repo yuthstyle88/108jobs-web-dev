@@ -57,6 +57,7 @@ import {useWorkflowStatus} from '@/modules/chat/hooks/useWorkflowStatus';
 import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
 import {useOrders} from '@/modules/chat/hooks/useOrders';
+import {OrderPane} from '@/modules/chat/components/OrderPane';
 import {useHireAgainPosts} from '@/modules/chat/hooks/useHireAgainPosts';
 import {preselectPostForRehire} from '@/modules/chat/utils/groupOrders';
 import {employerOnOrder, selectionFromOrder, type OrderSelection} from '@/modules/chat/utils/employerRole';
@@ -584,24 +585,30 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     // dependency list the effect originally carried.
     const ordersContent = useMemo(
         () => (
-            <>
-                {/* Every order in this conversation, including finished ones.
-                    The panel below shows the SELECTED order's workflow; before
-                    this list there was only ever one to show, and a room whose
-                    newest order had been cancelled rendered nothing at all
-                    (#136). */}
-                <OrdersList
-                    groups={orderGroups}
-                    selectedWorkflowId={selectedOrder?.workflowId ?? null}
-                    onSelect={order => setSelectedOrder(selectionFromOrder(order))}
-                    isLoading={ordersLoading}
-                />
-                <JobFlowContent
-                    renderFlowContent={renderFlowContent}
-                    jobId={roomPostId}
-                    lang={lang}
-                />
-            </>
+            <OrderPane
+                /* The SELECTED order's workflow, first: it is what the reader
+                   came to act on, and under the history it sat below every row
+                   of a 17-order conversation (#154). */
+                workflow={
+                    <JobFlowContent
+                        renderFlowContent={renderFlowContent}
+                        jobId={roomPostId}
+                        lang={lang}
+                    />
+                }
+                /* Every order in this conversation, including finished ones.
+                   Before this list there was only ever one to show, and a room
+                   whose newest order had been cancelled rendered nothing at
+                   all (#136). */
+                history={
+                    <OrdersList
+                        groups={orderGroups}
+                        selectedWorkflowId={selectedOrder?.workflowId ?? null}
+                        onSelect={order => setSelectedOrder(selectionFromOrder(order))}
+                        isLoading={ordersLoading}
+                    />
+                }
+            />
         ),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [
