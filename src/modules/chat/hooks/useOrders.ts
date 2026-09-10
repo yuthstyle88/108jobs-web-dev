@@ -111,7 +111,12 @@ export function useOrders(roomId: string | null | undefined) {
     // A stable handle on the unstable closure, so a consumer may put `refresh`
     // in an effect's dependency list without re-running it every render.
     const executeRef = useRef(res?.execute);
-    executeRef.current = res?.execute;
+    // Updated from an effect, not during render: writing a ref while rendering
+    // is what `react-hooks/refs` refuses, and the initial `useRef` value covers
+    // a `refresh` called before the first effect runs.
+    useEffect(() => {
+        executeRef.current = res?.execute;
+    });
     const refresh = useCallback(() => executeRef.current?.(), []);
 
     return {
