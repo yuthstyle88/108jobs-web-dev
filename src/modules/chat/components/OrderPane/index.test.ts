@@ -40,6 +40,7 @@ function render() {
     act(() => {
         root.render(
             createElement(OrderPane, {
+                selector: createElement("div", {"data-testid": "selector"}, "Order #17"),
                 workflow: createElement("div", {"data-testid": "workflow"}, "stepper and actions"),
                 history: createElement("div", {"data-testid": "history"}, "17 orders"),
             }),
@@ -48,6 +49,15 @@ function render() {
 }
 
 describe("the Orders pane", () => {
+    it("names the order before showing its workflow", () => {
+        render();
+        const selector = container.querySelector('[data-testid="selector"]')!;
+        const workflow = container.querySelector('[data-testid="workflow"]')!;
+        expect(
+            selector.compareDocumentPosition(workflow) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
     it("puts the workflow before the history", () => {
         render();
         const workflow = container.querySelector('[data-testid="workflow"]')!;
@@ -59,8 +69,9 @@ describe("the Orders pane", () => {
         expect(workflow.compareDocumentPosition(history) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it("renders both halves, so the history is still one scroll away", () => {
+    it("renders every part it is given", () => {
         render();
+        expect(container.textContent).toContain("Order #17");
         expect(container.textContent).toContain("stepper and actions");
         expect(container.textContent).toContain("17 orders");
     });

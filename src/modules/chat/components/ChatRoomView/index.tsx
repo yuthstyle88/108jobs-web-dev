@@ -611,9 +611,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                    ones included: before that list there was only ever one to
                    show, and a room whose newest order had been cancelled
                    rendered nothing at all (#136). */
-                history={
-                    <>
-                        <OrderSelectorLine
+                selector={
+                    <OrderSelectorLine
                             selected={
                                 selectedOrder
                                     ? {
@@ -623,10 +622,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                                       }
                                     : null
                             }
-                            total={ordersTotal}
-                            onOpen={() => setShowOrderHistory(true)}
-                        />
-                        <OrderHistoryModal
+                        total={ordersTotal}
+                        onOpen={() => setShowOrderHistory(true)}
+                    />
+                }
+                history={
+                    <OrderHistoryModal
                             isOpen={showOrderHistory}
                             onClose={() => setShowOrderHistory(false)}
                             groups={orderGroups}
@@ -636,9 +637,8 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                             total={ordersTotal}
                             hasMore={hasMoreOrders}
                             onLoadMore={() => void loadMoreOrders()}
-                            isLoading={ordersLoading}
-                        />
-                    </>
+                        isLoading={ordersLoading}
+                    />
                 }
             />
         ),
@@ -647,6 +647,15 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
             orderGroups,
             selectedOrder,
             ordersLoading,
+            // This node is pushed into the sidebar through `setContent`, so
+            // anything it renders must be listed here or the sidebar keeps a
+            // stale copy: without these the history modal never opened, because
+            // the pushed node still had `isOpen: false`.
+            showOrderHistory,
+            ordersTotal,
+            hasMoreOrders,
+            loadMoreOrders,
+            orders,
             currentRoom,
             isEmployer,
             isEmployerKnown,
