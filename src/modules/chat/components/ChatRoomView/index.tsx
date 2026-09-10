@@ -58,6 +58,8 @@ import {useFileUpload} from '@/modules/chat/hooks/useFileUpload';
 import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
 import {useOrders} from '@/modules/chat/hooks/useOrders';
 import {OrderPane} from '@/modules/chat/components/OrderPane';
+import {OrderSelectorLine} from '@/modules/chat/components/OrderSelectorLine';
+import {OrderHistoryModal} from '@/modules/chat/components/OrderHistoryModal';
 import {useHireAgainPosts} from '@/modules/chat/hooks/useHireAgainPosts';
 import {preselectPostForRehire} from '@/modules/chat/utils/groupOrders';
 import {employerOnOrder, selectionFromOrder, type OrderSelection} from '@/modules/chat/utils/employerRole';
@@ -313,7 +315,15 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         fallbackSelection,
         isLoading: ordersLoading,
         refresh: refreshOrders,
+        total: ordersTotal,
+        hasMore: hasMoreOrders,
+        loadMore: loadMoreOrders,
     } = useOrders(roomId);
+
+    // The history lives behind this, not on the pane: it grows with every order
+    // the pair completes, and what has to stay on screen is which order the
+    // panel is showing (#156).
+    const [showOrderHistory, setShowOrderHistory] = useState(false);
 
     const [selectedOrder, setSelectedOrder] = useState<OrderSelection | null>(null);
 
@@ -596,17 +606,39 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                         lang={lang}
                     />
                 }
-                /* Every order in this conversation, including finished ones.
-                   Before this list there was only ever one to show, and a room
-                   whose newest order had been cancelled rendered nothing at
-                   all (#136). */
+                /* One line naming the selected order, and the history behind
+                   it. Every order in this conversation is in there, finished
+                   ones included: before that list there was only ever one to
+                   show, and a room whose newest order had been cancelled
+                   rendered nothing at all (#136). */
                 history={
-                    <OrdersList
-                        groups={orderGroups}
-                        selectedWorkflowId={selectedOrder?.workflowId ?? null}
-                        onSelect={order => setSelectedOrder(selectionFromOrder(order))}
-                        isLoading={ordersLoading}
-                    />
+                    <>
+                        <OrderSelectorLine
+                            selected={
+                                selectedOrder
+                                    ? {
+                                          seqNumber: Number(selectedOrder.seqNumber ?? 0),
+                                          postName: selectedOrder.postName ?? null,
+                                          status: selectedOrder.status ?? null,
+                                      }
+                                    : null
+                            }
+                            total={ordersTotal}
+                            onOpen={() => setShowOrderHistory(true)}
+                        />
+                        <OrderHistoryModal
+                            isOpen={showOrderHistory}
+                            onClose={() => setShowOrderHistory(false)}
+                            groups={orderGroups}
+                            selectedWorkflowId={selectedOrder?.workflowId ?? null}
+                            onSelect={order => setSelectedOrder(selectionFromOrder(order))}
+                            loaded={orders.length}
+                            total={ordersTotal}
+                            hasMore={hasMoreOrders}
+                            onLoadMore={() => void loadMoreOrders()}
+                            isLoading={ordersLoading}
+                        />
+                    </>
                 }
             />
         ),
