@@ -2,6 +2,7 @@
 
 import React from 'react';
 import {useTranslation} from 'react-i18next';
+import {orderStatusLabelKey} from '@/modules/chat/utils/orderStatusLabel';
 
 /** What the line needs of an order: enough to name it. */
 export interface SelectedOrderSummary {
@@ -34,6 +35,7 @@ interface OrderSelectorLineProps {
  */
 export const OrderSelectorLine: React.FC<OrderSelectorLineProps> = ({selected, total, onOpen}) => {
     const {t} = useTranslation();
+    const statusKey = orderStatusLabelKey(selected?.status);
 
     return (
         <button
@@ -51,9 +53,11 @@ export const OrderSelectorLine: React.FC<OrderSelectorLineProps> = ({selected, t
                         : t('profileChat.ordersSelectorNone')}
                 </span>
                 {selected?.status && (
-                    // The same word the history rows use, so one order never
-                    // reads as two different things.
-                    <span className="block truncate text-xs text-gray-500">{selected.status}</span>
+                    // The same word the history rows and the stepper use, so
+                    // one order never reads as two different things.
+                    <span className="block truncate text-xs text-gray-500">
+                        {statusKey ? t(statusKey) : selected.status}
+                    </span>
                 )}
             </span>
             <span className="shrink-0 text-xs text-gray-500">

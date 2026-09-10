@@ -24,6 +24,8 @@ vi.mock("react-i18next", () => ({
         t: (k: string, o?: Record<string, unknown>) => {
             if (o && "n" in o) return `Order #${o.n}`;
             if (o && "count" in o) return `${o.count} orders`;
+            // The stepper's own labels, which the status now reads through.
+            if (k === "profileChat.step1") return "Wait For Quotation";
             return k;
         },
     }),
@@ -65,6 +67,18 @@ describe("the order selector line", () => {
         render();
         expect(container.textContent).toContain("#17");
         expect(container.textContent).toContain("HIRE AGAIN 0909 - third job");
+    });
+
+    it("words the status the way the stepper and the phone do", () => {
+        // Not the raw `WaitForFreelancerQuotation` the server sends.
+        render();
+        expect(container.textContent).toContain("Wait For Quotation");
+        expect(container.textContent).not.toContain("WaitForFreelancerQuotation");
+    });
+
+    it("shows a status this build does not know as the server's own word", () => {
+        render({selected: {seqNumber: 5, postName: "A job", status: "SomethingNewer"}});
+        expect(container.textContent).toContain("SomethingNewer");
     });
 
     it("says how many the conversation has, not how many are loaded", () => {

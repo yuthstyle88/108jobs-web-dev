@@ -4,6 +4,7 @@ import React from "react";
 import {useTranslation} from "react-i18next";
 import type {OrderSummary} from "@/lib/108jobs-client/src";
 import type {OrderGroups} from "@/modules/chat/utils/groupOrders";
+import {orderStatusLabelKey} from "@/modules/chat/utils/orderStatusLabel";
 
 /**
  * Every order in a conversation, grouped by what happened to it.
@@ -38,6 +39,7 @@ function OrderRow({
     onSelect: (order: OrderSummary) => void;
 }) {
     const {t} = useTranslation();
+    const statusKey = orderStatusLabelKey(order.status as string | undefined);
     const escrowKey = escrowLabelKey[order.escrow as string] ?? null;
 
     return (
@@ -76,7 +78,11 @@ function OrderRow({
                     </span>
                 </span>
                 <span className="mt-0.5 flex items-center gap-2 text-xs">
-                    <span className="text-gray-500">{order.status}</span>
+                    <span className="text-gray-500">
+                        {/* This app's word for the status, the same one the
+                            stepper and the phone use -- not the raw enum. */}
+                        {statusKey ? t(statusKey) : order.status}
+                    </span>
                     {order.amount != null && (
                         <span className="text-gray-500 tabular-nums">
                             {String(order.amount)}
