@@ -36,6 +36,9 @@ export type OrderSelection = {
     statusBeforeCancel: string | null;
     /** Per order, not per room: these two swap sides between orders. */
     employerId: number | null;
+    /** What the selector line names the order by (#156). */
+    seqNumber: number;
+    postName: string | null;
 };
 
 /**
@@ -51,6 +54,8 @@ export function selectionFromOrder(order: {
     status?: string | null;
     statusBeforeCancel?: string | null;
     employerId?: number | string | null;
+    seqNumber?: number | string | null;
+    postName?: string | null;
 }): OrderSelection {
     return {
         workflowId: Number(order.workflowId),
@@ -58,5 +63,7 @@ export function selectionFromOrder(order: {
         status: order.status ?? null,
         statusBeforeCancel: order.statusBeforeCancel ?? null,
         employerId: order.employerId == null ? null : Number(order.employerId),
+        seqNumber: Number(order.seqNumber ?? 0),
+        postName: order.postName ?? null,
     };
 }

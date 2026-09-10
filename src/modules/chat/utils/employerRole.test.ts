@@ -74,6 +74,8 @@ describe("the selection the panel keeps", () => {
             statusBeforeCancel: undefined,
             employerId: 8058 as never,
             freelancerId: 8059 as never,
+            seqNumber: 13 as never,
+            postName: "VIDEO 0908 — record all core flows" as never,
         } as never);
 
         expect(selection).toEqual({
@@ -82,6 +84,10 @@ describe("the selection the panel keeps", () => {
             status: "Completed",
             statusBeforeCancel: null,
             employerId: 8058,
+            // The selector line names the order the panel is showing, and it
+            // has only this selection to name it from (#156).
+            seqNumber: 13,
+            postName: "VIDEO 0908 — record all core flows",
         });
     });
 
@@ -96,6 +102,8 @@ describe("the selection the panel keeps", () => {
                 status: "Cancelled",
                 statusBeforeCancel: null,
                 employerId: null,
+                seqNumber: 0,
+                postName: null,
             });
     });
 });
