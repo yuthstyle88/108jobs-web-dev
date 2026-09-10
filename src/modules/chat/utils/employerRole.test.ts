@@ -26,10 +26,15 @@ describe("who the employer is", () => {
         expect(employerOnOrder({employerId: 8058}, 8059, true)).toBe(false);
     });
 
-    it("compares ids that arrive as strings", () => {
-        // `LocalUserId` is a branded number in the client types, but the wire
-        // and the room payload have both handed this component strings.
-        expect(employerOnOrder({employerId: "8058" as never}, "8058" as never, false)).toBe(true);
+    it("compares ids that arrive as different types", () => {
+        // `LocalUserId` is a branded number in the client types, but the room
+        // payload has handed this component strings -- which is why the code
+        // this replaces compared `String(a) === String(b)`. A mixed pair is
+        // the pair that matters: `8058 === "8058"` is false, and answering
+        // "you are the freelancer" to the employer is the whole of #151.
+        expect(employerOnOrder({employerId: "8058" as never}, 8058, false)).toBe(true);
+        expect(employerOnOrder({employerId: 8058}, "8058" as never, false)).toBe(true);
+        expect(employerOnOrder({employerId: "8058" as never}, 8059, true)).toBe(false);
     });
 
     it("falls back to the room when the order predates the columns", () => {
