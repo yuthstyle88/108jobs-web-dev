@@ -59,6 +59,7 @@ import {useWorkflowActions} from '@/modules/chat/hooks/useWorkflowActions';
 import {useOrders} from '@/modules/chat/hooks/useOrders';
 import {useHireAgainPosts} from '@/modules/chat/hooks/useHireAgainPosts';
 import {preselectPostForRehire} from '@/modules/chat/utils/groupOrders';
+import {employerOnOrder, selectionFromOrder, type OrderSelection} from '@/modules/chat/utils/employerRole';
 import {stepperStatusFor} from '@/modules/chat/utils/hydrateWorkflow';
 import {OrdersList} from '@/modules/chat/components/OrdersList';
 import {useHistoryBackfill} from "@/modules/chat/hooks/useHistoryBackfill";
@@ -144,7 +145,14 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
     const roomPostId = post?.id ?? currentRoom.room.postId;
     const roomProposalId = currentRoom.room.currentProposalId;
     const postCreatorId = post?.creatorId;
-    const isEmployer = postCreatorId != null && person?.id != null ? String(postCreatorId) === String(person?.id) : undefined;
+    // The room's post creator -- a whole conversation's worth of one answer.
+    // Kept only as the fallback for an order created before the server
+    // recorded `employer_id`; the real role comes from the selected order
+    // below, because the same two people swap sides between orders (#151).
+    const isEmployerOnRoomPost =
+        postCreatorId != null && person?.id != null
+            ? String(postCreatorId) === String(person?.id)
+            : undefined;
     const lastClientUpdateRef = useRef<{ status: StatusKey | null; timestamp: number }>({status: null, timestamp: 0});
     const currentStatus = useStateMachineStore((s) => s.state);
     const statusBeforeCancel = useStateMachineStore((s) => s.statusBeforeCancel);
@@ -157,11 +165,6 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         return Number.isFinite(total) ? total : 0;
     }, [wallet]);
 
-    const insufficientForApprove = useMemo(() => {
-        return Boolean(isEmployer && latestQuoteAmount != null && availableBalance < (latestQuoteAmount as number));
-    }, [isEmployer, latestQuoteAmount, availableBalance]);
-
-    const isEmployerKnown = typeof isEmployer === 'boolean';
     const {execute: createInvoice} = useHttpPost("createInvoice");
     const {execute: startWorkflow} = useHttpPost("startWorkflow");
     const {execute: approveQuotationApi} = useHttpPost("approveQuotation");
@@ -311,6 +314,22 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         refresh: refreshOrders,
     } = useOrders(roomId);
 
+    const [selectedOrder, setSelectedOrder] = useState<OrderSelection | null>(null);
+
+    // The role this person holds *on the order being shown*, which is the only
+    // level at which a role exists. Everything employer-only is gated on it:
+    // the revision and release actions, the balance check, "Hire again".
+    const isEmployer = employerOnOrder(
+        selectedOrder,
+        localUser?.id as number | undefined,
+        isEmployerOnRoomPost,
+    );
+    const isEmployerKnown = typeof isEmployer === 'boolean';
+
+    const insufficientForApprove = useMemo(() => {
+        return Boolean(isEmployer && latestQuoteAmount != null && availableBalance < (latestQuoteAmount as number));
+    }, [isEmployer, latestQuoteAmount, availableBalance]);
+
     // "Hire again" asks which job. The room's own post is only whichever one
     // this conversation last saw -- for a consolidated room, none at all -- so
     // it may be offered as a default but never started with silently (#150).
@@ -322,27 +341,12 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         [roomPostId, orders],
     );
 
-    const [selectedOrder, setSelectedOrder] = useState<{
-        workflowId: number;
-        billingId?: number | null;
-        status?: string | null;
-        statusBeforeCancel?: string | null;
-    } | null>(null);
-
     // Open on the running deal, or on the newest order when everything has
     // finished. Only until the reader picks one -- after that the selection is
     // theirs and must not be pulled back by a refresh.
     useEffect(() => {
         if (selectedOrder || !fallbackSelection) return;
-        setSelectedOrder({
-            workflowId: Number(fallbackSelection.workflowId),
-            billingId:
-                fallbackSelection.billingId == null
-                    ? null
-                    : Number(fallbackSelection.billingId),
-            status: fallbackSelection.status,
-            statusBeforeCancel: fallbackSelection.statusBeforeCancel ?? null,
-        });
+        setSelectedOrder(selectionFromOrder(fallbackSelection));
     }, [fallbackSelection, selectedOrder]);
 
     // A conversation change is a different set of orders.
@@ -589,15 +593,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 <OrdersList
                     groups={orderGroups}
                     selectedWorkflowId={selectedOrder?.workflowId ?? null}
-                    onSelect={order =>
-                        setSelectedOrder({
-                            workflowId: Number(order.workflowId),
-                            billingId:
-                                order.billingId == null ? null : Number(order.billingId),
-                            status: order.status,
-                            statusBeforeCancel: order.statusBeforeCancel ?? null,
-                        })
-                    }
+                    onSelect={order => setSelectedOrder(selectionFromOrder(order))}
                     isLoading={ordersLoading}
                 />
                 <JobFlowContent
