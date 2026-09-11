@@ -33,7 +33,7 @@ import type {
     LocalUser,
     Post,
     PostPreview,
-    SubmitUserReviewForm
+    SubmitUserReviewRequest
 } from "@108-plaza/jh-client";
 import ChatHeader from "../ChatHeader";
 import ChatInput from "../ChatInput";
@@ -466,7 +466,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
         return success;
     }, [approveWork, isEmployer]);
 
-    const submitReview = useCallback(async (form: SubmitUserReviewForm) => {
+    const submitReview = useCallback(async (form: SubmitUserReviewRequest) => {
         try {
             const response = await submitReviewApi({
                 revieweeId: form.revieweeId,

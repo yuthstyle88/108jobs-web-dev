@@ -1,13 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import React, { useState } from 'react';
-import { PersonId, SubmitUserReviewForm, WorkflowId } from '@108-plaza/jh-client';
+import { PersonId, SubmitUserReviewRequest, WorkflowId } from '@108-plaza/jh-client';
 
 interface SubmitReviewModalProps {
     showReviewModal: boolean;
     setShowReviewModal: (show: boolean) => void;
     revieweeId: PersonId;
     workflowId?: WorkflowId;
-    submitReview: (form: SubmitUserReviewForm) => Promise<boolean>;
+    submitReview: (form: SubmitUserReviewRequest) => Promise<boolean>;
 }
 
 export const SubmitReviewModal: React.FC<SubmitReviewModalProps> = ({
@@ -30,7 +30,7 @@ export const SubmitReviewModal: React.FC<SubmitReviewModalProps> = ({
             return;
         }
 
-        const form: SubmitUserReviewForm = {
+        const form: SubmitUserReviewRequest = {
             revieweeId,
             workflowId: workflowId ?? 0,
             rating,

@@ -2,9 +2,9 @@ import {HttpService, REQUEST_STATE} from '@/services/HttpService';
 import {useWorkflow} from '@/modules/chat/hooks/useWorkflow';
 import {getLatestProposedQuoteSeq} from '@/modules/chat/utils/message';
 import type {
-    ApproveQuotationForm,
+    ApproveQuotationRequest,
     ChatRoomView,
-    CreateInvoiceForm,
+    CreateInvoiceRequest,
     LocalUser,
     PostId
 } from '@108-plaza/jh-client';
@@ -42,9 +42,9 @@ export type UseWorkflowActionsDeps = {
     setHasStarted: (v: boolean) => void;
     setShowQuotationModal: (v: boolean) => void;
     setSelectedFile: (v: any) => void;
-    createInvoice: (form: CreateInvoiceForm) => Promise<any>;
+    createInvoice: (form: CreateInvoiceRequest) => Promise<any>;
     startWorkflow: (form: { postId: number; roomId: string; proposalId?: number }) => Promise<any>;
-    approveQuotationApi: (form: ApproveQuotationForm) => Promise<any>;
+    approveQuotationApi: (form: ApproveQuotationRequest) => Promise<any>;
     submitStartWorkApi: (form: any) => Promise<any>;
     approveWorkApi: (form: any) => Promise<any>;
     postId?: PostId | null | undefined;
@@ -178,7 +178,7 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
             const validWorkflowId = validateWorkflowId('createInvoice');
             if (!validWorkflowId) return false;
 
-            const form: CreateInvoiceForm = {
+            const form: CreateInvoiceRequest = {
                 employerId: data.partnerId,
                 postId: data.postId,
                 proposalId: data.proposalId,
@@ -234,7 +234,7 @@ export const useWorkflowActions = (deps: UseWorkflowActionsDeps) => {
             if (!workflowId) return false;
 
             const seqNumber = getLatestProposedQuoteSeq(messages as any, 1);
-            const form: ApproveQuotationForm = {
+            const form: ApproveQuotationRequest = {
                 seqNumber,
                 billingId: bid,
                 walletId: walletId,
