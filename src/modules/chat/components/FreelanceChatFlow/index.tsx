@@ -25,6 +25,7 @@ import type {WorkflowStatus} from "@108-plaza/jh-client";
 import {WorkFlowAction, workflowActionsMap} from "@/modules/chat/types/workflow";
 import WorkflowActionPanel from "@/components/WorkflowActionPanel"
 import {filterByRole} from "@/modules/chat/utils/workflow/helper";
+import {HireAgainModal, type HireAgainPost} from "@/modules/chat/components/HireAgainModal";
 
 // =============================================================================
 // Types & Props
@@ -71,7 +72,20 @@ export type FreelanceChatFlowProps = {
     // ---- Lifecycle ----
     /** Whether the workflow has started (affects Start button) */
     started?: boolean;
-    onStart?: () => void;
+    /**
+     * Starts an order against the job the employer picked. Never against the
+     * room's recorded post: one conversation now spans every job a pair has run
+     * together, so that post is only whichever one the room last saw.
+     */
+    onStart?: (postId: number) => void;
+
+    // ---- Hire again picker ----
+    /** The employer's own open jobs, to choose between. */
+    hireAgainPosts?: HireAgainPost[];
+    hireAgainLoading?: boolean;
+    /** Offered as the default; shown as a choice either way. */
+    hireAgainPreselectedPostId?: number | null;
+    createJobHref?: string;
 
     /** Viewer role flag */
     isEmployer?: boolean;
@@ -133,6 +147,10 @@ const FreelanceChatFlow: React.FC<FreelanceChatFlowProps> = ({
                                                                  className = '',
                                                                  started = true,
                                                                  onStart,
+                                                                 hireAgainPosts = [],
+                                                                 hireAgainLoading = false,
+                                                                 hireAgainPreselectedPostId = null,
+                                                                 createJobHref = '/job-board/create-job',
                                                                  isEmployer = false,
                                                                  selectedFile,
                                                                  isDeletingFile,
@@ -443,15 +461,17 @@ const FreelanceChatFlow: React.FC<FreelanceChatFlowProps> = ({
                     />
                 </>
             )}
-            <ConfirmActionModal
+            <HireAgainModal
                 isOpen={showStartConfirm}
                 onClose={() => setShowStartConfirm(false)}
-                onConfirm={() => {
+                onConfirm={(postId: number) => {
                     setShowStartConfirm(false);
-                    onStart?.();
+                    onStart?.(postId);
                 }}
-                title={t('profileChat.confirmStartWorkflowTitle') || 'ต้องการจ้างงาน?'}
-                message={t('profileChat.confirmStartWorkflowMessage') || 'ระบบจะเริ่มขั้นตอนงานสำหรับการสนทนานี้'}
+                posts={hireAgainPosts}
+                isLoading={hireAgainLoading}
+                preselectedPostId={hireAgainPreselectedPostId ?? null}
+                createJobHref={createJobHref}
             />
         </aside>
     );

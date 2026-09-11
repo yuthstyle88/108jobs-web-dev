@@ -16,12 +16,15 @@ import LoadingBlur from "@/components/Common/Loading/LoadingBlur";
 import {UserService} from "@/services";
 import ChatWrapper from "@/containers/ChatWrapper";
 import {useRoomsStore} from "@/modules/chat/store/roomsStore";
+import {decodeRoomIdParam} from "@/modules/chat/utils/roomId";
 
 export default function ProfileLayout({children}: LayoutProps) {
     const params = useParams() as { roomId?: string };
     const {user} = useUserStore();
     const activeRoomId = params?.roomId ?? null;
-    const normalizedRoomId = activeRoomId ?? "";
+    // Decoded, not raw: this value opens the socket and joins the room, and
+    // Next.js hands the segment over still percent-encoded. See decodeRoomIdParam.
+    const normalizedRoomId = decodeRoomIdParam(activeRoomId);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // derive senderId from user
@@ -77,8 +80,8 @@ export default function ProfileLayout({children}: LayoutProps) {
                     ${!activeRoomId ? "top-16" : "top-0"}
                     sm:top-20 
                     left-0 right-0 
-                    ${!activeRoomId ? "h-[calc(100vh-56px)]" : "h-screen"}
-                    sm:h-[calc(100vh-80px)] 
+                    ${!activeRoomId ? "h-[calc(100dvh-56px)]" : "h-dvh"}
+                    sm:h-[calc(100dvh-80px)] 
                     overflow-hidden
                `}
             >
