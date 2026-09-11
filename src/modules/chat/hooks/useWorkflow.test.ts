@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import {act} from "react";
+import {act, useEffect} from "react";
 import {createRoot, type Root} from "react-dom/client";
 import {createElement} from "react";
 import {afterEach, beforeEach, describe, expect, it} from "vitest";
@@ -37,7 +37,12 @@ function Probe({
     selectedOrder?: SelectedOrder | null;
 }) {
     const {workflowId, billingId} = useWorkflow(roomId, roomData, {selectedOrder});
-    seen = {workflowId, billingId};
+    // Recorded in an effect, not during render: reassigning a module-level
+    // variable while rendering is a side effect the react-hooks lint refuses.
+    // `act()` flushes effects before the assertions read `seen`.
+    useEffect(() => {
+        seen = {workflowId, billingId};
+    });
     return null;
 }
 
