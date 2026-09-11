@@ -602,7 +602,7 @@ const ChatRoomView: React.FC<ChatRoomViewProps> = ({
                 workflow={
                     <JobFlowContent
                         renderFlowContent={renderFlowContent}
-                        jobId={roomPostId}
+                        jobId={roomPostId ?? undefined}
                         lang={lang}
                     />
                 }

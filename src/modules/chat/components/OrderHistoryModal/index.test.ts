@@ -6,7 +6,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
 import {OrderHistoryModal} from "@/modules/chat/components/OrderHistoryModal";
 import type {OrderGroups} from "@/modules/chat/utils/groupOrders";
-import type {OrderSummary} from "@/lib/108jobs-client/src";
+import type {OrderSummary} from "@108-plaza/jh-client";
 
 /**
  * The order history, opened from the selector line.

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {useTranslation} from 'react-i18next';
-import type {OrderSummary} from '@/lib/108jobs-client/src';
+import type {OrderSummary} from '@108-plaza/jh-client';
 import type {OrderGroups} from '@/modules/chat/utils/groupOrders';
 import OrdersList from '@/modules/chat/components/OrdersList';
 

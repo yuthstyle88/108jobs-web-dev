@@ -4,7 +4,7 @@ import {act, createElement, useEffect} from "react";
 import {createRoot, type Root} from "react-dom/client";
 import {afterEach, beforeEach, describe, expect, it, vi} from "vitest";
 
-import type {OrderSummary} from "@/lib/108jobs-client/src";
+import type {OrderSummary} from "@108-plaza/jh-client";
 
 /**
  * Paging the order history.

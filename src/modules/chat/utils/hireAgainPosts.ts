@@ -1,4 +1,4 @@
-import type {ListPersonCreatedResponse} from "@/lib/108jobs-client/src";
+import type {ListPersonCreatedResponse} from "@108-plaza/jh-client";
 
 type PostItem = ListPersonCreatedResponse["created"][number];
 import type {HireAgainPost} from "@/modules/chat/components/HireAgainModal";
