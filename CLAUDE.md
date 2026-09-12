@@ -88,6 +88,28 @@ auth cookie name any more — that is the fixed literal `"108_auth"` in
 `.env` comment claiming otherwise was stale and had kept the browser tab
 reading "108Heros" on the jobs app. Changing it logs nobody out. Fixed in #140.
 
+## Asking the API for "my posts" (2026-09-09)
+
+`GET /post/list` has **no creator filter**. The server's `GetPosts` struct
+(`crates/db/src/source/post_view/api.rs`) carries no `creator_id` field at all,
+so a `creatorId` in the query string is accepted, ignored, and answered with
+every post on the instance. The generated `GetPosts.ts` has never had the field
+either — anything that appears to filter by creator is inventing it.
+
+`GET /account/created` is the endpoint that answers for the authenticated
+person (`listPersonCreated`). It takes `postKind`, which **is** honoured, so
+`postKind: "Normal"` is how you ask for jobs rather than rides and deliveries.
+Its `ListPersonCreated.ts` was missing `postKind` until the "Hire again" picker
+needed it.
+
+`limit` is not clamped: the server's `MAX_FETCH_LIMIT` is **30**, and anything
+above it fails the whole request with `invalidFetchLimit`. A list that asks for
+50 renders as empty, not as short — which looks exactly like "this person has
+posted nothing".
+
+Both facts were found by calling the running API; neither is visible from the
+TypeScript.
+
 ## The chat room payload already carries the workflow (2026-09-07)
 
 `GET /chat/rooms/{id}` returns `workflow` beside `room`, `participants`, `post`

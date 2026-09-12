@@ -16,7 +16,7 @@
   },
   "packageManager": "pnpm@8.15.4",
   "dependencies": {
-    "@108-plaza/jh-client": "^1.0.0",
+    "@108-plaza/jh-client": "^2.0.0",
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-brands-svg-icons": "^7.1.0",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",

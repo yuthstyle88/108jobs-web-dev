@@ -144,14 +144,15 @@ export const MediaLightbox: React.FC<Props> = ({item, onClose, onJump, fallbackF
     // moment this component is reused somewhere less careful.
     if (typeof document === "undefined") return null;
 
-    // Portalled straight to <body>, not rendered in place: on mobile,
-    // JobFlowSidebar's slide-over carries a `translate-x-*` utility, and any
-    // non-`none` CSS transform establishes a containing block for `position:
-    // fixed` descendants -- so without the portal, this dialog's
-    // `fixed inset-0` would resolve against the drawer's box instead of the
-    // viewport, and the lightbox would render cropped to the drawer instead
-    // of full-screen (Finding 2, FINAL-findings.md). Desktop's `<aside>` has
-    // no transform, which is why the bug was mobile-only.
+    // Portalled straight to <body>, not rendered in place. This originally
+    // fixed a mobile-only crop: the Order pane used to be a slide-over
+    // carrying a `translate-x-*` utility, and any non-`none` CSS transform
+    // establishes a containing block for `position: fixed` descendants, so
+    // this dialog's `fixed inset-0` resolved against the drawer's box instead
+    // of the viewport (Finding 2, FINAL-findings.md). That transform is gone
+    // now the pane is in-flow, but the portal stays: it is what makes this
+    // dialog independent of *any* future transformed ancestor, and the bug it
+    // prevents is invisible until someone is looking at a cropped lightbox.
     return createPortal(
         <div
             ref={dialogRef}
