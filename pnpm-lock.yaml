@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@108-plaza/jh-client':
-    specifier: ^1.1.0
-    version: 1.1.0
+    specifier: ^2.0.0
+    version: 2.0.0
   '@fortawesome/fontawesome-svg-core':
     specifier: ^7.1.0
     version: 7.1.0
@@ -250,8 +250,8 @@ devDependencies:
 
 packages:
 
-  /@108-plaza/jh-client@1.1.0:
-    resolution: {integrity: sha512-yfcvnZF1b2CYYx40l1GQKTPStbClXTh5KCBi7Rgvu7hSEbYzUBhdY6/+oQ21SeeubqMqgsLUFdjgF1Ukc3YR0w==, tarball: https://npm.pkg.github.com/download/@108-plaza/jh-client/1.1.0/e0d181fa23aba80da57014a5e0618e5b4749bee8}
+  /@108-plaza/jh-client@2.0.0:
+    resolution: {integrity: sha512-UIu0/6F2Mfe3Jlv5iwJBWebWlyYKSqura0h27Ua75r9saOKXCqlH4aU7NQNJci+lSQe5PV9HLXeZ/hpXI7tgFg==, tarball: https://npm.pkg.github.com/download/@108-plaza/jh-client/2.0.0/8bbfbdb032dec5b1f058e971915a4d63f8540326}
     dependencies:
       '@tsoa/runtime': 6.6.0
     transitivePeerDependencies:
