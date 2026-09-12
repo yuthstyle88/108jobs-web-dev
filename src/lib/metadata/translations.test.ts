@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { seoTranslations } from './translations';
 import { getProfilePrefix, PRODUCT_NAME, PRODUCT_SUPPORT_EMAIL } from '@/config/product';
-import { getAppName, getAppUrl } from '@/utils/appConfig';
+import { getAppDomain, getAppName, getAppUrl } from '@/utils/appConfig';
 
 describe('Branding and Metadata Translations', () => {
   it('does not contain hardcoded 108heros.com in any locale translations', () => {
@@ -24,10 +24,11 @@ describe('Branding and Metadata Translations', () => {
   it('provides single-source product constants', () => {
     // PRODUCT_* are still literals carrying the domain, which is deliberately
     // NOT renamed (.108jobs.com serves other systems). getAppName() carries the
-    // displayed product name, which is. They differ on purpose; see #172.
+    // displayed product name, which is. They differ on purpose — so the profile
+    // link is built from the domain, never the name (#172).
     expect(PRODUCT_NAME).toBe('108jobs.com');
     expect(PRODUCT_SUPPORT_EMAIL).toBe('support@108jobs.com');
-    expect(getProfilePrefix()).toBe(`${getAppName()}/profile/`);
+    expect(getProfilePrefix()).toBe(`${getAppDomain()}/profile/`);
     expect(getAppName()).toBe('108Heros');
     expect(getAppUrl()).toBe('https://108jobs.com');
   });
