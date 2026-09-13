@@ -201,7 +201,19 @@ jobs:
   deploy-prod:
     name: Deploy to PRODUCTION
     needs: image
-    if: success() && github.ref == 'refs/heads/release/prod'
+    # `event_name == 'push'` is what keeps the "Run workflow" button from
+    # reaching production (108jobs-web#177). On a dispatch, `github.ref` is
+    # whatever the person picked in the dropdown — pick `release/prod` and a ref
+    # check alone reads exactly like a real push. That button has already been
+    # aimed at `release/prod` once in this fleet (Livechat-Platform,
+    # 2026-08-08, `success`). The guarantee now comes from this condition, not
+    # from a comment asking people not to. `workflow_dispatch` still builds and
+    # pushes the image on any ref; it just no longer rolls it out.
+    #
+    # Deliberately NOT added to `deploy-staging` (:131): gating the staging
+    # button is a behaviour change nobody has decided, while gating production
+    # only closes a hazard.
+    if: success() && github.event_name == 'push' && github.ref == 'refs/heads/release/prod'
     runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Resolve image tag
